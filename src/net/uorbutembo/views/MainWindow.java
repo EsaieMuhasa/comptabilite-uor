@@ -19,11 +19,12 @@ import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import net.uorbutembo.views.components.Sidebar;
 import resources.net.uorbutembo.R;
 
+
 /**
  * @author Esaie MUHASA
  *
  */
-public class MainFrame extends JFrame {
+public class MainWindow extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private Sidebar sidebar;
@@ -33,7 +34,7 @@ public class MainFrame extends JFrame {
 	 * constructeur d'initialisation
 	 * configuration elementaire du formulaire
 	 */
-	public MainFrame() {
+	public MainWindow() {
 		super("U.O.R. Data Manager");
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int w = (int) (screenSize.getWidth() - screenSize.getWidth()/10);
@@ -62,7 +63,7 @@ public class MainFrame extends JFrame {
 		
 		
 //		this.btnExist.addActionListener(event -> {
-//			System.exit(MainFrame.NORMAL);
+//			System.exit(MainWindow.NORMAL);
 //
 //			int state = JOptionPane.showConfirmDialog(this.parent, "Voulez-vous vraiment quitter ce programme??", 
 //					"Fermeture du programme", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -82,7 +83,7 @@ public class MainFrame extends JFrame {
 			JOptionPane.showMessageDialog(null, "Une erreur est survenue lors du chargement du look end feel\n"+e.getMessage(), "Erreur look-end-feel", JOptionPane.ERROR_MESSAGE);
 		}
 		
-		MainFrame frame = new MainFrame();
+		MainWindow frame = new MainWindow();
 		frame.setVisible(true);
 	}
 

@@ -9,7 +9,8 @@ import java.util.logging.Logger;
 
 import javax.swing.UIManager;
 
-import net.uorbutembo.views.MainFrame;
+import net.uorbutembo.views.MainWindow;
+
 
 /**
  * @author Esaie MUHASA
@@ -41,7 +42,7 @@ public class Launcher {
 		}
 		
 		EventQueue.invokeLater(() -> {
-			MainFrame frame = new MainFrame();
+			MainWindow frame = new MainWindow();
 			frame.setVisible(true);
 		});
 		
