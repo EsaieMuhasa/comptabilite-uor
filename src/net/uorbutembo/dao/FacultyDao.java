@@ -9,6 +9,6 @@ import net.uorbutembo.beans.Faculty;
  * @author Esaie MUHASA
  *
  */
-public interface FacultyDao extends DAOInterface<Faculty> {
+public interface FacultyDao extends OrientationDao<Faculty> {
 
 }

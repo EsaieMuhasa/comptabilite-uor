@@ -22,7 +22,7 @@ public class StudyClass extends Orientation {
 	/**
 	 * @param id
 	 */
-	public StudyClass(Long id) {
+	public StudyClass(long id) {
 		super(id);
 	}
 

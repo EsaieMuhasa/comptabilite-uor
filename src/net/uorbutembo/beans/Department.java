@@ -62,5 +62,9 @@ public class Department extends Orientation {
 	public void setFaculty(Faculty faculty) {
 		this.faculty = faculty;
 	}
+	
+	public void setFaculty (long id) {
+		this.faculty = new  Faculty(id);
+	}
 
 }
