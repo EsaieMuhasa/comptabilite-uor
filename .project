@@ -13,11 +13,11 @@
 	</buildSpec>
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
+		<nature>org.jkiss.dbeaver.DBeaverNature</nature>
 	</natures>
-	<!-- 
 	<filteredResources>
 		<filter>
-			<id>1644393913243</id>
+			<id>1644427931609</id>
 			<name></name>
 			<type>30</type>
 			<matcher>
@@ -26,5 +26,4 @@
 			</matcher>
 		</filter>
 	</filteredResources>
-	 -->
 </projectDescription>

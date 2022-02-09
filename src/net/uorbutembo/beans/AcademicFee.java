@@ -20,6 +20,8 @@ public class AcademicFee extends DBEntity {
 	 * montant parametrer
 	 */
 	private float amount;
+	
+	private AcademicYear academicYear;
 
 	/**
 	 * 
@@ -47,6 +49,24 @@ public class AcademicFee extends DBEntity {
 	 */
 	public void setAmount(float amount) {
 		this.amount = amount;
+	}
+
+	/**
+	 * @return the academicYear
+	 */
+	public AcademicYear getAcademicYear() {
+		return academicYear;
+	}
+
+	/**
+	 * @param academicYear the academicYear to set
+	 */
+	public void setAcademicYear(AcademicYear academicYear) {
+		this.academicYear = academicYear;
+	}
+	
+	public void setAcademicYear (long academicYear) {
+		this.academicYear = new AcademicYear(academicYear);
 	}
 
 }

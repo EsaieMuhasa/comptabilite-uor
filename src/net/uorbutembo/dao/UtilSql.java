@@ -494,7 +494,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	 * @throws SQLException
 	 * @throws DAOException
 	 */
-	protected synchronized void updateInTable(String [] columnsNames, Object [] columnsValues, int idEntity) throws SQLException, DAOException{
+	protected synchronized void updateInTable(String [] columnsNames, Object [] columnsValues, long idEntity) throws SQLException, DAOException{
 		String SQL_QUERY = "UPDATE "+this.getTableName()+" SET ";
 		for (int i=0; i<columnsNames.length; i++) {
 			SQL_QUERY += columnsNames[i]+(i!=(columnsNames.length-1)? ("= ?, ") : ("=? "));

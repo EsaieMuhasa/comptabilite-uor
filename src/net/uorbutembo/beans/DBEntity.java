@@ -47,14 +47,14 @@ public abstract class DBEntity implements Serializable {
 	/**
 	 * @return the id
 	 */
-	public Long getId() {
+	public long getId() {
 		return id;
 	}
 
 	/**
 	 * @param id the id to set
 	 */
-	public void setId(Long id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 

@@ -31,7 +31,7 @@ public abstract class Orientation extends DBEntity {
 	/**
 	 * @param id
 	 */
-	public Orientation(Long id) {
+	public Orientation(long id) {
 		super(id);
 	}
 
