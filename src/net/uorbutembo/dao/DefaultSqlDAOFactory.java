@@ -37,10 +37,10 @@ class DefaultSqlDAOFactory implements DAOFactory{
 
 	/**
 	 * constructeur d'initialisation
-	 * @throws ClassNotFoundException 
 	 * @throws DAOConfigException 
+	 * @throws ClassNotFoundException 
 	 */
-	private DefaultSqlDAOFactory() throws ClassNotFoundException, DAOConfigException {
+	public DefaultSqlDAOFactory () throws DAOConfigException, ClassNotFoundException {
 		
 		if (daoFactory != null) {
 			throw new DAOConfigException("Impossible d'instancier 2 fois le factory du DAO");

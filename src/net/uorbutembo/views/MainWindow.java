@@ -13,9 +13,8 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.UIManager;
-import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
+import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.views.components.Sidebar;
 import resources.net.uorbutembo.R;
 
@@ -29,13 +28,15 @@ public class MainWindow extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private Sidebar sidebar;
 	private WorkspacePanel workspace;
+	public final DAOFactory factory;
 	
 	/**
 	 * constructeur d'initialisation
 	 * configuration elementaire du formulaire
 	 */
-	public MainWindow() {
+	public MainWindow(DAOFactory factory) {
 		super("U.O.R. Data Manager");
+		this.factory = factory;
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int w = (int) (screenSize.getWidth() - screenSize.getWidth()/10);
 		int h = (int) (screenSize.getHeight() - screenSize.getHeight()/10); 
@@ -71,20 +72,4 @@ public class MainWindow extends JFrame {
 //			}
 //		});
 	}
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-
-		try {
-			UIManager.setLookAndFeel(new NimbusLookAndFeel());//UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(null, "Une erreur est survenue lors du chargement du look end feel\n"+e.getMessage(), "Erreur look-end-feel", JOptionPane.ERROR_MESSAGE);
-		}
-		
-		MainWindow frame = new MainWindow();
-		frame.setVisible(true);
-	}
-
 }

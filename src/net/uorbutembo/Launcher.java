@@ -4,11 +4,12 @@
 package net.uorbutembo;
 
 import java.awt.EventQueue;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
+import net.uorbutembo.dao.DAOConfigException;
+import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.views.MainWindow;
 
 
@@ -34,17 +35,27 @@ public class Launcher {
 	            }
 	        }
 			
+			//UIManager.setLookAndFeel(new NimbusLookAndFeel());//UIManager.getSystemLookAndFeelClassName());
+			
 			if(!lookExist) {//sinon on utilise le look par defaut de l'OS
 				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			}
 		} catch (Exception e) {
-			Logger.getLogger(Launcher.class.getName()).log( Level.SEVERE, null, e);
+			JOptionPane.showMessageDialog(null, "Une erreur est survenue lors de la connexion à la base de données\n"+e.getMessage(), "Error look and feel", JOptionPane.ERROR_MESSAGE);
+			//Logger.getLogger(Launcher.class.getName()).log( Level.SEVERE, null, e);
 		}
 		
-		EventQueue.invokeLater(() -> {
-			MainWindow frame = new MainWindow();
-			frame.setVisible(true);
-		});
+		try {
+			DAOFactory factory = DAOFactory.getInstance();
+			EventQueue.invokeLater(() -> {
+				MainWindow frame = new MainWindow(factory);
+				frame.setVisible(true);
+			});
+		} catch (DAOConfigException e) {
+			//Logger.getLogger(Launcher.class.getName()).log( Level.SEVERE, null, e);
+			JOptionPane.showMessageDialog(null, "Une erreur est survenue lors de la connexion à la base de données\n"+e.getMessage(), "Erreur connexion a la BDD", JOptionPane.ERROR_MESSAGE);
+		}
+		
 		
 	}
 
