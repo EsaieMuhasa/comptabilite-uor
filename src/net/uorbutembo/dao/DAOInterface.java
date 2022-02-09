@@ -3,6 +3,7 @@
  */
 package net.uorbutembo.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import net.uorbutembo.beans.DBEntity;
@@ -180,7 +181,13 @@ public interface DAOInterface <T extends DBEntity>{
 	public List<T>  findAll ()  throws DAOException;
 	
 	/**
-	 * 
+	 * compte tout les occures
+	 * @return
+	 * @throws DAOException
+	 */
+	public int countAll () throws DAOException;
+	
+	/**
 	 * @param requestId
 	 */
 	public default void  doFindAll (int requestId) {
@@ -258,6 +265,96 @@ public interface DAOInterface <T extends DBEntity>{
 	public default List<T> findAll(int limit) throws DAOException {
 		return this.findAll(limit, 0);
 	}
+	
+	/**
+	 * Verifie s'il a des occurence serialiser en date en parametre
+	 * @param recordDate
+	 * @return
+	 * @throws DAOException
+	 */
+	public default boolean checkByRecordDate (Date recordDate) throws DAOException {
+		return this.checkByRecordDate(recordDate, recordDate);
+	}
+	
+	/**
+	 * verifie s'il y a des occureces serialiser en intervale de date en parametre
+	 * @param dateMin
+	 * @param dateMax
+	 * @return
+	 * @throws DAOException
+	 */
+	public boolean checkByRecordDate (Date dateMin, Date dateMax) throws DAOException;
+	
+	/**
+	 * verifie s'il y a des occurences serialiser pour les intervale de selection en parametre
+	 * @param dateMin
+	 * @param dateMax
+	 * @param limit
+	 * @param offset
+	 * @return
+	 * @throws DAOException
+	 */
+	public boolean checkByRecordDate (Date dateMin, Date dateMax, int limit, int offset) throws DAOException;
+	
+	/**
+	 * compte les occures en date en parametre
+	 * @param recordDate
+	 * @return
+	 * @throws DAOException
+	 */
+	public default int countByRecordDate (Date recordDate) throws DAOException{
+		return this.countByRecordDate(recordDate, recordDate);
+	}
+	
+	/**
+	 * Compte les occurences serialiser dans l'intervale de date en parmetre
+	 * @param dateMin
+	 * @param dateMax
+	 * @return
+	 * @throws DAOException
+	 */
+	public int countByRecordDate (Date dateMin, Date dateMax) throws DAOException;
+	
+	/**
+	 * Recuperation des occurence enregistrer en date en paramere
+	 * @param recordDate
+	 * @return
+	 * @throws DAOException
+	 */
+	public default List<T> findByRecordDate (Date recordDate) throws DAOException {
+		return this.findByRecordDate(recordDate, recordDate);
+	}
+	
+	/**
+	 * recuperation des elements enregistrer en une intervale de date donnee
+	 * @param dateMin
+	 * @param dateMax
+	 * @return
+	 * @throws DAOException
+	 */
+	public List<T> findByRecordDate (Date dateMin, Date dateMax) throws DAOException;
+	
+	/**
+	 * renvoie les occurences enregistrer en une intervale de date en parametre, en limitant la selection
+	 * @param dateMin
+	 * @param dateMax
+	 * @param limit
+	 * @return
+	 * @throws DAOException
+	 */
+	public default List<T> findByRecordDate (Date dateMin, Date dateMax, int limit) throws DAOException{
+		return this.findByRecordDate(dateMin, dateMax, limit, 0);
+	}
+	/**
+	 * renveoie les occurences serialiser en une intervale de date en parametre.
+	 * @param dateMin
+	 * @param dateMax
+	 * @param limit
+	 * @param offset
+	 * @return
+	 * @throws DAOException
+	 */
+	public List<T> findByRecordDate (Date dateMin, Date dateMax, int limit, int offset) throws DAOException;
 	
 	/**
 	 * surcharge recuperation d'une intervale des donnees

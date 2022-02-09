@@ -40,7 +40,7 @@ public abstract class DBEntity implements Serializable {
 	 * constructeur d'initialisation de l'identifiant d'une occurence
 	 * @param id
 	 */
-	public DBEntity (Long id) {
+	public DBEntity (long id) {
 		this.id = id;
 	}
 

@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import net.uorbutembo.beans.DBEntity;
@@ -17,7 +18,7 @@ import net.uorbutembo.beans.DBEntity;
  * @author Esaie MUHASA
  *
  */
-abstract class UtilSql <T extends DBEntity> {
+abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	
 	private DefaultSqlDAOFactory factory;
 	
@@ -38,8 +39,257 @@ abstract class UtilSql <T extends DBEntity> {
 	public DefaultSqlDAOFactory getFactory() {
 		return factory;
 	}
-
 	
+	
+	@Override
+	public synchronized boolean check(String columnName, Object value) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT %s FROM %s WHERE %s=? LIMIT 1", columnName, this.getViewName(), columnName);
+		try (
+				Connection connection =  this.factory.getConnection();
+				PreparedStatement statement = prepare(SQL_QUERY, connection, false, value);
+				ResultSet result = statement.executeQuery();
+			) {
+			
+			return result.next();
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public synchronized boolean check(String columnName, Object value, long id) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT %s FROM %s WHERE %s=? AND id != ? LIMIT 1", columnName, this.getViewName(), columnName);
+		try (
+				Connection connection =  this.factory.getConnection();
+				PreparedStatement statement = prepare(SQL_QUERY, connection, false, value, id);
+				ResultSet result = statement.executeQuery();
+			) {
+			
+			return result.next();
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public synchronized void delete(long id) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT FROM %s WHERE id = ?", this.getTableName());
+		try (
+				Connection connection =  this.factory.getConnection();
+				PreparedStatement statement = prepare(SQL_QUERY, connection, false, id);
+			) {
+			int status = statement.executeUpdate();
+			
+			if(status == 0) {
+				throw new DAOException("Aucune occurence suprimer");
+			}
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public synchronized T find(String columnName, Object value) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE %s=? LIMIT 1", this.getViewName(), columnName);
+		T t = null;
+		try (
+				Connection connection =  this.factory.getConnection();
+				PreparedStatement statement = prepare(SQL_QUERY, connection, false, value);
+				ResultSet result = statement.executeQuery();
+			) {
+			
+			if(result.next()) {
+				t = this.maping(result);
+			} else {
+				throw new DAOException("Aucune donnée ne correspond aux critere de la requêtte de selection");
+			}
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return t;
+	}
+
+	@Override
+	public synchronized List<T> findAll() throws DAOException {
+		final String SQL_QUERY = String.format("SELECT * FROM %s", this.getViewName());
+		List<T> t = new ArrayList<>();
+		try (
+				Connection connection =  this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY);
+			) {
+			
+			if(result.next()) {
+				t.add(this.maping(result));
+				while (result.next()) {
+					t.add(this.maping(result));
+				}
+			} else {
+				throw new DAOException("Aucune donnée dans la table "+this.getViewName());
+			}
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return t;
+	}
+
+	@Override
+	public synchronized int countAll () throws DAOException {
+		final String SQL_QUERY = String.format("SELECT COUNT(*) AS nombre FROM %s", this.getViewName());
+		try (
+				Connection connection =  this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY);
+			) {
+			
+			if(result.next()) {
+				return result.getInt("nombre");
+			} 
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return 0;
+	}
+
+	@Override
+	public synchronized boolean checkByRecordDate(Date dateMin, Date dateMax) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT recordDate FROM %s WHERE recordDate IN (%d, %d) LIMIT 1", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
+		try (
+				Connection connection =  this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY);
+			) {
+			
+			return result.next();
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public synchronized boolean checkByRecordDate(Date dateMin, Date dateMax, int limit, int offset) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT recordDate FROM %s WHERE recordDate IN (%d, %d) LIMIT %d OFFSET %d", this.getViewName(),  dateMin.getTime(), dateMax.getTime(), limit, offset);
+		try (
+				Connection connection =  this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY);
+			) {
+			
+			return result.next();
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public synchronized int countByRecordDate(Date dateMin, Date dateMax) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE recordDate IN (%d, %d)", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
+		try (
+				Connection connection =  this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY);
+			) {
+			
+			if(result.next()) {
+				return result.getInt("nombre");
+			}
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return 0;
+	}
+
+	@Override
+	public synchronized List<T> findByRecordDate(Date dateMin, Date dateMax) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE recordDate IN (%d, %d)", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
+		List<T> t = new ArrayList<>();
+		try (
+				Connection connection =  this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY);
+			) {
+			
+			if(result.next()) {
+				t.add(this.maping(result));
+				while(result.next()) {
+					t.add(this.maping(result));
+				}
+			} else {
+				throw new DAOException("Aucune donnees serialiser pour l'intervale de selection en parametre");
+			}
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return t;
+	}
+
+	@Override
+	public synchronized List<T> findByRecordDate(Date dateMin, Date dateMax, int limit, int offset) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE recordDate IN (%d, %d) LIMIT %d OFFSET %d", this.getViewName(),  dateMin.getTime(), dateMax.getTime(), limit, offset);
+		List<T> t = new ArrayList<>();
+		try (
+				Connection connection =  this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY);
+			) {
+			
+			if(result.next()) {
+				t.add(this.maping(result));
+				while(result.next()) {
+					t.add(this.maping(result));
+				}
+			} else {
+				throw new DAOException("Aucune donnees serialiser pour l'intervale de selection en parametre");
+			}
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return t;
+	}
+
+	@Override
+	public synchronized List<T> findAll(int limit, int offset) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT * FROM %s LIMIT %d OFFSET %d", this.getViewName(),  limit, offset);
+		List<T> t = new ArrayList<>();
+		try (
+				Connection connection =  this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY);
+			) {
+			
+			if(result.next()) {
+				t.add(this.maping(result));
+				while(result.next()) {
+					t.add(this.maping(result));
+				}
+			} else {
+				throw new DAOException("Aucune donnees serialiser pour l'intervale de selection en parametre");
+			}
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return t;
+	}
+
+	@Override
+	public synchronized List<DAOListener<T>> getListeners() {
+		return this.listeners;
+	}
+
 	/**
 	 * fermeture de la connection
 	 * @param connection
@@ -168,161 +418,12 @@ abstract class UtilSql <T extends DBEntity> {
 	 * @return
 	 * @throws SQLException
 	 */
-	protected synchronized static PreparedStatement prepare (String SQL_QUERY, Connection connection,
-			boolean autoGeneratedKeys, Object...objects) throws SQLException{
-		
-		PreparedStatement statement = connection.prepareStatement(SQL_QUERY, 
-				autoGeneratedKeys? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
+	protected synchronized static PreparedStatement prepare (String SQL_QUERY, Connection connection, boolean autoGeneratedKeys, Object...objects) throws SQLException{
+		PreparedStatement statement = connection.prepareStatement(SQL_QUERY, autoGeneratedKeys? Statement.RETURN_GENERATED_KEYS : Statement.NO_GENERATED_KEYS);
 		for (int i = 0; i < objects.length; i++) {
 			statement.setObject(i+1, objects[i]);
 		}
 		return statement;
-	}
-	
-	
-	/**
-	 * selection d'une occurence unique dans une table
-	 * si plusieur occurence corespond au critere de selection, alors uniquement la premiere occurence est returner
-	 * @param columnName
-	 * @param value
-	 * @return
-	 * @throws DAOException
-	 */
-	protected synchronized T selectSingle (String columnName, Object value) throws DAOException {
-		Connection connection = null;
-		PreparedStatement statement = null;
-		ResultSet result = null;
-		T entity = null;
-		
-		try {
-			connection = this.getFactory().getConnection();
-			statement = prepare("SELECT * FROM "+this.getTableName()+" WHERE "+columnName+" = ?", connection, false, value);
-			result = statement.executeQuery();
-			
-			if(result.next()) {
-				entity = this.maping(result);
-			}else {
-				throw new DAOException("Aucune occurence dans la table "+this.getTableName()+" ne correspond a "+columnName+" = "+value);
-			}
-		} catch (SQLException e) {
-			throw new DAOException(e.getMessage(), e);
-		} finally {
-			this.close(connection, statement, result);
-		}
-		return entity;
-	}
-	
-	
-	/**
-	 * 
-	 * @return
-	 * @throws DAOException
-	 */
-	protected synchronized List<T> selectAll () throws DAOException {
-		List<T> entities = new ArrayList<T>();
-		String sql = "SELECT * FROM "+this.getTableName();
-		Connection connection = null;
-		PreparedStatement statement = null;
-		ResultSet result=null;
-		try {
-			connection=this.factory.getConnection();
-			statement = connection.prepareStatement(sql);
-			result = statement.executeQuery();
-			if(result.next()) {
-				entities.add(this.maping(result));
-				while(result.next()) {
-					entities.add(this.maping(result));
-				}
-			}else {
-				DAOException ex =new DAOException("Aucunne donnée dans la table \""+this.getTableName()+"\"");
-				throw ex;
-			}
-		} catch (SQLException e) {
-			throw new DAOException(e.getMessage(), e);
-		}finally {
-			close(connection, statement, result);
-		}
-		return entities;
-	}
-	
-	
-	/**
-	 * 
-	 * @param limit
-	 * @param offset
-	 * @return
-	 * @throws DAOException
-	 */
-	protected synchronized List<T> selectAll (int limit, int offset) throws DAOException {
-		List<T> entities = new ArrayList<T>();
-		String sql = "SELECT * FROM "+this.getTableName()+" LIMIT ?  OFFSET ?";
-		Connection connection = null;
-		PreparedStatement statement = null;
-		ResultSet result=null;
-		try {
-			connection=this.factory.getConnection();
-			statement = prepare(sql, connection, false, limit, offset);
-			result = statement.executeQuery();
-			if(result.next()) {
-				entities.add(this.maping(result));
-				while(result.next()) {
-					entities.add(this.maping(result));
-				}
-			}else {
-				DAOException ex =new DAOException("Aucunne donnée dans la table \""+this.getTableName()+"\"");
-				throw ex;
-			}
-		} catch (SQLException e) {
-			throw new DAOException(e.getMessage(), e);
-		}finally {
-			close(connection, statement, result);
-		}
-		return entities;
-	}
-	
-	/**
-	 * 
-	 * @param limit
-	 * @return
-	 * @throws DAOException
-	 */
-	protected synchronized List<T> selectAll (int limit) throws DAOException {
-		return this.selectAll(limit, 0);
-	}
-	
-	
-	/**
-	 * Verification d'une valeur dans une colonne, en faisant abstraction a l'occurence dont l'id est en parametre
-	 * @param tableName
-	 * @param columnName
-	 * @param columnValue
-	 * @param idEntity
-	 * @return
-	 * @throws DAOException
-	 */
-	protected synchronized boolean columnValueExistInTable(String columnName, Object columnValue, int idEntity) throws DAOException{
-		boolean isInTable = false;
-		String sql = "SELECT "+columnName+" FROM "+this.getTableName()+" WHERE "+columnName+" = ? AND id != ? LIMIT 1";
-		Connection connection = null;
-		PreparedStatement statement = null;
-		ResultSet result=null;
-		try {
-			connection=this.factory.getConnection();
-			statement = prepare(sql, connection, false, columnValue, idEntity);
-			result = statement.executeQuery();
-			if(result.next()) {
-				isInTable = true;
-			}
-		} catch (SQLException e) {
-			throw new DAOException(e.getMessage(), e);
-		}finally {
-			close(connection, statement, result);
-		}
-		return isInTable;
-	}
-	
-	protected synchronized boolean columnValueExistInTable(String columnName, Object columnValue) throws DAOException{
-		return this.columnValueExistInTable(columnName, columnValue, 0);
 	}
 	
 	/**
@@ -330,29 +431,45 @@ abstract class UtilSql <T extends DBEntity> {
 	 * @param tableName le nom de la table
 	 * @param columnsNames un tableau des noms de colones
 	 * @param columnsValues
+	 * @throws SQLException
 	 * @throws DAOException
 	 */
-	protected synchronized int insertInTable(String [] columnsNames, Object [] columnsValues) throws DAOException{
-		String SQL_QUERY = "INSERT INTO "+this.getTableName()+" (", SQL_SUITE=" VALUES (";
+	protected synchronized int insertInTable(String [] columnsNames, Object [] columnsValues) throws SQLException, DAOException{
+		try ( Connection connection = this.factory.getConnection() ) {
+			return this.insertInTransactionnelTable(connection, columnsNames, columnsValues);
+		} 
+	}
+	
+	/**
+	 * insertion des donnee dans une table de maniere transactionnee
+	 * @param connection
+	 * @param columnsNames
+	 * @param columnsValues
+	 * @return
+	 * @throws SQLException
+	 * @throws DAOException
+	 */
+	protected synchronized int insertInTransactionnelTable(Connection connection, String [] columnsNames, Object [] columnsValues) throws SQLException, DAOException{
+		String 
+			SQL_QUERY = "INSERT INTO "+this.getTableName()+" (",
+			SQL_SUITE=" VALUES (";
 		for (int i=0; i<columnsNames.length; i++) {
-			SQL_QUERY += columnsNames[i]+(i!=(columnsNames.length-1)? ", ":", dateAjout)");
-			SQL_SUITE += "?"+(i!=(columnsNames.length-1)? ", ":", NOW())");
+			SQL_QUERY += columnsNames[i]+(i!=(columnsNames.length-1)? ", ":")");
+			SQL_SUITE += "?"+(i!=(columnsNames.length-1)? ", ":")");
 		}
 		
 		SQL_QUERY += SQL_SUITE;
 		
 		int id=0;
-		Connection connection = null;
-		PreparedStatement statement=null;
-		ResultSet result=null;
-		
-		try {
-			connection = this.factory.getConnection();
-			statement = prepare(SQL_QUERY, connection, true, columnsValues);
-			int statut=statement.executeUpdate();
-			if(statut==0) {
+		ResultSet result = null;
+		try (
+				PreparedStatement statement = prepare(SQL_QUERY, connection, true, columnsValues);
+			) {
+			int status = statement.executeUpdate();
+			if(status == 0) {
 				throw new DAOException("Aucune occurence enregistrer. Veiller ré-éssayer svp!");
 			}else {
+				
 				result= statement.getGeneratedKeys();
 				if (result.next()) {
 					id=result.getInt(1);
@@ -363,7 +480,7 @@ abstract class UtilSql <T extends DBEntity> {
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}finally {
-			close(connection, statement, result);
+			close(result);
 		}
 		return id;
 	}
@@ -374,55 +491,27 @@ abstract class UtilSql <T extends DBEntity> {
 	 * @param columnsValues les valeurs de colones de l'occurence a metre a jours
 	 * @param idEntity l'identifiant de l'occurence a metre a jours
 	 * @param dateModif si on doit actualiser la date de modification
+	 * @throws SQLException
 	 * @throws DAOException
 	 */
-	protected synchronized void updateInTable(String [] columnsNames, Object [] columnsValues, int idEntity, boolean dateModif) throws DAOException{
+	protected synchronized void updateInTable(String [] columnsNames, Object [] columnsValues, int idEntity) throws SQLException, DAOException{
 		String SQL_QUERY = "UPDATE "+this.getTableName()+" SET ";
 		for (int i=0; i<columnsNames.length; i++) {
-			SQL_QUERY += columnsNames[i]+(i!=(columnsNames.length-1)? ("= ?, ") : ("=? "+(dateModif? ", dateModif=NOW()":"")));
+			SQL_QUERY += columnsNames[i]+(i!=(columnsNames.length-1)? ("= ?, ") : ("=? "));
 		}
 		
 		SQL_QUERY += " WHERE id="+idEntity;
-		System.out.println(SQL_QUERY);
-		Connection connection = null;
-		PreparedStatement statement=null;
 		
-		try {
-			connection = this.factory.getConnection();
-			statement = prepare(SQL_QUERY, connection, false, columnsValues);
+		try (
+				Connection connection = this.factory.getConnection();
+				PreparedStatement statement = prepare(SQL_QUERY, connection, false, columnsValues);
+			) {
 			int statut=statement.executeUpdate();
-			if(statut==0) {
+			if(statut == 0 ) {
 				throw new DAOException("Aucune mise ajours n'a été effectuer. Veiller re-essayer svp!");
 			}
 		} catch (SQLException e) {
-			DAOException ex= new DAOException(e.getMessage(), e);
-			throw ex;
-		}finally {
-			close(connection, statement);
-		}
-	}
-	
-	/**
-	 * Utilitaire de supression definitive d'une occurence dans une table
-	 * @param idEntity l'identifiant de l'occurence
-	 * @throws DAOException
-	 */
-	protected synchronized void deleteFromTable(int idEntity) throws DAOException {
-		String SQL_QUERY = "DELETE FROM "+this.getTableName()+" WHERE id= "+idEntity;
-		Connection connection = null;
-		PreparedStatement statement=null;
-		
-		try {
-			connection = this.factory.getConnection();
-			statement = connection.prepareStatement(SQL_QUERY);
-			int statut=statement.executeUpdate();
-			if(statut==0) {
-				throw new DAOException("Aucune supression n'a été effectuer. Veiller ré-essayer svp!");
-			}
-		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
-		}finally {
-			close(connection, statement);
 		}
 	}
 	
@@ -438,6 +527,22 @@ abstract class UtilSql <T extends DBEntity> {
 	 * @return
 	 */
 	protected abstract String getTableName ();
+	
+	/**
+	 * Return le nom de la vue
+	 * @return
+	 */
+	protected String getViewName () {
+		return this.hasView()? "V_"+this.getTableName() : this.getTableName();
+	}
+	
+	/**
+	 * Esqu'il existe de vue materiel pour cette table???
+	 * @return
+	 */
+	protected boolean hasView () {
+		return false;
+	}
 	
 	/**
 	 * Treansmission d'un event los de la creation d'un occurence
