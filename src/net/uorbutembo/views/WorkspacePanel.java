@@ -30,7 +30,7 @@ import net.uorbutembo.views.components.Navbar;
  * Ce panieau represente l'epace de travail.
  * chaque element de l'espace de travail doit Heriter de DefaultScenePanel
  */
-public class WorkspacePanel extends JPanel implements MenuItemListener{
+public class WorkspacePanel extends Panel implements MenuItemListener{
 	private static final long serialVersionUID = 3541117443197136392L;
 	
 	private Navbar navbar = new Navbar();
@@ -39,13 +39,13 @@ public class WorkspacePanel extends JPanel implements MenuItemListener{
 	private Panel emptyPanel = new Panel(); 
 	private JScrollPane scroll= new JScrollPane();
 	private Map<String, DefaultScenePanel> scenes = new HashMap<>();//references vers tout les scenes
-	
+	private MainWindow mainWindow;
 	/**
 	 * 
 	 */
-	public WorkspacePanel() {
+	public WorkspacePanel(MainWindow mainWindow) {
 		super(new BorderLayout());
-		this.setOpaque(false);
+		this.mainWindow = mainWindow;
 		this.setBorder(null);
 		
 //		this.scroll.setVerticalScrollBar(new ScrollBar());
@@ -67,17 +67,24 @@ public class WorkspacePanel extends JPanel implements MenuItemListener{
 	 */
 	private void init() {
 		this
-		.add(new PanelDashboard())
-		.add(new PanelAcademicYear())
-		.add(new PanelInscription())
-		.add(new PanelFaculty())
-		.add(new PanelStudentSheet())
-		.add(new PanelConfigSoftware());
+		.add(new PanelDashboard(this.mainWindow))
+		.add(new PanelAcademicYear(this.mainWindow))
+		.add(new PanelInscription(this.mainWindow))
+		.add(new PanelFaculty(this.mainWindow))
+		.add(new PanelStudentSheet(this.mainWindow))
+		.add(new PanelConfigSoftware(this.mainWindow));
 		
 		this.emptyPanel.setName("defaultEmptyPanel");
 		this.body.add(this.emptyPanel);
 	}
 	
+	/**
+	 * @return the mainWindow
+	 */
+	public MainWindow getMainWindow() {
+		return mainWindow;
+	}
+
 	/**
 	 * Ajout d'une scene dans la pile des scenes
 	 * @param scene
@@ -135,7 +142,6 @@ public class WorkspacePanel extends JPanel implements MenuItemListener{
 			this.layout.show(this.body, this.emptyPanel.getName());
 		}
 	}
-
 
 	@Override
 	public void onAction(MenuItem item) {

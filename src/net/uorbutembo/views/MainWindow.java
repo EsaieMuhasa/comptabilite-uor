@@ -47,7 +47,7 @@ public class MainWindow extends JFrame {
 		this.setLocationRelativeTo(null);
 		this.requestFocus();
 		
-		this.workspace = new WorkspacePanel();
+		this.workspace = new WorkspacePanel(this);
 		this.sidebar = new Sidebar(workspace);
 		
 		this.getContentPane().add(this.workspace, BorderLayout.CENTER);

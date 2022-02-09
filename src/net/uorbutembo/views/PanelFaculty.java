@@ -21,8 +21,8 @@ public class PanelFaculty extends DefaultScenePanel {
 	/**
 	 * 
 	 */
-	public PanelFaculty() {
-		super("Facultés", new ImageIcon(R.getIcon("database")));
+	public PanelFaculty(MainWindow mainWindow) {
+		super("Facultés", new ImageIcon(R.getIcon("database")), mainWindow);
 		
 		//menu
 		this

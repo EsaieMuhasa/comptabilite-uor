@@ -5,6 +5,7 @@ package net.uorbutembo.views;
 
 import javax.swing.ImageIcon;
 
+import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.NavbarButtonModel;
@@ -19,10 +20,10 @@ import resources.net.uorbutembo.R;
 public class PanelAcademicYear extends DefaultScenePanel {
 	private static final long serialVersionUID = -732369198307883408L;
 
-	public PanelAcademicYear() {
-		super("Année académique", new ImageIcon(R.getIcon("events")));
+	public PanelAcademicYear(MainWindow mainWindow) {
+		super("Année académique", new ImageIcon(R.getIcon("events")), mainWindow);
 		this
-			.addItemMenu(new NavbarButtonModel("newStudent", "Annee academique"), new FormAcademicYear())
+			.addItemMenu(new NavbarButtonModel("newStudent", "Annee academique"), new FormAcademicYear(mainWindow.factory.findDao(AcademicYearDao.class)))
 			.addItemMenu(new NavbarButtonModel("oldStudent", "Promotions"), new FormPromotion())
 			.addItemMenu(new NavbarButtonModel("academicSpend", "Frais cademique"), new Panel());
 	}

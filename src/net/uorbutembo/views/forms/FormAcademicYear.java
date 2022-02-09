@@ -8,6 +8,7 @@ import java.awt.BorderLayout;
 import javax.swing.Box;
 import javax.swing.JPanel;
 
+import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
@@ -18,12 +19,15 @@ import net.uorbutembo.views.components.DefaultFormPanel;
 public class FormAcademicYear extends DefaultFormPanel {
 	private static final long serialVersionUID = -4419809391236771300L;
 	
+	private AcademicYearDao academicYearDao;
+	
 	private FormGroup<String> startDate = FormGroup.createEditText("Date d'ouverture");
 	private FormGroup<String> closeDate = FormGroup.createEditText("Date de fermeture");
 	private FormGroup<String> label = FormGroup.createEditText("Label de l'année");
 
-	public FormAcademicYear() {
+	public FormAcademicYear(AcademicYearDao academicYearDao) {
 		super();
+		this.academicYearDao = academicYearDao;
 		this.setTitle("Formulaire de decalration d'une année academique");
 		this.init();
 	}

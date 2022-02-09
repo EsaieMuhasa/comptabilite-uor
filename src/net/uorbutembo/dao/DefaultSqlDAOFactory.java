@@ -33,7 +33,6 @@ class DefaultSqlDAOFactory implements DAOFactory{
 	
 	//contiens les references des instances des implementations des interfaces du DAO
 	protected Map<String, DAOInterface<?>> daos = new HashMap<String, DAOInterface<?>>();
-	protected Map<String, String> dictionnary;//dictionnaire de elements de la configuration du DAO
 
 	/**
 	 * constructeur d'initialisation
@@ -83,11 +82,11 @@ class DefaultSqlDAOFactory implements DAOFactory{
 			}
 		}
 		
-		Set<String> keys = this.dictionnary.keySet();
+		Set<String> keys = Config.getInstance().getDictionnary().keySet();
 		for (String key : keys) {
 			if(key.equals(daoClass.getSimpleName())) {
 				try {
-					Class<?> c = Class.forName(this.dictionnary.get(key).toString());
+					Class<?> c = Class.forName(Config.find(key));
 					
 					Constructor<?> cons = c.getConstructor(this.getClass());
 					T instance = (T) cons.newInstance(this);

@@ -21,6 +21,7 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.forms.FormUtil;
 
 /**
@@ -41,26 +42,42 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 //	private Panel emptyPanel = new Panel();
 	
 	
+	private MainWindow mainWindow;
+	
+	
 	/**
+	 * 
 	 * @param title
+	 * @param mainWindow
 	 */
-	public DefaultScenePanel(String title) {
+	public DefaultScenePanel(String title, MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.title = title;
+		this.mainWindow = mainWindow;
 		this.init();
 	}
 	
 	/**
+	 * 
 	 * @param title
 	 * @param icon
+	 * @param mainWindow
 	 */
-	public DefaultScenePanel(String title, ImageIcon icon) {
+	public DefaultScenePanel(String title, ImageIcon icon, MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.title = title;
 		this.icon = icon;
+		this.mainWindow = mainWindow;
 		this.init();
 	}
 	
+	/**
+	 * @return the mainWindow
+	 */
+	public MainWindow getMainWindow() {
+		return mainWindow;
+	}
+
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);

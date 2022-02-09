@@ -19,8 +19,8 @@ import resources.net.uorbutembo.R;
 public class PanelInscription extends DefaultScenePanel {
 	private static final long serialVersionUID = -356861410803019685L;
 
-	public PanelInscription() {
-		super("Inscription 2021-2022", new ImageIcon(R.getIcon("student")));		
+	public PanelInscription(MainWindow mainWindow) {
+		super("Inscription 2021-2022", new ImageIcon(R.getIcon("student")), mainWindow);		
 		
 		//menu secondaire
 		this
