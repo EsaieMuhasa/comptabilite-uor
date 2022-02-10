@@ -7,6 +7,7 @@ package net.uorbutembo.views.forms;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.text.SimpleDateFormat;
 
 import javax.swing.JLabel;
 import javax.swing.border.EmptyBorder;
@@ -32,6 +33,8 @@ public abstract class FormUtil {
 	//bordure vide par defaut
 	public static final EmptyBorder DEFAULT_EMPTY_BORDER = new EmptyBorder(DEFAULT_H_GAP, DEFAULT_H_GAP, DEFAULT_H_GAP, DEFAULT_H_GAP);
 	
+	
+	public static SimpleDateFormat DEFAULT_FROMATER = new SimpleDateFormat("dd-MM-yyyy");
 	/**
 	 * Utilitaire de creation d'un titre
 	 * @param title

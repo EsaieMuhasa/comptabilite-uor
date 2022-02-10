@@ -6,10 +6,12 @@ package net.uorbutembo.views.components;
 import static net.uorbutembo.views.forms.FormUtil.*;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionListener;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
@@ -22,7 +24,7 @@ import resources.net.uorbutembo.R;
  * @author Esaie MUHASA
  *
  */
-public abstract class DefaultFormPanel extends Panel {
+public abstract class DefaultFormPanel extends Panel implements ActionListener {
 	private static final long serialVersionUID = 3940623605438304561L;
 
 	private String title;
@@ -54,6 +56,7 @@ public abstract class DefaultFormPanel extends Panel {
 		
 		//footer
 		this.btnSave = new Button(new ImageIcon(R.getIcon("success")), "Enregistrer");
+		this.btnSave.addActionListener(this);
 		this.footer = new JPanel();	
 		this.footer.setOpaque(false);
 		this.footer.add(this.btnSave);
@@ -68,6 +71,16 @@ public abstract class DefaultFormPanel extends Panel {
 		
 		this.add(this.header, BorderLayout.NORTH);
 		this.add(middle, BorderLayout.CENTER);
+	}
+	
+	/**
+	 * Affiche une boite de dialogue
+	 * @param title
+	 * @param message
+	 * @param type
+	 */
+	public void showMessageDialog (String title, String message, int type) {
+		JOptionPane.showMessageDialog(this, message, title, type);
 	}
 	
 	public String getTitle() {

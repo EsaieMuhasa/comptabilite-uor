@@ -45,6 +45,24 @@ public class FormGroup <T> extends Panel{
 	}
 	
 	/**
+	 * @return the field
+	 */
+	public InputComponent<T> getField() {
+		return field;
+	}
+
+	/**
+	 * @return the help
+	 */
+	public JLabel getHelp() {
+		return help;
+	}
+	
+	public T getValue () {
+		return this.field.getValue();
+	}
+
+	/**
 	 * Utilitaire de creation d'u combo box
 	 * @param <T>
 	 * @param label

@@ -116,6 +116,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	@Override
 	public synchronized List<T> findAll() throws DAOException {
 		final String SQL_QUERY = String.format("SELECT * FROM %s", this.getViewName());
+		System.out.println(SQL_QUERY);
 		List<T> t = new ArrayList<>();
 		try (
 				Connection connection =  this.factory.getConnection();

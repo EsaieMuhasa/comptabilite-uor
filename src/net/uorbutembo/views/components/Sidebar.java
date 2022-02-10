@@ -23,8 +23,6 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
-import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.swing.Panel;
 import resources.net.uorbutembo.R;
 /**
@@ -34,8 +32,7 @@ import resources.net.uorbutembo.R;
 public class Sidebar extends Panel {
 	private static final long serialVersionUID = -1925348829690899865L;
 	
-	
-	
+
 	private final JLabel logo = new JLabel(new ImageIcon(R.getIcon("x32")));
 	private final JLabel title = new JLabel("U.O.R");
 	
@@ -66,7 +63,6 @@ public class Sidebar extends Panel {
 		
 		this.add(scroll, BorderLayout.CENTER);
         
-        this.initItems();
         this.initHeader();
 	}
 	
@@ -85,40 +81,12 @@ public class Sidebar extends Panel {
 	}
 	
 	/**
-	 * test du rendu du sidebar
+	 * Ajout d'un item au menu
+	 * @param item
+	 * @return
 	 */
-	private void initItems() {
-		MenuItemModel<String> dashbord = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("dashboard")), "Tableau de bord", "dashboard");
-		MenuItemModel<String> exportData = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("export")), "Exporter", "export");
-		MenuItemModel<String> importData = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("import")), "Importer", "import");
-		MenuItemModel<AcademicYear> years = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("events")), "Annee Academiques", "year");
-		MenuItemModel<Faculty> facultys = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("database")), "Facultés", "faculty");
-
-		MenuItemModel<String> inscription = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("student")), "Inscription", "inscription");
-		MenuItemModel<String> sheet = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("card")), "Fiches individuels", "sheets");
-		MenuItemModel<String> story = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("classeur")), "Palmaresse", "archive");
-		MenuItemModel<String> help = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("help")), "Manuel d'utilisation", "help");
-		MenuItemModel<String> param = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("console")), "Configuration logiciel", "params");
-		MenuItemModel<String> journal = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("status")), "Journal d'erreurs", "logg");
-		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Autres configuration", "more");
-		
-		//sub config
-		config.addItems("Rubriques bidgetaires", "Frais universitaire", "Classe d'études");
-		importData.addItems("Exel 2007 ou plus (.xlsx)", "Exel 2003 (.xls)", "SQL File");
-		// --sub config
-		
-		this.addMenu(dashbord);
-		this.addMenu(years);	
-		this.addMenu(facultys);
-		this.addMenu(inscription);
-		this.addMenu(sheet);
-		this.addMenu(story);
-		this.addMenu(exportData);
-		this.addMenu(importData);
-		this.addMenu(config);
-		this.addMenu(help);
-		this.addMenu(param);
-		this.addMenu(journal);
+	public MenuItem addItem (MenuItemModel<?>  item) {
+		return this.addMenu(item);
 	}
 	
 	public void onItemClicked (MenuItem item) {

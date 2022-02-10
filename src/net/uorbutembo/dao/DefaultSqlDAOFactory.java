@@ -58,7 +58,7 @@ class DefaultSqlDAOFactory implements DAOFactory{
 	 * @throws SQLException
 	 */
 	public Connection getConnection () throws SQLException {
-		if(this.user == null) {
+		if(this.user == null || this.user.trim().isEmpty()) {
 			return DriverManager.getConnection(this.url);
 		}
 		

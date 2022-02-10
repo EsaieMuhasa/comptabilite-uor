@@ -8,6 +8,7 @@ import static net.uorbutembo.views.forms.FormUtil.DEFAULT_V_GAP;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 
 import javax.swing.Box;
 import javax.swing.ImageIcon;
@@ -132,6 +133,10 @@ public class FormPromotion extends DefaultFormPanel {
 		if(this.splitGeneral != null) {			
 			splitGeneral.setDividerLocation(this.getWidth()/2);
 		}
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent event) {
 	}
 	
 

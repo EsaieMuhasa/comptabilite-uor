@@ -61,6 +61,7 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
     	this.setBackground(FormUtil.BKG_DARK);
         setBorder(EditText.DEFAULT_EMPTY_BORDER);
         setUI(new ComboUI(this));
+        this.setForeground(DEFAULT_COLOR);
         
         
         //on utilise le rendu par de faut du JList
@@ -72,8 +73,9 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
                 Component com = super.getListCellRendererComponent(jlist, o, i, bln, bln1);
                 setBorder(new EmptyBorder(5, 5, 5, 5));
                 if (bln) {
-                    com.setBackground(new Color(240, 240, 240));
+                    com.setBackground(FormUtil.BORDER_COLOR);
                 }
+                com.setForeground(DEFAULT_COLOR);
                 return com;
             }
         });
@@ -151,6 +153,7 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
                 @Override
                 public void mouseEntered(MouseEvent me) {
                     mouseOver = true;
+                    
                     repaint();
                 }
 
@@ -273,7 +276,7 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
             g2.fillRect(0, height , width, 1);
             createHintText(g2);
             createLineStyle(g2);
-            g2.dispose();
+//            g2.dispose();
         }
 
         /**

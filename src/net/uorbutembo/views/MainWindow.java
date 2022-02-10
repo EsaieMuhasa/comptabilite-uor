@@ -49,6 +49,7 @@ public class MainWindow extends JFrame {
 		
 		this.workspace = new WorkspacePanel(this);
 		this.sidebar = new Sidebar(workspace);
+		this.workspace.init(this.sidebar);
 		
 		this.getContentPane().add(this.workspace, BorderLayout.CENTER);
 		this.getContentPane().add(this.sidebar, BorderLayout.WEST);

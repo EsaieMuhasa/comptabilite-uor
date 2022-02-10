@@ -3,36 +3,25 @@
  */
 package net.uorbutembo.views;
 
-import javax.swing.ImageIcon;
+import java.awt.BorderLayout;
 
+import net.uorbutembo.dao.FacultyDao;
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.views.components.DefaultScenePanel;
-import net.uorbutembo.views.components.NavbarButtonModel;
 import net.uorbutembo.views.forms.FormFaculty;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
  *
  */
-public class PanelFaculty extends DefaultScenePanel {
-	private static final long serialVersionUID = 1706520118231790169L;
-	
+public class PanelFaculty extends Panel {
+	private static final long serialVersionUID = 6683302991865603147L;
+
 	/**
-	 * 
+	 * @param mainWindow
 	 */
 	public PanelFaculty(MainWindow mainWindow) {
-		super("Facultés", new ImageIcon(R.getIcon("database")), mainWindow);
-		
-		//menu
-		this
-		.addItemMenu(new NavbarButtonModel("facultys", "Facultés"), new FormFaculty())
-		.addItemMenu(new NavbarButtonModel("departments", "Départements"), new Panel());
-	}
-
-	@Override
-	public String getNikeName() {
-		return "faculty";
+		super(new BorderLayout());
+		this.add(new FormFaculty(mainWindow.factory.findDao(FacultyDao.class)), BorderLayout.NORTH);
 	}
 
 }

@@ -21,13 +21,18 @@ import net.uorbutembo.beans.Faculty;
 public class DepartmentDaoSql extends OrientationDaoSql<Department> implements DepartmentDao {
 
 	private FacultyDao facultyDao;
-	
+
 	/**
 	 * @param factory
 	 */
 	public DepartmentDaoSql(DefaultSqlDAOFactory factory) {
 		super(factory);
 		this.facultyDao = factory.findDao(FacultyDao.class);
+	}
+	
+	@Override
+	public FacultyDao getFacultyDao() {
+		return this.facultyDao;
 	}
 
 	@Override

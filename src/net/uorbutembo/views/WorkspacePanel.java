@@ -14,16 +14,23 @@ import java.awt.RenderingHints;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.JPanel;
+import javax.swing.ImageIcon;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
+import net.uorbutembo.beans.AcademicYear;
+import net.uorbutembo.beans.Orientation;
+import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.views.components.DefaultMenuItemModel;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.MenuItem;
 import net.uorbutembo.views.components.MenuItemButton;
 import net.uorbutembo.views.components.MenuItemListener;
+import net.uorbutembo.views.components.MenuItemModel;
 import net.uorbutembo.views.components.Navbar;
+import net.uorbutembo.views.components.Sidebar;
+import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
@@ -35,17 +42,21 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 	
 	private Navbar navbar = new Navbar();
 	private CardLayout layout = new CardLayout();
-	private JPanel body = new JPanel(layout);
-	private Panel emptyPanel = new Panel(); 
+	private Panel body = new Panel(layout);
+	private Panel head = new Panel(new BorderLayout());
+
 	private JScrollPane scroll= new JScrollPane();
 	private Map<String, DefaultScenePanel> scenes = new HashMap<>();//references vers tout les scenes
 	private MainWindow mainWindow;
-	/**
-	 * 
-	 */
+	private Sidebar sidebar;
+	
+	private AcademicYear currentYear;
+
+	
 	public WorkspacePanel(MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.mainWindow = mainWindow;
+		this.currentYear = mainWindow.factory.findDao(AcademicYearDao.class).findCurrent();
 		this.setBorder(null);
 		
 //		this.scroll.setVerticalScrollBar(new ScrollBar());
@@ -55,27 +66,13 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 		this.scroll.setViewportView(body);
 		this.scroll.setViewportBorder(null);
 		this.scroll.setBorder(null);
-		this.body.setOpaque(false);
 		
-		this.add(navbar, BorderLayout.NORTH);
-		this.add(scroll, BorderLayout.CENTER);
-		this.init();
-	}
-	
-	/**
-	 * initialisation des composants graphique
-	 */
-	private void init() {
-		this
-		.add(new PanelDashboard(this.mainWindow))
-		.add(new PanelAcademicYear(this.mainWindow))
-		.add(new PanelInscription(this.mainWindow))
-		.add(new PanelFaculty(this.mainWindow))
-		.add(new PanelStudentSheet(this.mainWindow))
-		.add(new PanelConfigSoftware(this.mainWindow));
+		final Panel container = new Panel(new BorderLayout());
 		
-		this.emptyPanel.setName("defaultEmptyPanel");
-		this.body.add(this.emptyPanel);
+		this.add(head, BorderLayout.NORTH);
+		container.add(this.navbar, BorderLayout.NORTH);
+		container.add(scroll, BorderLayout.CENTER);
+		this.add(container, BorderLayout.CENTER);
 	}
 	
 	/**
@@ -84,16 +81,55 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 	public MainWindow getMainWindow() {
 		return mainWindow;
 	}
+	
+
+	/**
+	 * initialisation des composentants de l'espace de travail
+	 * @param sidebar
+	 */
+	public void init(Sidebar sidebar) {
+		this.sidebar = sidebar;
+		MenuItemModel<String> dashbord = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("dashboard")), "Tableau de bord");
+		
+		MenuItemModel<String> years = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("favorite")), "Config "+this.currentYear.getLabel());
+		MenuItemModel<Orientation> orientations = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("database")), "Orientations");
+		MenuItemModel<String> inscription = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("student")), "Inscription");
+		MenuItemModel<String> sheet = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("card")), "Fiches individuels");
+
+		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Autres configuration");
+		
+		MenuItemModel<String> exportData = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("export")), "Exporter");
+		MenuItemModel<String> importData = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("import")), "Importer");
+		MenuItemModel<String> story = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("classeur")), "Palmaresse");
+		MenuItemModel<String> help = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("help")), "Manuel d'utilisation");
+		MenuItemModel<String> param = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("console")), "Configuration logiciel");
+		MenuItemModel<String> journal = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("status")), "Journal d'erreurs");
+		
+		//sub config
+		importData.addItems("Exel 2007 ou plus (.xlsx)", "Exel 2003 (.xls)", "SQL File");
+		// --sub config
+		
+		this
+		.add(dashbord, new PanelDashboard(this.mainWindow))
+		.add(years, new PanelConfigCurrentYear(this.mainWindow))
+		.add(orientations, new PanelOrientation(this.mainWindow))
+		.add(inscription, new PanelInscription(this.mainWindow))
+		.add(sheet, new PanelStudentSheet(this.mainWindow))
+		.add(config, new PanelConfigGlobal(this.mainWindow))
+		.add(param, new PanelConfigSoftware(this.mainWindow));
+	}
 
 	/**
 	 * Ajout d'une scene dans la pile des scenes
 	 * @param scene
 	 * @return
 	 */
-	public WorkspacePanel add (DefaultScenePanel scene) {
-		this.body.add(scene, scene.getNikeName());
+	public WorkspacePanel add (MenuItemModel<?> item, DefaultScenePanel scene) {
+		item.setName(scene.getNikeName());
+		this.sidebar.addItem(item);//item au sidebar
+		this.body.add(scene, scene.getNikeName());//dans le card des scenes
 		this.scenes.put(scene.getNikeName(), scene);
-		this.navbar.createGroup(scene.getNikeName(), scene.getNavbarItems(), scene);
+		this.navbar.createGroup(scene.getNikeName(), scene.getNavbarItems(), scene);//menu pour la scene
 		return this;
 	}
 	
@@ -133,25 +169,28 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 
 	@Override
 	public void onAction(MenuItem item, int index, MenuItemButton view) {
-		if(this.scenes.containsKey(item.getModel().getName())) {
-			this.scenes.get(item.getModel().getName()).onShow(item, index);
-			this.layout.show(this.body, item.getModel().getName());
-			this.navbar.showGroup(item.getModel().getName());
-		} else {
-			this.navbar.hideItems();
-			this.layout.show(this.body, this.emptyPanel.getName());
-		}
+		this.onAction(item);
 	}
 
 	@Override
 	public void onAction(MenuItem item) {
 		if(this.scenes.containsKey(item.getModel().getName())) {	
+			DefaultScenePanel scene = this.scenes.get(item.getModel().getName());
+			this.head.removeAll();
+			this.head.add(scene.getHeader(), BorderLayout.CENTER);
+			this.head.repaint();
+			
+			if(scene.getNavbarItems().isEmpty()) {
+				this.navbar.setVisible(false);
+			} else {
+				this.navbar.setVisible(true);
+			}
+			
 			this.scenes.get(item.getModel().getName()).onShow(item);
 			this.layout.show(this.body, item.getModel().getName());
 			this.navbar.showGroup(item.getModel().getName());
 		} else {
 			this.navbar.hideItems();
-			this.layout.show(this.body, this.emptyPanel.getName());
 		}
 	}
 

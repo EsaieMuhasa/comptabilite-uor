@@ -3,6 +3,7 @@
  */
 package net.uorbutembo.views.components;
 
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,7 @@ public class NavbarGroup {
 	 * Le bouton du menu de navigation
 	 */
 	private List<NavbarButton> items = new ArrayList<>();
+	private List<Component> struts = new ArrayList<>();
 	private String name;
 
 	/**
@@ -64,8 +66,9 @@ public class NavbarGroup {
 	 * @param item
 	 * @return
 	 */
-	public NavbarGroup addItem (NavbarButton item) {
+	public NavbarGroup addItem (NavbarButton item, Component strut) {
 		this.items.add(item);
+		this.struts.add(strut);
 		return this;
 	}
 	
@@ -74,8 +77,9 @@ public class NavbarGroup {
 	 * @param visible
 	 */
 	public void setVisible (boolean visible) {
-		for (NavbarButton item : items) {
-			item.setVisible(visible);
+		for (int i = 0; i < this.items.size(); i++) {
+			this.items.get(i).setVisible(visible);
+			this.struts.get(i).setVisible(visible);
 		}
 	}
 	

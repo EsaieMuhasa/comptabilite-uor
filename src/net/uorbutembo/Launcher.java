@@ -35,7 +35,8 @@ public class Launcher {
 	            }
 	        }
 			
-			//UIManager.setLookAndFeel(new NimbusLookAndFeel());//UIManager.getSystemLookAndFeelClassName());
+			//UIManager.setLookAndFeel(new NimbusLookAndFeel());
+			//UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			
 			if(!lookExist) {//sinon on utilise le look par defaut de l'OS
 				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -45,8 +46,11 @@ public class Launcher {
 			//Logger.getLogger(Launcher.class.getName()).log( Level.SEVERE, null, e);
 		}
 		
+		//TestDAO.test(System.out);
+		
 		try {
 			DAOFactory factory = DAOFactory.getInstance();
+			
 			EventQueue.invokeLater(() -> {
 				MainWindow frame = new MainWindow(factory);
 				frame.setVisible(true);

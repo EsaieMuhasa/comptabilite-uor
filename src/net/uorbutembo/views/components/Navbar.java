@@ -6,6 +6,7 @@ package net.uorbutembo.views.components;
 import static net.uorbutembo.views.forms.FormUtil.BORDER_COLOR;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -49,9 +50,10 @@ public class Navbar extends JPanel {
 		NavbarGroup group = new NavbarGroup(name);
 		for (NavbarButtonModel model : models) {
 			NavbarButton item = new NavbarButton(model, listener, group);
-			group.addItem(item);
+			Component strut = Box.createHorizontalStrut(5);
+			group.addItem(item, strut);
 			this.nav.add(item);//, "h 40!");
-			this.nav.add(Box.createHorizontalStrut(5));
+			this.nav.add(strut);
 		}
 		this.groups.put(name, group);
 		group.setVisible(false);

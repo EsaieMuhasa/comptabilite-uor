@@ -7,7 +7,7 @@ package net.uorbutembo.dao;
  * @author Esaie MUHASA
  *
  */
-public class DAOException extends Exception {
+public class DAOException extends RuntimeException {
 	private static final long serialVersionUID = -5053637567665840772L;
 
 	/**

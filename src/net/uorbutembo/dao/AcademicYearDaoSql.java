@@ -59,14 +59,12 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 
 	@Override
 	public boolean checkCurrent() throws DAOException {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	@Override
 	public AcademicYear findCurrent() throws DAOException {
-		// TODO Auto-generated method stub
-		return null;
+		return this.findAll().get(0);
 	}
 
 	@Override
@@ -88,6 +86,7 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 
 	@Override
 	protected String getTableName() {
+//		return "AcademicYear";
 		return AcademicYear.class.getSimpleName();
 	}
 
