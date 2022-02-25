@@ -28,6 +28,11 @@ public class Student extends User {
 	private String matricul;
 	
 	/**
+	 * L'ecole d'horigine de l'etudiant
+	 */
+	private String originalSchool;
+	
+	/**
 	 * 
 	 */
 	public Student() {
@@ -81,6 +86,20 @@ public class Student extends User {
 	 */
 	public void setMatricul(String matricul) {
 		this.matricul = matricul;
+	}
+
+	/**
+	 * @return the originalSchool
+	 */
+	public String getOriginalSchool() {
+		return originalSchool;
+	}
+
+	/**
+	 * @param originalSchool the originalSchool to set
+	 */
+	public void setOriginalSchool(String originalSchool) {
+		this.originalSchool = originalSchool;
 	}
 
 }

@@ -21,6 +21,8 @@ public class AcademicFee extends DBEntity {
 	 */
 	private float amount;
 	
+	private String description;
+	
 	private AcademicYear academicYear;
 
 	/**
@@ -49,6 +51,20 @@ public class AcademicFee extends DBEntity {
 	 */
 	public void setAmount(float amount) {
 		this.amount = amount;
+	}
+
+	/**
+	 * @return the description
+	 */
+	public String getDescription() {
+		return description;
+	}
+
+	/**
+	 * @param description the description to set
+	 */
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	/**

@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import net.uorbutembo.beans.DBEntity;
 import resources.net.uorbutembo.Config;
 
 /**
@@ -66,15 +67,9 @@ class DefaultSqlDAOFactory implements DAOFactory{
 		return connection;
 	}
 	
-	/**
-	 * @param <T>
-	 * @param daoClass
-	 * @return
-	 * @throws DAOConfigException
-	 */
 	@SuppressWarnings("unchecked")
 	@Override
-	public synchronized <T extends DAOInterface<?>> T getDao (Class<T> daoClass) throws DAOConfigException{
+	public synchronized <H extends DBEntity, T extends DAOInterface<H>> T getDao (Class<T> daoClass) throws DAOConfigException{
 		Set<String> daoKeys = this.daos.keySet();
 		for (String daoName : daoKeys) {
 			if(daoName.equals(daoClass.getSimpleName())) {

@@ -10,7 +10,6 @@ import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.NavbarButtonModel;
-import net.uorbutembo.views.forms.FormPromotion;
 import resources.net.uorbutembo.R;
 
 /**
@@ -23,7 +22,6 @@ public class PanelConfigCurrentYear extends DefaultScenePanel {
 	private AcademicYear currentYear;
 	
 	/**
-	 * 
 	 * @param mainWindow
 	 */
 	public PanelConfigCurrentYear(MainWindow mainWindow) {
@@ -31,9 +29,11 @@ public class PanelConfigCurrentYear extends DefaultScenePanel {
 		this.currentYear = mainWindow.factory.findDao(AcademicYearDao.class).findCurrent();
 		this.setTitle("Paneau de configuration de l'année "+this.currentYear.getLabel());
 		this
-			.addItemMenu(new NavbarButtonModel("promotions", "Promotions"), new FormPromotion())
-			.addItemMenu(new NavbarButtonModel("feePromotion", "Frais par promotion"), new Panel())
-			.addItemMenu(new NavbarButtonModel("feePlanification", "Repartition des frais"), new Panel());
+			.addItemMenu(new NavbarButtonModel("promotions", "Promotions"), new PanelPromotion(mainWindow))
+			.addItemMenu(new NavbarButtonModel("academicFee", "Frais univeritaire"), new PanelAcademicFee(mainWindow))
+			.addItemMenu(new NavbarButtonModel("feePromotion", "Frais par promotion"), new PanelFeePromotion(mainWindow))
+			.addItemMenu(new NavbarButtonModel("annualSpend", "Rubrique budgetaire"), new PanelAnnualSpend(mainWindow))
+			.addItemMenu(new NavbarButtonModel("feePlanification", "Repartition des frais"), new PanelAllocationCost(mainWindow));
 	}
 
 	@Override

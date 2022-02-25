@@ -3,6 +3,8 @@
  */
 package net.uorbutembo.dao;
 
+import net.uorbutembo.beans.DBEntity;
+
 /**
  * @author Esaie MUHASA
  *
@@ -18,27 +20,31 @@ public interface DAOFactory {
 		return DAOLoader.load();
 	}
 	
-	/**
+
+	/** 
 	 * renvoie l'implemtation de l'interface, du pour l'interface DAO en parametre.
 	 * Si aucune implemetation n'existe selon la configuration, alors une exception est lever
+	 * @param <H>
 	 * @param <T>
 	 * @param daoClass
 	 * @return
 	 * @throws DAOConfigException
 	 */
-	public <T extends DAOInterface<?>> T getDao (Class<T> daoClass) throws DAOConfigException;
+	public <H extends DBEntity, T extends DAOInterface<H>> T getDao (Class<T> daoClass) throws DAOConfigException;
 	
 	/**
 	 * aliace de la method getDao, son s'il y a erreur lors de la recuperation du DAO,
-	 * un NULL pointer est renvoyer
+	 * un NULL pointer est renvoyer 
+	 * @param <H>
 	 * @param <T>
 	 * @param daoClass
 	 * @return
 	 */
-	default <T extends DAOInterface<?>> T findDao (Class<T> daoClass) {
+	default <H extends DBEntity, T extends DAOInterface<H>> T findDao (Class<T> daoClass) {
 		try {
 			return this.getDao(daoClass);
 		} catch (DAOConfigException e) {
+			System.out.printf("\n> Error: %s\n", e.getMessage());
 		}
 		return null;
 	}

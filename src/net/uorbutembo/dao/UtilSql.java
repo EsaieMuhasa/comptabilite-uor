@@ -20,7 +20,7 @@ import net.uorbutembo.beans.DBEntity;
  */
 abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	
-	private DefaultSqlDAOFactory factory;
+	protected DefaultSqlDAOFactory factory;
 	
 	protected List<DAOListener<T>> listeners;
 
@@ -36,14 +36,36 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	/**
 	 * @return the factory
 	 */
-	public DefaultSqlDAOFactory getFactory() {
+	@Override
+	public DefaultSqlDAOFactory getFactory () {
 		return factory;
+	}
+	
+	/**
+	 * Enregistrement d'une occurence dans une transaction deja demarer d'avence
+	 * @param connection
+	 * @param t
+	 * @throws DAOException
+	 */
+	protected void create (Connection connection, T t) throws DAOException{
+		throw new DAOException("Les enregistrement transactionnel ne sont pas pris en charche par le DAO de la table "+this.getTableName());
+	}
+	
+	/**
+	 * Enregistrement d'une collection d'occurence dans une transaction deja demarer d'avence
+	 * @param connection
+	 * @param t
+	 * @throws DAOException
+	 */
+	protected void create (Connection connection, T [] t) throws DAOException{
+		throw new DAOException("Les enregistrement transactionnel ne sont pas pris en charche par le DAO de la table "+this.getTableName());
 	}
 	
 	
 	@Override
 	public synchronized boolean check(String columnName, Object value) throws DAOException {
 		final String SQL_QUERY = String.format("SELECT %s FROM %s WHERE %s=? LIMIT 1", columnName, this.getViewName(), columnName);
+		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();
 				PreparedStatement statement = prepare(SQL_QUERY, connection, false, value);
@@ -60,9 +82,31 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	@Override
 	public synchronized boolean check(String columnName, Object value, long id) throws DAOException {
 		final String SQL_QUERY = String.format("SELECT %s FROM %s WHERE %s=? AND id != ? LIMIT 1", columnName, this.getViewName(), columnName);
+		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();
 				PreparedStatement statement = prepare(SQL_QUERY, connection, false, value, id);
+				ResultSet result = statement.executeQuery();
+			) {
+			
+			return result.next();
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+	
+	protected synchronized boolean check(String[] keys, Object [] value) throws DAOException {
+		String SQL_QUERY = String.format("SELECT * FROM %s WHERE ", this.getViewName());
+
+		for (int i=0, max = keys.length; i<max; i++) {
+			SQL_QUERY += keys[i]+" = ? "+((i+1)==max? " LIMIT 1 " : " AND ");
+		}
+		
+		System.out.println(SQL_QUERY);
+		try (
+				Connection connection =  this.factory.getConnection();
+				PreparedStatement statement = prepare(SQL_QUERY, connection, false, value);
 				ResultSet result = statement.executeQuery();
 			) {
 			
@@ -76,6 +120,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	@Override
 	public synchronized void delete(long id) throws DAOException {
 		final String SQL_QUERY = String.format("SELECT FROM %s WHERE id = ?", this.getTableName());
+		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();
 				PreparedStatement statement = prepare(SQL_QUERY, connection, false, id);
@@ -101,7 +146,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			) {
 			
 			if(result.next()) {
-				t = this.maping(result);
+				t = this.fullMapping(result);
 			} else {
 				throw new DAOException("Aucune donnée ne correspond aux critere de la requêtte de selection");
 			}
@@ -111,6 +156,31 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 		}
 		
 		return t;
+	}
+	
+	protected synchronized T find(String[] keys, Object [] value) throws DAOException {
+		String SQL_QUERY = String.format("SELECT * FROM %s WHERE ", this.getViewName());
+
+		for (int i=0, max = keys.length; i<max; i++) {
+			SQL_QUERY += keys[i]+" = ? "+((i+1)==max? " LIMIT 1 " : " AND ");
+		}
+		
+		System.out.println(SQL_QUERY);
+		try (
+				Connection connection =  this.factory.getConnection();
+				PreparedStatement statement = prepare(SQL_QUERY, connection, false, value);
+				ResultSet result = statement.executeQuery();
+			) {
+			
+			if( result.next() ) {
+				return this.fullMapping(result);
+			} else  {
+				throw new DAOException("Aucune donnée ne correspond aux criteres de selection");
+			}
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
 	}
 
 	@Override
@@ -125,9 +195,9 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			) {
 			
 			if(result.next()) {
-				t.add(this.maping(result));
+				t.add(this.mapping(result));
 				while (result.next()) {
-					t.add(this.maping(result));
+					t.add(this.mapping(result));
 				}
 			} else {
 				throw new DAOException("Aucune donnée dans la table "+this.getViewName());
@@ -139,10 +209,66 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 		
 		return t;
 	}
+	
+	/**
+	 * Renvoie
+	 * @param keys
+	 * @param value
+	 * @return
+	 * @throws DAOException
+	 */
+	protected synchronized List<T> findAll(String[] keys, Object [] value) throws DAOException {
+		return this.findAll(keys, value, null);
+	}
+	
+	/**
+	 * 
+	 * @param keys
+	 * @param value
+	 * @param order
+	 * @return
+	 * @throws DAOException
+	 */
+	protected synchronized List<T> findAll(String[] keys, Object [] value, String order) throws DAOException {
+		String SQL_QUERY = String.format("SELECT * FROM %s WHERE ", this.getViewName());
+
+		for (int i=0, max = keys.length; i<max; i++) {
+			SQL_QUERY += keys[i]+" = ? "+((i+1)==max? "" : " AND ");
+		}
+		
+		if(order != null && !order.trim().isEmpty()) {			
+			SQL_QUERY += " ORDER BY "+order;
+		}
+		
+		System.out.println(SQL_QUERY);
+		List<T> t = new ArrayList<>();
+		try (
+				Connection connection =  this.factory.getConnection();
+				PreparedStatement statement = prepare(SQL_QUERY, connection, false, value);
+				ResultSet result = statement.executeQuery();
+			) {
+			
+			if(result.next()) {
+				t.add(this.mapping(result));
+				while (result.next()) {
+					t.add(this.mapping(result));
+				}
+			} else {
+				throw new DAOException("Aucune donnée dans la table "+this.getViewName());
+			}
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return t;
+	}
+	
 
 	@Override
 	public synchronized int countAll () throws DAOException {
 		final String SQL_QUERY = String.format("SELECT COUNT(*) AS nombre FROM %s", this.getViewName());
+		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -163,6 +289,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	@Override
 	public synchronized boolean checkByRecordDate(Date dateMin, Date dateMax) throws DAOException {
 		final String SQL_QUERY = String.format("SELECT recordDate FROM %s WHERE recordDate IN (%d, %d) LIMIT 1", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
+		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -179,6 +306,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	@Override
 	public synchronized boolean checkByRecordDate(Date dateMin, Date dateMax, int limit, int offset) throws DAOException {
 		final String SQL_QUERY = String.format("SELECT recordDate FROM %s WHERE recordDate IN (%d, %d) LIMIT %d OFFSET %d", this.getViewName(),  dateMin.getTime(), dateMax.getTime(), limit, offset);
+		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -195,6 +323,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	@Override
 	public synchronized int countByRecordDate(Date dateMin, Date dateMax) throws DAOException {
 		final String SQL_QUERY = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE recordDate IN (%d, %d)", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
+		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -215,6 +344,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	public synchronized List<T> findByRecordDate(Date dateMin, Date dateMax) throws DAOException {
 		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE recordDate IN (%d, %d)", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
 		List<T> t = new ArrayList<>();
+		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -222,9 +352,9 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			) {
 			
 			if(result.next()) {
-				t.add(this.maping(result));
+				t.add(this.mapping(result));
 				while(result.next()) {
-					t.add(this.maping(result));
+					t.add(this.mapping(result));
 				}
 			} else {
 				throw new DAOException("Aucune donnees serialiser pour l'intervale de selection en parametre");
@@ -239,6 +369,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	@Override
 	public synchronized List<T> findByRecordDate(Date dateMin, Date dateMax, int limit, int offset) throws DAOException {
 		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE recordDate IN (%d, %d) LIMIT %d OFFSET %d", this.getViewName(),  dateMin.getTime(), dateMax.getTime(), limit, offset);
+		System.out.println(SQL_QUERY);
 		List<T> t = new ArrayList<>();
 		try (
 				Connection connection =  this.factory.getConnection();
@@ -247,9 +378,9 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			) {
 			
 			if(result.next()) {
-				t.add(this.maping(result));
+				t.add(this.mapping(result));
 				while(result.next()) {
-					t.add(this.maping(result));
+					t.add(this.mapping(result));
 				}
 			} else {
 				throw new DAOException("Aucune donnees serialiser pour l'intervale de selection en parametre");
@@ -264,6 +395,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	@Override
 	public synchronized List<T> findAll(int limit, int offset) throws DAOException {
 		final String SQL_QUERY = String.format("SELECT * FROM %s LIMIT %d OFFSET %d", this.getViewName(),  limit, offset);
+		System.out.println(SQL_QUERY);
 		List<T> t = new ArrayList<>();
 		try (
 				Connection connection =  this.factory.getConnection();
@@ -272,9 +404,9 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			) {
 			
 			if(result.next()) {
-				t.add(this.maping(result));
+				t.add(this.mapping(result));
 				while(result.next()) {
-					t.add(this.maping(result));
+					t.add(this.mapping(result));
 				}
 			} else {
 				throw new DAOException("Aucune donnees serialiser pour l'intervale de selection en parametre");
@@ -300,7 +432,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				this.sendOnErrorEvent(new DAOException(e.getMessage(), e));
+				this.emitOnError(new DAOException(e.getMessage(), e));
 			}
 		}
 	}
@@ -315,7 +447,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			try {
 				statement.close();
 			} catch (SQLException e) {
-				this.sendOnErrorEvent(new DAOException(e.getMessage(), e));
+				this.emitOnError(new DAOException(e.getMessage(), e));
 			}
 		}
 	}
@@ -329,7 +461,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			try {
 				result.close();
 			} catch (SQLException e) {
-				this.sendOnErrorEvent(new DAOException(e.getMessage(), e));
+				this.emitOnError(new DAOException(e.getMessage(), e));
 			}
 		}
 	}
@@ -343,7 +475,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			try {
 				statement.close();
 			} catch (SQLException e) {
-				this.sendOnErrorEvent(new DAOException(e.getMessage(), e));
+				this.emitOnError(new DAOException(e.getMessage(), e));
 			}
 		}
 	}
@@ -460,7 +592,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 		}
 		
 		SQL_QUERY += SQL_SUITE;
-		
+		System.out.println(SQL_QUERY);
 		int id=0;
 		ResultSet result = null;
 		try (
@@ -502,6 +634,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 		}
 		
 		SQL_QUERY += " WHERE id="+idEntity;
+		System.out.println(SQL_QUERY);
 		
 		try (
 				Connection connection = this.factory.getConnection();
@@ -517,11 +650,23 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	}
 	
 	/**
+	 * effectue le mapping sans tenir compte de dependances
 	 * @param result
 	 * @return
 	 * @throws SQLException
 	 */
-	protected abstract T maping (ResultSet result) throws SQLException, DAOException;
+	protected abstract T mapping (ResultSet result) throws SQLException, DAOException;
+	
+	/**
+	 * Effectue le mapping en tena compte des dependance
+	 * @param result
+	 * @return
+	 * @throws SQLException
+	 * @throws DAOException
+	 */
+	protected T fullMapping (ResultSet result)  throws SQLException, DAOException {
+		return this.mapping(result);
+	}
 	
 	/**
 	 * Revoie le nom de la table
@@ -549,42 +694,42 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	 * Treansmission d'un event los de la creation d'un occurence
 	 * @param event
 	 */
-	protected synchronized void sendOnCreateEvent (T e) {
-		this.sendOnCreateEvent(e, DAOInterface.DEFAULT_REQUEST_ID);
+	protected synchronized void emitOnCreate (T e) {
+		this.emitOnCreate(e, DAOInterface.DEFAULT_REQUEST_ID);
 	}
 	
-	protected synchronized void sendOnCreateEvent (T e, int requestId) {
+	protected synchronized void emitOnCreate (T e, int requestId) {
 		for (DAOListener<T> ls : listeners) {
 			ls.onCreate(e, DAOInterface.DEFAULT_REQUEST_ID);
 		}
 	}
 	
-	protected synchronized void sendOnUpdateEvent (T e) {
-		this.sendOnUpdateEvent(e, DAOInterface.DEFAULT_REQUEST_ID);
+	protected synchronized void emitOnUpdate (T e) {
+		this.emitOnUpdate(e, DAOInterface.DEFAULT_REQUEST_ID);
 	}
 	
-	protected synchronized void sendOnUpdateEvent (T e, int requestId) {
+	protected synchronized void emitOnUpdate (T e, int requestId) {
 		for (DAOListener<T> ls : listeners) {
 			ls.onUpdate(e, requestId);
 		}
 	}
 	
 	
-	protected synchronized void sendOnDeleteEvent (T e) {
-		this.sendOnDeleteEvent(e, DAOInterface.DEFAULT_REQUEST_ID);
+	protected synchronized void emitOnDelete (T e) {
+		this.emitOnDelete(e, DAOInterface.DEFAULT_REQUEST_ID);
 	}
 	
-	protected synchronized void sendOnDeleteEvent (T e, int requestId) {
+	protected synchronized void emitOnDelete (T e, int requestId) {
 		for (DAOListener<T> ls : listeners) {
 			ls.onDelete(e, requestId);
 		}
 	}
 	
-	protected synchronized void sendOnErrorEvent (DAOException e) {
-		this.sendOnErrorEvent(e, DAOInterface.DEFAULT_REQUEST_ID);
+	protected synchronized void emitOnError (DAOException e) {
+		this.emitOnError(e, DAOInterface.DEFAULT_REQUEST_ID);
 	}
 	
-	protected synchronized void sendOnErrorEvent (DAOException e, int requestId) {
+	protected synchronized void emitOnError (DAOException e, int requestId) {
 		for (DAOListener<T> ls : listeners) {
 			ls.onError(e, requestId);
 		}

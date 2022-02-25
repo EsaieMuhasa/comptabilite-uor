@@ -7,6 +7,7 @@ import javax.swing.ImageIcon;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.dao.AcademicYearDao;
+import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.NavbarButton;
@@ -29,9 +30,9 @@ public class PanelInscription extends DefaultScenePanel {
 		this.setTitle("Inscription "+this.currentYear.getLabel());
 		//menu secondaire
 		this
-			.addItemMenu(new NavbarButtonModel("newStudent", "Nouveau"), new FormInscription())
-			.addItemMenu(new NavbarButtonModel("oldStudent", "Re-inscription"), new Panel())
-			.addItemMenu(new NavbarButtonModel("inscrits", "Inscrits"), new Panel());
+			.addItemMenu(new NavbarButtonModel("inscrits", "Liste des inscrits"), new Panel())
+			.addItemMenu(new NavbarButtonModel("newStudent", "Nouveau"), new FormInscription(mainWindow.factory.findDao(InscriptionDao.class)))
+			.addItemMenu(new NavbarButtonModel("oldStudent", "Re-inscription"), new Panel());
 	}
 
 	@Override

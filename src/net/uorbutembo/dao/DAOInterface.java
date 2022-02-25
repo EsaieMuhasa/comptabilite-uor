@@ -23,6 +23,12 @@ public interface DAOInterface <T extends DBEntity>{
 	public static final int DEFAULT_LIMIT = 50;
 	
 	/**
+	 * Doit renvoyer une reference vers le factory des DAO
+	 * @return
+	 */
+	public DAOFactory getFactory ();
+	
+	/**
 	 * @param columnName
 	 * @param value
 	 * @return
@@ -58,6 +64,15 @@ public interface DAOInterface <T extends DBEntity>{
 	public void create (T e) throws DAOException;
 	
 	/**
+	 * creation d'un tableau d'occurence
+	 * @param t
+	 * @throws DAOException
+	 */
+	public default void create (T [] t) throws DAOException {
+		throw new DAOException("La creation de occurence pultiple n'est pas prise en charge \npar le DAO -> "+this.getClass().getName()+" <-");
+	}
+	
+	/**
 	 * cration dans un nouvea thread
 	 * @param e
 	 * @param requestId l'identifiant a retransmetre de l'evenement de syncronisation apres execution de la requette
@@ -66,9 +81,6 @@ public interface DAOInterface <T extends DBEntity>{
 		Thread t = new Thread( () ->  {
 			try {
 				create(e);
-				for (DAOListener<T> lis : getListeners()) {
-					lis.onCreate(e, requestId);
-				}
 			} catch (DAOException ex) {
 				for (DAOListener<T> lis : getListeners()) {
 					lis.onError(ex, requestId);
@@ -107,9 +119,6 @@ public interface DAOInterface <T extends DBEntity>{
 		Thread t = new Thread( () ->  {
 			try {
 				this.update(e, id);
-				for (DAOListener<T> lis : this.getListeners()) {
-					lis.onUpdate(e, requestId);
-				}
 			} catch (DAOException ex) {
 				for (DAOListener<T> lis : this.getListeners()) {
 					lis.onError(ex, requestId);
@@ -140,11 +149,7 @@ public interface DAOInterface <T extends DBEntity>{
 	public default void doDelete(long id, int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
-				T data = this.findById(id);
 				this.delete(id);
-				for (DAOListener<T> lis : this.getListeners()) {
-					lis.onDelete(data, requestId);
-				}
 			} catch (DAOException e) {
 				for (DAOListener<T> lis : this.getListeners()) {
 					lis.onError(e, requestId);
@@ -369,6 +374,9 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param listener
 	 */
 	default void addListener (DAOListener<T> listener) {
+		if(this.getListeners().contains(listener)) {
+			return;
+		}
 		this.getListeners().add(listener);
 	}
 	

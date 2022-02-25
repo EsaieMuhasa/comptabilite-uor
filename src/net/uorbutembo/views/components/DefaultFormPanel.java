@@ -96,6 +96,11 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 		return header;
 	}
 
+	/**
+	 * Renvoie le corp du formultaire.
+	 * Le Layout manager par default d'un corp d'un formulaire est le BorderLayout
+	 * @return
+	 */
 	public JPanel getBody() {
 		return body;
 	}

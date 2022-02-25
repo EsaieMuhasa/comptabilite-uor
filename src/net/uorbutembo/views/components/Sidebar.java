@@ -114,6 +114,11 @@ public class Sidebar extends Panel {
 		MenuItem item = new MenuItem  (this, model, this.listener);
 //        panel.add(item, "h "+(40 * model.getItems().size())+"!");
 		body.add(item, "h 40!");
+		
+		if(this.items.isEmpty()) {//le premier item est active par defaut
+			item.setCurrent(true);
+		}
+		
 		this.items.add(item);
         return item;
     }

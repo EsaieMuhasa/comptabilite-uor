@@ -61,5 +61,10 @@ public class FeePromotion extends DBEntity {
 	public void setPromotion(Promotion promotion) {
 		this.promotion = promotion;
 	}
+	
+	@Override
+	public String toString() {
+		return this.promotion.toString();
+	}
 
 }

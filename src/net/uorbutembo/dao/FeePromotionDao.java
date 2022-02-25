@@ -5,6 +5,7 @@ package net.uorbutembo.dao;
 
 import java.util.List;
 
+import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.FeePromotion;
 
 /**
@@ -50,4 +51,12 @@ public interface FeePromotionDao extends DAOInterface<FeePromotion> {
 	 * @throws DAOException
 	 */
 	public List<FeePromotion> findByAcademicFee (long academicFeeId) throws DAOException;
+	
+	/**
+	 * Renvoie la collection des promotions qui doivent payer le frais
+	 * @param academicFee
+	 * @return
+	 * @throws DAOException
+	 */
+	public List<FeePromotion> findByAcademicFee (AcademicFee academicFee) throws DAOException;
 }

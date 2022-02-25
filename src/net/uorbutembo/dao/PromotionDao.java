@@ -5,7 +5,10 @@ package net.uorbutembo.dao;
 
 import java.util.List;
 
+import net.uorbutembo.beans.AcademicYear;
+import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Promotion;
+import net.uorbutembo.beans.StudyClass;
 
 /**
  * @author Esaie MUHASA
@@ -32,6 +35,8 @@ public interface PromotionDao extends DAOInterface<Promotion> {
 	 * @throws DAOException
 	 */
 	public Promotion find (long academicYearId, long departmentId, long studyClassId) throws DAOException;
+	
+	public Promotion find (AcademicYear academicYear, Department department, StudyClass studyClass) throws DAOException;
 
 	/**
 	 * verifie le promotion d'un departement en une annee
@@ -85,4 +90,12 @@ public interface PromotionDao extends DAOInterface<Promotion> {
 	 * @throws DAOException
 	 */
 	public List<Promotion> findByAcademicYear(long academicYearId) throws DAOException;
+	
+	/**
+	 * 
+	 * @param academicYear
+	 * @return
+	 * @throws DAOException
+	 */
+	public List<Promotion> findByAcademicYear(AcademicYear academicYear) throws DAOException;
 }

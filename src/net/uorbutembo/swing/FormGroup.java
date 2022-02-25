@@ -38,9 +38,44 @@ public class FormGroup <T> extends Panel{
 	 * @param label
 	 * @return
 	 */
-	public static <T> FormGroup <T> createEditText (String label) {
-		EditText<T> edit = new EditText<>(label);
+	public static <T> FormGroup <T> createTextField (String label) {
+		TextField<T> edit = new TextField<>(label);
 		FormGroup<T> form = new FormGroup<>(edit);
+		return form;
+	}
+	
+	/**
+	 * Utilitaire de creation d'u combo box
+	 * @param <T>
+	 * @param label
+	 * @return
+	 */
+	public static <T> FormGroup <T> createComboBox (String label) {
+		ComboBox<T> combo = new ComboBox<>(label);
+		FormGroup<T> form = new FormGroup<>(combo);
+		return form;
+	}
+	
+	/**
+	 * utilitaire de referencement d'un combobox dans un form-group
+	 * @param <T>
+	 * @param combo
+	 * @return
+	 */
+	public static <T> FormGroup <T> createComboBox (ComboBox<T> combo) {
+		FormGroup<T> form = new FormGroup<>(combo);
+		return form;
+	}
+	
+	public static FormGroup<String> createTextArea (String label) {
+		TextArea area = new TextArea(label);
+		FormGroup<String> form = new FormGroup<>(area);
+		return form;
+	}
+	
+	public static FormGroup<String> createTextArea (String label, int row, int cols) {
+		TextArea area = new TextArea(label, row, cols);
+		FormGroup<String> form = new FormGroup<>(area);
 		return form;
 	}
 	
@@ -61,19 +96,6 @@ public class FormGroup <T> extends Panel{
 	public T getValue () {
 		return this.field.getValue();
 	}
-
-	/**
-	 * Utilitaire de creation d'u combo box
-	 * @param <T>
-	 * @param label
-	 * @return
-	 */
-	public static <T> FormGroup <T> createComboBox (String label) {
-		ComboBox<T> combo = new ComboBox<>(label);
-		FormGroup<T> form = new FormGroup<>(combo);
-		return form;
-	}
-	
 	/**
 	 * Initialisation des composents graphique
 	 * @param label

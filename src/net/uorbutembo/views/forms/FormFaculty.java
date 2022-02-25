@@ -23,8 +23,8 @@ import net.uorbutembo.views.components.DefaultFormPanel;
 public class FormFaculty extends DefaultFormPanel {
 	private static final long serialVersionUID = 1236148729398198199L;
 	
-	private final FormGroup<String> acronym = FormGroup.createEditText("Abbreviation");
-	private final FormGroup<String> fullname = FormGroup.createEditText("Appelation complete");
+	private final FormGroup<String> acronym = FormGroup.createTextField("Abbreviation");
+	private final FormGroup<String> fullname = FormGroup.createTextField("Appelation complete");
 	private FacultyDao facultyDao;
 	
 	public FormFaculty(FacultyDao facultyDao) {
@@ -53,6 +53,8 @@ public class FormFaculty extends DefaultFormPanel {
 		fac.setRecordDate(new Date());
 		try {
 			this.facultyDao.create(fac);
+			this.acronym.getField().setValue("");
+			this.fullname.getField().setValue("");
 			this.showMessageDialog("Info", name+"\nEnregistrer avec succes", JOptionPane.INFORMATION_MESSAGE);
 		} catch (DAOException e) {
 			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);

@@ -29,9 +29,9 @@ public class FormAcademicYear extends DefaultFormPanel {
 	
 	private AcademicYearDao academicYearDao;
 	
-	private FormGroup<String> startDate = FormGroup.createEditText("Date d'ouverture");
-	private FormGroup<String> closeDate = FormGroup.createEditText("Date de fermeture");
-	private FormGroup<String> label = FormGroup.createEditText("Label de l'année");
+	private FormGroup<String> startDate = FormGroup.createTextField("Date d'ouverture");
+	private FormGroup<String> closeDate = FormGroup.createTextField("Date de fermeture");
+	private FormGroup<String> label = FormGroup.createTextField("Label de l'année");
 
 	public FormAcademicYear(AcademicYearDao academicYearDao) {
 		super();
@@ -83,11 +83,10 @@ public class FormAcademicYear extends DefaultFormPanel {
 			year.setRecordDate(new Date());
 			try {
 				this.academicYearDao.create(year);
-				JOptionPane.showMessageDialog(this, "Année académique enregistrer avec success", "Success d'enregistrement", JOptionPane.ERROR_MESSAGE);
+				this.showMessageDialog("Information", "Année académique enregistrer avec success", JOptionPane.INFORMATION_MESSAGE);
 			} catch (DAOException e) {
-				JOptionPane.showMessageDialog(this, e.getMessage(), "Echec d'enregistrement", JOptionPane.ERROR_MESSAGE);
+				this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}
-
 }

@@ -52,6 +52,10 @@ public class Promotion extends DBEntity {
 	public void setDepartment(Department department) {
 		this.department = department;
 	}
+	
+	public void setDepartment (long department) {
+		this.department = new Department(department);
+	}
 
 	/**
 	 * @return the studyClass
@@ -66,6 +70,10 @@ public class Promotion extends DBEntity {
 	public void setStudyClass(StudyClass studyClass) {
 		this.studyClass = studyClass;
 	}
+	
+	public void setStudyClass (long studyClass) {
+		this.studyClass = new StudyClass(studyClass);
+	}
 
 	/**
 	 * @return the academicYear
@@ -79,6 +87,15 @@ public class Promotion extends DBEntity {
 	 */
 	public void setAcademicYear(AcademicYear academicYear) {
 		this.academicYear = academicYear;
+	}
+	
+	public void setAcademicYear (long academicYear) {
+		this.academicYear = new AcademicYear(academicYear);
+	}
+	
+	@Override
+	public String toString() {
+		return this.studyClass.getAcronym()+" "+this.department.getName();
 	}
 
 }

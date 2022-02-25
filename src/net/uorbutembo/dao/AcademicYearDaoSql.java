@@ -14,6 +14,8 @@ import net.uorbutembo.beans.AcademicYear;
  *
  */
 class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDao {
+	
+	private AcademicYear currentYear;
 
 	public AcademicYearDaoSql(DefaultSqlDAOFactory factory) {
 		super(factory);
@@ -33,7 +35,7 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 					}
 					);
 			e.setId(id);
-			this.sendOnCreateEvent(e);
+			this.emitOnCreate(e);
 		} catch (SQLException e1) {
 			throw new DAOException("Une erreur est survenue lors de l'enregistrement. \n"+e1.getMessage(), e1);
 		}
@@ -51,7 +53,7 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 							a.getRecordDate().getTime(),
 							a.getPrevious()!= null? a.getPrevious().getId() : null
 					}, id);
-			this.sendOnUpdateEvent(a);
+			this.emitOnUpdate(a);
 		} catch (SQLException e) {
 			throw new DAOException("Une erreure est survenue lors de la sauvegarde des modifications: \n"+e.getMessage(), e);
 		}
@@ -64,11 +66,14 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 
 	@Override
 	public AcademicYear findCurrent() throws DAOException {
-		return this.findAll().get(0);
+		if(this.currentYear == null) {
+			this.currentYear = this.findAll().get(0);
+		}
+		return this.currentYear;
 	}
 
 	@Override
-	protected AcademicYear maping(ResultSet result) throws SQLException, DAOException {
+	protected AcademicYear mapping(ResultSet result) throws SQLException, DAOException {
 		AcademicYear data = new AcademicYear(result.getLong("id"));
 		data.setStartDate(new Date(result.getLong("startDate")));
 		data.setRecordDate(new Date(result.getLong("recordDate")));

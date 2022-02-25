@@ -142,8 +142,8 @@ public class MenuItem extends JPanel{
 		 //si menu curent
 		 
 		 if(this.isCurrent()) {
-			 g2.setColor(ACTIVE_COLOR);
-			 g2.fillOval(-20, 1, 25, 40); 
+			 g2.setColor(BORDER_COLOR);
+			 g2.fillRect(0, 2, width, 38);
 		 }
     }
 	

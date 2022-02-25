@@ -31,7 +31,7 @@ import net.uorbutembo.views.forms.FormUtil;
  * @author Esaie MUHASA
  *
  */
-public class EditText <T> extends JTextField  implements InputComponent<T>{
+public class TextField <T> extends JTextField  implements InputComponent<T>{
 	private static final long serialVersionUID = -8698719412320568232L;
 	public static final EmptyBorder DEFAULT_EMPTY_BORDER = new EmptyBorder(15, 5, 5, 5);
 	public static final Dimension 
@@ -52,7 +52,7 @@ public class EditText <T> extends JTextField  implements InputComponent<T>{
 	 * Contructeur d'initialisation
 	 * @param hint, le label du champ de text
 	 */
-	public EditText(String hint) {
+	public TextField(String hint) {
 		super();
 		this.hint = hint;
 		this.setBackground(FormUtil.BKG_DARK);

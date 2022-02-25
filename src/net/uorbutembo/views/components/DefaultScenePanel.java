@@ -8,7 +8,9 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
@@ -21,7 +23,6 @@ import net.uorbutembo.views.forms.FormUtil;
 
 /**
  * @author Esaie MUHASA
- *
  */
 public abstract class DefaultScenePanel extends Panel implements WorkspaceListener, NavbarButtonListener{
 	private static final long serialVersionUID = 3779735890284766308L;
@@ -34,7 +35,7 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	
 	private CardLayout card = new CardLayout();//
 	private Panel body = new Panel(card);//conteneur
-//	private Panel emptyPanel = new Panel();
+	private Map<String, JComponent> cards = new HashMap<>();
 	
 	
 	private MainWindow mainWindow;
@@ -110,7 +111,7 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 		
 		this.setBorder(new EmptyBorder(10, 20, 10, 20));
 		//this.add(header, BorderLayout.NORTH);
-		this.add(this.body, BorderLayout.CENTER);
+		this.add(body, BorderLayout.CENTER);
 	}
 	
 	public CardLayout getCard() {
@@ -131,14 +132,11 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	//item-menu
 	public DefaultScenePanel addItemMenu (NavbarButtonModel item, JComponent component) {
 		this.navbarItems.add(item);
-		this.getBody().add(component, item.getName());
-		return this;
-	}
-	
-	public void addItemMenus (NavbarButtonModel... items) {
-		for (NavbarButtonModel item : navbarItems) {
-			this.navbarItems.add(item);
+		if(this.cards.isEmpty()) {			
+			this.getBody().add(component, item.getName());
 		}
+		this.cards.put(item.getName(), component);
+		return this;
 	}
 	//--item-menu
 	
@@ -148,7 +146,11 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 
 	@Override
 	public void onAction(NavbarButton view) {
+		this.body.removeAll();
+		this.body.add(this.cards.get(view.getButtonModel().getName()), view.getButtonModel().getName());
 		this.card.show(this.getBody(), view.getButtonModel().getName());
+		this.body.revalidate();
+		this.body.repaint();
 		view.setCurrent(true);
 		view.getGroup().setCurrent(view);
 	}

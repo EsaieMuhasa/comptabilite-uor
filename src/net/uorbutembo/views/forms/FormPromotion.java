@@ -9,17 +9,28 @@ import static net.uorbutembo.views.forms.FormUtil.DEFAULT_V_GAP;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.util.Date;
+import java.util.List;
 
 import javax.swing.Box;
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.border.EmptyBorder;
 
+import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
+import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.StudyClass;
+import net.uorbutembo.dao.AcademicYearDao;
+import net.uorbutembo.dao.DAOException;
+import net.uorbutembo.dao.DepartmentDao;
+import net.uorbutembo.dao.PromotionDao;
+import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.components.DefaultFormPanel;
@@ -32,27 +43,47 @@ import resources.net.uorbutembo.R;
 public class FormPromotion extends DefaultFormPanel {
 	private static final long serialVersionUID = 8664772794012293257L;
 	
-	private JList<Department> departments = new JList<Department>();
-	private JList<Department> selectedDepartments = new JList<Department>();
-	private JList<StudyClass> studyClass = new JList<StudyClass>();
-	private JList<StudyClass> selectedStudyClass = new JList<StudyClass>();
+	private DefaultListModel<Department> departmentsModel = new DefaultListModel<>();
+	private DefaultListModel<StudyClass> studyClassModel = new DefaultListModel<>();
 	
+	private DefaultListModel<Department> selectedDepartmentsModel = new DefaultListModel<>();
+	private DefaultListModel<StudyClass> selectedStudyClassModel = new DefaultListModel<>();
 	
-	private Button btnAddDepartments = new Button(new ImageIcon(R.getIcon("asc")));
-	private Button btnRemoveDepartments = new Button(new ImageIcon(R.getIcon("desc")));
+	private JList<Department> departments = new JList<>(departmentsModel);
+	private JList<StudyClass> studyClass = new JList<>(studyClassModel);
+	private JList<Department> selectedDepartments = new JList<>(selectedDepartmentsModel);
+	private JList<StudyClass> selectedStudyClass = new JList<>(selectedStudyClassModel);
 	
-	private Button btnAddStudyClass = new Button(new ImageIcon(R.getIcon("asc")));
-	private Button btnRemoveStudyClass = new Button(new ImageIcon(R.getIcon("desc")));
+	private Button btnAddDepartments = new Button(new ImageIcon(R.getIcon("desc")));
+	private Button btnRemoveDepartments = new Button(new ImageIcon(R.getIcon("asc")));
+	
+	private Button btnAddStudyClass = new Button(new ImageIcon(R.getIcon("desc")));
+	private Button btnRemoveStudyClass = new Button(new ImageIcon(R.getIcon("asc")));
 	
 	private JSplitPane splitGeneral;
+	private PromotionDao promotionDao;
+	private AcademicYear currentYear;
 	
 	/**
 	 * 
 	 */
-	public FormPromotion() {
+	public FormPromotion(PromotionDao promotionDao) {
 		super();
-		this.setTitle("Formulaire de configuration des promotions");
+		this.promotionDao = promotionDao;
+		this.currentYear = this.promotionDao.getFactory().findDao(AcademicYearDao.class).findCurrent();
+		this.setTitle("Formulaire de configuration des promotions pour l'année "+ this.currentYear.getLabel());
 		this.init();
+		
+		List<Department> deps = promotionDao.getFactory().findDao(DepartmentDao.class).findAll();
+		List<StudyClass> studys = promotionDao.getFactory().findDao(StudyClassDao.class).findAll();
+		for (Department d : deps) {
+			this.departmentsModel.addElement(d);
+		}
+		
+		for (StudyClass s : studys) {
+			this.studyClassModel.addElement(s);
+		}
+
 	}
 	
 	/**
@@ -74,9 +105,38 @@ public class FormPromotion extends DefaultFormPanel {
 		this.btnRemoveDepartments.setPreferredSize(FormUtil.createDimensionSmCare());
 		this.btnAddDepartments.setPreferredSize(FormUtil.createDimensionSmCare());
 		boxDepartment.add(Box.createVerticalGlue());
-		boxDepartment.add(this.btnAddDepartments);
 		boxDepartment.add(this.btnRemoveDepartments);
+		boxDepartment.add(this.btnAddDepartments);
 		boxDepartment.add(Box.createVerticalGlue());
+		
+		this.btnAddDepartments.addActionListener(event -> {
+			int [] index = this.departments.getSelectedIndices();
+			for (int i : index) {
+				this.selectedDepartmentsModel.addElement(this.departmentsModel.get(i));
+			}
+			
+			while (this.departments.getSelectedIndex() != -1) {
+				this.departmentsModel.remove(this.departments.getSelectedIndex());
+			}
+			
+			this.btnAddDepartments.setEnabled(!this.departmentsModel.isEmpty());
+			this.btnRemoveDepartments.setEnabled(!this.selectedDepartmentsModel.isEmpty());
+		});
+		
+		this.btnRemoveDepartments.setEnabled(false);
+		this.btnRemoveDepartments.addActionListener(event -> {
+			int [] index = this.selectedDepartments.getSelectedIndices();
+			for (int i : index) {
+				this.departmentsModel.addElement(this.selectedDepartmentsModel.get(i));
+			}
+			
+			while (this.selectedDepartments.getSelectedIndex() != -1) {
+				this.selectedDepartmentsModel.remove(this.selectedDepartments.getSelectedIndex());
+			}
+			
+			this.btnRemoveDepartments.setEnabled(!this.selectedDepartmentsModel.isEmpty());
+			this.btnAddDepartments.setEnabled(!this.departmentsModel.isEmpty());
+		});
 
 		
 		Panel departmentLists = new Panel(new GridLayout(2, 1, DEFAULT_H_GAP, DEFAULT_V_GAP));
@@ -99,9 +159,38 @@ public class FormPromotion extends DefaultFormPanel {
 		this.btnRemoveStudyClass.setPreferredSize(FormUtil.createDimensionSmCare());
 		this.btnAddStudyClass.setPreferredSize(FormUtil.createDimensionSmCare());
 		boxStudy.add(Box.createVerticalGlue());
-		boxStudy.add(this.btnAddStudyClass);
 		boxStudy.add(this.btnRemoveStudyClass);
+		boxStudy.add(this.btnAddStudyClass);
 		boxStudy.add(Box.createVerticalGlue());
+		
+		this.btnAddStudyClass.addActionListener(event -> {
+			int [] index = this.studyClass.getSelectedIndices();
+			for (int i : index) {
+				this.selectedStudyClassModel.addElement(this.studyClassModel.get(i));
+			}
+			
+			while (this.studyClass.getSelectedIndex() != -1) {
+				this.studyClassModel.remove(this.studyClass.getSelectedIndex());
+			}
+			
+			this.btnAddStudyClass.setEnabled(!this.studyClassModel.isEmpty());
+			this.btnRemoveStudyClass.setEnabled(!this.selectedStudyClassModel.isEmpty());
+		});
+		
+		this.btnRemoveStudyClass.setEnabled(false);
+		this.btnRemoveStudyClass.addActionListener(event -> {
+			int [] index = this.selectedStudyClass.getSelectedIndices();
+			for (int i : index) {
+				this.studyClassModel.addElement(this.selectedStudyClassModel.get(i));
+			}
+			
+			while (this.selectedStudyClass.getSelectedIndex() != -1) {
+				this.selectedStudyClassModel.remove(this.selectedStudyClass.getSelectedIndex());
+			}
+			
+			this.btnRemoveStudyClass.setEnabled(!this.selectedStudyClassModel.isEmpty());
+			this.btnAddStudyClass.setEnabled(!this.studyClassModel.isEmpty());
+		});
 
 		
 		Panel studyLists = new Panel(new GridLayout(2, 1, DEFAULT_H_GAP, DEFAULT_V_GAP));
@@ -137,6 +226,29 @@ public class FormPromotion extends DefaultFormPanel {
 	
 	@Override
 	public void actionPerformed(ActionEvent event) {
+		
+		Promotion[] t = new Promotion [this.selectedDepartmentsModel.getSize() * this.selectedStudyClassModel.getSize()];
+		Date now = new Date();
+		int index = 0;
+		for (int i = 0, iMax = this.selectedDepartmentsModel.getSize(); i < iMax ; i++) {
+			for (int j = 0, jMax = this.selectedStudyClassModel.getSize(); j < jMax; j++) {
+				Promotion p = new Promotion();
+				p.setAcademicYear(this.currentYear);
+				p.setDepartment(this.selectedDepartmentsModel.get(i));
+				p.setStudyClass(this.selectedStudyClassModel.get(j));;
+				p.setRecordDate(now);
+				
+				t[index] = p;
+				index++;
+			}
+		}
+		
+		try {
+			this.promotionDao.create(t);
+			this.showMessageDialog("Information", "Success d'enregistrement d"+(t.length==1? "e la":"es")+" promotion"+(t.length!=1? "s":""), JOptionPane.INFORMATION_MESSAGE);
+		} catch (DAOException e) {
+			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+		}
 	}
 	
 

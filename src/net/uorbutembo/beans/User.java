@@ -156,5 +156,9 @@ public abstract class User extends DBEntity {
 	public void setTelephone(String telephone) {
 		this.telephone = telephone;
 	}
+	
+	public String getFullName () {
+		return this.name+" "+this.postName+" "+this.firstName;
+	}
 
 }

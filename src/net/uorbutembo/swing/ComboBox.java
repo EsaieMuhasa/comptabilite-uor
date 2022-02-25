@@ -16,6 +16,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 
+import javax.swing.ComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -58,30 +59,42 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
      */
     public ComboBox(String label) {
     	super();
-    	this.setBackground(FormUtil.BKG_DARK);
-        setBorder(EditText.DEFAULT_EMPTY_BORDER);
-        setUI(new ComboUI(this));
-        this.setForeground(DEFAULT_COLOR);
-        
-        
-        //on utilise le rendu par de faut du JList
-        setRenderer(new DefaultListCellRenderer() {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-            public Component getListCellRendererComponent(JList<?> jlist, Object o, int i, boolean bln, boolean bln1) {
-                Component com = super.getListCellRendererComponent(jlist, o, i, bln, bln1);
-                setBorder(new EmptyBorder(5, 5, 5, 5));
-                if (bln) {
-                    com.setBackground(FormUtil.BORDER_COLOR);
-                }
-                com.setForeground(DEFAULT_COLOR);
-                return com;
-            }
-        });
-//        this.setOpaque(false);
+        this.init();
         this.setLabel(label);
     }
+    
+    /**
+     * construcurter par defaut
+     */
+    public ComboBox(String label, ComboBoxModel<E> model) {
+    	super(model);
+    	this.init();
+    	this.setLabel(label);
+    }
+    
+    private void init() {
+    	this.setBackground(FormUtil.BKG_DARK);
+    	setBorder(TextField.DEFAULT_EMPTY_BORDER);
+    	setUI(new ComboUI(this));
+    	this.setForeground(DEFAULT_COLOR);
+    	
+    	
+    	//on utilise le rendu par de faut du JList
+    	setRenderer(new DefaultListCellRenderer() {
+    		private static final long serialVersionUID = 1L;
+    		
+    		@Override
+    		public Component getListCellRendererComponent(JList<?> jlist, Object o, int i, boolean bln, boolean bln1) {
+    			Component com = super.getListCellRendererComponent(jlist, o, i, bln, bln1);
+    			setBorder(new EmptyBorder(5, 5, 5, 5));
+    			if (bln) {
+    				com.setBackground(FormUtil.BORDER_COLOR);
+    			}
+    			com.setForeground(DEFAULT_COLOR);
+    			return com;
+    		}
+    	});
+	}
 
 
     @Override

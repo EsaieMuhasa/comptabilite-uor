@@ -26,9 +26,8 @@ public class PanelConfigGlobal extends DefaultScenePanel {
 		super("Configuration globale", new ImageIcon(R.getIcon("cog")), mainWindow);
 		
 		this
-			.addItemMenu(new NavbarButtonModel("academicYear", "Année Academique"), new PanelAcademicYear(mainWindow))
-			.addItemMenu(new NavbarButtonModel("academicFee", "Frais univeritaire"), new Panel())
-			.addItemMenu(new NavbarButtonModel("univeritySpend", "Rubrique budgetaire"), new Panel());
+			.addItemMenu(new NavbarButtonModel("academicYear", "Année Academique"), new PanelAcademicYear(mainWindow))		
+			.addItemMenu(new NavbarButtonModel("univeritySpend", "Rubrique budgetaire"), new PanelUniversitySpend(mainWindow));
 	}
 
 	@Override

@@ -17,7 +17,7 @@ public abstract class DBEntity implements Serializable {
 	/**
 	 * Identifiant de l'occurence dans la base de donnee
 	 */
-	protected Long id;
+	protected long id;
 	
 	/**
 	 * Date de creation d'une occurence

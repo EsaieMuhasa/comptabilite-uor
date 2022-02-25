@@ -67,6 +67,9 @@ public class NavbarGroup {
 	 * @return
 	 */
 	public NavbarGroup addItem (NavbarButton item, Component strut) {
+		if(this.items.isEmpty()) {//par defaut, le premier item est active
+			item.setCurrent(true);
+		}
 		this.items.add(item);
 		this.struts.add(strut);
 		return this;

@@ -3,6 +3,10 @@
  */
 package net.uorbutembo.dao;
 
+import java.util.List;
+
+import net.uorbutembo.beans.AcademicYear;
+import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.StudyClass;
 
 /**
@@ -10,5 +14,31 @@ import net.uorbutembo.beans.StudyClass;
  *
  */
 public interface StudyClassDao extends OrientationDao<StudyClass> {
-
+	
+	/**
+	 * Verifie s'il y a des orientations qui ont ete configurer pour fonctionner pour l'annee en parametre
+	 * @param year
+	 * @param department
+	 * @return
+	 * @throws DAOException
+	 */
+	public boolean checkByAcademicYear (AcademicYear year, Department department) throws DAOException;
+	
+	/**
+	 * Comptage des orientations qui ont fonctionner pour l'annee en parametre
+	 * @param year
+	 * @param department
+	 * @return
+	 * @throws DAOException
+	 */
+	public int countByAcademicYear (AcademicYear year, Department department) throws DAOException;
+	
+	/**
+	 * renvoie la collection des orientations qui ont fonctionner pour l'annee en paramere
+	 * @param year
+	 * @param department
+	 * @return
+	 * @throws DAOException
+	 */
+	public List<StudyClass> findByAcademicYear (AcademicYear year, Department department) throws DAOException;
 }

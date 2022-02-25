@@ -40,12 +40,12 @@ import resources.net.uorbutembo.R;
 public class WorkspacePanel extends Panel implements MenuItemListener{
 	private static final long serialVersionUID = 3541117443197136392L;
 	
-	private Navbar navbar = new Navbar();
-	private CardLayout layout = new CardLayout();
-	private Panel body = new Panel(layout);
-	private Panel head = new Panel(new BorderLayout());
+	private final Navbar navbar = new Navbar();
+	private final CardLayout layout = new CardLayout();
+	private final Panel body = new Panel(layout);
+	private final Panel head = new Panel(new BorderLayout());
+	private final JScrollPane scroll= new JScrollPane();
 
-	private JScrollPane scroll= new JScrollPane();
 	private Map<String, DefaultScenePanel> scenes = new HashMap<>();//references vers tout les scenes
 	private MainWindow mainWindow;
 	private Sidebar sidebar;
@@ -59,15 +59,14 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 		this.currentYear = mainWindow.factory.findDao(AcademicYearDao.class).findCurrent();
 		this.setBorder(null);
 		
-//		this.scroll.setVerticalScrollBar(new ScrollBar());
-		this.scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-//		this.scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		this.scroll.getViewport().setOpaque(false);
-		this.scroll.setViewportView(body);
-		this.scroll.setViewportBorder(null);
-		this.scroll.setBorder(null);
-		
 		final Panel container = new Panel(new BorderLayout());
+//		this.scroll.setVerticalScrollBar(new ScrollBar());
+		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+//		this.scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scroll.getViewport().setOpaque(false);
+		scroll.setViewportView(this.body);
+		scroll.setViewportBorder(null);
+		scroll.setBorder(null);
 		
 		this.add(head, BorderLayout.NORTH);
 		container.add(this.navbar, BorderLayout.NORTH);
@@ -92,9 +91,9 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 		MenuItemModel<String> dashbord = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("dashboard")), "Tableau de bord");
 		
 		MenuItemModel<String> years = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("favorite")), "Config "+this.currentYear.getLabel());
-		MenuItemModel<Orientation> orientations = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("database")), "Orientations");
-		MenuItemModel<String> inscription = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("student")), "Inscription");
+		MenuItemModel<String> inscription = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("student")), "Inscription "+this.currentYear.getLabel());
 		MenuItemModel<String> sheet = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("card")), "Fiches individuels");
+		MenuItemModel<Orientation> orientations = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("database")), "Orientations");
 
 		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Autres configuration");
 		
@@ -112,9 +111,9 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 		this
 		.add(dashbord, new PanelDashboard(this.mainWindow))
 		.add(years, new PanelConfigCurrentYear(this.mainWindow))
-		.add(orientations, new PanelOrientation(this.mainWindow))
 		.add(inscription, new PanelInscription(this.mainWindow))
 		.add(sheet, new PanelStudentSheet(this.mainWindow))
+		.add(orientations, new PanelOrientation(this.mainWindow))
 		.add(config, new PanelConfigGlobal(this.mainWindow))
 		.add(param, new PanelConfigSoftware(this.mainWindow));
 	}
@@ -126,8 +125,11 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 	 */
 	public WorkspacePanel add (MenuItemModel<?> item, DefaultScenePanel scene) {
 		item.setName(scene.getNikeName());
+		scene.setVisible(false);
 		this.sidebar.addItem(item);//item au sidebar
-		this.body.add(scene, scene.getNikeName());//dans le card des scenes
+		if(this.scenes.isEmpty()) {//on ajoute le premier item
+			this.body.add(scene, scene.getNikeName());//dans le card des scenes
+		}
 		this.scenes.put(scene.getNikeName(), scene);
 		this.navbar.createGroup(scene.getNikeName(), scene.getNavbarItems(), scene);//menu pour la scene
 		return this;
@@ -174,8 +176,11 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 
 	@Override
 	public void onAction(MenuItem item) {
+		this.body.removeAll();
+		
 		if(this.scenes.containsKey(item.getModel().getName())) {	
 			DefaultScenePanel scene = this.scenes.get(item.getModel().getName());
+			this.body.add(scene, item.getModel().getName());
 			this.head.removeAll();
 			this.head.add(scene.getHeader(), BorderLayout.CENTER);
 			this.head.repaint();
@@ -192,6 +197,9 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 		} else {
 			this.navbar.hideItems();
 		}
+		
+		this.body.revalidate();
+		this.body.repaint();
 	}
 
 }
