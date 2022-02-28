@@ -18,6 +18,8 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
@@ -117,6 +119,7 @@ public class FormInscription extends DefaultFormPanel{
 
 		container.add(this.fields, BorderLayout.CENTER);
 		container.add(this.panelPicture, BorderLayout.EAST);
+		
 		
 		this.getBody().add(container, BorderLayout.CENTER);
 		this.loadData();

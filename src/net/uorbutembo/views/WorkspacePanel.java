@@ -15,8 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.ImageIcon;
-import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Orientation;
@@ -44,7 +42,6 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 	private final CardLayout layout = new CardLayout();
 	private final Panel body = new Panel(layout);
 	private final Panel head = new Panel(new BorderLayout());
-	private final JScrollPane scroll= new JScrollPane();
 
 	private Map<String, DefaultScenePanel> scenes = new HashMap<>();//references vers tout les scenes
 	private MainWindow mainWindow;
@@ -60,17 +57,10 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 		this.setBorder(null);
 		
 		final Panel container = new Panel(new BorderLayout());
-//		this.scroll.setVerticalScrollBar(new ScrollBar());
-		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-//		this.scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scroll.getViewport().setOpaque(false);
-		scroll.setViewportView(this.body);
-		scroll.setViewportBorder(null);
-		scroll.setBorder(null);
 		
 		this.add(head, BorderLayout.NORTH);
 		container.add(this.navbar, BorderLayout.NORTH);
-		container.add(scroll, BorderLayout.CENTER);
+		container.add(this.body, BorderLayout.CENTER);
 		this.add(container, BorderLayout.CENTER);
 	}
 	
@@ -86,7 +76,7 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 	 * initialisation des composentants de l'espace de travail
 	 * @param sidebar
 	 */
-	public void init(Sidebar sidebar) {
+	public void init (Sidebar sidebar) {
 		this.sidebar = sidebar;
 		MenuItemModel<String> dashbord = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("dashboard")), "Tableau de bord");
 		

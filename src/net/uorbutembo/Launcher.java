@@ -42,7 +42,7 @@ public class Launcher {
 				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			}
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(null, "Une erreur est survenue lors de la connexion à la base de données\n"+e.getMessage(), "Error look and feel", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, "Une erreur est survenue lors du chargement du look-end-feel\n"+e.getMessage(), "Error look and feel", JOptionPane.ERROR_MESSAGE);
 			//Logger.getLogger(Launcher.class.getName()).log( Level.SEVERE, null, e);
 		}
 		

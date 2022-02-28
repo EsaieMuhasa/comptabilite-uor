@@ -8,6 +8,7 @@ import java.awt.BorderLayout;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
 import net.uorbutembo.beans.AcademicYear;
@@ -45,7 +46,7 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 	private SidebarStudents sidebar;
 
 	public PanelStudents(MainWindow mainWindow) {
-		super("Inscription", new ImageIcon(R.getIcon("student")), mainWindow);		
+		super("Inscription", new ImageIcon(R.getIcon("student")), mainWindow, false);//la scene gere les scrollbars	
 		this.currentYear = mainWindow.factory.findDao(AcademicYearDao.class).findCurrent();
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		this.setTitle("Etudiants");
@@ -59,10 +60,23 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 		final JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.sidebar, panelInscrit);
 		split.setDividerLocation(300);
 		
+		final Panel formPanel = new Panel(new BorderLayout());
+		final Panel listPanel = new Panel(new BorderLayout());
+		
+		final FormInscription form = new FormInscription(mainWindow.factory.findDao(InscriptionDao.class));
+		formPanel.add(form, BorderLayout.CENTER);
+		
+		formPanel.setBorder(BODY_BORDER);
+		listPanel.setBorder(BODY_BORDER);
+		
+		final JScrollPane scroll = FormUtil.createVerticalScrollPane(formPanel);
+		
+		listPanel.add(split, BorderLayout.CENTER);
+		
 		//menu secondaire
 		this
-			.addItemMenu(new NavbarButtonModel("inscrits", "Liste des inscrits"), split)
-			.addItemMenu(new NavbarButtonModel("newStudent", "Inscription"), new FormInscription(mainWindow.factory.findDao(InscriptionDao.class)))
+			.addItemMenu(new NavbarButtonModel("inscrits", "Liste des inscrits"), listPanel)
+			.addItemMenu(new NavbarButtonModel("newStudent", "Inscription"), scroll)
 			.addItemMenu(new NavbarButtonModel("oldStudent", "Re-inscription"), new Panel());
 		
 		top.add(title);

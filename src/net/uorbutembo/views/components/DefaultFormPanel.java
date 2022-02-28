@@ -3,7 +3,9 @@
  */
 package net.uorbutembo.views.components;
 
-import static net.uorbutembo.views.forms.FormUtil.*;
+import static net.uorbutembo.views.forms.FormUtil.BKG_END;
+import static net.uorbutembo.views.forms.FormUtil.BORDER_COLOR;
+import static net.uorbutembo.views.forms.FormUtil.DEFAULT_EMPTY_BORDER;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionListener;
@@ -62,14 +64,14 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 		this.footer.add(this.btnSave);
 		this.footer.setBorder(DEFAULT_EMPTY_BORDER);
 		//--footer
-		
+
 		//adding components to panel
-		JPanel middle = new JPanel(new BorderLayout());
+		final JPanel middle = new JPanel(new BorderLayout());
 		middle.add(this.body, BorderLayout.NORTH);
 		middle.add(this.footer, BorderLayout.CENTER);
 		middle.setOpaque(false);
-		
-		this.add(this.header, BorderLayout.NORTH);
+
+		this.add(header, BorderLayout.NORTH);
 		this.add(middle, BorderLayout.CENTER);
 	}
 	

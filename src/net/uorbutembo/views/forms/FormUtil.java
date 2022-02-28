@@ -10,8 +10,11 @@ import java.awt.Font;
 import java.text.SimpleDateFormat;
 
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.swing.CheckBox;
@@ -95,6 +98,19 @@ public abstract class FormUtil {
 		return c;
 	}
 	
+	/**
+	 * Utilitaire de creation d'un scrollpane, scrollable vericallement
+	 * @param view
+	 * @return
+	 */
+	public static final JScrollPane createVerticalScrollPane (JComponent view) {
+		final JScrollPane scroll = new JScrollPane(view);
+		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);	
+		scroll.getViewport().setOpaque(false);
+		scroll.setViewportBorder(null);
+		scroll.setBorder(null);		
+		return scroll;
+	}
 
 	
 	/**

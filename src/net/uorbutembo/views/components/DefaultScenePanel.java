@@ -15,6 +15,7 @@ import java.util.Map;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.swing.Panel;
@@ -26,6 +27,8 @@ import net.uorbutembo.views.forms.FormUtil;
  */
 public abstract class DefaultScenePanel extends Panel implements WorkspaceListener, NavbarButtonListener{
 	private static final long serialVersionUID = 3779735890284766308L;
+	
+	public static final EmptyBorder BODY_BORDER = new EmptyBorder(10, 10, 10, 10); 
 	
 	private ImageIcon icon;
 	private JComponent header;
@@ -41,15 +44,26 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	
 	
 	/**
-	 * 
+	 * ce constructeur fait appel au constructeur du ajoute un parmetre boolean
+	 * par defaut, la vue devies scrollable
 	 * @param title
 	 * @param mainWindow
 	 */
 	public DefaultScenePanel(String title, MainWindow mainWindow) {
+		this(title, mainWindow, true);
+	}
+	
+	/**
+	 * constructeur d'initialisation
+	 * @param title le titlre de la scene
+	 * @param mainWindow la fenetre principale
+	 * @param scrollable, le corp de la scene est-il scrollable??
+	 */
+	public DefaultScenePanel(String title, MainWindow mainWindow, boolean scrollable) {
 		super(new BorderLayout());
 		this.title.setText(title);
 		this.mainWindow = mainWindow;
-		this.init();
+		this.init(scrollable);
 	}
 	
 	/**
@@ -59,11 +73,22 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	 * @param mainWindow
 	 */
 	public DefaultScenePanel(String title, ImageIcon icon, MainWindow mainWindow) {
+		this(title, icon, mainWindow, true);
+	}
+	
+	/**
+	 * Constructeur d'initialisation
+	 * @param title
+	 * @param icon
+	 * @param mainWindow
+	 * @param scrollable
+	 */
+	public DefaultScenePanel(String title, ImageIcon icon, MainWindow mainWindow, boolean scrollable) {
 		super(new BorderLayout());
 		this.title.setText(title);
 		this.icon = icon;
 		this.mainWindow = mainWindow;
-		this.init();
+		this.init(scrollable);
 	}
 	
 	/**
@@ -96,9 +121,10 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	}
 	
 	/**
-	 * 
+	 * initialisation des composants pricipaux de la scene
+	 * @param scrollable
 	 */
-	protected void init() {
+	protected void init(boolean scrollable) {
 		header = new Panel(new BorderLayout());
 		header.add(this.title, BorderLayout.CENTER);
 		header.setBackground(Color.BLACK);
@@ -108,9 +134,20 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 			header.add(icon, BorderLayout.WEST);
 		}
 		
-		this.setBorder(new EmptyBorder(10, 10, 10, 10));
-		//this.add(header, BorderLayout.NORTH);
-		this.add(body, BorderLayout.CENTER);
+		final Panel container = new Panel(new BorderLayout());
+		
+		container.add(body, BorderLayout.CENTER);
+		
+		if (scrollable) {
+			//scrollbar
+			final JScrollPane scroll = FormUtil.createVerticalScrollPane(container);
+			//--scrollbar
+			
+			body.setBorder(BODY_BORDER);
+			this.add(scroll, BorderLayout.CENTER);
+		} else {
+			this.add(container, BorderLayout.CENTER);
+		}
 	}
 	
 	public CardLayout getCard() {
