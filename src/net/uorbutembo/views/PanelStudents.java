@@ -5,7 +5,6 @@ package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
 
-import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -16,7 +15,6 @@ import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.Promotion;
-import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
@@ -36,28 +34,27 @@ import resources.net.uorbutembo.R;
  */
 public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 	private static final long serialVersionUID = -356861410803019685L;
-	
-	private AcademicYear currentYear;
+
 	private InscriptionDao inscriptionDao;
-	private Panel panelInscrit = new Panel(new BorderLayout());
 	
 	private Table table;
+	private InscritTableModel tableModel;
 	private JLabel title = FormUtil.createSubTitle("");
 	private SidebarStudents sidebar;
+	private Panel workspace = new Panel(new BorderLayout());
 
 	public PanelStudents(MainWindow mainWindow) {
 		super("Inscription", new ImageIcon(R.getIcon("student")), mainWindow, false);//la scene gere les scrollbars	
-		this.currentYear = mainWindow.factory.findDao(AcademicYearDao.class).findCurrent();
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		this.setTitle("Etudiants");
 		
-		table = new Table(new InscritTableModel(inscriptionDao, currentYear));
+		tableModel = new InscritTableModel(inscriptionDao);
+		table = new Table(tableModel);
 		table.setBackground(FormUtil.BKG_DARK);
-		Box top = Box.createHorizontalBox();
 		
-		sidebar = new SidebarStudents(mainWindow, this);
+		sidebar = new SidebarStudents(mainWindow, this, tableModel);
 		
-		final JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.sidebar, panelInscrit);
+		final JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.sidebar, workspace);
 		split.setDividerLocation(300);
 		
 		final Panel formPanel = new Panel(new BorderLayout());
@@ -79,9 +76,15 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 			.addItemMenu(new NavbarButtonModel("newStudent", "Inscription"), scroll)
 			.addItemMenu(new NavbarButtonModel("oldStudent", "Re-inscription"), new Panel());
 		
-		top.add(title);
-		panelInscrit.add(top, BorderLayout.NORTH);
-		panelInscrit.add(table, BorderLayout.CENTER);
+		this.initWorkspace();
+	}
+	
+	/**
+	 * Personnalisaion de l'espce de travaille
+	 */
+	private void initWorkspace() {
+		workspace.add(title, BorderLayout.NORTH);
+		workspace.add(table, BorderLayout.CENTER);
 	}
 
 	@Override
@@ -100,26 +103,22 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 
 	@Override
 	public void onSelectAcademicYear(AcademicYear year) {
-		// TODO Auto-generated method stub
-		
+		this.title.setText("Etudiants inscrit pour l'année " + year.getLabel());
 	}
 	
 	@Override
 	public void onSelectFaulty(Faculty faculty, AcademicYear year) {
-		// TODO Auto-generated method stub
-		
+		this.title.setText(year.toString()+" / "+faculty);
 	}
 
 	@Override
 	public void onSelectDepartment(Department department, AcademicYear year) {
-		// TODO Auto-generated method stub
-		
+		this.title.setText(year.toString()+" / "+department.getFaculty().getAcronym()+" / "+department);
 	}
 
 	@Override
 	public void onSelectPromotion(Promotion promotion) {
-		// TODO Auto-generated method stub
-		
+		this.title.setText(promotion.getAcademicYear().toString()+" / "+promotion.getDepartment().getFaculty().getAcronym()+" / "+promotion);
 	}
 
 	@Override

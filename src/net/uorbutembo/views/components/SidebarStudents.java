@@ -4,6 +4,7 @@
 package net.uorbutembo.views.components;
 
 import java.awt.BorderLayout;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,17 +106,18 @@ public class SidebarStudents extends Panel implements TreeSelectionListener{
 	private StudyClassDao studyClassDao;
 	private PromotionDao promotionDao;
 	
-	private SidebarListener listener;
+	private final List<SidebarListener> listeners = new ArrayList<>();
 
 	/**
-	 * 
 	 * @param mainWindow
 	 * @param listener
 	 */
-	public SidebarStudents(MainWindow mainWindow, SidebarListener listener) {
+	public SidebarStudents(MainWindow mainWindow, SidebarListener ...listener) {
 		super(new BorderLayout());
 		
-		this.listener = listener;
+		for (SidebarListener ls : listener) {			
+			this.listeners.add(ls);
+		}
 		
 		//les dao
 		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
@@ -172,7 +174,10 @@ public class SidebarStudents extends Panel implements TreeSelectionListener{
 			this.updateTree(year);
 		});
 		
-		this.updateTree(comboYearModel.getElementAt(comboAcademic.getSelectedIndex()));
+		AcademicYear year = comboYearModel.getElementAt(comboAcademic.getSelectedIndex());
+		this.updateTree(year);
+		
+		
 		tree.setRowHeight(25);
 		tree.setCellRenderer(new TreeCellRender());
 		tree.setBackground(FormUtil.BKG_END);
@@ -243,16 +248,16 @@ public class SidebarStudents extends Panel implements TreeSelectionListener{
 		
 		switch (count) {
 			case 1:
-				this.listener.onSelectAcademicYear(year);
+				this.emitSelectYear(year);;
 				break;
 			case 2:
-				this.listener.onSelectFaulty(faculty, year);
+				this.emitSelectFaculty(faculty, year);
 				break;
 			case 3:
-				this.listener.onSelectDepartment(department, year);
+				this.emitSelectDepartment(department, year);
 				break;
 			case 4:
-				this.listener.onSelectPromotion(promotionDao.find(year, department, study));
+				this.emitSelectPromotion(promotionDao.find(year, department, study));
 				break;
 				
 			default:
@@ -260,4 +265,35 @@ public class SidebarStudents extends Panel implements TreeSelectionListener{
 				break;
 		}
 	}
+	
+	public void addListener (SidebarListener listener) {
+		if(!this.listeners.contains(listener))
+			this.listeners.add(listener);
+	}	
+	
+	//emit events
+	private void emitSelectYear (AcademicYear year) {
+		for (SidebarListener l : listeners) {
+			l.onSelectAcademicYear(year);
+		}
+	}
+	
+	private void emitSelectFaculty (Faculty faculty, AcademicYear year) {
+		for (SidebarListener l : listeners) {
+			l.onSelectFaulty(faculty, year);
+		}
+	}
+	
+	private void emitSelectDepartment (Department department, AcademicYear year) {
+		for (SidebarListener l : listeners) {
+			l.onSelectDepartment(department, year);
+		}
+	}
+	
+	private void emitSelectPromotion (Promotion promotion) {
+		for (SidebarListener l : listeners) {
+			l.onSelectPromotion(promotion);
+		}
+	}
+	// -- emit events
 }

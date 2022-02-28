@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.beans.Faculty;
+import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.Student;
@@ -108,11 +108,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	}
 
 	@Override
-	public List<Inscription> findByPromotion(long promotionId) throws DAOException {
-		return this.findByPromotion(this.promotionDao.findById(promotionId));
-	}
-
-	@Override
 	public List<Inscription> findByPromotion(Promotion promotion) throws DAOException {
 		final String sql = String.format("SELECT * FROM %s WHERE promotion = %d", this.getTableName(), promotion.getId());
 		List<Inscription> data = new ArrayList<>();
@@ -133,10 +128,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		return data;
 	}
 
-	@Override
-	public List<Inscription> findByPromotion(long promotionId, int limit, int offset) throws DAOException {
-		return this.findByPromotion(this.promotionDao.findById(promotionId), limit, offset);
-	}
 
 	@Override
 	public List<Inscription> findByPromotion(Promotion promotion, int limit, int offset) throws DAOException {
@@ -162,20 +153,54 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 
 	@Override
 	public boolean checkByFaculty(long facultyId, long academicYearId) throws DAOException {
-		return this.check(new String[] {"faculty", "academicYear"}, new Object[] {facultyId, academicYearId});
+		final String subSql = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department IN (SELECT %s.id FROM %s WHERE %s.faculty = %d)",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), academicYearId, Promotion.class.getSimpleName(),
+				Department.class.getSimpleName(), Department.class.getSimpleName(), Department.class.getSimpleName(), facultyId);
+		
+		final String sql = String.format("SELECT %s.id FROM %s WHERE promotion IN (%s) LIMIT 1 OFFSET 0", getTableName(), getTableName(),subSql);
+
+		System.out.println(sql);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			
+			return result.next();
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
 	}
 
 	@Override
 	public List<Inscription> findByFaculty(long facultyId, long academicYearId) throws DAOException {
-		// TODO Auto-generated method stub
-		return null;
+		
+		final String subSql = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department IN (SELECT %s.id FROM %s WHERE %s.faculty = %d)",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), academicYearId, Promotion.class.getSimpleName(),
+				Department.class.getSimpleName(), Department.class.getSimpleName(), Department.class.getSimpleName(), facultyId);
+		
+		final String sql = String.format("SELECT %s.id, %s.student, %s.promotion, %s.recordDate, %s.lastUpdate FROM %s WHERE promotion IN (%s)", 
+				getTableName(), getTableName(), getTableName(), getTableName(), getTableName(), getTableName(), subSql);
+		
+		final List<Inscription> data = new ArrayList<>();
+		System.out.println(sql);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next()) {
+				data.add(this.fullMapping(result));
+			}
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune inscription ne correspond aux criteres de selection");
+		
+		return data;
 	}
 
-	@Override
-	public List<Inscription> findByFaculty(Faculty faculty, AcademicYear academicYear) throws DAOException {
-		final String sql = String.format("SELECT * ", getTableName(), faculty.getId(), academicYear);
-		return null;
-	}
 
 	@Override
 	public int countByAcademicYear (long academicYearId) throws DAOException {
@@ -260,6 +285,69 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		}
 		
 		return data;
+	}
+
+	@Override
+	public List<Inscription> findByDepartment(long departmentId, long academicYearId) throws DAOException {
+		
+		final String sql = String.format("SELECT %s.id, %s.student, %s.promotion, %s.recordDate, %s.lastUpdate FROM %s "
+				+ "WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department = %d)", 
+				getTableName(), getTableName(), getTableName(), getTableName(), getTableName(), getTableName(), getTableName(),
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
+				academicYearId, Promotion.class.getSimpleName(), departmentId);
+		
+		final List<Inscription> data = new ArrayList<>();
+		System.out.println(sql);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next()) {
+				data.add(this.fullMapping(result));
+			}
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune inscription ne correspond aux criteres de selection");
+		
+		return data;
+	}
+
+	@Override
+	public boolean checkByDepartment(long departmentId, long academicYearId) throws DAOException {
+		final String sql = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department = %d) LIMIT 1 OFFSET 0", 
+				getTableName(), getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
+				academicYearId, Promotion.class.getSimpleName(), departmentId);
+		System.out.println(sql);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			return result.next();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public int countByDepartment(long departmentId, long academicYearId) throws DAOException {
+		final String sql = String.format("SELECT COUNT(%s.id) AS nombre FROM %s WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department = %d)", 
+				getTableName(), getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
+				academicYearId, Promotion.class.getSimpleName(), departmentId);
+		System.out.println(sql);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if(result.next())
+				return result.getInt("nombre");
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return 0;
 	}
 
 	@Override
