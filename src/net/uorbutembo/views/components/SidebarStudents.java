@@ -127,7 +127,7 @@ public class SidebarStudents extends Panel implements TreeSelectionListener{
 		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
 		//-- dao
 		
-		this.setBorder(new EmptyBorder(0, 0, 0, 5));
+		this.setBorder(new EmptyBorder(5, 10, 5, 5));
 		
 		final Box top = Box.createVerticalBox();
 		final JScrollPane scrollPane = new JScrollPane(tree);

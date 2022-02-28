@@ -39,7 +39,7 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 	
 	private Table table;
 	private InscritTableModel tableModel;
-	private JLabel title = FormUtil.createSubTitle("");
+	private JLabel title = FormUtil.createTitle("");
 	private SidebarStudents sidebar;
 	private Panel workspace = new Panel(new BorderLayout());
 
@@ -64,7 +64,6 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 		formPanel.add(form, BorderLayout.CENTER);
 		
 		formPanel.setBorder(BODY_BORDER);
-		listPanel.setBorder(BODY_BORDER);
 		
 		final JScrollPane scroll = FormUtil.createVerticalScrollPane(formPanel);
 		
@@ -84,7 +83,14 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 	 */
 	private void initWorkspace() {
 		workspace.add(title, BorderLayout.NORTH);
-		workspace.add(table, BorderLayout.CENTER);
+		
+		Panel panel = new Panel (new BorderLayout());
+		JScrollPane scroll = FormUtil.createVerticalScrollPane(panel);
+		panel.setBorder(BODY_BORDER);
+		panel.add(table, BorderLayout.CENTER);
+		
+		table.getTableHeader().setVisible(false);
+		workspace.add(scroll, BorderLayout.CENTER);
 	}
 
 	@Override
