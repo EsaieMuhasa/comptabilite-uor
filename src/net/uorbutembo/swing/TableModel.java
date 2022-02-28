@@ -39,6 +39,15 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	public int getRowCount() {
 		return this.data.size();
 	}
+	
+	/**
+	 * Renvoie la ligne a l'index en parametre
+	 * @param index
+	 * @return
+	 */
+	public T getRow (int index) {
+		return this.data.get(index);
+	}
 
 	@Override
 	public void onCreate(T e, int requestId) {

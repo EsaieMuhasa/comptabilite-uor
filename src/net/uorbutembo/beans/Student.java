@@ -101,5 +101,10 @@ public class Student extends User {
 	public void setOriginalSchool(String originalSchool) {
 		this.originalSchool = originalSchool;
 	}
+	
+	@Override
+	public String toString() {
+		return super.toString();
+	}
 
 }

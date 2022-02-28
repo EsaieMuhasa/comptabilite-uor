@@ -160,5 +160,10 @@ public abstract class User extends DBEntity {
 	public String getFullName () {
 		return this.name+" "+this.postName+" "+this.firstName;
 	}
+	
+	@Override
+	public String toString() {
+		return this.getFullName();
+	}
 
 }

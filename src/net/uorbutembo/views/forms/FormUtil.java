@@ -111,6 +111,15 @@ public abstract class FormUtil {
 		scroll.setBorder(null);		
 		return scroll;
 	}
+	
+	public static final JScrollPane createScrollPane (JComponent view) {
+		final JScrollPane scroll = new JScrollPane(view);
+		//scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);	
+		scroll.getViewport().setOpaque(false);
+		scroll.setViewportBorder(null);
+		scroll.setBorder(null);		
+		return scroll;
+	}
 
 	
 	/**
