@@ -37,7 +37,6 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	private Panel body = new Panel(card);//conteneur
 	private Map<String, JComponent> cards = new HashMap<>();
 	
-	
 	private MainWindow mainWindow;
 	
 	
@@ -103,13 +102,13 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 		header = new Panel(new BorderLayout());
 		header.add(this.title, BorderLayout.CENTER);
 		header.setBackground(Color.BLACK);
-		this.header.setBorder(new EmptyBorder(0, 20, 0, 20));
+		this.header.setBorder(new EmptyBorder(0, 10, 0, 10));
 		if(this.icon != null) {
 			JLabel icon = new JLabel(this.icon);
 			header.add(icon, BorderLayout.WEST);
 		}
 		
-		this.setBorder(new EmptyBorder(10, 20, 10, 20));
+		this.setBorder(new EmptyBorder(10, 10, 10, 10));
 		//this.add(header, BorderLayout.NORTH);
 		this.add(body, BorderLayout.CENTER);
 	}
@@ -130,6 +129,13 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	}
 
 	//item-menu
+	
+	/**
+	 * Ajout d'un item dans la base de menu
+	 * @param item
+	 * @param component
+	 * @return
+	 */
 	public DefaultScenePanel addItemMenu (NavbarButtonModel item, JComponent component) {
 		this.navbarItems.add(item);
 		if(this.cards.isEmpty()) {			
@@ -146,11 +152,11 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 
 	@Override
 	public void onAction(NavbarButton view) {
-		this.body.removeAll();
-		this.body.add(this.cards.get(view.getButtonModel().getName()), view.getButtonModel().getName());
-		this.card.show(this.getBody(), view.getButtonModel().getName());
-		this.body.revalidate();
-		this.body.repaint();
+		body.removeAll();
+		body.add(cards.get(view.getButtonModel().getName()), view.getButtonModel().getName());
+		card.show(body, view.getButtonModel().getName());
+		body.revalidate();
+		body.repaint();
 		view.setCurrent(true);
 		view.getGroup().setCurrent(view);
 	}

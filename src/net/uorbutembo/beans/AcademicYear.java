@@ -102,5 +102,10 @@ public class AcademicYear extends DBEntity {
 	public void setPrevious(AcademicYear previous) {
 		this.previous = previous;
 	}
+	
+	@Override
+	public String toString() {
+		return label;
+	}
 
 }

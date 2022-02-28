@@ -1,11 +1,14 @@
 package net.uorbutembo.swing.charts;
 
-import java.awt.Color;
+import java.awt.BasicStroke;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JComponent;
 
@@ -18,6 +21,8 @@ public class PieRender extends JComponent implements PieModelListener{
 	private static final long serialVersionUID = -1944742088465191107L;
 	
 	private PieModel model;
+	private int radius;//le rayons d'un cercle
+	private List<LineSegment> segments = new ArrayList<>();
 	
 	public PieRender() {}
 
@@ -45,35 +50,51 @@ public class PieRender extends JComponent implements PieModelListener{
 		if(somme > model.getMax()) {
 			max = somme;
 		}
+		segments.clear();
 		
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 		
 		//on prende la plus petie valeur entre la hauteur et la largeur de la vue
-		int ration = (this.getWidth() < this.getHeight())?  this.getWidth() : this.getHeight();
+		this.radius = ((this.getWidth() < this.getHeight())?  this.getWidth() : this.getHeight())/2 - 30;
 		
-		ration -= 30;
 		
 		int start = 0;
-		int translateX = (this.getWidth()/2) - (ration/2),
-				translateY = (this.getHeight()/2) - (ration/2);
+		int translateX = (this.getWidth()/2),
+				translateY = (this.getHeight()/2);
+//		center = new Point(translateX, translateY);
 		
 		g2.translate(translateX, translateY);
-		g2.setColor(Color.BLACK);
-		g2.drawOval(0, 0, ration, ration);
+		
+		Point O = new Point(radius, 0);
+		
 		for (PiePart part : model.getParts()) {
 			double toPercent = (100 / max) * part.getValue();//valeur du part en pourcent
 			BigDecimal big = new BigDecimal((360.0 / 100.0) * toPercent).setScale(0, RoundingMode.HALF_UP);
 			int toDegre = big.intValue();
 //			System.out.println("\t* "+part.getValue()+" -> "+toDegre+" -> "+toPercent+" %");
 			g2.setColor(part.getBackgroundColor());
-			g2.fillArc(0, 0, ration, ration, start, toDegre);
+			g2.fillArc(-radius, -radius, radius*2, radius*2, start, toDegre);
+
+			double toRad = -(big.doubleValue()+start) * (Math.PI / 180);//en rad
+			int rotOx = new BigDecimal((O.getX() * Math.cos(toRad)) - (O.getY() * Math.sin(toRad))).setScale(0, RoundingMode.HALF_UP).intValue();
+			int rotOy = new BigDecimal((O.getX() * Math.sin(toRad)) + (O.getY() * Math.cos(toRad))).setScale(0, RoundingMode.HALF_UP).intValue();
+			
+			LineSegment segment = new LineSegment(new Point(rotOx, rotOy), new Point(0, 0));
+			segments.add(segment);
 			start += toDegre;
 		}
-		int x = ration/3;
+		
+		g2.setColor(this.getBackground());
+		g2.setStroke(new BasicStroke(2f));
+		for (LineSegment segment : segments) {
+			g2.drawLine((int)segment.getStart().getX(), (int)segment.getStart().getY(), (int)segment.getEnd().getX(), (int)segment.getEnd().getY());
+		}
+		
 		g2.setColor(getBackground());
-		g2.fillOval(x, x, ration/3, ration/3);
+		int xy = -radius/3, minRaduis = (radius * 2) /3;
+		g2.fillOval(xy, xy, minRaduis, minRaduis);
 		
 	}
 

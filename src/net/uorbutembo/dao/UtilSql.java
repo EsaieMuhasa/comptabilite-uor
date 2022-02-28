@@ -285,6 +285,40 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 		
 		return 0;
 	}
+	
+	/**
+	 * Comptage de occurances.
+	 * le filtrage s'effectue sur le colone en parametre
+	 * @param collumnName
+	 * @param values
+	 * @return
+	 * @throws DAOException
+	 */
+	protected synchronized int countAll (String [] collumnName, Object [] values) throws DAOException {
+		
+		String sql = " WHERE ";
+		for (int i = 0, max=collumnName.length; i<max; i++) {
+			sql += collumnName[i] +" = ?"+ (i == max-1? "":" AND ");
+		}
+		
+		final String SQL_QUERY = String.format("SELECT COUNT(DISTINCT *) AS nombre FROM %s %s", this.getViewName(), sql);
+		System.out.println(SQL_QUERY);
+		try (
+				Connection connection =  this.factory.getConnection();
+				PreparedStatement statement = prepare(SQL_QUERY, connection, false, values);
+				ResultSet result = statement.executeQuery();
+			) {
+			
+			if(result.next()) {
+				return result.getInt("nombre");
+			} 
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return 0;
+	}
 
 	@Override
 	public synchronized boolean checkByRecordDate(Date dateMin, Date dateMax) throws DAOException {

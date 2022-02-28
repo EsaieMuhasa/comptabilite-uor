@@ -29,6 +29,16 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 		super();
 		daoInterface.addListener(this);
 	}
+	
+	@Override
+	public boolean isCellEditable(int rowIndex, int columnIndex) {
+		return false;
+	}
+	
+	@Override
+	public int getRowCount() {
+		return this.data.size();
+	}
 
 	@Override
 	public void onCreate(T e, int requestId) {

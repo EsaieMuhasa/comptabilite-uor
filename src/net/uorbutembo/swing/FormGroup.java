@@ -45,6 +45,17 @@ public class FormGroup <T> extends Panel{
 	}
 	
 	/**
+	 * utilitaire de creation d'un edit text
+	 * @param <T>
+	 * @param field
+	 * @return
+	 */
+	public static <T> FormGroup <T> createTextField (TextField<T> field) {
+		FormGroup<T> form = new FormGroup<>(field);
+		return form;
+	}
+	
+	/**
 	 * Utilitaire de creation d'u combo box
 	 * @param <T>
 	 * @param label

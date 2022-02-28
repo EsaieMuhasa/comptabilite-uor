@@ -32,6 +32,7 @@ import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.Button;
+import net.uorbutembo.swing.ListCellRenderer;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.components.DefaultFormPanel;
 import resources.net.uorbutembo.R;
@@ -83,6 +84,8 @@ public class FormPromotion extends DefaultFormPanel {
 		for (StudyClass s : studys) {
 			this.studyClassModel.addElement(s);
 		}
+		
+		this.departments.setCellRenderer(new ListCellRenderer(departments));
 
 	}
 	

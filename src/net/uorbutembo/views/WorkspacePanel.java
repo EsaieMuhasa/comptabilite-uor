@@ -91,8 +91,7 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 		MenuItemModel<String> dashbord = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("dashboard")), "Tableau de bord");
 		
 		MenuItemModel<String> years = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("favorite")), "Config "+this.currentYear.getLabel());
-		MenuItemModel<String> inscription = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("student")), "Inscription "+this.currentYear.getLabel());
-		MenuItemModel<String> sheet = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("card")), "Fiches individuels");
+		MenuItemModel<String> students = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("student")), "Etudiants ");
 		MenuItemModel<Orientation> orientations = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("database")), "Orientations");
 
 		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Autres configuration");
@@ -111,8 +110,7 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 		this
 		.add(dashbord, new PanelDashboard(this.mainWindow))
 		.add(years, new PanelConfigCurrentYear(this.mainWindow))
-		.add(inscription, new PanelInscription(this.mainWindow))
-		.add(sheet, new PanelStudentSheet(this.mainWindow))
+		.add(students, new PanelStudents(this.mainWindow))
 		.add(orientations, new PanelOrientation(this.mainWindow))
 		.add(config, new PanelConfigGlobal(this.mainWindow))
 		.add(param, new PanelConfigSoftware(this.mainWindow));

@@ -65,7 +65,7 @@ class StudentDaoSql extends UserDaoSql<Student> implements StudentDao {
 		s.setFirstName(result.getString("lastName"));
 		s.setEmail(result.getString("email"));
 		s.setBirthPlace(result.getString("birthPlace"));
-		s.setMatricul(result.getString("matricule"));
+		s.setMatricul(result.getString("matricul"));
 		s.setPicture(result.getString("picture"));
 		s.setBirthDate(new Date(result.getLong("birthDate")));
 		s.setRecordDate(new Date(result.getLong("recordDate")));

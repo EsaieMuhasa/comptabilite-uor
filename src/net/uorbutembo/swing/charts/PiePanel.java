@@ -57,6 +57,7 @@ public class PiePanel extends Panel {
 		this.add(render, BorderLayout.CENTER);
 		this.add(title, BorderLayout.NORTH);
 		this.render.setBackground(this.getBackground());
+		this.setBackground(FormUtil.BKG_DARK);
 	}
 
 	/**

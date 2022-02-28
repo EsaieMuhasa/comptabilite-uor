@@ -48,6 +48,17 @@ public class DefaultPiePart implements PiePart {
 
 	/**
 	 * @param backgroundColor
+	 * @param borderColor
+	 * @param value
+	 * @param label
+	 */
+	public DefaultPiePart(Color backgroundColor, Color borderColor, double value, String label) {
+		this(backgroundColor, value, label);
+		this.borderColor = borderColor;
+	}
+
+	/**
+	 * @param backgroundColor
 	 * @param name
 	 */
 	public DefaultPiePart(Color backgroundColor, String name) {

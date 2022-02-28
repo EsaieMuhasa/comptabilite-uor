@@ -45,11 +45,6 @@ public class PromotionTableModel extends TableModel<Promotion> {
 	}
 
 	@Override
-	public int getRowCount() {
-		return this.data.size();
-	}
-
-	@Override
 	public int getColumnCount() {
 		return 4;
 	}

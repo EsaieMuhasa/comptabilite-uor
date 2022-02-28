@@ -23,16 +23,15 @@ public class PanelDashboard extends DefaultScenePanel {
 	public PanelDashboard(MainWindow mainWindow) {
 		super("Tableau de board", new ImageIcon(R.getIcon("dashboard")), mainWindow);
 		
-		DefaultPieModel model = new DefaultPieModel(1000);
+		DefaultPieModel model = new DefaultPieModel(360);
 		
-		model.addPart(new DefaultPiePart(COLORS[0], 100, "valeur"));
-		model.addPart(new DefaultPiePart(COLORS[1], 200, "valeur"));
-		model.addPart(new DefaultPiePart(COLORS[2], 50, "valeur"));
-		model.addPart(new DefaultPiePart(COLORS[3], 70, "valeur"));
-		model.addPart(new DefaultPiePart(COLORS[4], 350, "valeur"));
-		model.addPart(new DefaultPiePart(COLORS[5], 30, "valeur"));
-		model.addPart(new DefaultPiePart(COLORS[6], 90, "valeur"));
-		model.addPart(new DefaultPiePart(COLORS[7], 120, "valeur"));
+		model.addPart(new DefaultPiePart(COLORS[0], COLORS[6], 60, "valeur"));
+		model.addPart(new DefaultPiePart(COLORS[8], COLORS[5], 60, "valeur"));
+		model.addPart(new DefaultPiePart(COLORS[2], COLORS[4], 60, "valeur"));
+		model.addPart(new DefaultPiePart(COLORS[3], COLORS[3], 30, "valeur"));
+		model.addPart(new DefaultPiePart(COLORS[4], COLORS[2], 30, "valeur"));
+		model.addPart(new DefaultPiePart(COLORS[5], COLORS[8], 30, "valeur"));
+		model.addPart(new DefaultPiePart(COLORS[6], COLORS[0], 90, "valeur"));
 		
 		this.getBody().add(new PiePanel(model));
 	}

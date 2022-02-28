@@ -103,9 +103,8 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	}
 
 	@Override
-	public List<Inscription> countByPromotion(long promotionId) throws DAOException {
-		// TODO Auto-generated method stub
-		return null;
+	public int countByPromotion(long promotionId) throws DAOException {
+		return this.countAll(new String[] {"promotion"}, new Object[] {promotionId});
 	}
 
 	@Override
@@ -143,7 +142,7 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	public List<Inscription> findByPromotion(Promotion promotion, int limit, int offset) throws DAOException {
 		final String sql = String.format("SELECT * FROM %s WHERE promotion = %d LIMIT %d OFFSET %d", 
 												this.getTableName(), promotion.getId(), limit, offset);
-		List<Inscription> data = new ArrayList<>();
+		final List<Inscription> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -163,8 +162,7 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 
 	@Override
 	public boolean checkByFaculty(long facultyId, long academicYearId) throws DAOException {
-		// TODO Auto-generated method stub
-		return false;
+		return this.check(new String[] {"faculty", "academicYear"}, new Object[] {facultyId, academicYearId});
 	}
 
 	@Override
@@ -180,13 +178,115 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	}
 
 	@Override
-	public int countByFaculty(long facultyId, int academicYearId) throws DAOException {
-		// TODO Auto-generated method stub
+	public int countByAcademicYear (long academicYearId) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT COUNT(*) AS nombre FROM %s INNER JOIN %s ON %s.promotion = %s.id WHERE %s.academicYear = %d",
+				getTableName(), Promotion.class.getSimpleName(), getTableName(), Promotion.class.getSimpleName(),
+				Promotion.class.getSimpleName(), academicYearId);
+		System.out.println(SQL_QUERY);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY)) {
+			if(result.next()) {
+				return result.getInt("nombre");
+			}
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
 		return 0;
 	}
 
 	@Override
-	protected Inscription mapping(ResultSet result) throws SQLException, DAOException {
+	public boolean checkByAcademicYear (long academicYearId) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT * FROM %s INNER JOIN %s ON %s.promotion = %s.id WHERE %s.academicYear = %d LIMIT 1",
+				getTableName(), Promotion.class.getSimpleName(), getTableName(), Promotion.class.getSimpleName(),
+				Promotion.class.getSimpleName(), academicYearId);
+		System.out.println(SQL_QUERY);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY)) {
+			return result.next();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public List<Inscription> findByAcademicYear (AcademicYear academicYear) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d )",
+				getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
+				Promotion.class.getSimpleName(), academicYear.getId());
+		System.out.println(SQL_QUERY);
+		List<Inscription> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY)) {
+			while(result.next()) {
+				data.add(this.fullMapping(result));
+			}
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty()) {
+			throw new DAOException("Auncune inscription pour l'annee academique "+academicYear.getLabel());
+		}
+		
+		return data;
+	}
+
+	@Override
+	public List<Inscription> findByAcademicYear (AcademicYear academicYear, int limit, int offset) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d ) LIMIT %d OFFSET %d",
+				getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
+				Promotion.class.getSimpleName(), academicYear.getId(), limit, offset);
+		System.out.println(SQL_QUERY);
+		List<Inscription> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY)) {
+			while(result.next()) {
+				data.add(this.fullMapping(result));
+			}
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty()) {
+			throw new DAOException("Auncune inscription pour l'annee academique "+academicYear.getLabel());
+		}
+		
+		return data;
+	}
+
+	@Override
+	public List<Inscription> search (String... value) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Inscription> search (AcademicYear year, String... value) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Inscription> search (Promotion promotion, String... value) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countByFaculty (long facultyId, long academicYearId) throws DAOException {
+		return this.countAll(new String[] {"faculty", "academicYear"}, new Object[] {facultyId, academicYearId});
+	}
+
+	@Override
+	protected Inscription mapping (ResultSet result) throws SQLException, DAOException {
 		Inscription in = new Inscription(result.getLong("id"));
 		in.setStudent(new Student(result.getLong("student")));
 		in.setPromotion(new Promotion(result.getLong("promotion")));
@@ -197,7 +297,7 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		return in;
 	}
 	
-	protected Inscription mapping(ResultSet result, Student student, Promotion promotion) throws SQLException, DAOException {
+	protected Inscription mapping (ResultSet result, Student student, Promotion promotion) throws SQLException, DAOException {
 		Inscription in = new Inscription(result.getLong("id"));
 		in.setStudent(student == null ? new Student(result.getLong("student")) : student);
 		in.setPromotion(promotion == null ? new Promotion(result.getLong("promotion")) : promotion);
@@ -209,7 +309,7 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	}
 	
 	@Override
-	protected Inscription fullMapping(ResultSet result) throws SQLException, DAOException {
+	protected Inscription fullMapping (ResultSet result) throws SQLException, DAOException {
 		Inscription in = new Inscription(result.getLong("id"));
 		in.setStudent(this.studentDao.findById(result.getLong("student")));
 		in.setPromotion(this.promotionDao.findById(result.getLong("promotion")));
@@ -220,7 +320,7 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		return in;
 	}
 	
-	protected Inscription fullMapping(ResultSet result, Student student, Promotion promotion) throws SQLException, DAOException {
+	protected Inscription fullMapping (ResultSet result, Student student, Promotion promotion) throws SQLException, DAOException {
 		Inscription in = new Inscription(result.getLong("id"));
 		in.setStudent(student == null ? this.studentDao.findById(result.getLong("student")) : student);
 		in.setPromotion(promotion == null ? this.promotionDao.findById(result.getLong("promotion")) : promotion);
@@ -232,7 +332,7 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	}
 
 	@Override
-	protected String getTableName() {
+	protected String getTableName () {
 		return Inscription.class.getSimpleName();
 	}
 
