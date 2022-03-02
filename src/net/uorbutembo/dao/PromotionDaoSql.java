@@ -23,11 +23,13 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 	
 	private DepartmentDao departmentDao;
 	private StudyClassDao studyClassDao;
+	private AcademicYearDao academicYearDao;
 
 	public PromotionDaoSql(DefaultSqlDAOFactory factory) {
 		super(factory);
-		this.departmentDao = factory.findDao(DepartmentDao.class);
-		this.studyClassDao = factory.findDao(StudyClassDao.class);
+		departmentDao = factory.findDao(DepartmentDao.class);
+		studyClassDao = factory.findDao(StudyClassDao.class);
+		academicYearDao = factory.findDao(AcademicYearDao.class);
 	}
 
 	@Override
@@ -178,6 +180,7 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 		p.setAcademicYear(result.getLong("academicYear"));
 		p.setDepartment(this.departmentDao.findById(result.getLong("department")));
 		p.setStudyClass(this.studyClassDao.findById(result.getLong("studyClass")));
+		p.setAcademicYear(this.academicYearDao.findById(result.getLong("academicYear")));
 		p.setRecordDate(new Date(result.getLong("recordDate")));
 		if(result.getLong("lastUpdate") != 0) {
 			p.setLastUpdate(new Date(result.getLong("lastUpdate")));

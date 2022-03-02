@@ -63,7 +63,7 @@ public class PaymentFee extends DBEntity {
 	/**
 	 * @param id
 	 */
-	public PaymentFee(Long id) {
+	public PaymentFee(long id) {
 		super(id);
 	}
 

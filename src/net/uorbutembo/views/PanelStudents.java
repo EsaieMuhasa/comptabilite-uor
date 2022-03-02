@@ -57,12 +57,13 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 	private Button btnClose = new Button(new ImageIcon(R.getIcon("close")));
 	
 	private JPopupMenu popup = new JPopupMenu();
-	private JMenuItem itemFiche = new JMenuItem("Fiche individuel", new ImageIcon(R.getIcon("card")));
-	private JMenuItem itemUpdate = new JMenuItem("Editer l'identité", new ImageIcon(R.getIcon("usredit")));
-	private JMenuItem itemPalmaresse = new JMenuItem("Consulter le palmaresse", new ImageIcon(R.getIcon("report")));
-	private JMenuItem itemExportPDF = new JMenuItem("Exporter en PDF", new ImageIcon(R.getIcon("pdf")));
-	private JMenuItem itemExportEXEL = new JMenuItem("Exporter en Excel", new ImageIcon(R.getIcon("export")));
 	
+	private JMenuItem itemStudentFiche = new JMenuItem("Ouvrir la fiche individuel", new ImageIcon(R.getIcon("card")));
+	private JMenuItem itemStudentUpdate = new JMenuItem("Editer l'identité", new ImageIcon(R.getIcon("usredit")));
+
+	private JMenuItem itemListSolde = new JMenuItem("Solde des comptes", new ImageIcon(R.getIcon("report")));
+	private JMenuItem itemListExportPDF = new JMenuItem("Exporter la liste au format PDF", new ImageIcon(R.getIcon("pdf")));
+	private JMenuItem itemListExportEXEL = new JMenuItem("Exporter la liste au format Excel", new ImageIcon(R.getIcon("export")));
 
 	public PanelStudents(MainWindow mainWindow) {
 		super("Inscription", new ImageIcon(R.getIcon("student")), mainWindow, false);//la scene gere les scrollbars	
@@ -135,12 +136,17 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 		scene.add(scrollTable, BorderLayout.CENTER);
 		
 		//popup
-		popup.add(itemFiche);
-		popup.add(itemExportEXEL);
-		popup.add(itemExportPDF);
+		popup.add(itemStudentFiche);
+		popup.add(itemStudentUpdate);
 		popup.addSeparator();
-		popup.add(itemUpdate);
-		popup.add(itemPalmaresse);
+		popup.add(itemListSolde);
+		popup.add(itemListExportPDF);
+		popup.add(itemListExportEXEL);
+		
+		itemStudentFiche.addActionListener(event -> {
+			Inscription in = tableModel.getRow(table.getSelectedRow());
+			onSelectInscription(in);
+		});
 		// --popup
 		
 		table.addMouseListener(new MouseAdapter() {
@@ -155,17 +161,26 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				
-				if(table.getSelectedRow() <= -1) 
-					return;
-				
-				Inscription in = tableModel.getRow(table.getSelectedRow());
-				if(e.isPopupTrigger() && in!=null) {
-					popup.setLabel(in.getStudent().toString());
+				if(e.isPopupTrigger()) {
+					
+					if(tableModel.getRowCount() == 0)
+						return;
+					
+					if(table.getSelectedRow() <= -1) {
+						itemStudentFiche.setEnabled(false);
+						itemStudentUpdate.setEnabled(false);
+					} else {
+						Inscription in = tableModel.getRow(table.getSelectedRow());
+						popup.setLabel(in.getStudent().toString());
+						itemStudentFiche.setEnabled(true);
+						itemStudentUpdate.setEnabled(true);
+					}
+					
 					int x = e.getX(), y = e.getY();
 					popup.show(table, x, y);
 				}
 			}
+			
 		});
 	}
 
@@ -186,34 +201,46 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 	@Override
 	public void onSelectAcademicYear(AcademicYear year) {
 		this.title.setText("Etudiants inscrit pour l'année " + year.getLabel());
+		
+		if(btnClose.isVisible())
+			btnClose.doClick();
 	}
 	
 	@Override
 	public void onSelectFaulty(Faculty faculty, AcademicYear year) {
 		this.title.setText(year.toString()+" / "+faculty);
+		if(btnClose.isVisible())
+			btnClose.doClick();
 	}
 
 	@Override
 	public void onSelectDepartment(Department department, AcademicYear year) {
 		this.title.setText(year.toString()+" / "+department.getFaculty().getAcronym()+" / "+department);
+		if(btnClose.isVisible())
+			btnClose.doClick();
 	}
 
 	@Override
 	public void onSelectPromotion(Promotion promotion) {
 		this.title.setText(promotion.getAcademicYear().toString()+" / "+promotion.getDepartment().getFaculty().getAcronym()+" / "+promotion);
+		if(btnClose.isVisible())
+			btnClose.doClick();
 	}
 	
 	private static final EmptyBorder BORDER_CONTENT_SHEET = new EmptyBorder(0, 5, 5, 0);
 
 	@Override
 	public void onSelectInscription(Inscription inscription) {
+		Promotion promotion = inscription.getPromotion();
+		
+		title.setName(title.getText());
+		this.title.setText(promotion.getAcademicYear().toString()+" / "+promotion.getDepartment().getFaculty().getAcronym()+" / "+promotion+" / "+inscription.getStudent().getMatricul());
+		
 		scene.removeAll();
 		scene.add(sheet, BorderLayout.CENTER);
 		scene.revalidate();
 		scene.repaint();
 		scene.setBorder(BORDER_CONTENT_SHEET);
-		title.setName(title.getText());
-		title.setText(inscription.getStudent().toString());
 		btnClose.setVisible(true);
 		sheet.setInscription(inscription);
 	}

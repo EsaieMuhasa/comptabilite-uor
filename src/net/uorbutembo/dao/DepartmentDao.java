@@ -16,12 +16,6 @@ import net.uorbutembo.beans.Faculty;
 public interface DepartmentDao extends OrientationDao<Department> {
 	
 	/**
-	 * Renvoie un reference vers l'instance du DAO des faculte
-	 * @return
-	 */
-	public FacultyDao getFacultyDao () ;
-	
-	/**
 	 * verifie si la faculte a aumon un departement
 	 * @param facultyId
 	 * @return

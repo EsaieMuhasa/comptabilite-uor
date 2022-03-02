@@ -138,9 +138,9 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(sql)) {
-			while (result.next()) {
+			while (result.next())
 				data.add(this.fullMapping(result, null, promotion));
-			}
+			
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
@@ -149,6 +149,16 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 			throw new DAOException("Aucune inscription pour dans la promotion "+promotion.toString());
 		
 		return data;
+	}
+
+	@Override
+	public List<Inscription> findByPromotion(long promotionId, int limit, int offset) throws DAOException {
+		return findByPromotion(this.factory.findDao(PromotionDao.class).findById(promotionId), limit, offset);
+	}
+
+	@Override
+	public List<Inscription> findByPromotion (long promotionId) throws DAOException {
+		return findByPromotion(this.factory.findDao(PromotionDao.class).findById(promotionId));
 	}
 
 	@Override
@@ -188,9 +198,8 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(sql)) {
-			while (result.next()) {
+			while (result.next()) 
 				data.add(this.fullMapping(result));
-			}
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
@@ -212,9 +221,8 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL_QUERY)) {
-			if(result.next()) {
+			if(result.next())
 				return result.getInt("nombre");
-			}
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
@@ -238,35 +246,34 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	}
 
 	@Override
-	public List<Inscription> findByAcademicYear (AcademicYear academicYear) throws DAOException {
+	public List<Inscription> findByAcademicYear (long academicYear) throws DAOException {
 		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d )",
 				getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
-				Promotion.class.getSimpleName(), academicYear.getId());
+				Promotion.class.getSimpleName(), academicYear);
 		System.out.println(SQL_QUERY);
 		List<Inscription> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL_QUERY)) {
-			while(result.next()) {
+			while(result.next())
 				data.add(this.fullMapping(result));
-			}
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
 		
 		if(data.isEmpty()) {
-			throw new DAOException("Auncune inscription pour l'annee academique "+academicYear.getLabel());
+			throw new DAOException("Auncune inscription pour l'annee academique "+academicYear);
 		}
 		
 		return data;
 	}
 
 	@Override
-	public List<Inscription> findByAcademicYear (AcademicYear academicYear, int limit, int offset) throws DAOException {
+	public List<Inscription> findByAcademicYear (long academicYear, int limit, int offset) throws DAOException {
 		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d ) LIMIT %d OFFSET %d",
 				getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
-				Promotion.class.getSimpleName(), academicYear.getId(), limit, offset);
+				Promotion.class.getSimpleName(), academicYear, limit, offset);
 		System.out.println(SQL_QUERY);
 		List<Inscription> data = new ArrayList<>();
 		try (
@@ -281,7 +288,7 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		}
 		
 		if(data.isEmpty()) {
-			throw new DAOException("Auncune inscription pour l'annee academique "+academicYear.getLabel());
+			throw new DAOException("Auncune inscription pour l'annee academique "+academicYear);
 		}
 		
 		return data;
@@ -351,6 +358,100 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	}
 
 	@Override
+	public int countByFaculty(long faculty, long year) throws DAOException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public List<Inscription> findByDepartment(long departmentId, long academicYearId, int limit, int offset)
+			throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Inscription> findByStudyClass(long studyClassId, long yearId, int limit, int offset)
+			throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Inscription> findByStudyClass(long studyClassId, long yearId) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countByStudyClass(long studyClassId, long yearId) throws DAOException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean checkByStudyClass(long studyClass, long yearId) throws DAOException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+	@Override
+	public List<Inscription> findByAcademicYear(long academicYearId, Date min, Date max) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countByAcademicYear(long academicYearId, Date min, Date max) throws DAOException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public List<Inscription> findByFaculty(long faculty, long year, Date min, Date max) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countByFaculty(long faculty, long year, Date min, Date max) throws DAOException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public List<Inscription> findByDepartment(long departmentId, long academicYearId, Date min, Date max)
+			throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countByDepartment(long departmentId, long academicYearId, Date min, Date max) throws DAOException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public List<Inscription> findByStudyClass(long studyClassId, long yearId, Date min, Date max) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Inscription> findByPromotion(long promotion, Date min, Date max) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countByPromotion(long promotion, Date min, Date max) throws DAOException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
 	public List<Inscription> search (String... value) throws DAOException {
 		// TODO Auto-generated method stub
 		return null;
@@ -366,11 +467,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	public List<Inscription> search (Promotion promotion, String... value) throws DAOException {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	@Override
-	public int countByFaculty (long facultyId, long academicYearId) throws DAOException {
-		return this.countAll(new String[] {"faculty", "academicYear"}, new Object[] {facultyId, academicYearId});
 	}
 
 	@Override

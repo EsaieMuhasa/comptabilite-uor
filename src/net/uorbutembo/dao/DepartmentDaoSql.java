@@ -33,8 +33,10 @@ public class DepartmentDaoSql extends OrientationDaoSql<Department> implements D
 	}
 	
 	@Override
-	public FacultyDao getFacultyDao() {
-		return this.facultyDao;
+	public Department findById(long id) throws DAOException {
+		Department d = super.findById(id);
+		d.setFaculty(this.facultyDao.findById(d.getFaculty().getId()));
+		return d;
 	}
 
 	@Override

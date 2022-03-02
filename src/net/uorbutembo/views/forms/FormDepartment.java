@@ -37,7 +37,7 @@ public class FormDepartment extends DefaultFormPanel {
 	public FormDepartment(DepartmentDao departmentDao) {
 		super();
 		this.departmentDao = departmentDao;
-		this.facultyDao = departmentDao.getFacultyDao();
+		this.facultyDao = departmentDao.getFactory().findDao(FacultyDao.class);
 		this.setTitle("Formulaire d'enregistrement");
 		this.init();
 	}
