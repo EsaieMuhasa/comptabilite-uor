@@ -93,7 +93,7 @@ class FeePromotionDaoSql extends UtilSql<FeePromotion> implements FeePromotionDa
 				ResultSet result = statement.executeQuery(sql);
 			) {
 			while(result.next()) {				
-				FeePromotion  fee = this.mapping(result, true, false);
+				FeePromotion  fee = this.mapping(result);
 				fee.setAcademicFee(academicFee);
 				data.add(fee);
 			}			
@@ -117,8 +117,7 @@ class FeePromotionDaoSql extends UtilSql<FeePromotion> implements FeePromotionDa
 				ResultSet result = statement.executeQuery(sql);
 			) {
 			while(result.next()) {				
-				FeePromotion  fee = this.mapping(result, true, false);
-				fee.setAcademicFee(academicFee);
+				FeePromotion  fee = this.mapping(result, null, academicFee);
 				data.add(fee);
 			}			
 		} catch (SQLException e) {
@@ -134,7 +133,7 @@ class FeePromotionDaoSql extends UtilSql<FeePromotion> implements FeePromotionDa
 	@Override
 	protected FeePromotion mapping(ResultSet result) throws SQLException, DAOException {
 		FeePromotion f = new FeePromotion(result.getLong("id"));
-		f.setAcademicFee(new AcademicFee(result.getLong("academicFee")));
+		f.setAcademicFee(this.academicFeeDao.findById(result.getLong("academicFee")));
 		f.setPromotion(new Promotion(result.getLong("promotion")));
 		f.setRecordDate(new Date(result.getLong("recordDate")));
 		if(result.getLong("lastUpdate") != 0) {
@@ -143,16 +142,13 @@ class FeePromotionDaoSql extends UtilSql<FeePromotion> implements FeePromotionDa
 		return f;
 	}
 	
-	protected FeePromotion mapping(ResultSet result, boolean promotion, boolean fee) throws SQLException, DAOException {
+	protected FeePromotion mapping(ResultSet result, Promotion promotion, AcademicFee fee) throws SQLException, DAOException {
 		FeePromotion f = new FeePromotion(result.getLong("id"));
 		f.setRecordDate(new Date(result.getLong("recordDate")));
 		
-		if(fee) {
-			f.setAcademicFee(this.academicFeeDao.findById(result.getLong("academicFee")));
-		}
-		if(promotion) {
-			f.setPromotion(this.promotionDao.findById(result.getLong("promotion")));
-		}
+		f.setAcademicFee(fee == null ? this.academicFeeDao.findById(result.getLong("academicFee") ) : fee);
+		f.setPromotion(promotion == null ? this.promotionDao.findById(result.getLong("promotion")) : promotion);
+
 		if(result.getLong("lastUpdate") != 0) {
 			f.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}

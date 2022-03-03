@@ -20,23 +20,19 @@ public interface AcademicFeeDao extends DAOInterface<AcademicFee> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public default boolean checkByAcademicYear (long yearId) throws DAOException {
+	default boolean checkByAcademicYear (long yearId) throws DAOException {
 		return this.check("academicYear", yearId);
 	}
 	
-	/**
-	 * renvoie la configuration des frais pour l'annee academique en parametre
-	 * @param yearId
-	 * @return
-	 * @throws DAOException
-	 */
-	public List<AcademicFee> findByAcademicYear (long yearId) throws DAOException;
 	
-	/**
+	/** 
 	 * Renvoie tout les  frais academique qui refrenceie l'annee academique en parametre
 	 * @param year
 	 * @return
 	 * @throws DAOException
 	 */
-	public List<AcademicFee> findByAcademicYear (AcademicYear year)  throws DAOException;
+	List<AcademicFee> findByAcademicYear (AcademicYear year)  throws DAOException;
+	default List<AcademicFee> findByAcademicYear (long yearId) throws DAOException{
+		return findByAcademicYear(getFactory().findDao(AcademicYearDao.class).findById(yearId));
+	}
 }

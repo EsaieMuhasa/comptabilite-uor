@@ -35,7 +35,7 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 			long id = insertInTable(
 					new String[] {
 							"inscription", "amount", "receivedDate", "receiptNumber",
-							"slipDate", "slipNumber", "wording"
+							"slipDate", "slipNumber", "wording", "recordDate"
 					},
 					new Object[] {
 							p.getInscription().getId(),
@@ -44,9 +44,11 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 							p.getReceiptNumber(),
 							p.getSlipDate().getTime(),
 							p.getSlipNumber(),
-							p.getWording()
+							p.getWording(),
+							p.getRecordDate().getTime()
 					});
 			p.setId(id);
+			emitOnCreate(p);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
@@ -57,7 +59,7 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		try {
 			updateInTable(new String[] {
 								"amount", "receivedDate", "receiptNumber",
-								"slipDate", "slipNumber", "wording"
+								"slipDate", "slipNumber", "wording", "lastUpdate"
 						},
 						new Object[] {
 								p.getAmount(),
@@ -65,8 +67,11 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 								p.getReceiptNumber(),
 								p.getSlipDate().getTime(),
 								p.getSlipNumber(),
-								p.getWording()
+								p.getWording(),
+								p.getLastUpdate().getTime()
 						}, id);
+			p.setId(id);
+			emitOnUpdate(p);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
@@ -245,15 +250,15 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 
 	@Override
 	public List<PaymentFee> findByInscription(Inscription inscription) throws DAOException {
-		final String sql = String.format("SELECT * FROM %s WHERE inscription = %d", this.getTableName(), inscription.getId());
+		final String sql = String.format("SELECT * FROM %s WHERE inscription = %d ORDER BY recordDate DESC", this.getTableName(), inscription.getId());
 		List<PaymentFee> data = new ArrayList<>();
+		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(sql)) {
-			while (result.next()) {
+			while (result.next())
 				data.add(this.mapping(result, inscription));
-			}
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
@@ -266,15 +271,7 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 
 	@Override
 	protected PaymentFee mapping(ResultSet result) throws SQLException, DAOException {
-		PaymentFee fee = new PaymentFee(result.getLong("id"));
-		fee.setRecordDate(new Date(result.getLong("recordDate")));
-		fee.setInscription(this.inscriptionDao.findById(result.getLong("inscription")));
-		fee.setAmount(result.getFloat("amount"));
-		fee.setReceivedDate(new Date(result.getLong("receivedDate")));
-		fee.setReceiptNumber(result.getString("receiptNumber"));
-		fee.setSlipDate(new Date(result.getLong("slipDate")));
-		fee.setSlipNumber(result.getString("slipNumber"));
-		return fee;
+		return mapping(result, this.inscriptionDao.findById(result.getLong("inscription")));
 	}
 	
 	/**
@@ -294,6 +291,7 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		fee.setReceiptNumber(result.getString("receiptNumber"));
 		fee.setSlipDate(new Date(result.getLong("slipDate")));
 		fee.setSlipNumber(result.getString("slipNumber"));
+		fee.setWording(result.getString("wording"));
 		return fee;
 	}
 
