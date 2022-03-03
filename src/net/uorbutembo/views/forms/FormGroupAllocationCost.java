@@ -178,6 +178,14 @@ public class FormGroupAllocationCost extends Panel {
 
 	}
 	
+	/**
+	 * Liberation des resources utiliser par le groupe
+	 */
+	public void dispose() {
+		// TODO Auto-generated method stub
+
+	}
+	
 	@Override
 	protected void paintBorder(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g;

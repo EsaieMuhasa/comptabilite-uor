@@ -15,13 +15,13 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JOptionPane;
+import javax.swing.JRadioButton;
 
 import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.FeePromotion;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.dao.AcademicFeeDao;
-import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.FeePromotionDao;
@@ -61,29 +61,7 @@ public class FormFeePromotion extends DefaultFormPanel {
 		this.promotionDao  = feePromotionDao.getFactory().findDao(PromotionDao.class);
 		this.academicFeeDao = feePromotionDao.getFactory().findDao(AcademicFeeDao.class);
 		
-		this.currentYear = feePromotionDao.getFactory().findDao(AcademicYearDao.class).findCurrent();
-		final List<Promotion> promotions = this.promotionDao.findByAcademicYear(this.currentYear.getId());
-		final List<AcademicFee> academicFees = this.academicFeeDao.findByAcademicYear(this.currentYear.getId());
-		
-		int row = (promotions.size()%4)!=0? (promotions.size()/4)+1 : promotions.size()/4;
-		this.gridCheckBoxPromotion.setColumns(3);
-		this.gridCheckBoxPromotion.setRows(row);
-		
-		
-		for (AcademicFee fee : academicFees) {
-			RadioButton<AcademicFee> r = FormUtil.createRadioButon(fee.getAmount()+" USD", fee);
-			panelRadioButtonFees.add(r);
-			groupRadioButtonFees.add(r);
-			this.radioButtons.add(r);
-		}
 		panelRadioButtonFees.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY), "Montant a payer"));
-		
-		for (Promotion p : promotions) {
-			CheckBox<Promotion> c = FormUtil.createCheckBox(p.getStudyClass().getAcronym()+" "+p.getDepartment().getName(), p);
-			panelCheckBoxPromotions.add(c);
-			this.checkBoxs.add(c);
-		}
-		
 		panelCheckBoxPromotions.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY), "Promotions"));
 		
 		Panel panel = new Panel(new BorderLayout(5, 5));
@@ -92,8 +70,61 @@ public class FormFeePromotion extends DefaultFormPanel {
 		this.getBody().add(panel, BorderLayout.CENTER);
 		
 		this.init();
+		this.setVisible(false);
 	}
 	
+	/**
+	 * @param currentYear the currentYear to set
+	 */
+	public void setCurrentYear(AcademicYear currentYear) {
+		if(this.currentYear == null || currentYear.getId() != this.currentYear.getId()) {			
+			this.currentYear = currentYear;
+			this.loadData();
+		}
+	}
+	
+	
+	/**
+	 * Rechargement des donnees
+	 * utile lors de la modificationd de l'annee academique via le mutateur setCurrentYear
+	 */
+	private void loadData() {
+		
+		if(this.currentYear == null) 
+			return;
+		
+		final List<Promotion> promotions = this.promotionDao.checkByAcademicYear(this.currentYear.getId())?
+				this.promotionDao.findByAcademicYear(this.currentYear.getId()) : new ArrayList<>();
+		final List<AcademicFee> academicFees = this.academicFeeDao.checkByAcademicYear(this.currentYear.getId())?
+				this.academicFeeDao.findByAcademicYear(this.currentYear.getId()) : new ArrayList<>();
+		
+		final int row = (promotions.size()%4)!=0? (promotions.size()/4)+1 : promotions.size()/4;
+		this.gridCheckBoxPromotion.setColumns(3);
+		this.gridCheckBoxPromotion.setRows(row);
+		
+		panelRadioButtonFees.removeAll();
+		for (JRadioButton btn : radioButtons) {//supression de enciens composant
+			groupRadioButtonFees.remove(btn);
+		}
+		radioButtons.clear();
+		for (AcademicFee fee : academicFees) {
+			RadioButton<AcademicFee> r = FormUtil.createRadioButon(fee.getAmount()+" USD", fee);
+			panelRadioButtonFees.add(r);
+			groupRadioButtonFees.add(r);
+			this.radioButtons.add(r);
+		}
+		
+		panelCheckBoxPromotions.removeAll();
+		checkBoxs.clear();
+		for (Promotion p : promotions) {
+			CheckBox<Promotion> c = FormUtil.createCheckBox(p.getStudyClass().getAcronym()+" "+p.getDepartment().getName(), p);
+			panelCheckBoxPromotions.add(c);
+			this.checkBoxs.add(c);
+		}
+		
+		this.setVisible(true);
+	}
+
 	/**
 	 * Ecoute des evenements du DAO
 	 */
@@ -127,6 +158,9 @@ public class FormFeePromotion extends DefaultFormPanel {
 	public void doLayout() {
 		super.doLayout();
 //		System.out.println("width: "+this.getWidth());
+		if(checkBoxs.size() == 0)
+			return;
+		
 		if(this.getWidth() <= 800) {
 			int row = (checkBoxs.size()%3)!=0? (checkBoxs.size()/3)+1 : checkBoxs.size()/3;
 			gridCheckBoxPromotion.setRows(row);

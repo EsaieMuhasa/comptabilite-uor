@@ -146,7 +146,6 @@ public class IndividualSheet extends Panel {
 		
 	}
 	
-	
 	private void initPopup() {
 
 		popup.add(itemPayement);

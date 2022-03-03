@@ -23,7 +23,7 @@ public class PanelConfigGlobal extends DefaultScenePanel {
 	 * @param mainWindow
 	 */
 	public PanelConfigGlobal(MainWindow mainWindow) {
-		super("Configuration globale", new ImageIcon(R.getIcon("cog")), mainWindow);
+		super("Configuration globale", new ImageIcon(R.getIcon("cog")), mainWindow, false);
 		
 		this
 			.addItemMenu(new NavbarButtonModel("academicYear", "Année Academique"), new PanelAcademicYear(mainWindow))		

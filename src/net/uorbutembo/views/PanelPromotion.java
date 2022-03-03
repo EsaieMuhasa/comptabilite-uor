@@ -9,7 +9,7 @@ import java.awt.FlowLayout;
 import javax.swing.ImageIcon;
 import javax.swing.border.EmptyBorder;
 
-import net.uorbutembo.dao.AcademicYearDao;
+import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
@@ -32,7 +32,10 @@ public class PanelPromotion extends Panel {
 	private FormPromotion form;
 	private TablePanel tablePanel;
 	
+	private AcademicYear year;//l'annee acdemique acutuelement selectionner
+	
 	private Panel center = new Panel(new BorderLayout());
+	private PromotionTableModel tableModel;
 
 
 	/**
@@ -42,6 +45,8 @@ public class PanelPromotion extends Panel {
 		super(new BorderLayout());
 		this.promotionDao = mainWindow.factory.findDao(PromotionDao.class);
 		
+		tableModel = new PromotionTableModel(this.promotionDao);
+		
 		Panel top = new Panel(new FlowLayout(FlowLayout.RIGHT));
 		top.add(btnNew);
 		top.add(btnList);
@@ -50,6 +55,7 @@ public class PanelPromotion extends Panel {
 			this.center.removeAll();
 			if(this.form == null) {
 				this.form = new FormPromotion(this.promotionDao);
+				form.setCurrentYear(year);
 			}
 			this.center.add(this.form, BorderLayout.CENTER);
 			this.center.revalidate();
@@ -69,13 +75,24 @@ public class PanelPromotion extends Panel {
 		});
 		this.btnList.setVisible(false);
 		
-		Table table = new Table(new PromotionTableModel(this.promotionDao, mainWindow.factory.findDao(AcademicYearDao.class).findCurrent()));
-		tablePanel = new TablePanel(table, "Liste des promotions");
-		center.add(tablePanel, BorderLayout.CENTER);
+		Table table = new Table(tableModel);
+		center.add(table.getTableHeader(), BorderLayout.NORTH);
+		center.add(table, BorderLayout.CENTER);
 		center.setBorder(new EmptyBorder(10, 0, 10, 0));
 		
 		this.add(top, BorderLayout.NORTH);
 		this.add(center, BorderLayout.CENTER);
+	}
+	
+	public void setCurrentYear (AcademicYear year) {
+		if(this.year != null && year.getId() == this.year.getId()) 
+			return;
+		
+		this.year = year;
+		this.tableModel.setAcademicYear(year);
+		
+		if(form != null)
+			this.form.setCurrentYear(year);
 	}
 
 }

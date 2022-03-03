@@ -8,6 +8,7 @@ import java.awt.FlowLayout;
 
 import javax.swing.ImageIcon;
 
+import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
@@ -30,6 +31,8 @@ public class PanelAnnualSpend extends Panel {
 	private Panel panelTable = new Panel();
 	
 	private AnnualSpendDao annualSpendDao;
+	
+	private AcademicYear currentYear;
 
 	/**
 	 * @param mainWindow
@@ -55,6 +58,7 @@ public class PanelAnnualSpend extends Panel {
 			
 			if(this.form == null ) {
 				this.form = new FormAnnualSpend(this.annualSpendDao);
+				form.setCurrentYear(currentYear);
 			}
 			
 			this.center.add(this.form, BorderLayout.NORTH);
@@ -77,6 +81,16 @@ public class PanelAnnualSpend extends Panel {
 		
 		this.add(top, BorderLayout.NORTH);
 		this.add(this.center, BorderLayout.CENTER);
+	}
+
+	/**
+	 * @param currentYear the currentYear to set
+	 */
+	public void setCurrentYear(AcademicYear currentYear) {
+		this.currentYear = currentYear;
+		
+		if(form!= null) 
+			form.setCurrentYear(currentYear);
 	}
 
 

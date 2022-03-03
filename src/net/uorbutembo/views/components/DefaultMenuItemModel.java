@@ -32,6 +32,24 @@ public class DefaultMenuItemModel <T> implements MenuItemModel<T> {
 		}
 	}
 	
+	public DefaultMenuItemModel (Icon icon, String label, List<T> items){
+		this.icon = icon;
+		this.label = label;
+		this.name = label;
+		for (T item : items) {			
+			this.items.add(item);
+		}
+	}
+	
+	public DefaultMenuItemModel (Icon icon, String label, String name, List<T> items){
+		this.icon = icon;
+		this.label = label;
+		this.name = name;
+		for (T item : items) {			
+			this.items.add(item);
+		}
+	}
+	
 	@Override
 	public String getLabel() {
 		return this.label;

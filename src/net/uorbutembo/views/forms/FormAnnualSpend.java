@@ -15,7 +15,6 @@ import javax.swing.JOptionPane;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.UniversitySpend;
-import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.UniversitySpendDao;
@@ -34,6 +33,7 @@ public class FormAnnualSpend extends DefaultFormPanel {
 	private AcademicYear currentYear;
 	
 	private List<CheckBox<UniversitySpend>> checkBoxs = new ArrayList<>();
+	Box box = Box.createVerticalBox();
 
 	/**
 	 * 
@@ -42,11 +42,25 @@ public class FormAnnualSpend extends DefaultFormPanel {
 		super();
 		this.annualSpendDao = annualSpendDao;
 		this.setTitle("Rubriques budgetaire");
-		this.currentYear = annualSpendDao.getFactory().findDao(AcademicYearDao.class).findCurrent();
 		this.universitySpendDao = this.annualSpendDao.getFactory().findDao(UniversitySpendDao.class);
 		
+		this.getBody().add(box, BorderLayout.NORTH);
+		this.setVisible(false);
+	}
+	
+	/**
+	 * rechargement des donnees
+	 * cette methode est automatiquement appeler lors de la modification de l'annee academique
+	 */
+	private void loadData() {
+		if(this.currentYear == null) {
+			this.setVisible(false);
+			return;
+		}
+
+		box.removeAll();
 		List<UniversitySpend> spends = this.universitySpendDao.findAll();
-		Box box = Box.createVerticalBox();
+		checkBoxs.clear();
 		
 		for (UniversitySpend spend : spends) {
 			CheckBox<UniversitySpend> check = FormUtil.createCheckBox(spend.getTitle(), spend);
@@ -54,7 +68,17 @@ public class FormAnnualSpend extends DefaultFormPanel {
 			box.add(check);
 		}
 		
-		this.getBody().add(box, BorderLayout.NORTH);
+		this.setVisible(true);
+	}
+
+	/**
+	 * @param currentYear the currentYear to set
+	 */
+	public void setCurrentYear(AcademicYear currentYear) {
+		if(this.currentYear == null || this.currentYear.getId() != currentYear.getId()) {
+			this.currentYear = currentYear;
+			this.loadData();//mis en jour des composent du paneau
+		}
 	}
 
 	@Override

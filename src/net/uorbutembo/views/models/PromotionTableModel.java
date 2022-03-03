@@ -3,8 +3,6 @@
  */
 package net.uorbutembo.views.models;
 
-import java.util.ArrayList;
-
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.dao.PromotionDao;
@@ -25,38 +23,45 @@ public class PromotionTableModel extends TableModel<Promotion> {
 	 * @param departmentDao
 	 * @param faculty
 	 */
-	public PromotionTableModel(PromotionDao promotionDao, AcademicYear academicYear) {
+	public PromotionTableModel(PromotionDao promotionDao) {
 		super(promotionDao);
-		this.academicYear = academicYear;
 		this.promotionDao = promotionDao;
+	}
+	
+	/**
+	 * @param academicYear the academicYear to set
+	 */
+	public void setAcademicYear(AcademicYear academicYear) {
+		this.academicYear = academicYear;
 		if(this.promotionDao.checkByAcademicYear(academicYear.getId())) {			
 			this.data = this.promotionDao.findByAcademicYear(academicYear.getId());
 		} else {
-			this.data = new ArrayList<>();
+			this.data.clear();
 		}
+		this.fireTableDataChanged();
 	}
-	
+
 	@Override
 	public void onCreate(Promotion e, int requestId) {
-		if(e.getAcademicYear().getId() == this.academicYear.getId()) {
+		if(academicYear != null && e.getAcademicYear().getId() == this.academicYear.getId()) {
 			this.data.add(e);
 			this.fireTableRowsInserted(this.data.size()-1, this.data.size()-1);
 		}
 	}
+	
 
 	@Override
 	public int getColumnCount() {
-		return 4;
+		return 2;
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		switch (columnIndex) {
-			case 0: return (rowIndex+1);
-			case 1: {
+			case 0: {
 				return (this.data.get(rowIndex).getStudyClass().getAcronym())+" "+(this.data.get(rowIndex).getDepartment().getAcronym());
 			}
-			case 2: {
+			case 1: {
 				return (this.data.get(rowIndex).getStudyClass().getName())+" "+(this.data.get(rowIndex).getDepartment().getName());
 			}
 		}
@@ -66,11 +71,10 @@ public class PromotionTableModel extends TableModel<Promotion> {
 	@Override
 	public String getColumnName(int column) {
 		switch (column) {
-			case 0: return ("N°");
-			case 1: return ("Abbreviation");
-			case 2: return ("Appelation complete");
+			case 0: return ("Abbreviation");
+			case 1: return ("Appelation complete");
 		}
-		return "Option";
+		return null;
 	}
 
 }

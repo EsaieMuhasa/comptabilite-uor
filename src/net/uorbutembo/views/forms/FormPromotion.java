@@ -90,6 +90,13 @@ public class FormPromotion extends DefaultFormPanel {
 	}
 	
 	/**
+	 * @param currentYear the currentYear to set
+	 */
+	public void setCurrentYear(AcademicYear currentYear) {
+		this.currentYear = currentYear;
+	}
+
+	/**
 	 */
 	private void init() {
 		Panel center = new  Panel(new BorderLayout());

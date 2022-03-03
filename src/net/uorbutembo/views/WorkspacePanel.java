@@ -48,12 +48,14 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 	private Sidebar sidebar;
 	
 	private AcademicYear currentYear;
+	private AcademicYearDao academicYearDao;
 
 	
 	public WorkspacePanel(MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.mainWindow = mainWindow;
-		this.currentYear = mainWindow.factory.findDao(AcademicYearDao.class).findCurrent();
+		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
+		this.currentYear = academicYearDao.findCurrent();
 		this.setBorder(null);
 		
 		final Panel container = new Panel(new BorderLayout());
@@ -84,22 +86,19 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 		MenuItemModel<String> students = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("student")), "Etudiants ");
 		MenuItemModel<Orientation> orientations = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("database")), "Orientations");
 
-		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Autres configuration");
+		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Autres configurations");
+		MenuItemModel<String> param = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("console")), "Configuration logiciel");
 		
 		MenuItemModel<String> exportData = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("export")), "Exporter");
 		MenuItemModel<String> importData = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("import")), "Importer");
-		MenuItemModel<String> story = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("classeur")), "Palmaresse");
 		MenuItemModel<String> help = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("help")), "Manuel d'utilisation");
-		MenuItemModel<String> param = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("console")), "Configuration logiciel");
 		MenuItemModel<String> journal = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("status")), "Journal d'erreurs");
 		
-		//sub config
+
 		importData.addItems("Exel 2007 ou plus (.xlsx)", "Exel 2003 (.xls)", "SQL File");
-		// --sub config
 		
 		this
 		.add(dashbord, new PanelDashboard(this.mainWindow))
-		.add(years, new PanelConfigCurrentYear(this.mainWindow))
 		.add(students, new PanelStudents(this.mainWindow))
 		.add(orientations, new PanelOrientation(this.mainWindow))
 		.add(config, new PanelConfigGlobal(this.mainWindow))

@@ -1,5 +1,8 @@
 package net.uorbutembo.views.components;
 
+import static net.uorbutembo.views.forms.FormUtil.BKG_END;
+import static net.uorbutembo.views.forms.FormUtil.BKG_END_2;
+
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics;
@@ -10,7 +13,7 @@ import javax.swing.GroupLayout;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
-import static net.uorbutembo.views.forms.FormUtil.*;
+import net.uorbutembo.views.forms.FormUtil;
 
 /**
  * 
@@ -38,6 +41,7 @@ public class MenuItem extends JPanel{
         setOpaque(false);
         setLayout(new MigLayout("wrap, fillx, insets 0", "[fill]", "[fill, 40!]0[fill, 35!]"));
         MenuItemButton firstItem = new MenuItemButton(model.getIcon(), model.getLabel(), model.getName());
+        
         if(model.getItems().size() != 0) {        	
         	animation = new MenuItemAnimation(side.layout, this);
         }
@@ -142,8 +146,10 @@ public class MenuItem extends JPanel{
 		 //si menu curent
 		 
 		 if(this.isCurrent()) {
-			 g2.setColor(BORDER_COLOR);
-			 g2.fillRect(0, 2, width, 38);
+			 g2.setColor(FormUtil.BKG_DARK);
+			 int xs [] = {this.getWidth(), this.getWidth()-19, this.getWidth()};
+			 int ys [] = {2, 19, 38};
+			 g2.fillPolygon(xs, ys, 3);
 		 }
     }
 	

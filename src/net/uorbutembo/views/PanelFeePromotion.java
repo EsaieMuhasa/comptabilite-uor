@@ -8,6 +8,7 @@ import java.awt.FlowLayout;
 
 import javax.swing.ImageIcon;
 
+import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.FeePromotion;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.FeePromotionDao;
@@ -31,6 +32,8 @@ public class PanelFeePromotion extends Panel {
 	private Panel center = new Panel(new BorderLayout());
 	private FormFeePromotion form;
 	private Panel tablePanel = new Panel();
+	
+	private AcademicYear currentYear;
 
 	/**
 	 * 
@@ -51,6 +54,7 @@ public class PanelFeePromotion extends Panel {
 			this.center.removeAll();
 			if(this.form == null) {
 				this.form = new FormFeePromotion(this.feePromotionDao);
+				form.setCurrentYear(currentYear);
 			}
 			this.center.add(this.form, BorderLayout.CENTER);
 			this.center.revalidate();
@@ -74,6 +78,16 @@ public class PanelFeePromotion extends Panel {
 		
 		this.add(top, BorderLayout.NORTH);
 		this.add(this.center, BorderLayout.CENTER);
+	}
+
+	/**
+	 * @param currentYear the currentYear to set
+	 */
+	public void setCurrentYear(AcademicYear currentYear) {
+		this.currentYear = currentYear;
+		
+		if(form != null)
+			this.form.setCurrentYear(currentYear);
 	}
 
 }

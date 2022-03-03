@@ -36,6 +36,7 @@ public class FormAllocationCost extends DefaultFormPanel {
 	private AcademicFeeDao academicFeeDao;
 	private FeePromotionDao feePromotionDao;
 	private List<FormGroupAllocationCost> groups = new ArrayList<>();
+	private Box content = Box.createVerticalBox();
 
 	/**
 	 * @param allocationCostDao
@@ -49,17 +50,21 @@ public class FormAllocationCost extends DefaultFormPanel {
 		this.annualSpendDao = allocationCostDao.getFactory().findDao(AnnualSpendDao.class);
 		this.feePromotionDao = allocationCostDao.getFactory().findDao(FeePromotionDao.class);
 		
+		this.getBody().add(content, BorderLayout.CENTER);
+	}
+	
+	private void loadData() {
+
 		List<AnnualSpend> spends = this.annualSpendDao.checkByAcademicYear(this.currentYear.getId())? this.annualSpendDao.findkByAcademicYear(currentYear) : new ArrayList<>();
 		List<AcademicFee> fees = this.academicFeeDao.checkByAcademicYear(this.currentYear.getId())? this.academicFeeDao.findByAcademicYear(currentYear) : new ArrayList<>();
+		content.removeAll();
+		groups.clear();
 		
-		Box content = Box.createVerticalBox();
 		for (AcademicFee fee : fees) {
 			FormGroupAllocationCost group = new FormGroupAllocationCost(this.feePromotionDao, fee, spends);
 			content.add(group);
 			groups.add(group);
 		}
-		
-		this.getBody().add(content, BorderLayout.CENTER);
 	}
 
 	@Override

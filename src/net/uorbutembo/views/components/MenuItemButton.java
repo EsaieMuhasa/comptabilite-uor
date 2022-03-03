@@ -43,7 +43,7 @@ public class MenuItemButton extends JButton {
         super(text);
         this.setIcon(icon);
         init();
-        setBorder(new EmptyBorder(1, 10, 1, 20));
+        setBorder(new EmptyBorder(1, 10, 1, 40));
     }
     
     public MenuItemButton(Icon icon, String text, String name) {
@@ -57,8 +57,8 @@ public class MenuItemButton extends JButton {
      */
     public MenuItemButton(String text) {
         super(text);
-        setBorder(new EmptyBorder(1, 40, 1, 20));
         init();
+        setBorder(new EmptyBorder(1, 40, 1, 20));
     }
 
     public MenuItemButton(String text, String name) {
