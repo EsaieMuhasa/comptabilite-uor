@@ -14,7 +14,6 @@ import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
-import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.views.forms.FormPromotion;
 import net.uorbutembo.views.models.PromotionTableModel;
 import resources.net.uorbutembo.R;
@@ -30,7 +29,6 @@ public class PanelPromotion extends Panel {
 	private Button btnList = new Button(new ImageIcon(R.getIcon("menu")), "Voir les promotions");
 	private PromotionDao promotionDao;
 	private FormPromotion form;
-	private TablePanel tablePanel;
 	
 	private AcademicYear year;//l'annee acdemique acutuelement selectionner
 	
@@ -46,6 +44,7 @@ public class PanelPromotion extends Panel {
 		this.promotionDao = mainWindow.factory.findDao(PromotionDao.class);
 		
 		tableModel = new PromotionTableModel(this.promotionDao);
+		Table table = new Table(tableModel);
 		
 		Panel top = new Panel(new FlowLayout(FlowLayout.RIGHT));
 		top.add(btnNew);
@@ -66,7 +65,8 @@ public class PanelPromotion extends Panel {
 		
 		this.btnList.addActionListener(event -> {
 			this.center.removeAll();
-			this.center.add(this.tablePanel, BorderLayout.CENTER);
+			center.add(table.getTableHeader(), BorderLayout.NORTH);
+			this.center.add(table, BorderLayout.CENTER);
 			this.center.revalidate();
 			this.center.repaint();
 			
@@ -75,7 +75,6 @@ public class PanelPromotion extends Panel {
 		});
 		this.btnList.setVisible(false);
 		
-		Table table = new Table(tableModel);
 		center.add(table.getTableHeader(), BorderLayout.NORTH);
 		center.add(table, BorderLayout.CENTER);
 		center.setBorder(new EmptyBorder(10, 0, 10, 0));

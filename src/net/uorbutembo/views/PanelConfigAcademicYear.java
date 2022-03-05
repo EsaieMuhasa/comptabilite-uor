@@ -4,11 +4,13 @@
 package net.uorbutembo.views;
 
 import javax.swing.ImageIcon;
+import javax.swing.JScrollPane;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.NavbarButtonModel;
+import net.uorbutembo.views.forms.FormUtil;
 import resources.net.uorbutembo.R;
 
 /**
@@ -21,30 +23,28 @@ public class PanelConfigAcademicYear extends DefaultScenePanel {
 	private AcademicYear currentYear;
 	
 	private PanelPromotion panelPromotion;
-	private PanelAcademicFee panelAcademicFee;
 	private PanelFeePromotion panelFeePromotion;
 	private PanelAnnualSpend panelAnnualSpend;
-	private PanelAllocationCost panelAllocationCost;
+//	private PanelAllocationCost panelAllocationCost;
 	
 	/**
 	 * @param mainWindow
 	 */
 	public PanelConfigAcademicYear(MainWindow mainWindow) {
-		super("Année académique", new ImageIcon(R.getIcon("favorite")), mainWindow);
+		super("Année académique", new ImageIcon(R.getIcon("favorite")), mainWindow, false);
 		this.currentYear = mainWindow.factory.findDao(AcademicYearDao.class).findCurrent();
 		
 		this.panelPromotion = new PanelPromotion(mainWindow);
-		this.panelAcademicFee = new PanelAcademicFee(mainWindow);
 		this.panelFeePromotion = new PanelFeePromotion(mainWindow);
 		this.panelAnnualSpend = new PanelAnnualSpend(mainWindow);
-		this.panelAllocationCost = new PanelAllocationCost(mainWindow);
+		
+		JScrollPane scroll = FormUtil.createScrollPane(panelPromotion);
+		panelPromotion.setBorder(BODY_BORDER);
 		
 		this
-			.addItemMenu(new NavbarButtonModel("promotions", "Promotions"), this.panelPromotion)
-			.addItemMenu(new NavbarButtonModel("academicFee", "Frais univeritaire"), this.panelAcademicFee)
+			.addItemMenu(new NavbarButtonModel("promotions", "Promotions"), scroll)
 			.addItemMenu(new NavbarButtonModel("feePromotion", "Frais par promotion"), this.panelFeePromotion)
-			.addItemMenu(new NavbarButtonModel("annualSpend", "Rubrique budgetaire"), this.panelAnnualSpend)
-			.addItemMenu(new NavbarButtonModel("feePlanification", "Repartition des frais"), this.panelAllocationCost);
+			.addItemMenu(new NavbarButtonModel("annualSpend", "Rubrique budgetaire"), this.panelAnnualSpend);
 	}
 
 	@Override

@@ -48,11 +48,52 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	public T getRow (int index) {
 		return this.data.get(index);
 	}
+	
+	/**
+	 * Ajout d'une ligne a la fin du tableau
+	 * @param row
+	 */
+	public void addRow (T row) {
+		this.data.add(row);
+		fireTableRowsInserted(data.size()-1, data.size()-1);	
+	}
+	
+	/**
+	 * Insersion d'une ligne dans la collection des donnees du model d'un table
+	 * @param row
+	 * @param index
+	 */
+	public void addRow (T row, int index) {
+		this.data.add(index, row);
+		fireTableRowsInserted(index, data.size()-1);
+	}
+
+	/**
+	 * @return the data
+	 */
+	public List<T> getData() {
+		return data;
+	}
+
+	/**
+	 * @param data the data to set
+	 */
+	public void setData(List<T> data) {
+		this.data = data;
+		this.fireTableDataChanged();
+	}
+	
+	/**
+	 * Supression de tout les donnees dans le model
+	 */
+	public void clear () {
+		this.data.clear();
+		this.fireTableDataChanged();
+	}
 
 	@Override
 	public void onCreate(T e, int requestId) {
-		data.add(e);
-		fireTableRowsInserted(data.size()-1, data.size()-1);
+		this.addRow(e);
 	}
 	
 	@Override

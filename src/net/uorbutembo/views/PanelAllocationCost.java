@@ -9,6 +9,7 @@ import java.awt.FlowLayout;
 
 import javax.swing.ImageIcon;
 
+import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.dao.AllocationCostDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
@@ -30,6 +31,8 @@ public class PanelAllocationCost extends Panel {
 	private final Panel chartPanel = new Panel();
 	private AllocationCostDao allocationCostDao;
 	
+	private AcademicYear currentYear;
+	
 	/**
 	 * @param mainWindow
 	 */
@@ -39,6 +42,13 @@ public class PanelAllocationCost extends Panel {
 		init();
 	}
 	
+	/**
+	 * @param currentYear the currentYear to set
+	 */
+	public void setCurrentYear(AcademicYear currentYear) {
+		this.currentYear = currentYear;
+	}
+
 	private void init() {
 		
 		//top

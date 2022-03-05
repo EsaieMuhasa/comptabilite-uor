@@ -25,9 +25,9 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicFee;
@@ -36,13 +36,14 @@ import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.FeePromotion;
 import net.uorbutembo.dao.AllocationCostDao;
 import net.uorbutembo.dao.FeePromotionDao;
+import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.TextField;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
-import net.uorbutembo.swing.charts.PieModel;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
+import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
@@ -51,68 +52,114 @@ import net.uorbutembo.swing.charts.PiePart;
 public class FormGroupAllocationCost extends Panel {
 	private static final long serialVersionUID = -6416909862130925182L;
 	
-	private JLabel title = FormUtil.createSubTitle("");
+	private final JLabel title = FormUtil.createSubTitle("");
 	private AcademicFee academicFee;
-	private List<AnnualSpend> annualSpends;
-	private List<FeePromotion> feePromotions;
+	private List<AnnualSpend> annualSpends = new ArrayList<>();
+	private List<FeePromotion> feePromotions= new ArrayList<>();
 	private List<AllocationCostField> fields = new ArrayList<>();
+	
 	private FeePromotionDao feePromotionDao;
 	private AllocationCostDao allocationCostDao;
 	
-	private DefaultListModel<FeePromotion> listFeePromotionModel = new DefaultListModel<>();
-	private JList<FeePromotion> listFeePromotion = new JList<>(listFeePromotionModel);
-	private GridLayout layout = new GridLayout(1, 1);
+	private final DefaultListModel<FeePromotion> listFeePromotionModel = new DefaultListModel<>();
+	private final JList<FeePromotion> listFeePromotion = new JList<>(listFeePromotionModel);
+	private final GridLayout layout = new GridLayout(1, 1);
+	
+	//paneau principeau
+	private final Panel container = new Panel(layout);
+	private final Panel left = new Panel(new BorderLayout());
+	private final Box center = Box.createVerticalBox();
 	
 	
 	//pour le grahique
-	private PieModel pieModel = new DefaultPieModel();
-	private PiePanel piePanel = new PiePanel(pieModel);
+	private final DefaultPieModel pieModel = new DefaultPieModel();
+	private final PiePanel piePanel = new PiePanel(pieModel);
 
 	/**
 	 * Constructeur d'initialisation
 	 * @param feePromotionDao
-	 * @param academicFee
-	 * @param annualSpends
 	 */
-	public FormGroupAllocationCost(FeePromotionDao feePromotionDao, AcademicFee academicFee, List<AnnualSpend> annualSpends) {
+	public FormGroupAllocationCost(FeePromotionDao feePromotionDao) {
 		super(new BorderLayout(DEFAULT_H_GAP, DEFAULT_V_GAP));
 		this.feePromotionDao = feePromotionDao;
 		this.allocationCostDao = feePromotionDao.getFactory().findDao(AllocationCostDao.class);
+		
+		this.initViews();
+		this.setBorder(new EmptyBorder(0, 0, DEFAULT_V_GAP*2, 0));
+	}
+	
+	/**
+	 * @param academicFee the academicFee to set
+	 * @param annualSpends the annualSpends to set
+	 */
+	public void init (AcademicFee academicFee, List<AnnualSpend> annualSpends) {
 		this.academicFee = academicFee;
 		this.annualSpends = annualSpends;
-		this.title.setText(academicFee.getAmount()+" "+UNIT_MONEY);
 		
+		//this.pieModel.setTitle("Repartition du "+academicFee.getAmount()+" USD");
 		this.pieModel.setMax(academicFee.getAmount());
-		this.pieModel.setTitle("Repartition du "+academicFee.getAmount()+" USD");
+		this.title.setText("Repartition du "+academicFee.getAmount()+" "+UNIT_MONEY);
 		
 		if(this.feePromotionDao.checkByAcademicFee(academicFee.getId())) {
 			feePromotions = feePromotionDao.findByAcademicFee(academicFee);
 		} else {
 			feePromotions = new ArrayList<>();
 		}
-		this.init();
-		this.setBorder(new EmptyBorder(0, 0, DEFAULT_V_GAP*2, 0));
+		
+		this.updateViews();
 	}
-	
+
 	/**
 	 * initialisation de l'interface graphique
 	 */
-	private void init () {
+	private void initViews() {
+		this.title.setBackground(FormUtil.BKG_START);
+		this.title.setOpaque(true);
+		this.title.setHorizontalAlignment(JLabel.CENTER);
+		
+		final Panel bottom = new Panel();
+		Button btn = new Button(new ImageIcon(R.getIcon("success")), "Enregistrer");
+		
+		bottom.add(btn);
+		
+		center.add(Box.createVerticalGlue());
+		center.setBorder(new EmptyBorder(0, DEFAULT_H_GAP, 0, DEFAULT_V_GAP));
+		
+		container.add(left);
+		container.add(piePanel);
+		piePanel.setBackground(BKG_END);
+		
+		left.add(FormUtil.createScrollPane(this.listFeePromotion), BorderLayout.WEST);
+		left.add(FormUtil.createScrollPane(center), BorderLayout.CENTER);
+		left.setBorder(new EmptyBorder(0, DEFAULT_H_GAP, 0, 0));
+		
+		this.add(bottom, BorderLayout.SOUTH);
+		
+		piePanel.setBackground(FormUtil.BKG_DARK);
+		
+		this.add(this.title, BorderLayout.NORTH);
+		this.add(container, BorderLayout.CENTER);
+	}
+	
+	/**
+	 * mise en jours des composant graphiques
+	 */
+	private void updateViews () {
+		
+		listFeePromotionModel.clear();
+		pieModel.removeAll();
+		fields.clear();
+		center.removeAll();
 		
 		//le promotions conserner
 		for (FeePromotion fee : feePromotions) {
 			listFeePromotionModel.addElement(fee);
 		}
 		
-		final Panel container = new Panel(layout);
-		final Panel left = new Panel(new BorderLayout());
-		final Box center = Box.createVerticalBox();
-		
 		//les champs de text
-		int i = 0;
-		for (AnnualSpend spend : annualSpends) {
-			
-			i++;
+		for ( int i= 0, max= annualSpends.size(); i<max; i++) {
+			AnnualSpend spend = annualSpends.get(i);
+
 			int c = i % (COLORS.length-1);
 			Color color = COLORS[c];
 			DefaultPiePart part = new DefaultPiePart(color, spend.getUniversitySpend().getTitle());
@@ -151,31 +198,17 @@ public class FormGroupAllocationCost extends Panel {
 			box.add(Box.createHorizontalStrut(DEFAULT_H_GAP));
 			box.add(fieldPercent);
 			
-			this.fields.add(field);
 			
 			panel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			panelPadding.setBorder(BorderFactory.createLineBorder(FormUtil.BORDER_COLOR));
 			panelPadding.add(panel, BorderLayout.CENTER);
+			
+			fields.add(field);
 			center.add(panelPadding);
 			center.add(Box.createVerticalStrut(DEFAULT_H_GAP));
-			
 		}
-		
-		center.add(Box.createVerticalGlue());
-		
-		container.add(left);
-		container.add(piePanel);
-		piePanel.setBackground(BKG_END);
-		
-		left.add(new JScrollPane(this.listFeePromotion), BorderLayout.WEST);
-		left.add(center, BorderLayout.CENTER);
-		
-		this.add(container, BorderLayout.CENTER);
-		this.add(this.title, BorderLayout.NORTH);
-		this.title.setBackground(FormUtil.BKG_START);
-		this.title.setOpaque(true);
-		this.title.setHorizontalAlignment(JLabel.CENTER);
 
+		center.repaint();
 	}
 	
 	/**

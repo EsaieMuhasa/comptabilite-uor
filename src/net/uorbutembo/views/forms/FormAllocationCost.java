@@ -60,11 +60,11 @@ public class FormAllocationCost extends DefaultFormPanel {
 		content.removeAll();
 		groups.clear();
 		
-		for (AcademicFee fee : fees) {
-			FormGroupAllocationCost group = new FormGroupAllocationCost(this.feePromotionDao, fee, spends);
-			content.add(group);
-			groups.add(group);
-		}
+//		for (AcademicFee fee : fees) {
+//			FormGroupAllocationCost group = new FormGroupAllocationCost(this.feePromotionDao, fee, spends);
+//			content.add(group);
+//			groups.add(group);
+//		}
 	}
 
 	@Override

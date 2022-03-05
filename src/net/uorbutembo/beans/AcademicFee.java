@@ -84,5 +84,10 @@ public class AcademicFee extends DBEntity {
 	public void setAcademicYear (long academicYear) {
 		this.academicYear = new AcademicYear(academicYear);
 	}
+	
+	@Override
+	public String toString() {
+		return this.amount+" USD";
+	}
 
 }
