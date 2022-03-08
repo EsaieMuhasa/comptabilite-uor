@@ -7,6 +7,7 @@ import static net.uorbutembo.views.forms.FormUtil.COLORS;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.GridLayout;
 
 import javax.swing.Box;
 import javax.swing.ImageIcon;
@@ -30,7 +31,7 @@ public class PanelDashboard extends DefaultScenePanel {
 	private static final long serialVersionUID = 4525497607858984186L;
 	
 	private Box panelCards = Box.createHorizontalBox();
-	private Box panelPies = Box.createHorizontalBox();
+	private Panel panelPies = new Panel(new GridLayout(1, 3, 10, 10));
 	private Panel panelCurrent = new Panel(new BorderLayout());
 	
 	public PanelDashboard(MainWindow mainWindow) {
@@ -56,12 +57,16 @@ public class PanelDashboard extends DefaultScenePanel {
 		panelCurrent.add(panelPies, BorderLayout.CENTER);
 		panelCurrent.setBorder(BODY_BORDER);
 		
+		PiePanel 
+			panel1 = new PiePanel(model, COLORS[6]),
+			panel2 = new PiePanel(model2, COLORS[11]),
+			panel3 = new PiePanel(model, COLORS[10]);
 		
-		panelPies.add(new PiePanel(model, COLORS[6]));
-		panelPies.add(Box.createHorizontalStrut(10));
-		panelPies.add(new PiePanel(model2, COLORS[11]));
-		panelPies.add(Box.createHorizontalStrut(10));
-		panelPies.add(new PiePanel(model, COLORS[10]));
+		panel2.setHorizontalPlacement(false);
+		
+		panelPies.add(panel1);
+		panelPies.add(panel2);
+		panelPies.add(panel3);
 		
 		panelPies.setBorder(new EmptyBorder(10, 0, 0, 0));
 		

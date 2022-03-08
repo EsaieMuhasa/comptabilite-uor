@@ -52,6 +52,18 @@ public class PiePanel extends Panel {
 		});
 	}
 	
+	public void setHorizontalPlacement (boolean horizontalPlacement) {
+		if(horizontalPlacement) {
+			this.layout.setColumns(2);
+			this.layout.setRows(1);
+			caption.setPaddingLeft(false);
+		} else {
+			this.layout.setColumns(1);
+			this.layout.setRows(2);
+			caption.setPaddingLeft(true);
+		}
+	}
+	
 
 	/**
 	 * @param borderColor

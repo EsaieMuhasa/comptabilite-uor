@@ -163,6 +163,7 @@ public class FormGroupAllocationCost extends Panel {
 			int c = i % (COLORS.length-1);
 			Color color = COLORS[c];
 			DefaultPiePart part = new DefaultPiePart(color, spend.getUniversitySpend().getTitle());
+			part.setLabel(spend.getUniversitySpend().getTitle());
 			pieModel.addPart(part);
 
 			

@@ -27,6 +27,7 @@ class PiePartCaption extends JComponent implements PieModelListener{
 	
 	private PieModel model;
 	private Color borderColor;
+	private boolean paddingLeft = false;
 
 	/**
 	 * @param part
@@ -36,6 +37,11 @@ class PiePartCaption extends JComponent implements PieModelListener{
 		this.model = model;
 		this.model.addListener(this);
 		this.borderColor = Color.WHITE;
+	}
+	
+	public void setPaddingLeft (boolean left) {
+		paddingLeft = left;
+		this.repaint();
 	}
 	
 	@Override
@@ -58,7 +64,7 @@ class PiePartCaption extends JComponent implements PieModelListener{
 		int mH = step * count;//hauteur max des items
 		int padding = (height - mH) / 2;
 		
-		int col = 50; //largeur max pour la colone des pourcentages
+		int col = 50 + (paddingLeft? step/2 : 0); //largeur max pour la colone des pourcentages
 		int xLabel = col + 5;
 		
 		FontMetrics metricsPercent = g2.getFontMetrics(FONT_PERCENT);
@@ -69,7 +75,7 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			int index = i+1, h = padding + (index*step);
 			if(index != count) {				
 				g2.setColor(borderColor);
-				g2.drawLine(0, h, widht, h);
+				g2.drawLine(paddingLeft? step/2 : 0, h, widht, h);
 			}
 			
 			BigDecimal big = new BigDecimal(model.getPercentOf(i)).setScale(2, RoundingMode.HALF_UP);
@@ -79,7 +85,6 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			int x = col - metricsPercent.stringWidth(percentVal), y = h- metricsPercent.getHeight()/2;
 			g2.setColor(part.getBackgroundColor());
 			g2.drawString(percentVal, x, y);
-			
 			
 			g2.setFont(FONT_LABEL);
 			g2.drawString(label, xLabel, y);
