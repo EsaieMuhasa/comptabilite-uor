@@ -93,13 +93,27 @@ public class ImagePicker extends Panel {
 		fileChooser.setDialogTitle("Selectionner la photo de paceport");
 		fileChooser.setFileFilter(new ImagePickerFilter());
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		fileChooser.addActionListener( event -> {
-			File file = fileChooser.getSelectedFile();
-			render.setFileName(file.getAbsolutePath());
-			slider.setEnabled(true);
-		});
+
 		this.btnChoose.addActionListener(event -> {
-			fileChooser.showDialog(mainFrame, "Ouvrir");
+			int result = fileChooser.showDialog(mainFrame, "Ouvrir");
+			
+			if(result == JFileChooser.APPROVE_OPTION) {
+				File file = fileChooser.getSelectedFile();
+				render.setFileName(file.getAbsolutePath());
+				slider.setEnabled(true);
+			} else {
+				render.setFileName(null);
+				slider.setEnabled(false);
+			}
+		});
+		
+		this.render.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(e.getClickCount() == 2) {
+					btnChoose.doClick();
+				}
+			}
 		});
 		
 		slider.addChangeListener(event -> {
