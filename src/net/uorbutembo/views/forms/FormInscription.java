@@ -4,7 +4,6 @@ import static net.uorbutembo.views.forms.FormUtil.DEFAULT_H_GAP;
 import static net.uorbutembo.views.forms.FormUtil.DEFAULT_V_GAP;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.text.ParseException;
@@ -13,13 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
+import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
@@ -38,7 +34,9 @@ import net.uorbutembo.dao.StudentDao;
 import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
+import net.uorbutembo.swing.ImagePicker;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
 /**
@@ -49,9 +47,6 @@ import net.uorbutembo.views.components.DefaultFormPanel;
 public class FormInscription extends DefaultFormPanel{
 	
 	private static final long serialVersionUID = -7867072774750271198L;
-	
-	private JLabel picture = new JLabel();
-	private JButton pickPicture = new JButton("Photo paceport");
 	
 	private GridLayout fieldsLayoutLg = new GridLayout(6, 2, DEFAULT_H_GAP, DEFAULT_V_GAP), 
 			fieldsLayoutSm = new GridLayout(12, 1, DEFAULT_H_GAP, DEFAULT_V_GAP) ;
@@ -85,6 +80,8 @@ public class FormInscription extends DefaultFormPanel{
 	private FormGroup<String> birthPlace = FormGroup.createTextField("Leux de naissance");
 	private FormGroup<String> birthDate = FormGroup.createTextField("Date de naissance");
 	private FormGroup<String> matricul = FormGroup.createTextField("Matricule");
+	
+	private ImagePicker imagePicker = new ImagePicker("photo paceport");
 	//-- fields
 	
 	private AcademicYear currentYear;
@@ -98,10 +95,8 @@ public class FormInscription extends DefaultFormPanel{
 	private StudentDao studentDao;
 	//-- dao
 	
-	/**
-	 * Constructeur par defaut
-	 */
-	public FormInscription(InscriptionDao inscriptionDao) {
+
+	public FormInscription(MainWindow mainWindow, InscriptionDao inscriptionDao) {
 		super();
 		this.currentYear = inscriptionDao.getFactory().findDao(AcademicYearDao.class).findCurrent();
 		this.inscriptionDao = inscriptionDao;
@@ -123,6 +118,7 @@ public class FormInscription extends DefaultFormPanel{
 		
 		this.getBody().add(container, BorderLayout.CENTER);
 		this.loadData();
+		this.imagePicker.setMaintFrame(mainWindow);
 	}
 	
 	/**
@@ -148,9 +144,13 @@ public class FormInscription extends DefaultFormPanel{
 		fields.add(groupFaculty, BorderLayout.NORTH);
 		fields.add(responsiveFileds, BorderLayout.CENTER);
 		
-		this.panelPicture.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1, true));
-		this.panelPicture.add(this.pickPicture, BorderLayout.NORTH);
-		this.panelPicture.add(this.picture, BorderLayout.CENTER);
+		this.panelPicture.setBorder(new EmptyBorder(0, 0, 0, 5));
+		
+		Box box = Box.createVerticalBox();
+		box.add(Box.createVerticalStrut(5));
+		box.add(imagePicker);
+		box.add(Box.createVerticalGlue());
+		this.panelPicture.add(box, BorderLayout.CENTER);
 	}
 	
 	/**

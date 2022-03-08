@@ -84,7 +84,7 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 		final Panel formPanel = new Panel(new BorderLayout());
 		final Panel listPanel = new Panel(new BorderLayout());
 		
-		final FormInscription form = new FormInscription(mainWindow.factory.findDao(InscriptionDao.class));
+		final FormInscription form = new FormInscription(mainWindow, mainWindow.factory.findDao(InscriptionDao.class));
 		formPanel.add(form, BorderLayout.CENTER);
 		
 		formPanel.setBorder(BODY_BORDER);
