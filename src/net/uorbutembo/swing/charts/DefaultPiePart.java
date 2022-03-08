@@ -66,6 +66,7 @@ public class DefaultPiePart implements PiePart {
 		this.backgroundColor = backgroundColor;
 		this.name = name;
 	}
+	
 
 	@Override
 	public String getName() {

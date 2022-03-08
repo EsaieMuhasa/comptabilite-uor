@@ -13,6 +13,11 @@ public class R {
 		return icon;
 	}
 	
+	public static final String getIcon (String name, String ext) {
+		String icon = R.class.getResource("/resources/net/uorbutembo/icons/"+name+"."+ext).getFile();
+		return icon;
+	}
+	
 	/**
 	 * Recuperation de la configiration de 
 	 * @return

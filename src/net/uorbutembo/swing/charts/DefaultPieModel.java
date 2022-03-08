@@ -15,6 +15,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	protected final List<PiePart> parts;
 	protected final List<PieModelListener> listeners = new ArrayList<>();
 	protected double max;
+	protected double realMax;
 	protected String title;
 
 	public DefaultPieModel() {
@@ -30,6 +31,20 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 		this.max = max;
 	}
 	
+	public DefaultPieModel(double max, String title) {
+		this();
+		this.max = max;
+		this.title = title;
+	}
+	
+	/**
+	 * Ajoute les items du model en parametre a son model des parts
+	 * @param model
+	 */
+	public void bind (DefaultPieModel model) {
+		this.addParts(model.getParts());
+	}
+	
 	/**
 	 * @param parts
 	 */
@@ -38,6 +53,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 		for (PiePart part : parts) {
 			part.addListener(this);
 		}
+		this.calculRealMax();
 		this.emitRefresh();
 	}
 
@@ -61,6 +77,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 		
 		this.parts.add(part);
 		part.addListener(this);
+		this.calculRealMax();
 		this.emitRefresh();
 	}
 
@@ -71,6 +88,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 		
 		this.parts.add(index, part);
 		part.addListener(this);
+		this.calculRealMax();
 		this.emitRefresh();
 	}
 
@@ -78,16 +96,23 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	public void addParts(PiePart... parts) {
 		for (PiePart part : parts) {
 			if(!this.parts.contains(part)){
+				
 				this.parts.add(part);
 				part.addListener(this);
 			}
 		}
+		this.calculRealMax();
 		this.emitRefresh();
 	}
 
 	@Override
 	public double getMax() {
 		return max;
+	}
+	
+	@Override
+	public double getRealMax() {
+		return realMax;
 	}
 	
 	@Override
@@ -115,8 +140,38 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	}
 
 	@Override
-	public List<PiePart> getParts() {
-		return parts;
+	public PiePart getPartAt(int index) {
+		return parts.get(index);
+	}
+
+	@Override
+	public int getCountPart() {
+		return parts.size();
+	}
+
+	@Override
+	public double getPercentOf(int index) {
+		double m = (this.realMax <= this.max )? this.max : this.realMax;
+		return ((this.getPartAt(index).getValue() * 100.0)/m);
+	}
+
+	@Override
+	public double getPercentOf(PiePart part) {
+		if(this.parts.contains(part)) {
+			double m = (this.realMax <= this.max )? this.max : this.realMax;
+			return ((part.getValue() * 100.0)/m);
+		}
+		return 0;
+	}
+
+	@Override
+	public PiePart [] getParts() {
+		int count = parts.size();
+		PiePart [] data = new PiePart[count];
+		for (int i = 0; i<count; i++) {
+			data[i] = parts.get(i);
+		}
+		return data;
 	}
 	
 	protected void emitRefresh () {
@@ -129,6 +184,13 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 		int index =  this.parts.indexOf(part);
 		for (PieModelListener listener : listeners) {
 			listener.repaintPart(this, index);
+		}
+	}
+	
+	protected void calculRealMax () {
+		this.realMax = 0;
+		for (PiePart part : parts) {
+			this.realMax += part.getValue();
 		}
 	}
 
@@ -147,6 +209,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 
 	@Override
 	public void onChange(PiePart part) {
+		this.calculRealMax();
 		this.emitRepaint(part);
 	}
 

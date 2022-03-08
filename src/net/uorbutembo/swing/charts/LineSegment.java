@@ -50,4 +50,9 @@ public class LineSegment {
 		this.end = end;
 	}
 
+	@Override
+	public String toString() {
+		return "LineSegment [start=" + start + ", end=" + end + "]";
+	}
+
 }

@@ -3,8 +3,6 @@
  */
 package net.uorbutembo.swing.charts;
 
-import java.util.List;
-
 /**
  * @author Esaie MUHASA
  *
@@ -27,13 +25,33 @@ public interface PieModel {
 	double getMax ();
 	void setMax (double max);
 	
+	double getRealMax();
+	
 	/**
 	 * @param index
 	 * @return
 	 */
-	default PiePart getPartAt (int index) {
-		return this.getParts().get(index);
-	}
+	PiePart getPartAt (int index);
+	
+	/**
+	 * Renvoei les pourcentages de l'indem a l'index
+	 * @param index
+	 * @return
+	 */
+	double getPercentOf (int index);
+	
+	/**
+	 * Renvoie les pourcentage du part en parametre, si cel-ci ce trouve dans le model
+	 * @param part
+	 * @return
+	 */
+	double getPercentOf (PiePart part);
+	
+	/**
+	 * Renvoie le nombre des parts
+	 * @return
+	 */
+	int getCountPart();
 	
 	/**
 	 * recuperation du part dont le nom est en parametre
@@ -53,7 +71,7 @@ public interface PieModel {
 	 */
 	void removePartAt (int index);
 	void removeAll ();
-	List<PiePart> getParts ();
+	PiePart [] getParts ();
 	
 	void addListener (PieModelListener listener);
 	void removeListener (PieModelListener listener);
