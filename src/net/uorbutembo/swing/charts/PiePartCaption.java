@@ -84,8 +84,9 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			g2.fillOval(widht-col-5, h-step-10, col, col);
 			
 			BigDecimal big = new BigDecimal(model.getPercentOf(i)).setScale(2, RoundingMode.HALF_UP);
+			BigDecimal bigValue = new BigDecimal(part.getValue()).setScale(2, RoundingMode.HALF_UP);
 			String percentVal = big.doubleValue()+"%", label = part.getLabel();
-			String valueVal = part.getValue()+""+model.getSuffix();
+			String valueVal = bigValue.doubleValue()+""+model.getSuffix();
 			
 			g2.setFont(FONT_VALUE);
 			int x = col - metricsValue.stringWidth(valueVal) + step/3, y = h- metricsValue.getHeight()/2;

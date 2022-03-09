@@ -59,13 +59,7 @@ public interface PieModel {
 	 * @param name
 	 * @return
 	 */
-	default PiePart getPartByName (String name) {
-		for (PiePart part : getParts()) {
-			if(part.getName().equals(name)) 
-				return part;
-		}
-		return null;
-	}
+	PiePart getPartByName (String name);
 	
 	/**
 	 * @param index

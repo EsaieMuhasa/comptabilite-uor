@@ -14,12 +14,16 @@ import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.border.EmptyBorder;
 
+import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AcademicYear;
+import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.AcademicYearDao;
+import net.uorbutembo.dao.AllocationCostDao;
+import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.FacultyDao;
 import net.uorbutembo.dao.FeePromotionDao;
@@ -31,6 +35,7 @@ import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.PiePanel;
+import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.NavbarButtonModel;
 import resources.net.uorbutembo.R;
@@ -51,6 +56,8 @@ public class PanelDashboard extends DefaultScenePanel {
 	private FeePromotionDao feePromotionDao;
 	private PaymentFeeDao paymentFeeDao;
 	private FacultyDao facultyDao;
+	private AnnualSpendDao annualSpendDao;
+	private AllocationCostDao allocationCostDao;
 	
 	private AcademicYear currentYear;
 	
@@ -73,6 +80,8 @@ public class PanelDashboard extends DefaultScenePanel {
 		feePromotionDao = mainWindow.factory.findDao(FeePromotionDao.class);
 		paymentFeeDao = mainWindow.factory.findDao(PaymentFeeDao.class);
 		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
+		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
+		allocationCostDao = mainWindow.factory.findDao(AllocationCostDao.class);
 		
 		this.currentYear = mainWindow.factory.findDao(AcademicYearDao.class).findCurrent();
 		
@@ -85,15 +94,15 @@ public class PanelDashboard extends DefaultScenePanel {
 		panelCurrent.setBorder(BODY_BORDER);
 		
 		PiePanel 
-			panel1 = new PiePanel(modelPieStudents, COLORS[6]),
-			panel2 = new PiePanel(modelPieBudget, COLORS[11]),
-			panel3 = new PiePanel(modelPiePaymentFee, COLORS[10]);
+			pieStuents = new PiePanel(modelPieStudents, COLORS[6]),
+			pieBudget = new PiePanel(modelPieBudget, COLORS[11]),
+			piePayment = new PiePanel(modelPiePaymentFee, COLORS[10]);
 		
-		panel2.setHorizontalPlacement(false);
+//		pieStuents.setHorizontalPlacement(false);
 		
-		panelPies.add(panel1);
-		panelPies.add(panel2);
-		panelPies.add(panel3);
+		panelPies.add(pieStuents);
+		panelPies.add(piePayment);
+		panelPies.add(pieBudget);
 		
 		panelPies.setBorder(new EmptyBorder(10, 0, 0, 0));
 		
@@ -117,7 +126,32 @@ public class PanelDashboard extends DefaultScenePanel {
 		//==students
 
 		//budget generale
-		
+		List<AcademicFee> fees = this.academicFeeDao.findByAcademicYear(currentYear);
+//		List<AnnualSpend> spends = this.annualSpendDao.findkByAcademicYear(currentYear);
+		for (int i =0, max = fees.size(); i < max; i++) {
+			
+			AcademicFee fee = fees.get(i);
+			List<AllocationCost> costs = this.allocationCostDao.findByAcademicFee(fee);
+			
+			for (int j=0, max2 = costs.size(); j< max2; j++) {
+				AllocationCost cost = costs.get(j);
+				Color color = COLORS[j%(COLORS.length-1)];
+				PiePart part = modelPieBudget.getPartByName(cost.getAnnualSpend().getUniversitySpend().getTitle());
+				
+				if(part == null) {
+					part = new DefaultPiePart(color, cost.getAnnualSpend().getUniversitySpend().getTitle());
+					part.setValue(0.0);
+					System.out.println("\t> "+cost.getAnnualSpend().getUniversitySpend().getTitle());
+				}
+				
+				double value = part.getValue()+cost.getAmount();
+				part.setValue(value);
+				part.setLabel(cost.getAnnualSpend().getUniversitySpend().getTitle());
+				modelPieBudget.addPart(part);
+			}
+			
+			modelPieBudget.setMax(fee.getAmount());			
+		}
 		//==budget generale
 	}
 	

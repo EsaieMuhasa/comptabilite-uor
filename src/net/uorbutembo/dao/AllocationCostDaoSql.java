@@ -176,8 +176,8 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 		c.setAmount(result.getFloat("amount"));
 		if (result.getLong("lastUpdate") != 0)
 			c.setLastUpdate(new Date(result.getLong("lastUpdate")));
-		c.setAcademicFee(new AcademicFee(result.getLong("academicFee")));
-		c.setAnnualSpend(new AnnualSpend(result.getLong("annualSpend")));
+		c.setAcademicFee(this.academicFeeDao.findById(result.getLong("academicFee")));
+		c.setAnnualSpend(this.annualSpendDao.findById(result.getLong("annualSpend")));
 		return c;
 	}
 	

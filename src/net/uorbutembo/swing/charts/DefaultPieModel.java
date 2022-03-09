@@ -39,14 +39,6 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	}
 	
 	/**
-	 * Ajoute les items du model en parametre a son model des parts
-	 * @param model
-	 */
-	public void bind (DefaultPieModel model) {
-		this.addParts(model.getParts());
-	}
-	
-	/**
 	 * @param parts
 	 */
 	public DefaultPieModel(final List<PiePart> parts) {
@@ -56,6 +48,23 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 		}
 		this.calculRealMax();
 		this.emitRefresh();
+	}
+	
+	/**
+	 * Ajoute les items du model en parametre a son model des parts
+	 * @param model
+	 */
+	public void bind (DefaultPieModel model) {
+		this.addParts(model.getParts());
+	}
+	
+	@Override
+	public PiePart getPartByName(String name) {
+		for (PiePart part : parts) {
+			if(part.getName().equals(name)) 
+				return part;
+		}
+		return null;
 	}
 
 	@Override
