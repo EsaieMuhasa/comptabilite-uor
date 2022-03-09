@@ -17,6 +17,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	protected double max;
 	protected double realMax;
 	protected String title;
+	protected String suffix = "";
 
 	public DefaultPieModel() {
 		parts = new ArrayList<>();
@@ -60,6 +61,18 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	@Override
 	public String getTitle() {
 		return title;
+	}
+	
+	@Override
+	public String getSuffix() {
+		return suffix;
+	}
+
+	/**
+	 * @param suffix the suffix to set
+	 */
+	public void setSuffix(String suffix) {
+		this.suffix = suffix;
 	}
 
 	@Override

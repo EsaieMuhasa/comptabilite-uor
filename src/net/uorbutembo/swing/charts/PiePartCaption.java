@@ -23,7 +23,8 @@ class PiePartCaption extends JComponent implements PieModelListener{
 	
 	private final Font 
 			FONT_PERCENT = new Font("Arial", Font.BOLD, 15),
-			FONT_LABEL = new Font("Arial", Font.PLAIN, 12);
+			FONT_LABEL = new Font("Arial", Font.PLAIN, 12),
+			FONT_VALUE = new Font("Arial", Font.BOLD, 13);
 	
 	private PieModel model;
 	private Color borderColor;
@@ -61,33 +62,45 @@ class PiePartCaption extends JComponent implements PieModelListener{
 		
 		int count  = this.model.getCountPart(),
 				step = 30;
-		int mH = step * count;//hauteur max des items
+		int mH = (step + 18) * count;//hauteur max des items
 		int padding = (height - mH) / 2;
 		
 		int col = 50 + (paddingLeft? step/2 : 0); //largeur max pour la colone des pourcentages
-		int xLabel = col + 5;
+		int xLabel = col + 5 + step/3;
 		
 		FontMetrics metricsPercent = g2.getFontMetrics(FONT_PERCENT);
+		FontMetrics metricsValue = g2.getFontMetrics(FONT_VALUE);
 //		FontMetrics metricsLabel = g2.getFontMetrics(FONT_LABEL);
 		
+		int h = padding + step;
 		for (int i = 0 ; i < count; i++) {
 			PiePart part = model.getPartAt(i);
-			int index = i+1, h = padding + (index*step);
-			if(index != count) {				
-				g2.setColor(borderColor);
-				g2.drawLine(paddingLeft? step/2 : 0, h, widht, h);
-			}
+
+//			g2.drawLine(paddingLeft? step/2 : 0, h, widht, h);
+			g2.setColor(part.getBackgroundColor().darker().darker().darker().darker());
+			g2.fillRoundRect(0, h-step, widht-10, step, step, step);
+			
+			g2.setColor(part.getBackgroundColor());
+			g2.fillOval(widht-col-5, h-step-10, col, col);
 			
 			BigDecimal big = new BigDecimal(model.getPercentOf(i)).setScale(2, RoundingMode.HALF_UP);
 			String percentVal = big.doubleValue()+"%", label = part.getLabel();
+			String valueVal = part.getValue()+""+model.getSuffix();
 			
-			g2.setFont(FONT_PERCENT);
-			int x = col - metricsPercent.stringWidth(percentVal), y = h- metricsPercent.getHeight()/2;
-			g2.setColor(part.getBackgroundColor());
-			g2.drawString(percentVal, x, y);
+			g2.setFont(FONT_VALUE);
+			int x = col - metricsValue.stringWidth(valueVal) + step/3, y = h- metricsValue.getHeight()/2;
+			g2.drawString(valueVal, x, y);
 			
 			g2.setFont(FONT_LABEL);
 			g2.drawString(label, xLabel, y);
+			
+			g2.setFont(FONT_PERCENT);
+			g2.setColor(getBackground());
+			x = (widht - col - 5 + col/2) - metricsPercent.stringWidth(percentVal) + (metricsPercent.stringWidth(percentVal)/2);
+			y = ( h-step-10 + col/2) + metricsPercent.getHeight()/3;
+			g2.drawString(percentVal, x, y);
+			
+			h += step + 25;
 		}
 		
 	}

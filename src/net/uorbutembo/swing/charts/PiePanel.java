@@ -95,6 +95,7 @@ public class PiePanel extends Panel {
 				this.caption.setBorderColor(borderColor);
 			}
 		}
+		
 	}
 
 	/**
@@ -134,6 +135,9 @@ public class PiePanel extends Panel {
 		super.setBackground(bg);
 		if(this.render != null)
 			this.render.setBackground(bg);
+		
+		if(this.caption != null)
+			this.caption.setBackground(bg);
 	}
 	
 	@Override

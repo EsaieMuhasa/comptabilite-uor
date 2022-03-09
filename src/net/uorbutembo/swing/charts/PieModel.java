@@ -26,6 +26,7 @@ public interface PieModel {
 	void setMax (double max);
 	
 	double getRealMax();
+	String getSuffix ();
 	
 	/**
 	 * @param index
