@@ -59,7 +59,7 @@ public class PanelDepartment extends Panel {
 		
 		this.btnNew.addActionListener(event -> {
 			if(formDialog == null) {
-				form = new FormDepartment(this.departmentDao);
+				form = new FormDepartment(mainWindow, this.departmentDao);
 				this.formDialog = new Dialog(mainWindow);
 				this.formDialog.setTitle("Enregistrement d'un nouveau departement");
 				this.formDialog.getContentPane().add(this.form, BorderLayout.CENTER);

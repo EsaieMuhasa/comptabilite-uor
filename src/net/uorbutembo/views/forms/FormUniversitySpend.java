@@ -14,6 +14,7 @@ import net.uorbutembo.beans.UniversitySpend;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.FormGroup;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
 /**
@@ -28,11 +29,9 @@ public class FormUniversitySpend extends DefaultFormPanel {
 	
 	private UniversitySpendDao universitySpendDao;
 
-	/**
-	 * 
-	 */
-	public FormUniversitySpend(UniversitySpendDao universitySpendDao) {
-		super();
+
+	public FormUniversitySpend(MainWindow mainWindow, UniversitySpendDao universitySpendDao) {
+		super(mainWindow);
 		this.universitySpendDao = universitySpendDao;
 		this.setTitle("Formultaire d'enregistrement");
 		Box box = Box.createVerticalBox();

@@ -18,6 +18,7 @@ import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.FacultyDao;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
 /**
@@ -34,8 +35,8 @@ public class FormDepartment extends DefaultFormPanel {
 	private FacultyDao facultyDao;
 	private DepartmentDao departmentDao;
 	
-	public FormDepartment(DepartmentDao departmentDao) {
-		super();
+	public FormDepartment(MainWindow mainWindow, DepartmentDao departmentDao) {
+		super(mainWindow);
 		this.departmentDao = departmentDao;
 		this.facultyDao = departmentDao.getFactory().findDao(FacultyDao.class);
 		this.setTitle("Formulaire d'enregistrement");

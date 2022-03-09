@@ -22,7 +22,7 @@ public class PanelUniversitySpend extends Panel {
 	public PanelUniversitySpend(MainWindow mainWindow) {
 		super(new BorderLayout());
 		
-		this.add(new FormUniversitySpend(mainWindow.factory.findDao(UniversitySpendDao.class)), BorderLayout.NORTH);
+		this.add(new FormUniversitySpend(mainWindow, mainWindow.factory.findDao(UniversitySpendDao.class)), BorderLayout.NORTH);
 	}
 
 }

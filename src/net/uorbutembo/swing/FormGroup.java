@@ -119,7 +119,8 @@ public class FormGroup <T> extends Panel{
 		this.setBorder(new EmptyBorder(5, 5, 5, 5));
 		this.add(this.field.getComponent());
 		this.add(this.help);
-//		this.setBackground(FormUtil.BKG_END);
+		//Dimension max = new Dimension((int) field.getComponent().getMaximumSize().getWidth(), (int)field.getComponent().getMaximumSize().getHeight()); 
+		//this.setMaximumSize(max);
 	}
 	
 

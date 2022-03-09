@@ -53,7 +53,7 @@ public class PanelStudyClass extends Panel {
 		
 		this.btnNew.addActionListener(event -> {
 			if(formDialog == null) {
-				form = new FormStudyClass(this.studyClassDao);
+				form = new FormStudyClass(mainWindow, this.studyClassDao);
 				this.formDialog = new Dialog(mainWindow);
 				this.formDialog.setTitle("Enregistrement d'une nouvelle classe d'etude");
 				this.formDialog.getContentPane().add(this.form, BorderLayout.CENTER);

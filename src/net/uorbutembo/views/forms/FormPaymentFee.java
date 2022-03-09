@@ -19,6 +19,7 @@ import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
 /**
@@ -44,11 +45,15 @@ public class FormPaymentFee extends DefaultFormPanel {
 	private final JDialog parent;
 	private PaymentFee fee = new  PaymentFee();//objet encours de traitement
 
+
 	/**
+	 * 
+	 * @param mainWindow
+	 * @param parent la boite de dialogue, dans le cas ou le formulaire doit etre integrer dans une boite de dialogue comme contentPanel
 	 * @param paymentFeeDao
 	 */
-	public FormPaymentFee(JDialog parent, PaymentFeeDao paymentFeeDao) {
-		super();
+	public FormPaymentFee(MainWindow mainWindow, JDialog parent, PaymentFeeDao paymentFeeDao) {
+		super(mainWindow);
 		this.parent = parent;
 		this.paymentFeeDao = paymentFeeDao;
 		this.setTitle(TITLE_1);
@@ -70,15 +75,17 @@ public class FormPaymentFee extends DefaultFormPanel {
 		
 		this.getBody().add(content, BorderLayout.CENTER);
 		
-		parent.addWindowListener (new WindowAdapter() {
-			//si l'utilisateur ferme la fenetre alors qu'il devait enregistrer les modifications,
-			//alors on raz l'id de l'ojet qui facilite le la mediation
-			@Override
-			public void windowClosing(WindowEvent e) {
-				if(fee.getId()>0)
-					fee.setId(0);
-			}
-		});
+		if(parent != null) {			
+			parent.addWindowListener (new WindowAdapter() {
+				//si l'utilisateur ferme la fenetre alors qu'il devait enregistrer les modifications,
+				//alors on raz l'id de l'ojet qui facilite le la mediation
+				@Override
+				public void windowClosing(WindowEvent e) {
+					if(fee.getId()>0)
+						fee.setId(0);
+				}
+			});
+		}
 	}
 
 	/**

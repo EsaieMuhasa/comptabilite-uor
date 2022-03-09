@@ -19,6 +19,7 @@ import javax.swing.border.LineBorder;
 
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.forms.FormUtil;
 import resources.net.uorbutembo.R;
 
@@ -37,8 +38,14 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 	private JPanel body;
 	private JPanel footer;
 	
-	public DefaultFormPanel() {
+	protected final MainWindow mainWindow;
+	
+	/**
+	 * @param mainWindow
+	 */
+	public DefaultFormPanel(MainWindow mainWindow) {
 		super(new BorderLayout());
+		this.mainWindow = mainWindow;
 		this.title = "";
 		
 		this.setOpaque(false);
@@ -82,7 +89,7 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 	 * @param type
 	 */
 	public void showMessageDialog (String title, String message, int type) {
-		JOptionPane.showMessageDialog(this, message, title, type);
+		JOptionPane.showMessageDialog(mainWindow, message, title, type);
 	}
 	
 	public String getTitle() {

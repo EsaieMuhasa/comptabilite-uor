@@ -39,7 +39,7 @@ public class PanelAllocationCost extends Panel {
 	public PanelAllocationCost(MainWindow mainWindow) {
 		super(new BorderLayout());
 		allocationCostDao = mainWindow.factory.findDao(AllocationCostDao.class);
-		init();
+		init(mainWindow);
 	}
 	
 	/**
@@ -49,7 +49,7 @@ public class PanelAllocationCost extends Panel {
 		this.currentYear = currentYear;
 	}
 
-	private void init() {
+	private void init(MainWindow mainWindow) {
 		
 		//top
 		top.add(btnGraphics);
@@ -61,7 +61,7 @@ public class PanelAllocationCost extends Panel {
 				this.setCursor(new Cursor(Cursor.WAIT_CURSOR));
 				Thread t = new Thread(() -> {
 					center.removeAll();
-					form = new FormAllocationCost(allocationCostDao);
+					form = new FormAllocationCost(mainWindow, allocationCostDao);
 					center.add(form, BorderLayout.CENTER);
 					center.revalidate();
 					center.repaint();

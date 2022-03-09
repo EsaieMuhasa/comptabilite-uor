@@ -18,6 +18,7 @@ import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.swing.FormGroup;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
 /**
@@ -33,8 +34,8 @@ public class FormAcademicYear extends DefaultFormPanel {
 	private FormGroup<String> closeDate = FormGroup.createTextField("Date de fermeture");
 	private FormGroup<String> label = FormGroup.createTextField("Label de l'année");
 
-	public FormAcademicYear(AcademicYearDao academicYearDao) {
-		super();
+	public FormAcademicYear(MainWindow mainWindow, AcademicYearDao academicYearDao) {
+		super(mainWindow);
 		this.academicYearDao = academicYearDao;
 		this.setTitle("Formulaire de decalration d'une année academique");
 		this.init();

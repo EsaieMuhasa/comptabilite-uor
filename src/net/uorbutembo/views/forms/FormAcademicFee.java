@@ -15,6 +15,7 @@ import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.swing.FormGroup;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
 /**
@@ -32,8 +33,8 @@ public class FormAcademicFee extends DefaultFormPanel {
 	/**
 	 * 
 	 */
-	public FormAcademicFee(AcademicFeeDao academicFeeDao) {
-		super();
+	public FormAcademicFee(MainWindow mainWindow, AcademicFeeDao academicFeeDao) {
+		super(mainWindow);
 		this.academicFeeDao = academicFeeDao;
 		this.setTitle("Formultaire d'enregistrement");
 		Box box = Box.createVerticalBox();

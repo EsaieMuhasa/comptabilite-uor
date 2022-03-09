@@ -20,6 +20,7 @@ import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AllocationCostDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.FeePromotionDao;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 import net.uorbutembo.views.forms.FormGroupAllocationCost.AllocationCostField;
 
@@ -41,8 +42,8 @@ public class FormAllocationCost extends DefaultFormPanel {
 	/**
 	 * @param allocationCostDao
 	 */
-	public FormAllocationCost(AllocationCostDao allocationCostDao) {
-		super();
+	public FormAllocationCost(MainWindow mainWindow, AllocationCostDao allocationCostDao) {
+		super(mainWindow);
 		this.allocationCostDao = allocationCostDao;
 		this.currentYear = allocationCostDao.getFactory().findDao(AcademicYearDao.class).findCurrent();
 		this.setTitle("Formulire de répartiton des fais univeristaire");

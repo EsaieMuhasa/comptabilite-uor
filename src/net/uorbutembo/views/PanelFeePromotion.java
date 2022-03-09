@@ -87,7 +87,7 @@ public class PanelFeePromotion extends Panel {
 		
 		tableModel = new PromotionTableModel(promotionDao);
 		table =  new Table(tableModel);
-		formFeePromotion = new FormFeePromotion(feePromotionDao);
+		formFeePromotion = new FormFeePromotion(mainWindow, feePromotionDao);
 		
 		formCost = new FormGroupAllocationCost(feePromotionDao);
 		
@@ -102,7 +102,7 @@ public class PanelFeePromotion extends Panel {
 		
 		btnNewFee.addActionListener(event -> {
 			if(dialogAcademicFee == null) {
-				dialogAcademicFee = new Dialog(mainWindow, new FormAcademicFee(this.academicFeeDao));
+				dialogAcademicFee = new Dialog(mainWindow, new FormAcademicFee(mainWindow, this.academicFeeDao));
 			}
 			
 			dialogAcademicFee.setVisible(true);

@@ -34,6 +34,7 @@ import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.ListCellRenderer;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 import resources.net.uorbutembo.R;
 
@@ -68,8 +69,8 @@ public class FormPromotion extends DefaultFormPanel {
 	/**
 	 * 
 	 */
-	public FormPromotion(PromotionDao promotionDao) {
-		super();
+	public FormPromotion(MainWindow mainWindow, PromotionDao promotionDao) {
+		super(mainWindow);
 		this.promotionDao = promotionDao;
 		this.currentYear = this.promotionDao.getFactory().findDao(AcademicYearDao.class).findCurrent();
 		this.setTitle("Formulaire de configuration des promotions pour l'année "+ this.currentYear.getLabel());

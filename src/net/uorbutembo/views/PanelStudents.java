@@ -22,6 +22,7 @@ import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.dao.InscriptionDao;
+import net.uorbutembo.dao.StudentDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
@@ -32,6 +33,7 @@ import net.uorbutembo.views.components.NavbarButtonModel;
 import net.uorbutembo.views.components.SidebarStudents;
 import net.uorbutembo.views.components.SidebarStudents.SidebarListener;
 import net.uorbutembo.views.forms.FormInscription;
+import net.uorbutembo.views.forms.FormReRegister;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.InscritTableModel;
 import resources.net.uorbutembo.R;
@@ -43,7 +45,10 @@ import resources.net.uorbutembo.R;
 public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 	private static final long serialVersionUID = -356861410803019685L;
 
+	//dao
 	private InscriptionDao inscriptionDao;
+	private StudentDao studentDao;
+	//==dao
 	
 	private Table table;
 	private InscritTableModel tableModel;
@@ -68,6 +73,8 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 	public PanelStudents(MainWindow mainWindow) {
 		super("Inscription", new ImageIcon(R.getIcon("student")), mainWindow, false);//la scene gere les scrollbars	
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
+		studentDao = mainWindow.factory.findDao(StudentDao.class);
+		
 		this.setTitle("Etudiants");
 		
 		sheet = new IndividualSheet(mainWindow);
@@ -81,23 +88,29 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 		final JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.sidebar, workspace);
 		split.setDividerLocation(300);
 		
-		final Panel formPanel = new Panel(new BorderLayout());
+		final Panel inscriptionFormPanel = new Panel(new BorderLayout());
+		final Panel registerFormPanel = new Panel(new BorderLayout());
 		final Panel listPanel = new Panel(new BorderLayout());
 		
-		final FormInscription form = new FormInscription(mainWindow, mainWindow.factory.findDao(InscriptionDao.class));
-		formPanel.add(form, BorderLayout.CENTER);
+		final FormInscription inscription = new FormInscription(mainWindow, inscriptionDao, studentDao);
+		final FormReRegister register = new FormReRegister(mainWindow, inscriptionDao, studentDao);
 		
-		formPanel.setBorder(BODY_BORDER);
+		inscriptionFormPanel.add(inscription, BorderLayout.NORTH);
+		inscriptionFormPanel.setBorder(BODY_BORDER);
 		
-		final JScrollPane scroll = FormUtil.createVerticalScrollPane(formPanel);
+		registerFormPanel.add(register, BorderLayout.NORTH);
+		registerFormPanel.setBorder(BODY_BORDER);
+		
+		final JScrollPane inscriptionFormScroll = FormUtil.createVerticalScrollPane(inscriptionFormPanel);
+		final JScrollPane registerFormScroll = FormUtil.createVerticalScrollPane(registerFormPanel);
 		
 		listPanel.add(split, BorderLayout.CENTER);
 		
 		//menu secondaire
 		this
 			.addItemMenu(new NavbarButtonModel("inscrits", "Liste des inscrits"), listPanel)
-			.addItemMenu(new NavbarButtonModel("newStudent", "Inscription"), scroll)
-			.addItemMenu(new NavbarButtonModel("oldStudent", "Re-inscription"), new Panel());
+			.addItemMenu(new NavbarButtonModel("newStudent", "Inscription"), inscriptionFormScroll)
+			.addItemMenu(new NavbarButtonModel("oldStudent", "Re-inscription"), registerFormScroll);
 		
 		this.initWorkspace();
 	}

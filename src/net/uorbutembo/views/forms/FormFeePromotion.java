@@ -29,6 +29,7 @@ import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.CheckBox;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.RadioButton;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
 /**
@@ -54,8 +55,8 @@ public class FormFeePromotion extends DefaultFormPanel {
 	/**
 	 * 
 	 */
-	public FormFeePromotion(FeePromotionDao feePromotionDao) {
-		super();
+	public FormFeePromotion(MainWindow mainWindow, FeePromotionDao feePromotionDao) {
+		super(mainWindow);
 		this.setTitle("Formulaire d'enregistrement");
 		this.feePromotionDao = feePromotionDao;
 		this.promotionDao  = feePromotionDao.getFactory().findDao(PromotionDao.class);

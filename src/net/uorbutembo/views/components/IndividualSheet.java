@@ -97,7 +97,7 @@ public class IndividualSheet extends Panel {
 		table = new Table(tableModel);
 		
 		formDialog = new JDialog(mainWindow, "Payement de frais universitaire");
-		form = new FormPaymentFee(formDialog, mainWindow.factory.findDao(PaymentFeeDao.class));
+		form = new FormPaymentFee(mainWindow, formDialog, mainWindow.factory.findDao(PaymentFeeDao.class));
 		formDialog.getContentPane().setBackground(FormUtil.BKG_DARK);
 		formDialog.getContentPane().add(form, BorderLayout.CENTER);
 		formDialog.pack();

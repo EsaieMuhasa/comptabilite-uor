@@ -54,7 +54,7 @@ public class PanelFaculty extends Panel {
 			if(this.dialogForm == null) {
 				this.dialogForm = new Dialog(mainWindow);
 				this.dialogForm.setTitle("Enregistrememnt d'une faculté");
-				this.form = new FormFaculty(this.facultyDao);
+				this.form = new FormFaculty(mainWindow, this.facultyDao);
 				this.dialogForm.getContentPane().add(this.form, BorderLayout.CENTER);
 				this.dialogForm.setSize(600, 250);
 			}

@@ -72,11 +72,11 @@ class PiePartCaption extends JComponent implements PieModelListener{
 		FontMetrics metricsValue = g2.getFontMetrics(FONT_VALUE);
 //		FontMetrics metricsLabel = g2.getFontMetrics(FONT_LABEL);
 		
+		
 		int h = padding + step;
 		for (int i = 0 ; i < count; i++) {
 			PiePart part = model.getPartAt(i);
 
-//			g2.drawLine(paddingLeft? step/2 : 0, h, widht, h);
 			g2.setColor(part.getBackgroundColor().darker().darker().darker().darker());
 			g2.fillRoundRect(0, h-step, widht-10, step, step, step);
 			
@@ -97,7 +97,7 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			
 			g2.setFont(FONT_PERCENT);
 			g2.setColor(getBackground());
-			x = (widht - col - 5 + col/2) - metricsPercent.stringWidth(percentVal) + (metricsPercent.stringWidth(percentVal)/2);
+			x = (widht - col-5 + col/2) - metricsPercent.stringWidth(percentVal) + (metricsPercent.stringWidth(percentVal)/2);
 			y = ( h-step-10 + col/2) + metricsPercent.getHeight()/3;
 			g2.drawString(percentVal, x, y);
 			

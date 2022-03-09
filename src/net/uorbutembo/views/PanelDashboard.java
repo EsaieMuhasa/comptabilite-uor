@@ -141,7 +141,6 @@ public class PanelDashboard extends DefaultScenePanel {
 				if(part == null) {
 					part = new DefaultPiePart(color, cost.getAnnualSpend().getUniversitySpend().getTitle());
 					part.setValue(0.0);
-					System.out.println("\t> "+cost.getAnnualSpend().getUniversitySpend().getTitle());
 				}
 				
 				double value = part.getValue()+cost.getAmount();

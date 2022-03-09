@@ -14,6 +14,7 @@ import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.FormGroup;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
 /**
@@ -27,8 +28,8 @@ public class FormStudyClass extends DefaultFormPanel {
 	private final FormGroup<String> fullname = FormGroup.createTextField("Appelation complete");
 	private StudyClassDao studyClassDao;
 	
-	public FormStudyClass(StudyClassDao studyClassDao) {
-		super();
+	public FormStudyClass(MainWindow mainWindow, StudyClassDao studyClassDao) {
+		super(mainWindow);
 		this.studyClassDao = studyClassDao;
 		this.setTitle("Formulaire d'enregistrement");
 		this.init();

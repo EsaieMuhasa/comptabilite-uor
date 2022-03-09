@@ -19,6 +19,7 @@ import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.CheckBox;
+import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
 /**
@@ -38,8 +39,8 @@ public class FormAnnualSpend extends DefaultFormPanel {
 	/**
 	 * 
 	 */
-	public FormAnnualSpend(AnnualSpendDao annualSpendDao) {
-		super();
+	public FormAnnualSpend(MainWindow mainWindow, AnnualSpendDao annualSpendDao) {
+		super(mainWindow);
 		this.annualSpendDao = annualSpendDao;
 		this.setTitle("Rubriques budgetaire");
 		this.universitySpendDao = this.annualSpendDao.getFactory().findDao(UniversitySpendDao.class);

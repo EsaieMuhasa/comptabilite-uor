@@ -53,7 +53,7 @@ public class PanelPromotion extends Panel {
 		this.btnNew.addActionListener(event -> {
 			this.center.removeAll();
 			if(this.form == null) {
-				this.form = new FormPromotion(this.promotionDao);
+				this.form = new FormPromotion(mainWindow, this.promotionDao);
 				form.setCurrentYear(year);
 			}
 			this.center.add(this.form, BorderLayout.CENTER);

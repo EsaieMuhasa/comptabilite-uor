@@ -57,7 +57,7 @@ public class PanelAnnualSpend extends Panel {
 			this.center.removeAll();
 			
 			if(this.form == null ) {
-				this.form = new FormAnnualSpend(this.annualSpendDao);
+				this.form = new FormAnnualSpend(mainWindow, this.annualSpendDao);
 				form.setCurrentYear(currentYear);
 			}
 			
