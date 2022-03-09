@@ -9,7 +9,7 @@ import java.awt.Color;
  * @author Esaie MUHASA
  *
  */
-public class DefaultCardModel implements CardModel {
+public class DefaultCardModel <T> implements CardModel <T> {
 	
 	/**
 	 * @author Esaie MUHASA
@@ -27,10 +27,11 @@ public class DefaultCardModel implements CardModel {
 		LIGHT
 	}
 	
-	private String value;
+	private T value;
 	private String title;
 	private String icon;
 	private String info;
+	private String suffix="";
 	
 	private Card view;
 	private Color backgroundColor;
@@ -141,7 +142,7 @@ public class DefaultCardModel implements CardModel {
 	/**
 	 * @param value the value to set
 	 */
-	public void setValue(String value) {
+	public void setValue(T value) {
 		if (value == this.value)
 			return;
 		this.value = value;
@@ -153,6 +154,7 @@ public class DefaultCardModel implements CardModel {
 	 */
 	public void setTitle(String title) {
 		this.title = title;
+		this.repaintView();
 	}
 
 	/**
@@ -160,6 +162,7 @@ public class DefaultCardModel implements CardModel {
 	 */
 	public void setIcon(String icon) {
 		this.icon = icon;
+		this.repaintView();
 	}
 
 	/**
@@ -167,6 +170,7 @@ public class DefaultCardModel implements CardModel {
 	 */
 	public void setInfo(String info) {
 		this.info = info;
+		this.repaintView();
 	}
 
 	/**
@@ -177,7 +181,7 @@ public class DefaultCardModel implements CardModel {
 	}
 
 	@Override
-	public String getValue() {
+	public T getValue() {
 		return value;
 	}
 
@@ -194,6 +198,22 @@ public class DefaultCardModel implements CardModel {
 	@Override
 	public String getIcon() {
 		return icon;
+	}
+
+	/**
+	 * @return the suffix
+	 */
+	@Override
+	public String getSuffix() {
+		return suffix;
+	}
+
+	/**
+	 * @param suffix the suffix to set
+	 */
+	public void setSuffix(String suffix) {
+		this.suffix = suffix;
+		this.repaintView();
 	}
 
 }

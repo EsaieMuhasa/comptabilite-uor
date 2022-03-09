@@ -35,11 +35,11 @@ public class Card extends JComponent {
 			FONT_VALUE = new Font("Arial", Font.BOLD, 35),
 			FONT_INFO = new Font("Arial", Font.PLAIN, 13);
 	
-	private CardModel model;
+	private CardModel<?> model;
 
 	public Card() {//default constructor
 		super();
-		DefaultCardModel model = new DefaultCardModel(CardType.PRIMARY);
+		DefaultCardModel<?> model = new DefaultCardModel<>(CardType.PRIMARY);
 		this.model = model;
 		model.setView(this);
 		this.init();
@@ -49,7 +49,7 @@ public class Card extends JComponent {
 	 * Consctructeur d'initialisation du model du card
 	 * @param model
 	 */
-	public Card(CardModel model) {
+	public Card(CardModel<?> model) {
 		super();
 		this.model = model;
 		this.init();
@@ -101,7 +101,7 @@ public class Card extends JComponent {
 		FontMetrics metricsTitle = g2.getFontMetrics(FONT_TITLE);
 		
 		int hI =  height-(metricsInfo.getHeight()+10), wI = width;
-		int hV = (height- (metricsInfo.getHeight()+10)) - metricsValue.getHeight() - 5, xV = width - metricsValue.stringWidth(model.getValue()) - 5;
+		int hV = (height- (metricsInfo.getHeight()+10)) - metricsValue.getHeight() - 5, xV = width - metricsValue.stringWidth(model.getValue()+model.getSuffix()) - 5;
 		int hT = hV + metricsValue.getHeight() - 10, xT = width - metricsTitle.stringWidth(model.getTitle()) - 5;
 		
 		Color darker = model.getBackgroundColor().darker();
@@ -112,7 +112,7 @@ public class Card extends JComponent {
 		
 		//value 
 		g2.setFont(FONT_VALUE);
-		g2.drawString(model.getValue(), xV, hV);
+		g2.drawString(model.getValue().toString()+model.getSuffix(), xV, hV);
 		//==value
 		
 		//title

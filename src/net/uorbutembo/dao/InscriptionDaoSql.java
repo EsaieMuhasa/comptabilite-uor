@@ -359,8 +359,23 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 
 	@Override
 	public int countByFaculty(long faculty, long year) throws DAOException {
-		// TODO Auto-generated method stub
-		return 0;
+		final String subSql = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department IN (SELECT %s.id FROM %s WHERE %s.faculty = %d)",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year, Promotion.class.getSimpleName(),
+				Department.class.getSimpleName(), Department.class.getSimpleName(), Department.class.getSimpleName(), faculty);
+		final String sql = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE promotion IN (%s)", getTableName(), subSql);
+		System.out.println(sql);	
+		int count = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				count  = result.getInt("nombre");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return count;
 	}
 
 	@Override

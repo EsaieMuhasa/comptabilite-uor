@@ -9,13 +9,15 @@ import java.awt.Color;
  * @author Esaie MUHASA
  * Model des donnees d'un carde
  */
-public interface CardModel {
+public interface CardModel <T> {
 	
 	/**
 	 * Renvoie la valeur du card
 	 * @return
 	 */
-	String getValue ();
+	T getValue ();
+	
+	String getSuffix ();
 	
 	/**
 	 * Renvoie le titre principale du card
