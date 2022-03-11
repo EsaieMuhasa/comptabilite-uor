@@ -75,6 +75,19 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 			throw new DAOException(e.getMessage(), e);
 		}
 	}
+	
+	@Override
+	public void updatePicture(long id, String picture) {
+		try {
+			this.updateInTable(
+					new String[] {"picture", "lastUpdate"},
+					new Object[] {picture, System.currentTimeMillis()}, id);
+			Inscription i = findById(id);
+			this.emitOnUpdate(i);
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
 
 	@Override
 	public List<Inscription> findByStudent(long studentId) throws DAOException {

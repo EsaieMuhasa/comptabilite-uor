@@ -11,6 +11,7 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
@@ -18,6 +19,8 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import javax.imageio.ImageIO;
 import javax.swing.Box;
@@ -39,6 +42,7 @@ import resources.net.uorbutembo.R;
 public class ImagePicker extends Panel {
 	private static final long serialVersionUID = -8188839974929150048L;
 	private static final Dimension PREFERRED_SIZE = new Dimension(260, 300);
+	private static final String [] EXT = {"png", "jpg", "jpeg"};
 	
 	private JLabel title = new JLabel("", JLabel.CENTER);
 	
@@ -73,6 +77,9 @@ public class ImagePicker extends Panel {
 		this.setMaximumSize(PREFERRED_SIZE);
 		this.setMinimumSize(PREFERRED_SIZE);
 		this.setBorder(new LineBorder(Color.WHITE));
+		
+		slider.setMaximum(200);
+		slider.setMinimum(20);
 		
 		box.add(slider);
 		box.add(Box.createVerticalStrut(20));
@@ -121,13 +128,73 @@ public class ImagePicker extends Panel {
 		});
 	}
 	
+	/**
+	 * Modification du zoom max possible
+	 * @param ration
+	 */
+	public void setMaxZoom (int ration) {
+		this.slider.setMaximum(ration);
+	}
+	
+	/**
+	 * Modification du zoom min possible
+	 * @param ration
+	 */
+	public void setMinZoom (int ration) {
+		this.slider.setMinimum(ration);
+	}
+	
+	/**
+	 * modification du ration actuel 
+	 * doit etre une valeur comptix entre zoomMin et zoomMax
+	 * @param ration
+	 */
+	public void setRation (int ration) {
+		this.slider.setValue(ration);
+	}
+	
+	public int getRation () {
+		return this.slider.getValue();
+	}
+	
+	/**
+	 * Renvoie le chemain absolut vers l'image sur le HDD
+	 * @return
+	 */
+	public String getSelectedFileName () {
+		return render.getFileName();
+	}
+	
+	/**
+	 * Renvoie le type de l'image.
+	 * typiquement une petite chaine de caractere comme png, jpg ou jpeg
+	 * @return
+	 */
+	public String getImageType () {
+		if(getSelectedFileName() == null)
+			return null;
+		for (String e : EXT)
+			if(getSelectedFileName().toLowerCase().matches(".+\\."+e))
+				return e;
+		
+		return null;
+	}
+	
+	/**
+	 * Renvoie l'image deja redimensionner
+	 * @return
+	 */
+	public BufferedImage getImage () {
+		return render.cropImage();
+	}
+	
 	
 	/**
 	 * 
 	 * @author Esaie MUHASA
-	 *
+	 * Rendu de l'image choisie
 	 */
-	protected static class ImagePickerRender extends JComponent {
+	private static class ImagePickerRender extends JComponent {
 		private static final long serialVersionUID = 7268721008490974405L;
 		private static int IMAGE_MAX_WIDTH = 150;
 		private static final String DEFAULT_FILE_NAME = R.getIcon("personne");
@@ -294,11 +361,15 @@ public class ImagePicker extends Panel {
 		 * @param ration une valeur entre 1 et 100
 		 */
 		public void setRation (int ration) {
-			if(ration<=0 || ration > 100)
+			if(ration<=0 || ration > 200)
 				throw new RuntimeException("ration doit etre une valeur compris entre 0 et 100: => "+ration);
 			
-			wImg = (image.getWidth()/100) * ration;
-			hImg = (image.getHeight()/100) * ration;
+			BigDecimal bigW = new BigDecimal(image.getWidth() * (ration/100.0)).setScale(0, RoundingMode.HALF_UP),
+					bigH = new BigDecimal(image.getHeight() * (ration/100.0)).setScale(0, RoundingMode.HALF_UP);
+			
+			wImg = bigW.intValue();
+			hImg = bigH.intValue();
+			
 			this.repaint();
 		}
 		
@@ -309,8 +380,20 @@ public class ImagePicker extends Panel {
 		public BufferedImage cropImage () {
 			if(image == null)
 				return null;
-			int x = xImg - xRect, y = yImg - yRect;
-			BufferedImage crop = image.getSubimage(x, y, IMAGE_MAX_WIDTH, IMAGE_MAX_WIDTH);
+			
+			double diffX = Math.abs(xImg - xRect),
+					diffY = Math.abs(yImg - yRect);
+			
+			Image resize = image.getScaledInstance(wImg, hImg, Image.SCALE_DEFAULT);
+			BufferedImage buffer = new BufferedImage(wImg, hImg, BufferedImage.TYPE_INT_BGR);
+			buffer.createGraphics().drawImage(resize, 0, 0, null);
+			
+			BigDecimal bigX = new BigDecimal(diffX).setScale(0, RoundingMode.HALF_UP),
+					bigY = new BigDecimal(diffY).setScale(0, RoundingMode.HALF_UP), 
+					bigSize = new BigDecimal(IMAGE_MAX_WIDTH).setScale(0, RoundingMode.HALF_UP);
+			
+			int x = bigX.intValue(), y = bigY.intValue(), size = bigSize.intValue();
+			BufferedImage crop = buffer.getSubimage(x, y, size, size);
 			return crop;
 		}
 	}
@@ -319,8 +402,7 @@ public class ImagePicker extends Panel {
 	 * @author Esaie MUHASA
 	 * Filtrage lors de la selection d'une image
 	 */
-	protected static class ImagePickerFilter extends FileFilter {
-		private static final String [] EXT = {"png", "jpg", "jpeg"};
+	private static class ImagePickerFilter extends FileFilter {
 
 		@Override
 		public boolean accept(File f) {
@@ -328,7 +410,7 @@ public class ImagePicker extends Panel {
 				return true;
 			
 			for (String e : EXT)
-				if(f.getAbsoluteFile().getName().matches(".+\\."+e))
+				if(f.getAbsoluteFile().getName().toLowerCase().matches(".+\\."+e))
 					return true;
 			
 			return false;

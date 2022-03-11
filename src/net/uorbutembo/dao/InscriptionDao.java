@@ -6,8 +6,6 @@ package net.uorbutembo.dao;
 import java.util.List;
 
 import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.beans.Department;
-import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.Student;
@@ -17,6 +15,13 @@ import net.uorbutembo.beans.Student;
  *
  */
 public interface InscriptionDao extends DAOInterface<Inscription>, OverallStatistic<Inscription> {
+	
+	/**
+	 * Mise en jour la photo d'un inscrit
+	 * @param id
+	 * @param picture
+	 */
+	void updatePicture(long id, String picture);
 	
 	/**
 	 * Verifie si letudiant s'est deja inscrit aumoin une fois

@@ -1,9 +1,12 @@
 package net.uorbutembo.views.forms;
 
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.text.ParseException;
 import java.util.Date;
 
+import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
 import net.uorbutembo.beans.AcademicYear;
@@ -16,6 +19,7 @@ import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.StudentDao;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.views.MainWindow;
+import resources.net.uorbutembo.R;
 
 /**
  * 
@@ -147,6 +151,19 @@ public class FormInscription extends AbstractInscriptionForm{
 			this.showMessageDialog("Information", "Success d'enregistrement de l'inscription de\n l'etudiant "+student.toString()+", \ndans la promtion "+promotion.toString(), JOptionPane.INFORMATION_MESSAGE);
 		} catch (DAOException e) {
 			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		//ecriture de la photo sur le disque dur
+		String fileName = inscription.getId()+"-"+System.currentTimeMillis()+"."+imagePicker.getImageType();
+		try  {
+			File file = new File(R.getConfig().get("workspace")+fileName);
+			BufferedImage image = imagePicker.getImage();
+			ImageIO.write(image, imagePicker.getImageType(), file);
+			inscriptionDao.updatePicture(inscription.getId(), fileName);
+			studentDao.updatePicture(fileName, inscription.getStudent().getId());
+		} catch (Exception e) {
+			this.showMessageDialog("Erreur d'ecriture du fichier", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

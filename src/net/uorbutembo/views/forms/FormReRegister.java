@@ -37,16 +37,9 @@ public class FormReRegister extends AbstractInscriptionForm {
 	@Override
 	protected void onResize(int width) {
 		super.onResize(width);
-//		if(this.getWidth() <= 650) {
-//			if(fieldsLayout.getRows()==2) {
-//				fieldsLayout.setRows(3);
-//				fieldsLayout.setColumns(1);
-//			}
-//		} else {
-//			if(fieldsLayout.getRows() != 2) {
-//				fieldsLayout.setRows(2);
-//				fieldsLayout.setColumns(2);
-//			}
+//		if(fieldsLayout.getRows()!=3) {
+//			fieldsLayout.setRows(3);
+//			fieldsLayout.setColumns(1);
 //		}
 	}
 
