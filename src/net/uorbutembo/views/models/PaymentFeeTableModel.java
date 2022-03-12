@@ -48,8 +48,10 @@ public class PaymentFeeTableModel extends TableModel<PaymentFee> {
 		else
 			this.data.clear();
 		
-		if(this.feePromotion == null || inscription.getPromotion().getId() != this.feePromotion.getPromotion().getId())
-			this.feePromotion = this.feePromotionDao.findByPromotion(inscription.getPromotion().getId());
+		if(this.feePromotion == null || inscription.getPromotion().getId() != this.feePromotion.getPromotion().getId()) {
+			if(this.feePromotionDao.checkByPromotion(inscription.getPromotion().getId()))
+				this.feePromotion = this.feePromotionDao.findByPromotion(inscription.getPromotion().getId());
+		}
 		
 		this.fireTableDataChanged();
 	}

@@ -55,7 +55,7 @@ public class MainWindow extends JFrame {
 		this.getContentPane().add(this.sidebar, BorderLayout.WEST);
 		this.getContentPane().setBackground(Color.WHITE);
 		
-		this.getLayeredPane().setOpaque(false);
+		this.getLayeredPane().setOpaque(false);		
 		
 		try {
 			this.setIconImage(ImageIO.read(new File(R.getIcon("logo"))));

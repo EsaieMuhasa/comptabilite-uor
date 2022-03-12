@@ -24,18 +24,14 @@ import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.AnnualSpend;
-import net.uorbutembo.beans.FeePromotion;
 import net.uorbutembo.dao.AllocationCostDao;
-import net.uorbutembo.dao.FeePromotionDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.TextField;
@@ -47,7 +43,9 @@ import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
- *
+ * Formulaire de repartition des frais universitaire.
+ * Contiens entre autre un groupe de champs de texte pour chaque rubrique du budget, 
+ * et un graphique Pie, permetant la visualisation de graphique.
  */
 public class FormGroupAllocationCost extends Panel {
 	private static final long serialVersionUID = -6416909862130925182L;
@@ -55,14 +53,10 @@ public class FormGroupAllocationCost extends Panel {
 	private final JLabel title = FormUtil.createSubTitle("");
 	private AcademicFee academicFee;
 	private List<AnnualSpend> annualSpends = new ArrayList<>();
-	private List<FeePromotion> feePromotions= new ArrayList<>();
 	private List<AllocationCostField> fields = new ArrayList<>();
 	
-	private FeePromotionDao feePromotionDao;
 	private AllocationCostDao allocationCostDao;
 	
-	private final DefaultListModel<FeePromotion> listFeePromotionModel = new DefaultListModel<>();
-	private final JList<FeePromotion> listFeePromotion = new JList<>(listFeePromotionModel);
 	private final GridLayout layout = new GridLayout(1, 1);
 	
 	//paneau principeau
@@ -79,34 +73,37 @@ public class FormGroupAllocationCost extends Panel {
 	 * Constructeur d'initialisation
 	 * @param feePromotionDao
 	 */
-	public FormGroupAllocationCost(FeePromotionDao feePromotionDao) {
+	public FormGroupAllocationCost(AllocationCostDao allocationCostDao) {
 		super(new BorderLayout(DEFAULT_H_GAP, DEFAULT_V_GAP));
-		this.feePromotionDao = feePromotionDao;
-		this.allocationCostDao = feePromotionDao.getFactory().findDao(AllocationCostDao.class);
+		this.allocationCostDao = allocationCostDao;
 		
 		this.initViews();
 		this.setBorder(new EmptyBorder(0, 0, DEFAULT_V_GAP*2, 0));
 	}
 	
 	/**
+	 * Modification de la repartion des frais encours de vistaalisation
 	 * @param academicFee the academicFee to set
 	 * @param annualSpends the annualSpends to set
 	 */
 	public void init (AcademicFee academicFee, List<AnnualSpend> annualSpends) {
 		this.academicFee = academicFee;
-		this.annualSpends = annualSpends;
+		
+		if(annualSpends != null)
+			this.annualSpends = annualSpends;
 		
 		//this.pieModel.setTitle("Repartition du "+academicFee.getAmount()+" USD");
 		this.pieModel.setMax(academicFee.getAmount());
 		this.title.setText("Repartition du "+academicFee.getAmount()+" "+UNIT_MONEY);
 		
-		if(this.feePromotionDao.checkByAcademicFee(academicFee.getId())) {
-			feePromotions = feePromotionDao.findByAcademicFee(academicFee);
-		} else {
-			feePromotions = new ArrayList<>();
-		}
-		
 		this.updateViews();
+	}
+	
+	/**
+	 * @param academicFee
+	 */
+	public void init (AcademicFee academicFee) {
+		this.init(academicFee, null);
 	}
 
 	/**
@@ -128,8 +125,7 @@ public class FormGroupAllocationCost extends Panel {
 		container.add(left);
 		container.add(piePanel);
 		piePanel.setBackground(BKG_END);
-		
-		left.add(FormUtil.createScrollPane(this.listFeePromotion), BorderLayout.WEST);
+
 		left.add(FormUtil.createScrollPane(center), BorderLayout.CENTER);
 		left.setBorder(new EmptyBorder(0, DEFAULT_H_GAP, 0, 0));
 		
@@ -146,15 +142,9 @@ public class FormGroupAllocationCost extends Panel {
 	 */
 	private void updateViews () {
 		
-		listFeePromotionModel.clear();
 		pieModel.removeAll();
 		fields.clear();
 		center.removeAll();
-		
-		//le promotions conserner
-		for (FeePromotion fee : feePromotions) {
-			listFeePromotionModel.addElement(fee);
-		}
 		
 		//les champs de text
 		for ( int i= 0, max= annualSpends.size(); i<max; i++) {
@@ -319,6 +309,10 @@ public class FormGroupAllocationCost extends Panel {
 				part = pieModel.getPartByName(cost.getAnnualSpend().getUniversitySpend().getTitle());
 			
 			this.amount.addCaretListener(event -> {
+				
+				if(cost == null)
+					return;
+				
 				try {
 					BigDecimal number = new BigDecimal(Float.parseFloat(amount.getValue())).setScale(2, RoundingMode.HALF_UP);
 					cost.setAmount(number.floatValue());

@@ -90,12 +90,13 @@ public class IndividualSheetHeader extends JComponent {
 		
 		
 		//photo de profil
+		String picture = inscription.getStudent().getPicture() != null? R.getConfig().get("workspace")+""+inscription.getStudent().getPicture(): null;
 		try {
-			Image image = ImageIO.read(new File(R.getIcon("personne")));
-			g2.drawImage (image, 4, 4, height-8, height-8, null);
+			Image image = ImageIO.read(new File(picture !=null? picture : R.getIcon("personne")));
+			g2.drawImage (image, 4, 4, height-10, height-10, null);
 			g2.drawRoundRect(1, 1, height-5, height-5, 5, 5);
 		} catch (IOException e) {
-			System.out.println("> Error: "+e.getMessage());
+			System.out.println("> Error: "+e.getMessage()+" => "+picture);
 		}
 		
 		if(this.inscription == null)

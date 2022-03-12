@@ -11,6 +11,58 @@ public abstract class User extends DBEntity {
 	private static final long serialVersionUID = -6025563457537816603L;
 	
 	/**
+	 * 
+	 * @author Esaie MUHASA
+	 * Le sexe d'un utilsiateur
+	 */
+	public static class Kind {
+		private String shortName;
+		private String fullName;
+		
+		/**
+		 * @param shortName
+		 * @param fullName
+		 */
+		public Kind(String shortName, String fullName) {
+			super();
+			this.shortName = shortName;
+			this.fullName = fullName;
+		}
+		
+		/**
+		 * @return the shortName
+		 */
+		public String getShortName() {
+			return shortName;
+		}
+		/**
+		 * @param shortName the shortName to set
+		 */
+		public void setShortName(String shortName) {
+			this.shortName = shortName;
+		}
+		/**
+		 * @return the fullName
+		 */
+		public String getFullName() {
+			return fullName;
+		}
+		/**
+		 * @param fullName the fullName to set
+		 */
+		public void setFullName(String fullName) {
+			this.fullName = fullName;
+		}
+
+		@Override
+		public String toString() {
+			return  "["+shortName+"] "+fullName;
+		}
+	}
+	
+	public static final Kind [] KINDS = new Kind [] {new Kind("M", "Masculin"), new Kind("F", "Feminin")}; 
+	
+	/**
 	 * Le nom de l'utilisateur
 	 */
 	protected String name;
@@ -44,6 +96,11 @@ public abstract class User extends DBEntity {
 	 * le numero de telephone d'un utilisateur
 	 */
 	protected String telephone;
+	
+	/**
+	 * Le sexe d'un  utilisateur 
+	 */
+	protected Kind kind;
 
 	/**
 	 * 
@@ -112,6 +169,8 @@ public abstract class User extends DBEntity {
 	 * @param picture the picture to set
 	 */
 	public void setPicture(String picture) {
+		if(picture == null || picture.isEmpty()) 
+			return;
 		this.picture = picture;
 	}
 
@@ -161,6 +220,23 @@ public abstract class User extends DBEntity {
 		return this.name+" "+this.postName+" "+this.firstName;
 	}
 	
+	/**
+	 * @return the kind
+	 */
+	public Kind getKind() {
+		return kind;
+	}
+
+	/**
+	 * @param kind the kind to set
+	 */
+	public void setKind(String kind) {
+		if(!KINDS[0].getShortName().equals(kind) && !KINDS[1].getShortName().equals(kind)) {
+			throw new IllegalArgumentException("valeur invalide en parametre de la methode setKind() => "+kind);
+		}
+		this.kind = KINDS[0].getShortName().equals(kind)? KINDS[0] : KINDS[1];
+	}
+
 	@Override
 	public String toString() {
 		return this.getFullName();

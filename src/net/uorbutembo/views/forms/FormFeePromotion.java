@@ -5,17 +5,21 @@ package net.uorbutembo.views.forms;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
-import javax.swing.JOptionPane;
-import javax.swing.JRadioButton;
+import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.border.LineBorder;
 
 import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AcademicYear;
@@ -23,20 +27,19 @@ import net.uorbutembo.beans.FeePromotion;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.DAOAdapter;
-import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.FeePromotionDao;
 import net.uorbutembo.dao.PromotionDao;
-import net.uorbutembo.swing.CheckBox;
+import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.swing.RadioButton;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
+import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
  *
  */
-public class FormFeePromotion extends DefaultFormPanel {
+public class FormFeePromotion extends DefaultFormPanel  {
 	private static final long serialVersionUID = 6991790198392841255L;
 	
 	private AcademicYear currentYear;
@@ -44,34 +47,56 @@ public class FormFeePromotion extends DefaultFormPanel {
 	private AcademicFeeDao academicFeeDao;
 	private FeePromotionDao feePromotionDao;
 
-	private List<CheckBox<Promotion>> checkBoxs = new ArrayList<>();
-	private List<RadioButton<AcademicFee>> radioButtons = new ArrayList<>();
+	private final DefaultListModel<Promotion> modelUnselectedPromotion = new DefaultListModel<>();
 	
-	private GridLayout gridCheckBoxPromotion = new GridLayout();
-	private Panel panelCheckBoxPromotions = new Panel(gridCheckBoxPromotion);
-	private Panel panelRadioButtonFees = new Panel(new FlowLayout(FlowLayout.LEFT));
-	private ButtonGroup groupRadioButtonFees = new ButtonGroup();
-
+	private final GridLayout layout = new GridLayout(1, 3, FormUtil.DEFAULT_H_GAP*2, FormUtil.DEFAULT_V_GAP);
+	private final Panel container = new Panel(layout);
+	private DialogChoosePromotion  dialogPromotion;
+	
+	
+	private List<PanelAcademicFeeConfig> panelsConfig = new ArrayList<>();
+	private PanelConfigListener  configListener = new  PanelConfigListener() {//ecouteur du panel de repartition pour chaque frais
+		
+		@Override
+		public void requireAdding(PanelAcademicFeeConfig config) {
+			if(dialogPromotion == null )
+				dialogPromotion = new DialogChoosePromotion(mainWindow);
+			
+			dialogPromotion.setReceiver(config);
+			dialogPromotion.setVisible(true);
+		}
+		
+		@Override
+		public void onRemove(PanelAcademicFeeConfig config, List<FeePromotion> fees) {
+			for (FeePromotion fee : fees) {
+				if(fee.getId() > 0)
+					feePromotionDao.delete(fee.getId());
+				
+				modelUnselectedPromotion.addElement(fee.getPromotion());
+			}
+		}
+		
+		@Override
+		public void onAdding(FeePromotion fee) {
+			if(fee.getId() == 0)
+				feePromotionDao.create(fee);
+		};
+	};
 	/**
 	 * 
 	 */
 	public FormFeePromotion(MainWindow mainWindow, FeePromotionDao feePromotionDao) {
 		super(mainWindow);
 		this.setTitle("Formulaire d'enregistrement");
+		
 		this.feePromotionDao = feePromotionDao;
 		this.promotionDao  = feePromotionDao.getFactory().findDao(PromotionDao.class);
 		this.academicFeeDao = feePromotionDao.getFactory().findDao(AcademicFeeDao.class);
-		
-		panelRadioButtonFees.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY), "Montant a payer"));
-		panelCheckBoxPromotions.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY), "Promotions"));
-		
-		Panel panel = new Panel(new BorderLayout(5, 5));
-		panel.add(panelCheckBoxPromotions, BorderLayout.NORTH);
-		panel.add(panelRadioButtonFees, BorderLayout.SOUTH);
-		this.getBody().add(panel, BorderLayout.CENTER);
+
+		this.getBody().add(container, BorderLayout.CENTER);
 		
 		this.init();
-		this.setVisible(false);
+		this.btnSave.setVisible(false);
 	}
 	
 	/**
@@ -96,34 +121,37 @@ public class FormFeePromotion extends DefaultFormPanel {
 		
 		final List<Promotion> promotions = this.promotionDao.checkByAcademicYear(this.currentYear.getId())?
 				this.promotionDao.findByAcademicYear(this.currentYear.getId()) : new ArrayList<>();
+		
 		final List<AcademicFee> academicFees = this.academicFeeDao.checkByAcademicYear(this.currentYear.getId())?
 				this.academicFeeDao.findByAcademicYear(this.currentYear.getId()) : new ArrayList<>();
-		
-		final int row = (promotions.size()%4)!=0? (promotions.size()/4)+1 : promotions.size()/4;
-		this.gridCheckBoxPromotion.setColumns(3);
-		this.gridCheckBoxPromotion.setRows(row);
-		
-		panelRadioButtonFees.removeAll();
-		for (JRadioButton btn : radioButtons) {//supression de enciens composant
-			groupRadioButtonFees.remove(btn);
-		}
-		radioButtons.clear();
+
 		for (AcademicFee fee : academicFees) {
-			RadioButton<AcademicFee> r = FormUtil.createRadioButon(fee.getAmount()+" USD", fee);
-			panelRadioButtonFees.add(r);
-			groupRadioButtonFees.add(r);
-			this.radioButtons.add(r);
+			PanelAcademicFeeConfig panel = new PanelAcademicFeeConfig(fee, configListener, feePromotionDao);
+			panelsConfig.add(panel);
+			container.add(panel);
 		}
 		
-		panelCheckBoxPromotions.removeAll();
-		checkBoxs.clear();
-		for (Promotion p : promotions) {
-			CheckBox<Promotion> c = FormUtil.createCheckBox(p.getStudyClass().getAcronym()+" "+p.getDepartment().getName(), p);
-			panelCheckBoxPromotions.add(c);
-			this.checkBoxs.add(c);
+		boolean next = false;
+		for (Promotion promotion : promotions) {//trie des promotions non associer aux frais univ
+			next = false;
+			for (PanelAcademicFeeConfig panel : panelsConfig) {
+				for (int i = 0, count = panel.getModel().getSize(); i<count; i++) {
+					FeePromotion fee = panel.getModel().get(i);
+					
+					if(promotion.getId() == fee.getPromotion().getId()) {
+						next = true;
+						break;
+					}
+				}
+				
+				if(next)
+					break;
+			}
+			
+			if(!next) 
+				modelUnselectedPromotion.addElement(promotion);
 		}
-		
-		this.setVisible(true);
+
 	}
 
 	/**
@@ -134,86 +162,248 @@ public class FormFeePromotion extends DefaultFormPanel {
 		this.promotionDao.addListener(new DAOAdapter<Promotion>() {
 			@Override
 			public void onCreate(Promotion p, int requestId) {
-				CheckBox<Promotion> check = FormUtil.createCheckBox(p.getStudyClass().getAcronym()+" "+p.getDepartment().getName(), p);
-				checkBoxs.add(check);
-				panelCheckBoxPromotions.add(check);
-				
-				int row = (checkBoxs.size()%4)!=0? (checkBoxs.size()/4)+1 : checkBoxs.size()/4;
-				gridCheckBoxPromotion.setRows(row);
+				if(currentYear.getId() == p.getAcademicYear().getId())
+					modelUnselectedPromotion.addElement(p);
 			}
 		});
 		
 		this.academicFeeDao.addListener(new DAOAdapter<AcademicFee>() {
 			@Override
 			public void onCreate(AcademicFee fee, int requestId) {
-				RadioButton<AcademicFee> r = FormUtil.createRadioButon(fee.getAmount()+" USD", fee);
-				panelRadioButtonFees.add(r);
-				groupRadioButtonFees.add(r);
-				radioButtons.add(r);
+				if(currentYear.getId() != fee.getAcademicYear().getId()) 
+					return;
+				
+				PanelAcademicFeeConfig panel = new PanelAcademicFeeConfig(fee, configListener, feePromotionDao);
+				panelsConfig.add(panel);
+				container.add(panel);
 			}
 		});
 		
 	}
-	
-	@Override
-	public void doLayout() {
-		super.doLayout();
-//		System.out.println("width: "+this.getWidth());
-		if(checkBoxs.size() == 0)
-			return;
-		
-		if(this.getWidth() <= 800) {
-			int row = (checkBoxs.size()%3)!=0? (checkBoxs.size()/3)+1 : checkBoxs.size()/3;
-			gridCheckBoxPromotion.setRows(row);
-			gridCheckBoxPromotion.setColumns(3);
-		} else {
-			int row = (checkBoxs.size()%4)!=0? (checkBoxs.size()/4)+1 : checkBoxs.size()/4;
-			gridCheckBoxPromotion.setRows(row);
-		}
-	}
 
 	@Override
-	public void actionPerformed(ActionEvent event) {
+	public void actionPerformed(ActionEvent event) {}
+	
+	/**
+	 * @author Esaie MUHASA
+	 * Listener 
+	 */
+	private interface PanelConfigListener {
 		
-		List<Promotion> promotions = new ArrayList<>();
-		for (CheckBox<Promotion> check : this.checkBoxs) {
-			if(check.isSelected()) {
-				promotions.add(check.getData());
+		/**
+		 * Evenemet d'ecoute d'ajout de nouveau promotion 
+		 * dans la configuration des frais academique
+		 * @param config
+		 */
+		void requireAdding (PanelAcademicFeeConfig config);
+		
+		/**
+		 * Supression de promotions dans la configuration des frais universitaire
+		 * @param config
+		 * @param fees
+		 */
+		void onRemove (PanelAcademicFeeConfig config, List<FeePromotion> fees);
+		
+		/**
+		 * Apres que le paneau de configuration ait instancier la relation entre les frais est la prmotion
+		 * @param fee
+		 */
+		void onAdding (FeePromotion fee);
+	}
+	
+	/**
+	 * @author Esaie MUHASA
+	 * Panel de de configuration des frais universitaire
+	 */
+	private static final class PanelAcademicFeeConfig extends Panel {
+		private static final long serialVersionUID = -3831549572169534221L; 
+		
+		private final AcademicFee fee;
+		private final PanelConfigListener listener;
+		private final FeePromotionDao feePromotionDao;
+		private final DefaultListModel<FeePromotion> model = new DefaultListModel<>();
+		
+		private JLabel title = FormUtil.createSubTitle("");
+		private final JList<FeePromotion> list = new JList<>(model);
+		private final Button btnAdd = new Button(new ImageIcon(R.getIcon("success")));
+		private final Button btnRemove = new Button(new ImageIcon(R.getIcon("close")));
+		private final LineBorder  border = new LineBorder(FormUtil.BORDER_COLOR), 
+				borderActive = new LineBorder(new Color(0xFF0000), 1);
+		
+		/**
+		 * Constructeur d'initialisation.
+		 * @param fee, les frais auquel nous voulons associer un nombre x de promotion
+		 */
+		public PanelAcademicFeeConfig(final AcademicFee fee, final PanelConfigListener listener, final FeePromotionDao feePromotionDao) {
+			super(new BorderLayout());
+			this.fee = fee;
+			this.listener = listener;
+			this.feePromotionDao = feePromotionDao;
+			title.setText(fee.getAmount()+" "+FormUtil.UNIT_MONEY);
+			title.setHorizontalAlignment(JLabel.CENTER);
+			
+			init();
+			load();
+		}
+		
+		/**
+		 * Chargement des prmotions concerner par le frais
+		 */
+		public void load () {
+			if(this.feePromotionDao.checkByAcademicFee(fee.getId())) {
+				List<FeePromotion> data = feePromotionDao.findByAcademicFee(fee);
+				for (FeePromotion f : data) {
+					model.addElement(f);
+				}
 			}
 		}
 		
-		AcademicFee fee = null;
-		for (RadioButton<AcademicFee> radio : this.radioButtons) {
-			if(radio.isSelected()) {
-				fee = radio.getData();
-				break;
+		/**
+		 * Personnalisation des composant graphique
+		 */
+		private void init() {
+			add(title, BorderLayout.NORTH);
+			add(FormUtil.createVerticalScrollPane(list), BorderLayout.CENTER);
+			
+			Panel bottom = new Panel();
+			bottom.add(btnAdd);
+			bottom.add(btnRemove);
+			add(bottom, BorderLayout.SOUTH);
+			setBorder(border);
+			
+			btnAdd.addActionListener(event -> {
+				listener.requireAdding(this);
+			});
+			
+			btnRemove.addActionListener(event ->  {
+				int indexs [] = list.getSelectedIndices();
+				
+				if(indexs.length == 0) 
+					return;
+				
+				List<FeePromotion> fees = new ArrayList<>();
+				for (int index : indexs) {
+					fees.add(model.get(index));
+				}
+				
+				for (int i : indexs) {
+					model.remove(i);
+				}
+				
+				listener.onRemove(this, fees);
+			});
+		}
+		
+		public void setActive (boolean active) {
+			if(active)
+				setBorder(borderActive);
+			else 
+				setBorder(border);
+		}
+		
+		public void addItem (Promotion promotion) {
+			FeePromotion fee = null;
+			if(feePromotionDao.checkByPromotion(promotion.getId())) {
+				fee = feePromotionDao.findByPromotion(promotion.getId());
+			} else {
+				fee = new FeePromotion();
+				fee.setAcademicFee(getFee());
+				fee.setPromotion(promotion);
+				fee.setRecordDate(new Date());
 			}
+			model.addElement(fee);
+			listener.onAdding(fee);
+		}
+
+		/**
+		 * @return the fee
+		 */
+		public AcademicFee getFee() {
+			return fee;
+		}
+
+		/**
+		 * @return the model
+		 */
+		public DefaultListModel<FeePromotion> getModel() {
+			return model;
 		}
 		
-		if(fee == null || promotions.isEmpty()) {
-			this.showMessageDialog("Alert", "Impossible d'effectuer cette requette. \nAssurez-vous d'avoir selectionner aumoin une promotion\n et le fais qui vous voulez y associer!", JOptionPane.ERROR_MESSAGE);
-			return;
+	}
+	
+	/**
+	 * @author Esaie MUHASA
+	 * Poite de dialogue permetant de choisir une/plusieur promotions
+	 * pour l'/les associer(s) au frais universitarie
+	 */
+	private class DialogChoosePromotion extends JDialog {
+		private static final long serialVersionUID = -4259412319774601929L;
+		
+		private final JList<Promotion> listPromotion = new JList<>(modelUnselectedPromotion);
+		private final JButton btnAccept = new  JButton("Valider");
+		private final JButton btnCancel = new JButton("Fermer");
+		
+		private PanelAcademicFeeConfig receiver;
+		
+		public DialogChoosePromotion(MainWindow parent) {
+			super(parent, "Selectionner une promotion", false);
+			
+			this.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+			this.setSize(300, 400);
+			this.setLocationRelativeTo(parent);
+			
+			//init ihm
+			final Panel bottom = new Panel();
+			bottom.add(btnAccept);
+			bottom.add(btnCancel);
+			bottom.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			this.getContentPane().setBackground(FormUtil.BKG_DARK);
+			this.getContentPane().add(FormUtil.createSubTitle("Promotion disponible"), BorderLayout.NORTH);
+			this.getContentPane().add(FormUtil.createVerticalScrollPane(listPromotion), BorderLayout.CENTER);
+			this.getContentPane().add(bottom, BorderLayout.SOUTH);
+			//==init ihm
+			
+			this.addWindowStateListener(new WindowAdapter() {
+
+				@Override
+				public void windowActivated(WindowEvent e) {
+					if(receiver == null) {
+						setVisible(false);
+					}
+				}
+				
+			});
+			
+			btnAccept.addActionListener(event -> {
+				int [] indexs = listPromotion.getSelectedIndices();
+				for (int i : indexs) {
+					receiver.addItem(modelUnselectedPromotion.getElementAt(i));
+				}
+				
+				for (int i = indexs.length; i > 0; i--) {
+					modelUnselectedPromotion.remove(indexs[i-1]);
+				}
+				
+				btnCancel.doClick();
+			});
+			
+			btnCancel.addActionListener(event -> {
+				if(modelUnselectedPromotion.getSize() != 0) 
+					listPromotion.setSelectedIndex(0);
+				receiver.setActive(false);
+				this.setVisible(false);
+			});
 		}
 		
-		FeePromotion [] fees = new FeePromotion[promotions.size()];
-		Date recordDate = new Date();
-		
-		String message = "";
-		for (int i=0, max =promotions.size(); i<max; i++) {
-			Promotion promotion  = promotions.get(i);
-			FeePromotion f = new FeePromotion();
-			f.setRecordDate(recordDate);
-			f.setPromotion(promotion);
-			f.setAcademicFee(fee);
-			fees[i] = f;
-			message += "\n"+promotion.getStudyClass().getAcronym()+" "+promotion.getDepartment().getName()+" \t-> "+fee.getAmount()+" USD";
-		}
-		
-		try {
-			this.feePromotionDao.create(fees);
-			this.showMessageDialog("Success d'enregistrement ",""+message, JOptionPane.INFORMATION_MESSAGE);
-		} catch (DAOException e) {
-			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+		/**
+		 * mutateur du panel en ecoute de la selection des promotion
+		 * @param panel
+		 */
+		public void setReceiver (PanelAcademicFeeConfig panel) {
+			if(receiver != null)
+				receiver.setActive(false);
+			receiver = panel;
+			panel.setActive(true);
 		}
 		
 	}

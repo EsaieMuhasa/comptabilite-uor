@@ -119,8 +119,10 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 
 	@Override
 	public synchronized void delete(long id) throws DAOException {
-		final String SQL_QUERY = String.format("SELECT FROM %s WHERE id = ?", this.getTableName());
+		final String SQL_QUERY = String.format("DELETE FROM %s WHERE id = ?", this.getTableName());
 		System.out.println(SQL_QUERY);
+		
+		T t = this.findById(id);
 		try (
 				Connection connection =  this.factory.getConnection();
 				PreparedStatement statement = prepare(SQL_QUERY, connection, false, id);
@@ -130,6 +132,8 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			if(status == 0) {
 				throw new DAOException("Aucune occurence suprimer");
 			}
+			
+			emitOnDelete(t);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}

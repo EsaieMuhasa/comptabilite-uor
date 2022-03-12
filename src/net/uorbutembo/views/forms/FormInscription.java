@@ -13,10 +13,12 @@ import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.Student;
+import net.uorbutembo.beans.User.Kind;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.StudentDao;
+import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.views.MainWindow;
 import resources.net.uorbutembo.R;
@@ -29,7 +31,8 @@ import resources.net.uorbutembo.R;
 public class FormInscription extends AbstractInscriptionForm{
 	private static final long serialVersionUID = -7867072774750271198L;
 
-	
+
+	private ComboBox<Kind> comboKind = new ComboBox<>("Sexe");
 	// fields
 	private FormGroup<String> name;
 	private FormGroup<String> postName;
@@ -39,6 +42,7 @@ public class FormInscription extends AbstractInscriptionForm{
 	private FormGroup<String> school;
 	private FormGroup<String> birthPlace;
 	private FormGroup<String> birthDate;
+	private FormGroup<Kind> groupKind;
 	//-- fields
 	
 	{
@@ -50,6 +54,7 @@ public class FormInscription extends AbstractInscriptionForm{
 		school = FormGroup.createTextField("Ecole d'origine");
 		birthPlace = FormGroup.createTextField("Leux de naissance");
 		birthDate = FormGroup.createTextField("Date de naissance");
+		groupKind = FormGroup.createComboBox(comboKind);
 	}
 	
 	private AcademicYear currentYear;
@@ -76,7 +81,12 @@ public class FormInscription extends AbstractInscriptionForm{
 		responsiveFileds.add(school);
 		responsiveFileds.add(birthDate);
 		responsiveFileds.add(birthPlace);
+		responsiveFileds.add(groupKind);
 		responsiveFileds.add(matricul);
+		
+		for(Kind k : Student.KINDS) {
+			comboKind.addItem(k);
+		}
 	}
 
 
@@ -140,6 +150,7 @@ public class FormInscription extends AbstractInscriptionForm{
 		student.setMatricul(matricul);
 		student.setOriginalSchool(school);
 		student.setRecordDate(now);
+		student.setKind(comboKind.getItemAt(comboKind.getSelectedIndex()).getShortName());
 		
 		Inscription inscription = new Inscription();
 		inscription.setStudent(student);

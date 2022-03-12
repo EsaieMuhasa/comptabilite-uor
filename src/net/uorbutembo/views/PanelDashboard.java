@@ -8,6 +8,7 @@ import static net.uorbutembo.views.forms.FormUtil.COLORS;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Box;
@@ -131,7 +132,8 @@ public class PanelDashboard extends DefaultScenePanel {
 		for (int i =0, max = fees.size(); i < max; i++) {
 			
 			AcademicFee fee = fees.get(i);
-			List<AllocationCost> costs = this.allocationCostDao.findByAcademicFee(fee);
+			
+			List<AllocationCost> costs = allocationCostDao.checkByAcademicFee(fee.getId())? this.allocationCostDao.findByAcademicFee(fee) : new ArrayList<>();
 			
 			for (int j=0, max2 = costs.size(); j< max2; j++) {
 				AllocationCost cost = costs.get(j);

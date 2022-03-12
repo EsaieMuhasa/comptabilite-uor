@@ -89,7 +89,7 @@ public class PanelFeePromotion extends Panel {
 		table =  new Table(tableModel);
 		formFeePromotion = new FormFeePromotion(mainWindow, feePromotionDao);
 		
-		formCost = new FormGroupAllocationCost(feePromotionDao);
+		formCost = new FormGroupAllocationCost(allocationCostDao);
 		
 		Panel panelForm = new Panel(new BorderLayout());
 		panelForm.add(formFeePromotion, BorderLayout.CENTER);

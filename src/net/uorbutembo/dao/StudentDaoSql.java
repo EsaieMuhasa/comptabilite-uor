@@ -28,13 +28,13 @@ class StudentDaoSql extends UserDaoSql<Student> implements StudentDao {
 					connection, 
 					new String[] {
 							"name", "postName", "lastName",
-							"birthDate", "birthPlace", 
+							"birthDate", "birthPlace", "kind", 
 							"email", "matricul", "picture",
 							"telephone", "recordDate"
 					},
 					new Object[] {
 							t.getName(), t.getPostName(), t.getFirstName(),
-							t.getBirthDate().getTime(), t.getBirthPlace(),
+							t.getBirthDate().getTime(), t.getBirthPlace(), t.getKind().getShortName(),
 							t.getEmail(), t.getMatricul(),
 							t.getPicture(), t.getTelephone(),
 							t.getRecordDate().getTime()
@@ -67,6 +67,7 @@ class StudentDaoSql extends UserDaoSql<Student> implements StudentDao {
 		s.setBirthPlace(result.getString("birthPlace"));
 		s.setMatricul(result.getString("matricul"));
 		s.setPicture(result.getString("picture"));
+		s.setKind(result.getString("kind"));
 		s.setBirthDate(new Date(result.getLong("birthDate")));
 		s.setRecordDate(new Date(result.getLong("recordDate")));
 		s.setTelephone(result.getString("telephone"));
