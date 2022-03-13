@@ -11,6 +11,7 @@ import java.awt.GridLayout;
 import java.awt.RenderingHints;
 
 import javax.swing.JLabel;
+import javax.swing.JScrollPane;
 
 import net.uorbutembo.swing.Card;
 import net.uorbutembo.swing.Panel;
@@ -29,29 +30,70 @@ public class PiePanel extends Panel {
 	private Color borderColor;
 	
 	private final GridLayout layout = new GridLayout(1, 2);
+	private final Panel center = new Panel(layout);
+	private final JScrollPane scroll = FormUtil.createVerticalScrollPane(center);
+	private PieModel model;
+	
+	private PieModelListener modelListener = new PieModelListener() {
+		@Override
+		public void repaintPart(PieModel model, int partIndex) {}
+		@Override
+		public void refresh(PieModel model) {
+			if(model.getTitle() != null) {				
+				title.setText(model.getTitle());
+			}
+			setBorderColor(borderColor);
+		}
+		
+		@Override
+		public void onTitleChange(PieModel  model, String title) {
+			PiePanel.this.title.setText(title);
+		}
+	};
+	
+	/**
+	 * 
+	 */
+	public PiePanel() {
+		super ();
+		this.setOpaque(true);
+		this.render = new PieRender();
+		this.caption = new  PiePartCaption();
+		this.init();
+	}
 	
 	/**
 	 * @param model
 	 */
 	public PiePanel (PieModel model) {
 		super ();
+		this.model = model;
 		this.render = new PieRender(model);
 		this.caption = new PiePartCaption(model);
 		this.title.setText(model.getTitle());
 		this.init();
-		model.addListener(new PieModelListener() {
-			@Override
-			public void repaintPart(PieModel model, int partIndex) {}
-			@Override
-			public void refresh(PieModel model) {}
-			
-			@Override
-			public void onTitleChange(PieModel  model, String title) {
-				PiePanel.this.title.setText(title);
-			}
-		});
+		model.addListener(modelListener);
 	}
 	
+	/**
+	 * @return the model
+	 */
+	public PieModel getModel() {
+		return model;
+	}
+
+	/**
+	 * @param model the model to set
+	 */
+	public void setModel(PieModel model) {
+		if(this.model != null)
+			this.model.removeListener(modelListener);
+		this.model = model;
+		model.addListener(modelListener);
+		this.caption.setModel(model);
+		this.render.setModel(model);
+	}
+
 	public void setHorizontalPlacement (boolean horizontalPlacement) {
 		if(horizontalPlacement) {
 			this.layout.setColumns(2);
@@ -98,21 +140,11 @@ public class PiePanel extends Panel {
 		
 	}
 
-	/**
-	 * 
-	 */
-	public PiePanel() {
-		super ();
-		this.setOpaque(true);
-		this.render = new PieRender();
-		this.init();
-	}
 	
 	private void init() {
 		this.setLayout(new BorderLayout());
-		Panel center = new Panel(layout);
 		
-		this.add(center, BorderLayout.CENTER);
+		this.add(scroll, BorderLayout.CENTER);
 		this.add(title, BorderLayout.SOUTH);
 		
 		this.setBackground(FormUtil.BKG_DARK);

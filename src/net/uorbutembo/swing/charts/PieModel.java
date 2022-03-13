@@ -49,6 +49,13 @@ public interface PieModel {
 	double getPercentOf (PiePart part);
 	
 	/**
+	 * renvoie l'object le part qui a une reference vers l'object en parametre
+	 * @param data
+	 * @return
+	 */
+	PiePart findByData (Object data);
+	
+	/**
 	 * Renvoie le nombre des parts
 	 * @return
 	 */

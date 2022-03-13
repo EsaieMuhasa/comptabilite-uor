@@ -305,7 +305,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			sql += collumnName[i] +" = ?"+ (i == max-1? "":" AND ");
 		}
 		
-		final String SQL_QUERY = String.format("SELECT COUNT(DISTINCT *) AS nombre FROM %s %s", this.getViewName(), sql);
+		final String SQL_QUERY = String.format("SELECT COUNT(*) AS nombre FROM %s %s", this.getViewName(), sql);
 		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();

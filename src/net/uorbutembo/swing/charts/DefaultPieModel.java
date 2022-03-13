@@ -165,6 +165,15 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	public PiePart getPartAt(int index) {
 		return parts.get(index);
 	}
+	
+	@Override
+	public PiePart findByData(Object data) {
+		for (PiePart part : parts) {
+			if(part == data || part.getData() == data)
+				return part;
+		}
+		return null;
+	}
 
 	@Override
 	public int getCountPart() {

@@ -99,7 +99,9 @@ public class PieRender extends JComponent implements PieModelListener{
 	 * @param model the model to set
 	 */
 	public void setModel(PieModel model) {
-		if(this.model != null && this.model != model) {
+		if(this.model != model) {
+			if(this.model != null )
+				this.model.removeListener(this);
 			this.model = model;
 			this.model.addListener(this);
 		}
@@ -119,12 +121,13 @@ public class PieRender extends JComponent implements PieModelListener{
 		
 		//on prend la plus petie valeur entre la hauteur et la largeur de la vue
 		this.radius = ((this.getWidth() < this.getHeight())?  this.getWidth() : this.getHeight())/2 - 10;
-		
 		int start = 0;
 
 		Point O = new Point(radius, 0);
 		Point center = new Point(0, 0);
-		
+		if(model == null) {
+			return;
+		}
 		for (PiePart part : model.getParts()) {
 			BigDecimal big = new BigDecimal((360.0 / 100.0) * model.getPercentOf(part)).setScale(0, RoundingMode.HALF_UP);
 			int toDegre = big.intValue();

@@ -39,6 +39,7 @@ public abstract class FormUtil {
 							ACTIVE_COLOR = new Color(90, 120, 240);
 	
 	public static final String UNIT_MONEY = "USD";
+	public static final String UNIT_MONEY_SYMBOL = "$";
 	
 	//bordure vide par defaut
 	public static final EmptyBorder DEFAULT_EMPTY_BORDER = new EmptyBorder(DEFAULT_H_GAP, DEFAULT_H_GAP, DEFAULT_H_GAP, DEFAULT_H_GAP);
@@ -132,7 +133,7 @@ public abstract class FormUtil {
 	//pouleurs
 	public static final Color [] COLORS = new Color[] {
 			new Color(0xFFCE30), new Color(0xE83845), new Color(0xE3889B), new Color(0x746AB0), new Color(0x288BA8),
-			new Color(0xB22222), new Color(0xFF7F50), new Color(0xF0F80F), new Color(0xD72631), new Color(0xA2D5C6),
+			new Color(0x7F222F), new Color(0xFF7F50), new Color(0xF0F80F), new Color(0xD72631), new Color(0xA2D5C6),
 			new Color(0x077B8A), new Color(0x5C3C92), new Color(0xE2D810), new Color(0xD9138A), new Color(0x12A4D9)
 	};
 }

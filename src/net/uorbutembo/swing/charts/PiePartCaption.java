@@ -4,6 +4,7 @@
 package net.uorbutembo.swing.charts;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -29,6 +30,13 @@ class PiePartCaption extends JComponent implements PieModelListener{
 	private PieModel model;
 	private Color borderColor;
 	private boolean paddingLeft = false;
+	
+	private int prefferedWidth;
+	private int prefferedHeight;
+	
+	public PiePartCaption() {
+		this.borderColor = Color.WHITE;
+	}
 
 	/**
 	 * @param part
@@ -56,6 +64,9 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			return;
 		}
 		
+		int prefferedWidth = 0;
+		int prefferedHeight = 0;
+		
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
@@ -63,14 +74,14 @@ class PiePartCaption extends JComponent implements PieModelListener{
 		int count  = this.model.getCountPart(),
 				step = 30;
 		int mH = (step + 18) * count;//hauteur max des items
-		int padding = (height - mH) / 2;
+		int padding = ((height - mH) / 2) - step/3;
 		
 		int col = 50 + (paddingLeft? step/2 : 0); //largeur max pour la colone des pourcentages
 		int xLabel = col + 5 + step/3;
 		
 		FontMetrics metricsPercent = g2.getFontMetrics(FONT_PERCENT);
 		FontMetrics metricsValue = g2.getFontMetrics(FONT_VALUE);
-//		FontMetrics metricsLabel = g2.getFontMetrics(FONT_LABEL);
+		FontMetrics metricsLabel = g2.getFontMetrics(FONT_LABEL);
 		
 		
 		int h = padding + step;
@@ -88,8 +99,17 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			String percentVal = big.doubleValue()+"%", label = part.getLabel();
 			String valueVal = bigValue.doubleValue()+""+model.getSuffix();
 			
+			//calcult largeur des textes
+			int wPercent = metricsPercent.stringWidth(percentVal),
+					wValue = metricsValue.stringWidth(valueVal),
+					wLabel = metricsLabel.stringWidth(label);
+			
+			int wMax = col + xLabel + wLabel + 10;//prefferedWidth
+			if (wMax > prefferedWidth)
+				prefferedWidth = wMax;
+			
 			g2.setFont(FONT_VALUE);
-			int x = col - metricsValue.stringWidth(valueVal) + step/3, y = h- metricsValue.getHeight()/2;
+			int x = col - wValue + step/3, y = h- metricsValue.getHeight()/2;
 			g2.drawString(valueVal, x, y);
 			
 			g2.setFont(FONT_LABEL);
@@ -97,13 +117,17 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			
 			g2.setFont(FONT_PERCENT);
 			g2.setColor(getBackground());
-			x = (widht - col-5 + col/2) - metricsPercent.stringWidth(percentVal) + (metricsPercent.stringWidth(percentVal)/2);
+			x = (widht - col-5 + col/2) - wPercent + (wPercent/2);
 			y = ( h-step-10 + col/2) + metricsPercent.getHeight()/3;
 			g2.drawString(percentVal, x, y);
 			
 			h += step + 25;
 		}
+		prefferedHeight = mH + col;
 		
+		if (this.prefferedWidth != prefferedWidth || this.prefferedHeight != prefferedHeight) {
+			this.setPreferredSize(new Dimension(prefferedWidth, prefferedHeight));
+		}
 	}
 
 	/**

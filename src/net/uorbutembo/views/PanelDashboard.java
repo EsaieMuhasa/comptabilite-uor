@@ -7,17 +7,16 @@ import static net.uorbutembo.views.forms.FormUtil.COLORS;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.GridLayout;
-import java.util.ArrayList;
+import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.Box;
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
+import javax.swing.JRadioButton;
 import javax.swing.border.EmptyBorder;
 
-import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
@@ -39,6 +38,8 @@ import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.NavbarButtonModel;
+import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.views.models.GeneralBudgetModel;
 import resources.net.uorbutembo.R;
 
 /**
@@ -49,7 +50,6 @@ public class PanelDashboard extends DefaultScenePanel {
 	private static final long serialVersionUID = 4525497607858984186L;
 	
 	private Box panelCards = Box.createHorizontalBox();
-	private Panel panelPies = new Panel(new GridLayout(1, 3, 10, 10));
 	private Panel panelCurrent = new Panel(new BorderLayout());
 	
 	private InscriptionDao inscriptionDao;
@@ -65,17 +65,19 @@ public class PanelDashboard extends DefaultScenePanel {
 	//models cards
 	private final DefaultCardModel<Integer> modelCardStudents = new DefaultCardModel<>(COLORS[6], Color.WHITE);
 	private final DefaultCardModel<Double> modelCardPaymentFee = new DefaultCardModel<>(COLORS[11], Color.WHITE);
-	private final DefaultCardModel<Double> modelCardBudget = new DefaultCardModel<>(COLORS[10], Color.WHITE);
 	// == model cards
 	
 	//model pie
 	private final DefaultPieModel modelPieStudents = new DefaultPieModel(0, "Etudiant par faculté");
-	private final DefaultPieModel modelPieBudget = new DefaultPieModel(0, "Rubirque budgetaire");
+	private final GeneralBudgetModel modelPieBudget;
 	private final DefaultPieModel modelPiePaymentFee = new DefaultPieModel(0, "Payement par faculté");
+	
+	private PiePanel piePanel = new PiePanel();
+	private Panel panelBottom = new Panel();
 	
 	public PanelDashboard(MainWindow mainWindow) {
 		super("Tableau de board", new ImageIcon(R.getIcon("dashboard")), mainWindow, false);
-		
+		modelPieBudget = new GeneralBudgetModel(mainWindow.factory);
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		academicFeeDao = mainWindow.factory.findDao(AcademicFeeDao.class);
 		feePromotionDao = mainWindow.factory.findDao(FeePromotionDao.class);
@@ -87,73 +89,92 @@ public class PanelDashboard extends DefaultScenePanel {
 		this.currentYear = mainWindow.factory.findDao(AcademicYearDao.class).findCurrent();
 		
 		initCards();
-		initPies();
+		init();
 		
+		Panel center = new Panel(new BorderLayout());
+		center.setBorder(new EmptyBorder(10, 0, 0, 0));
+		center.add(piePanel, BorderLayout.CENTER);
+		piePanel.setBorderColor(FormUtil.BORDER_COLOR);
 		
 		panelCurrent.add(panelCards, BorderLayout.NORTH);
-		panelCurrent.add(panelPies, BorderLayout.CENTER);
+		panelCurrent.add(center, BorderLayout.CENTER);
+		panelCurrent.add(panelBottom, BorderLayout.SOUTH);
 		panelCurrent.setBorder(BODY_BORDER);
 		
-		PiePanel 
-			pieStuents = new PiePanel(modelPieStudents, COLORS[6]),
-			pieBudget = new PiePanel(modelPieBudget, COLORS[11]),
-			piePayment = new PiePanel(modelPiePaymentFee, COLORS[10]);
+		ButtonGroup group = new ButtonGroup();
 		
-//		pieStuents.setHorizontalPlacement(false);
+		JRadioButton  radio = new JRadioButton("Etudiants");
+		JRadioButton  payment = new JRadioButton("Payement");
+		JRadioButton  budget = new JRadioButton("Budget général");
+		ActionListener radionListener = (event -> {
+			if(event.getSource() == radio) {
+				piePanel.setModel(modelPieStudents);
+			} else if(event.getSource() == payment) {
+				piePanel.setModel(modelPiePaymentFee);
+			} else if (event.getSource() == budget) {
+				piePanel.setModel(modelPieBudget);
+			} else {
+				piePanel.setModel(null);
+			}
+		});
+		group.add(radio);
+		group.add(payment);
+		group.add(budget);
+		panelBottom.add(radio);
+		panelBottom.add(payment);
+		panelBottom.add(budget);
 		
-		panelPies.add(pieStuents);
-		panelPies.add(piePayment);
-		panelPies.add(pieBudget);
+		radio.addActionListener(radionListener);
+		payment.addActionListener(radionListener);
+		budget.addActionListener(radionListener);
 		
-		panelPies.setBorder(new EmptyBorder(10, 0, 0, 0));
+		radio.setForeground(Color.WHITE);
+		payment.setForeground(Color.WHITE);
+		budget.setForeground(Color.WHITE);
 		
+		radio.doClick();
+
 		this
 		.addItemMenu(new NavbarButtonModel("general", "Générale"), panelCurrent)
-		.addItemMenu(new NavbarButtonModel("rubrique", "Rubiques budgetaire"), new Panel())
 		.addItemMenu(new NavbarButtonModel("payments", "Evolution des payement"), new Panel());
 	}
 	
-	private void initPies() {
-		//students
+	private void init() {
+		
+		//students		
+		modelCardStudents.setTitle("Etudiants inscrits");
+		modelCardStudents.setInfo("Nombre des étudiants inscrits");
+		modelCardStudents.setIcon(R.getIcon("toge"));
+		modelCardStudents.setValue(inscriptionDao.countByAcademicYear(currentYear));
+		inscriptionDao.addListener(new DAOAdapter<Inscription>() {
+			@Override
+			public void onCreate(Inscription e, int requestId) {
+				modelCardStudents.setValue(modelCardStudents.getValue()+1);
+				
+				PiePart []  parts =  modelPieStudents.getParts();
+				for (PiePart part : parts) {
+					Faculty fac = (Faculty) part.getData();
+					if(fac.getId() == e.getPromotion().getDepartment().getFaculty().getId()) {
+						part.setValue(part.getValue()+1);
+						break;
+					}
+				}
+			}
+		});
 		List<Faculty> faculties = facultyDao.findByAcademicYear(currentYear);
 		modelPieStudents.setMax(inscriptionDao.countByAcademicYear(currentYear));
 		for (int i=0, max=faculties.size(); i<max; i++) {
 			Faculty faculty = faculties.get(i);
 			Color color = COLORS[i%(COLORS.length-1)];
 			int count = inscriptionDao.countByFaculty(faculty, currentYear);
-			DefaultPiePart part = new DefaultPiePart(color, color, count, faculty.getAcronym());
+			DefaultPiePart part = new DefaultPiePart(color, color, count, faculty.getName());
+			part.setData(faculty);
 			modelPieStudents.addPart(part);
 		}
 		//==students
 
 		//budget generale
-		List<AcademicFee> fees = this.academicFeeDao.findByAcademicYear(currentYear);
-//		List<AnnualSpend> spends = this.annualSpendDao.findkByAcademicYear(currentYear);
-		for (int i =0, max = fees.size(); i < max; i++) {
-			
-			AcademicFee fee = fees.get(i);
-			
-			List<AllocationCost> costs = allocationCostDao.checkByAcademicFee(fee.getId())? this.allocationCostDao.findByAcademicFee(fee) : new ArrayList<>();
-			
-			for (int j=0, max2 = costs.size(); j< max2; j++) {
-				AllocationCost cost = costs.get(j);
-				Color color = COLORS[j%(COLORS.length-1)];
-				PiePart part = modelPieBudget.getPartByName(cost.getAnnualSpend().getUniversitySpend().getTitle());
-				
-				if(part == null) {
-					part = new DefaultPiePart(color, cost.getAnnualSpend().getUniversitySpend().getTitle());
-					part.setValue(0.0);
-				}
-				
-				double value = part.getValue()+cost.getAmount();
-				part.setValue(value);
-				part.setLabel(cost.getAnnualSpend().getUniversitySpend().getTitle());
-				modelPieBudget.addPart(part);
-			}
-			
-			modelPieBudget.setMax(fee.getAmount());			
-		}
-		//==budget generale
+		this.modelPieBudget.setCurrentYear(currentYear);
 	}
 	
 	/**
@@ -165,17 +186,6 @@ public class PanelDashboard extends DefaultScenePanel {
 	 * </ul>
 	 */
 	private void initCards() {
-		
-		modelCardStudents.setTitle("Etudiants inscrits");
-		modelCardStudents.setInfo("Nombre des étudiants inscrits");
-		modelCardStudents.setIcon(R.getIcon("toge"));
-		modelCardStudents.setValue(inscriptionDao.countByAcademicYear(currentYear));
-		inscriptionDao.addListener(new DAOAdapter<Inscription>() {
-			@Override
-			public void onCreate(Inscription e, int requestId) {
-				modelCardStudents.setValue(modelCardStudents.getValue()+1);
-			}
-		});
 
 		modelCardPaymentFee.setValue(0.0);
 		modelCardPaymentFee.setTitle("Payer par les etudiants");
@@ -189,17 +199,12 @@ public class PanelDashboard extends DefaultScenePanel {
 			}
 		});
 		
-		modelCardBudget.setValue(0.0);
-		modelCardBudget.setTitle("Budget general");
-		modelCardBudget.setInfo("Montant que doit payer tout les etudiants");
-		modelCardBudget.setIcon(R.getIcon("acounting"));
-		modelCardBudget.setSuffix("$");
-		
+
 		panelCards.add(new Card(modelCardStudents));
 		panelCards.add(Box.createHorizontalStrut(10));
 		panelCards.add(new Card(modelCardPaymentFee));
 		panelCards.add(Box.createHorizontalStrut(10));
-		panelCards.add(new Card(modelCardBudget));
+		panelCards.add(new Card(modelPieBudget.getCardModel()));
 	}
 	
 	@Override

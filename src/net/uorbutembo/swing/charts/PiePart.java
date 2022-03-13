@@ -10,6 +10,13 @@ import java.awt.Color;
 public interface PiePart {
 	
 	/**
+	 * Conservation d'une reference d'un object X au part
+	 * @param data
+	 */
+	void setData (Object data);
+	Object getData ();
+	
+	/**
 	 * renvoie la couleur d'arriere plans du Parts
 	 * @return
 	 */

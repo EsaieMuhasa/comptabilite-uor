@@ -22,6 +22,8 @@ public class DefaultPiePart implements PiePart {
 	protected String name;
 	protected double value;
 	protected boolean visible;
+	protected Object data;
+	
 
 	/**
 	 * 
@@ -67,6 +69,16 @@ public class DefaultPiePart implements PiePart {
 		this.name = name;
 	}
 	
+
+	@Override
+	public void setData(Object data) {
+		this.data = data;
+	}
+
+	@Override
+	public Object getData() {
+		return data;
+	}
 
 	@Override
 	public String getName() {
