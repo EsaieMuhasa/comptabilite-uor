@@ -75,14 +75,21 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	}
 
 	@Override
-	public void update(AllocationCost e, long id) throws DAOException {
-		// TODO Auto-generated method stub
-		
+	public void update(AllocationCost a, long id) throws DAOException {
+		try {
+			updateInTable(
+					new String[] {"amount","lastUpdate" },
+					new Object[] {a.getAmount(), a.getLastUpdate().getTime()}, id);
+			emitOnUpdate(a);
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
 	}
 	
 	@Override
 	public AllocationCost find(AnnualSpend annualSpend, AcademicFee academicFee) throws DAOException {
 		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", this.getTableName(), annualSpend.getId(), academicFee.getId());
+		System.out.println(sql);
 		try(
 				final Connection connection = factory.getConnection();
 				final Statement statement = connection.createStatement();
@@ -104,6 +111,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	@Override
 	public AllocationCost find(long annualSpendId, long academicFeeId) throws DAOException {
 		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", this.getTableName(), annualSpendId, academicFeeId);
+		System.out.println(sql);
 		try(
 				final Connection connection = factory.getConnection();
 				final Statement statement = connection.createStatement();
@@ -122,6 +130,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	@Override
 	public boolean check(long annualSpendId, long academicFeeId) throws DAOException {
 		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", this.getTableName(), annualSpendId, academicFeeId);
+		System.out.println(sql);
 		try(
 				final Connection connection = factory.getConnection();
 				final Statement statement = connection.createStatement();
@@ -142,6 +151,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	public List<AllocationCost> findByAcademicFee(AcademicFee academicFee) throws DAOException {
 		List<AllocationCost>  costs = new ArrayList<>();
 		final String sql = String.format("SELECT * FROM %s WHERE academicFee = %d", this.getTableName(), academicFee.getId());
+		System.out.println(sql);
 		try(
 				final Connection connection = factory.getConnection();
 				final Statement statement = connection.createStatement();

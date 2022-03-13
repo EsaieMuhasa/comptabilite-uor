@@ -19,6 +19,7 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.border.LineBorder;
 
 import net.uorbutembo.beans.AcademicFee;
@@ -29,7 +30,6 @@ import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.FeePromotionDao;
 import net.uorbutembo.dao.PromotionDao;
-import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
@@ -59,6 +59,12 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		
 		@Override
 		public void requireAdding(PanelAcademicFeeConfig config) {
+			
+			if(modelUnselectedPromotion.getSize() == 0) {
+				JOptionPane.showMessageDialog(mainWindow, "Toute les promotions sont déjà \nassocier au frais universitaires.", "Alert", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+			
 			if(dialogPromotion == null )
 				dialogPromotion = new DialogChoosePromotion(mainWindow);
 			
@@ -96,7 +102,11 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		this.getBody().add(container, BorderLayout.CENTER);
 		
 		this.init();
-		this.btnSave.setVisible(false);
+	}
+	
+	@Override
+	protected boolean createButtonAccept() {
+		return false;
 	}
 	
 	/**
@@ -225,8 +235,8 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		
 		private JLabel title = FormUtil.createSubTitle("");
 		private final JList<FeePromotion> list = new JList<>(model);
-		private final Button btnAdd = new Button(new ImageIcon(R.getIcon("success")));
-		private final Button btnRemove = new Button(new ImageIcon(R.getIcon("close")));
+		private final JButton btnAdd = new JButton(new ImageIcon(R.getIcon("success")));
+		private final JButton btnRemove = new JButton(new ImageIcon(R.getIcon("close")));
 		private final LineBorder  border = new LineBorder(FormUtil.BORDER_COLOR), 
 				borderActive = new LineBorder(new Color(0xFF0000), 1);
 		
@@ -292,6 +302,12 @@ public class FormFeePromotion extends DefaultFormPanel  {
 				
 				listener.onRemove(this, fees);
 			});
+			
+			btnRemove.setEnabled(false);
+			list.addListSelectionListener(event -> {
+				btnRemove.setEnabled(list.getSelectedIndex() != -1);
+			});
+			
 		}
 		
 		public void setActive (boolean active) {
@@ -348,7 +364,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		public DialogChoosePromotion(MainWindow parent) {
 			super(parent, "Selectionner une promotion", false);
 			
-			this.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+			this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 			this.setSize(300, 400);
 			this.setLocationRelativeTo(parent);
 			
@@ -363,7 +379,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 			this.getContentPane().add(bottom, BorderLayout.SOUTH);
 			//==init ihm
 			
-			this.addWindowStateListener(new WindowAdapter() {
+			WindowAdapter listener = new WindowAdapter() {
 
 				@Override
 				public void windowActivated(WindowEvent e) {
@@ -372,7 +388,19 @@ public class FormFeePromotion extends DefaultFormPanel  {
 					}
 				}
 				
-			});
+				@Override
+				public void windowClosing(WindowEvent e) {
+					if(receiver != null)
+						receiver.setActive(false);
+					
+					receiver = null;
+					setVisible(false);
+				}
+				
+			};
+			
+			this.addWindowStateListener(listener);
+			this.addWindowListener(listener);
 			
 			btnAccept.addActionListener(event -> {
 				int [] indexs = listPromotion.getSelectedIndices();

@@ -14,16 +14,15 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.ListSelectionModel;
-import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.dao.AcademicYearDao;
-import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.components.Navbar;
 import net.uorbutembo.views.forms.FormUtil;
@@ -43,7 +42,7 @@ public class PanelAcademicYear extends Panel {
 	private Navbar navbar = new Navbar();
 	private JLabel title = createSubTitle("");
 	
-	private Button btnAdd = new Button("Nouvelle année");
+	private JButton btnAdd = new JButton("Nouvelle année");
 	
 	public PanelAcademicYear(MainWindow mainWindow) {
 		super(new BorderLayout());
@@ -59,7 +58,7 @@ public class PanelAcademicYear extends Panel {
 		JScrollPane scroll = createScrollPane(listMenu);
 		menu.add(scroll, BorderLayout.CENTER);
 		menu.add(btnAdd, BorderLayout.SOUTH);
-		menu.setBorder(new EmptyBorder(DEFAULT_H_GAP, DEFAULT_V_GAP, 0, DEFAULT_V_GAP));
+		menu.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		navbar.createGroup("default", config.getNavbarItems(), config);
 		navbar.showGroup("default");

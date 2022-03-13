@@ -57,9 +57,13 @@ public class PanelConfigAcademicYear extends DefaultScenePanel {
 	 */
 	public void setCurrentYear(AcademicYear currentYear) {
 		this.currentYear = currentYear;
+		this.reload();
+	}
+	
+	protected void reload () {
 		this.panelPromotion.setCurrentYear(currentYear);
 		this.panelFeePromotion.setCurrentYear(currentYear);
-		this.panelAnnualSpend.setCurrentYear(currentYear);
+		this.panelAnnualSpend.setCurrentYear(currentYear);	
 	}
 
 }

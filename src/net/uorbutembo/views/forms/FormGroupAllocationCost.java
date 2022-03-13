@@ -20,18 +20,22 @@ import java.awt.event.FocusEvent;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 
 import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.dao.AllocationCostDao;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.TextField;
@@ -64,6 +68,7 @@ public class FormGroupAllocationCost extends Panel {
 	private final Panel left = new Panel(new BorderLayout());
 	private final Box center = Box.createVerticalBox();
 	
+	private final Button  btnSave = new Button(new ImageIcon(R.getIcon("success")), "Enregistrer");
 	
 	//pour le grahique
 	private final DefaultPieModel pieModel = new DefaultPieModel();
@@ -115,9 +120,31 @@ public class FormGroupAllocationCost extends Panel {
 		this.title.setHorizontalAlignment(JLabel.CENTER);
 		
 		final Panel bottom = new Panel();
-		Button btn = new Button(new ImageIcon(R.getIcon("success")), "Enregistrer");
 		
-		bottom.add(btn);
+		bottom.add(btnSave);
+		btnSave.addActionListener(event -> {
+			btnSave.setEnabled(false);
+			Thread t = new Thread(() -> {				
+				Date now = new Date();
+				try {					
+					for (AllocationCostField field : fields) {
+						AllocationCost cost = field.getCost();
+						if(cost.getId() != 0) {
+							cost.setLastUpdate(now);
+							allocationCostDao.update(cost, cost.getId());
+						} else {
+							cost.setRecordDate(now);
+							allocationCostDao.create(cost);
+						}
+					}
+					JOptionPane.showMessageDialog(null, "Succès d'enregistrement de \nla répartiton du "+academicFee.getAmount()+" USD", "Alert", JOptionPane.INFORMATION_MESSAGE);
+				} catch (DAOException e) {
+					JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+				}
+				btnSave.setEnabled(true);
+			});
+			t.start();
+		});
 		
 		center.add(Box.createVerticalGlue());
 		center.setBorder(new EmptyBorder(0, DEFAULT_H_GAP, 0, DEFAULT_V_GAP));
@@ -170,17 +197,23 @@ public class FormGroupAllocationCost extends Panel {
 				AllocationCost cost = this.allocationCostDao.find(spend, academicFee);
 				field.setCost(cost);
 				part.setValue(cost.getAmount());
-			} else {				
+			} else {
+				AllocationCost cost = new AllocationCost();
+				cost.setAnnualSpend(spend);
+				cost.setAcademicFee(academicFee);
+				
+				field.setCost(cost);
 				fieldPercent.setValue("0");
 				fieldAmount.setValue("0");
 				part.setValue(0.0);
 			}
 			
 			
-			label.setForeground(Color.LIGHT_GRAY);
+			label.setForeground(color);
 			label.setOpaque(true);
-			label.setBackground(FormUtil.BORDER_COLOR);
-			label.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			label.setBackground(color.darker().darker().darker());
+			Border border = new LineBorder(label.getBackground());
+			label.setBorder(border);
 			
 			panelPadding.add(label, BorderLayout.NORTH);
 			panel.add(box, BorderLayout.CENTER);
@@ -191,7 +224,7 @@ public class FormGroupAllocationCost extends Panel {
 			
 			
 			panel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-			panelPadding.setBorder(BorderFactory.createLineBorder(FormUtil.BORDER_COLOR));
+			panelPadding.setBorder(border);
 			panelPadding.add(panel, BorderLayout.CENTER);
 			
 			fields.add(field);

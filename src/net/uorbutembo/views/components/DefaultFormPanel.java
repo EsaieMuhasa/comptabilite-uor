@@ -64,18 +64,21 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 		//--body
 		
 		//footer
-		this.btnSave = new Button(new ImageIcon(R.getIcon("success")), "Enregistrer");
-		this.btnSave.addActionListener(this);
-		this.footer = new JPanel();	
-		this.footer.setOpaque(false);
-		this.footer.add(this.btnSave);
-		this.footer.setBorder(DEFAULT_EMPTY_BORDER);
+		if(this.createButtonAccept()) {			
+			this.btnSave = new Button(new ImageIcon(R.getIcon("success")), "Enregistrer");
+			this.btnSave.addActionListener(this);
+			this.footer = new JPanel();	
+			this.footer.setOpaque(false);
+			this.footer.add(this.btnSave);
+			this.footer.setBorder(DEFAULT_EMPTY_BORDER);
+		}
 		//--footer
 
 		//adding components to panel
 		final JPanel middle = new JPanel(new BorderLayout());
-		middle.add(this.body, BorderLayout.NORTH);
-		middle.add(this.footer, BorderLayout.CENTER);
+		middle.add(this.body, BorderLayout.CENTER);
+		if(this.createButtonAccept()) 
+			middle.add(this.footer, BorderLayout.SOUTH);
 		middle.setOpaque(false);
 
 		this.add(header, BorderLayout.NORTH);
@@ -94,6 +97,14 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 	
 	public String getTitle() {
 		return title;
+	}
+	
+	/**
+	 * Fait-il ajouter le pour de enregistrement au formulaire?
+	 * @return
+	 */
+	protected boolean createButtonAccept () {
+		return true;
 	}
 
 	public void setTitle(String title) {

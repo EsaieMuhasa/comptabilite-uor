@@ -13,7 +13,7 @@ import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
-import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JTabbedPane;
 import javax.swing.border.EmptyBorder;
@@ -28,7 +28,6 @@ import net.uorbutembo.dao.AllocationCostDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.FeePromotionDao;
 import net.uorbutembo.dao.PromotionDao;
-import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Dialog;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
@@ -39,7 +38,6 @@ import net.uorbutembo.views.forms.FormFeePromotion;
 import net.uorbutembo.views.forms.FormGroupAllocationCost;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.PromotionTableModel;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
@@ -48,7 +46,7 @@ import resources.net.uorbutembo.R;
 public class PanelFeePromotion extends Panel {
 	private static final long serialVersionUID = 5400969854848116850L;
 	
-	private Button btnNewFee = new Button(new ImageIcon(R.getIcon("plus")), "Ajout un montant");
+	private JButton btnNewFee = new JButton("Ajout un montant");
 	
 	private FeePromotionDao feePromotionDao;
 	private AllocationCostDao allocationCostDao;
@@ -57,7 +55,6 @@ public class PanelFeePromotion extends Panel {
 	private PromotionDao promotionDao;
 	
 	private Panel center = new Panel(new BorderLayout());
-	private FormFeePromotion form;
 	private FormFeePromotion formFeePromotion;
 	private Panel panelShowConfig = new Panel(new BorderLayout());
 	
@@ -183,10 +180,6 @@ public class PanelFeePromotion extends Panel {
 			}
 			feeList.setSelectedIndex(0);
 		}
-		
-		
-		if(form != null)
-			this.form.setCurrentYear(currentYear);
 		
 		formFeePromotion.setCurrentYear(currentYear);
 		
