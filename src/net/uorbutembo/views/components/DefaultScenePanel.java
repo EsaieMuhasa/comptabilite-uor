@@ -40,7 +40,7 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	private Panel body = new Panel(card);//conteneur
 	private Map<String, JComponent> cards = new HashMap<>();
 	
-	private MainWindow mainWindow;
+	protected MainWindow mainWindow;
 	
 	
 	/**

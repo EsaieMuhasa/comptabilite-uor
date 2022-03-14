@@ -180,6 +180,8 @@ public class SidebarStudents extends Panel implements TreeSelectionListener{
 		
 		tree.setRowHeight(25);
 		tree.setCellRenderer(new TreeCellRender());
+		tree.setRootVisible(false);
+		tree.expandPath(new TreePath(root));
 		tree.setBackground(FormUtil.BKG_END);
 		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 		

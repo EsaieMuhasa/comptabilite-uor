@@ -56,7 +56,7 @@ public class GeneralBudgetModel extends DefaultPieModel {
 		this.inscriptionDao = factory.findDao(InscriptionDao.class);
 		this.universitySpendDao = factory.findDao(UniversitySpendDao.class);
 		
-		cardModel = new DefaultCardModel<>(COLORS[10], Color.WHITE);
+		cardModel = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
 		cardModel.setTitle("Budget général");
 		cardModel.setInfo("Montant que doit payer tout les étudiants");
 		cardModel.setIcon(R.getIcon("acounting"));
@@ -143,8 +143,8 @@ public class GeneralBudgetModel extends DefaultPieModel {
 				double value = count * al.getAmount();
 				part.setValue(part.getValue()+value);
 				this.addPart(part);
-				this.setMax(this.getMax() + value);
 			}
+			this.setMax(this.getMax() + (count * fee.getAmount()));
 		}
 		
 		
