@@ -24,7 +24,7 @@ public class TablePanel extends Panel {
 	public TablePanel(Table table, String title, boolean scrollable) {
 		super(new BorderLayout());
 		this.table = table;
-		this.title = FormUtil.createTitle(title);
+		this.title = FormUtil.createSubTitle(title);
 		this.init(scrollable);
 	}
 

@@ -25,7 +25,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	
 	private Promotion promotion;
 	private FeePromotion feePromotion;
-	private List<IncriptionDataRow> data = new ArrayList<>();
+	private List<InscriptionDataRow> data = new ArrayList<>();
 	
 	private PaymentFeeDao paymentFeeDao;
 	private InscriptionDao inscriptionDao;
@@ -60,14 +60,19 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		if(inscriptionDao.checkByPromotion(promotion)) {
 			List<Inscription> inscriptions = inscriptionDao.findByPromotion(promotion);
 			for (int index = 0, count = inscriptions.size(); index < count ; index++) {
-				data.add(new IncriptionDataRow(inscriptions.get(index), index));
+				InscriptionDataRow row = new InscriptionDataRow(inscriptions.get(index), index);
+				data.add(row);
 			}
 		}
 		fireTableDataChanged();
+		
+		for (InscriptionDataRow row : data) {
+			row.reload();
+		}
 	}
 	
 	private void removeAll () {
-		for (IncriptionDataRow row : data) {
+		for (InscriptionDataRow row : data) {
 			row.dispose();
 		}
 		data.clear();
@@ -80,7 +85,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 
 	@Override
 	public int getColumnCount() {
-		return 4;
+		return 5;
 	}
 
 	@Override
@@ -123,7 +128,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	 * @author Esaie MUHASA
 	 *
 	 */
-	public class IncriptionDataRow {
+	public class InscriptionDataRow {
 		
 		private Inscription inscription;
 		private List<PaymentFee> payments;
@@ -173,7 +178,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		 * @param inscription
 		 * @param index
 		 */
-		public IncriptionDataRow(Inscription inscription, int index) {
+		public InscriptionDataRow(Inscription inscription, int index) {
 			super();
 			this.inscription = inscription;
 			this.index = index;
@@ -223,14 +228,20 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 			if (paymentFeeDao.checkByInscription(inscription)) {
 				setPayments(paymentFeeDao.findByInscription(inscription));
 			}
+			fireTableCellUpdated(index, 3);
 		}
 		
 		protected void calcul () {
+			calcul(false);
+		}
+		
+		protected void calcul (boolean fireTable) {
 			sold = 0;
 			for (PaymentFee p : payments) {
 				sold += p.getAmount();
 			}
-			fireTableCellUpdated(index, 3);
+			if (fireTable)
+				fireTableCellUpdated(index, 3);
 		}
 		
 		public double getSold () {

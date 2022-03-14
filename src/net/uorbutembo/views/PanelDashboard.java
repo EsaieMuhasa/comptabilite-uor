@@ -31,6 +31,7 @@ import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
+import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.AcademicYearDao;
@@ -47,6 +48,8 @@ import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.Card;
 import net.uorbutembo.swing.DefaultCardModel;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.swing.Table;
+import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.swing.TreeCellRender;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
@@ -56,6 +59,7 @@ import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.NavbarButtonModel;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.GeneralBudgetModel;
+import net.uorbutembo.views.models.PromotionPaymentTableModel;
 import resources.net.uorbutembo.R;
 
 /**
@@ -255,8 +259,10 @@ public class PanelDashboard extends DefaultScenePanel {
 			split.setOneTouchExpandable(true);
 			right.add(navigation);
 			JTabbedPane tabbed = new JTabbedPane(JTabbedPane.BOTTOM);
+			final Panel panelData = new Panel(new BorderLayout());
+			panelData.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			
-			tabbed.addTab("Liste", new ImageIcon(R.getIcon("list")), new Panel(), "Liste des etats des compte des etudiants");
+			tabbed.addTab("Liste", new ImageIcon(R.getIcon("list")), FormUtil.createVerticalScrollPane(panelData), "Liste des etats des compte des etudiants");
 			tabbed.addTab("Graphique", new ImageIcon(R.getIcon("chart")), new Panel(), "Evolution des payements dans le temps");
 			
 			center.add(tabbed, BorderLayout.CENTER);
@@ -272,15 +278,30 @@ public class PanelDashboard extends DefaultScenePanel {
 				
 				@Override
 				public void onFilter(List<FacultyFilter> filters) {
+					panelData.removeAll();
+					Box box = Box.createVerticalBox();
 					for (FacultyFilter f : filters) {
-						System.out.println(f.getFaculty());
+						Panel panelFaculty = new Panel(new BorderLayout());
+						Box boxFaculty = Box.createVerticalBox();
+						panelFaculty.add(FormUtil.createTitle(f.getFaculty().toString()), BorderLayout.NORTH);
 						for (DepartmentFilter d : f.getDepartments()) {
-							System.out.println("\t"+d.getDepartment());
 							for (StudyClass s : d.getClasses()) {
-								System.out.println("\t\t"+s);
+								Promotion promotion = promotionDao.find(currentYear, d.getDepartment(), s);
+								if(inscriptionDao.checkByPromotion(promotion)) {
+									PromotionPaymentTableModel tableModel = new PromotionPaymentTableModel(mainWindow.factory);
+									tableModel.setPromotion(promotion);
+									Table table = new Table(tableModel);
+									boxFaculty.add(new TablePanel(table, s.getAcronym()+" "+d.getDepartment().getName(), false));
+									boxFaculty.add(Box.createVerticalStrut(10));
+								}
 							}
 						}
+						panelFaculty.add(boxFaculty, BorderLayout.CENTER);
+						box.add(panelFaculty);
 					}
+					box.add(Box.createVerticalGlue());
+					panelData.add(box, BorderLayout.CENTER);
+					panelData.repaint();
 				}
 			});
 		}
