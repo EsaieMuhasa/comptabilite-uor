@@ -7,7 +7,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JScrollPane;
 
 import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.NavbarButtonModel;
 import net.uorbutembo.views.forms.FormUtil;
@@ -32,7 +31,6 @@ public class PanelConfigAcademicYear extends DefaultScenePanel {
 	 */
 	public PanelConfigAcademicYear(MainWindow mainWindow) {
 		super("Année académique", new ImageIcon(R.getIcon("favorite")), mainWindow, false);
-		this.currentYear = mainWindow.factory.findDao(AcademicYearDao.class).findCurrent();
 		
 		this.panelPromotion = new PanelPromotion(mainWindow);
 		this.panelFeePromotion = new PanelFeePromotion(mainWindow);

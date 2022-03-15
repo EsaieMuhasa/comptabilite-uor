@@ -5,13 +5,14 @@ package net.uorbutembo.dao;
 
 import java.util.List;
 
+import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.DBEntity;
 
 /**
  * @author Esaie MUHASA
  *
  */
-public abstract class DAOAdapter <H extends DBEntity> implements DAOListener<H> {
+public abstract class DAOAdapter <H extends DBEntity> implements DAOListener<H>, AcademicYearDaoListener{
 
 	public DAOAdapter() {
 		super();
@@ -34,5 +35,8 @@ public abstract class DAOAdapter <H extends DBEntity> implements DAOListener<H> 
 
 	@Override
 	public void onError(DAOException e, int requestId) {}
+
+	@Override
+	public void onCurrentYear(AcademicYear year) {}
 
 }

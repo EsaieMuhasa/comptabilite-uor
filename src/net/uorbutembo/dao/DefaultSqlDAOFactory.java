@@ -98,4 +98,9 @@ class DefaultSqlDAOFactory implements DAOFactory{
 		throw new DAOConfigException("Aucune implementation n'a ete specifier dans le fichier de configuration du DAO pour l'interface \""+daoClass.getName()+"\"");
 	}
 	
+	@Override
+	public void reload() {
+		this.findDao(AcademicYearDao.class).reload();
+	}
+	
 }

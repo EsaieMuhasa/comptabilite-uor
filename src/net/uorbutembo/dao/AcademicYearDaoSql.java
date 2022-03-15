@@ -5,7 +5,9 @@ package net.uorbutembo.dao;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import net.uorbutembo.beans.AcademicYear;
 
@@ -16,6 +18,7 @@ import net.uorbutembo.beans.AcademicYear;
 class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDao {
 	
 	private AcademicYear currentYear;
+	private final List<AcademicYearDaoListener> yearListeners = new ArrayList<>();
 
 	public AcademicYearDaoSql(DefaultSqlDAOFactory factory) {
 		super(factory);
@@ -36,6 +39,8 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 					);
 			e.setId(id);
 			this.emitOnCreate(e);
+			currentYear = e;
+			reload();
 		} catch (SQLException e1) {
 			throw new DAOException("Une erreur est survenue lors de l'enregistrement. \n"+e1.getMessage(), e1);
 		}
@@ -88,11 +93,57 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 		
 		return data;
 	}
+	
+	private volatile boolean reloadRunning = false;
+	
+	@Override
+	public boolean isReload() {
+		return reloadRunning;
+	}
+	
+	@Override
+	public synchronized void reload(int requestId) {
+		if(reloadRunning) 
+			return;
+		
+		reloadRunning = true;
+		Thread t = new Thread(()-> {
+			try {
+				if(currentYear == null && checkCurrent())
+					findCurrent();
+				
+				if(currentYear == null){
+					reloadRunning = false;
+					return;
+				}
+				
+				for (AcademicYearDaoListener ls : yearListeners) {
+					ls.onCurrentYear(currentYear);
+				}				
+			} catch (DAOException e) {
+				emitOnError(e);
+			} catch (Exception e) {
+				emitOnError(new DAOException(e.getMessage(), e));
+			}
+			reloadRunning = false;
+		});
+		t.start();
+	}
 
 	@Override
 	protected String getTableName() {
-//		return "AcademicYear";
 		return AcademicYear.class.getSimpleName();
+	}
+
+	@Override
+	public void addYearListener(AcademicYearDaoListener listener) {
+		if(!yearListeners.contains(listener))
+			yearListeners.add(listener);
+	}
+
+	@Override
+	public void removeYearListener(AcademicYearDaoListener listener) {
+		yearListeners.remove(listener);
 	}
 
 }

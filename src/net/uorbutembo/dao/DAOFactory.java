@@ -48,5 +48,10 @@ public interface DAOFactory {
 		}
 		return null;
 	}
+	
+	/**
+	 * Demande de rechargement de donnee pour tout le DAO
+	 */
+	void reload ();
 
 }

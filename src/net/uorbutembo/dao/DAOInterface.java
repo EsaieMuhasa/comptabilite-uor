@@ -26,7 +26,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * Doit renvoyer une reference vers le factory des DAO
 	 * @return
 	 */
-	public DAOFactory getFactory ();
+	DAOFactory getFactory ();
 	
 	/**
 	 * @param columnName
@@ -34,7 +34,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public boolean check (String columnName, Object value) throws DAOException;
+	boolean check (String columnName, Object value) throws DAOException;
 	
 	/**
 	 * 
@@ -44,7 +44,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public boolean check (String columnName, Object value, long id) throws DAOException;
+	boolean check (String columnName, Object value, long id) throws DAOException;
 	
 	/**
 	 * 
@@ -52,7 +52,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public default boolean checkById (long id) throws DAOException {
+	default boolean checkById (long id) throws DAOException {
 		return this.check("id", id);
 	}
 	
@@ -61,14 +61,14 @@ public interface DAOInterface <T extends DBEntity>{
 	 * la communication avec le DAO se fait dans le meme thread
 	 * @param e
 	 */
-	public void create (T e) throws DAOException;
+	void create (T e) throws DAOException;
 	
 	/**
 	 * creation d'un tableau d'occurence
 	 * @param t
 	 * @throws DAOException
 	 */
-	public default void create (T [] t) throws DAOException {
+	default void create (T [] t) throws DAOException {
 		throw new DAOException("La creation de occurence pultiple n'est pas prise en charge \npar le DAO -> "+this.getClass().getName()+" <-");
 	}
 	
@@ -77,7 +77,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param e
 	 * @param requestId l'identifiant a retransmetre de l'evenement de syncronisation apres execution de la requette
 	 */
-	public default void doCreate (T e, int requestId) {
+	default void doCreate (T e, int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
 				create(e);
@@ -94,7 +94,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * surcharge cration d'une occurence dans un nouveau thread
 	 * @param e
 	 */
-	public default void doCreate(T e) {
+	default void doCreate(T e) {
 		this.doCreate(e, DEFAULT_REQUEST_ID);
 	}
 	
@@ -106,7 +106,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param id
 	 * @throws DAOException
 	 */
-	public void update (T e, long id) throws DAOException;
+	void update (T e, long id) throws DAOException;
 	
 	/**
 	 * mis en jour
@@ -115,7 +115,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param id
 	 * @param requestId
 	 */
-	public default void doUpdate(T e, long id, int requestId) {
+	default void doUpdate(T e, long id, int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
 				this.update(e, id);
@@ -132,7 +132,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param e
 	 * @param id
 	 */
-	public default void doUpdate(T e, long id) {
+	default void doUpdate(T e, long id) {
 		this.doUpdate(e, id, DEFAULT_REQUEST_ID);
 	}
 	
@@ -140,13 +140,13 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param id
 	 * @throws DAOException
 	 */
-	public void delete (long id)  throws DAOException;
+	void delete (long id)  throws DAOException;
 	
 	/**
 	 * @param id
 	 * @param requestId
 	 */
-	public default void doDelete(long id, int requestId) {
+	default void doDelete(long id, int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
 				this.delete(id);
@@ -167,7 +167,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public T find (String columnName, Object value)  throws DAOException;
+	T find (String columnName, Object value)  throws DAOException;
 	
 	/**
 	 * 
@@ -175,7 +175,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public default T findById (long id)  throws DAOException {
+	default T findById (long id)  throws DAOException {
 		return this.find("id", id);
 	}
 	
@@ -183,19 +183,19 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public List<T>  findAll ()  throws DAOException;
+	List<T>  findAll ()  throws DAOException;
 	
 	/**
 	 * compte tout les occures
 	 * @return
 	 * @throws DAOException
 	 */
-	public int countAll () throws DAOException;
+	int countAll () throws DAOException;
 	
 	/**
 	 * @param requestId
 	 */
-	public default void  doFindAll (int requestId) {
+	default void  doFindAll (int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
 				List<T> data = this.findAll();
@@ -215,7 +215,7 @@ public interface DAOInterface <T extends DBEntity>{
 	/**
 	 * 
 	 */
-	public default void  doFindAll () {
+	default void  doFindAll () {
 		this.doFindAll(DEFAULT_REQUEST_ID);
 	}
 	
@@ -223,7 +223,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param limit
 	 * @param requestId
 	 */
-	public default void  doFindAll (int limit, int requestId) {
+	default void  doFindAll (int limit, int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
 				List<T> data = this.findAll(limit);
@@ -246,7 +246,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param offset
 	 * @param requestId
 	 */
-	public default void  doFindAll (int limit, int offset, int requestId) {
+	default void  doFindAll (int limit, int offset, int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
 				List<T> data = this.findAll(limit, offset);
@@ -267,7 +267,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param limit
 	 * @return
 	 */
-	public default List<T> findAll(int limit) throws DAOException {
+	default List<T> findAll(int limit) throws DAOException {
 		return this.findAll(limit, 0);
 	}
 	
@@ -277,7 +277,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public default boolean checkByRecordDate (Date recordDate) throws DAOException {
+	default boolean checkByRecordDate (Date recordDate) throws DAOException {
 		return this.checkByRecordDate(recordDate, recordDate);
 	}
 	
@@ -288,7 +288,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public boolean checkByRecordDate (Date dateMin, Date dateMax) throws DAOException;
+	boolean checkByRecordDate (Date dateMin, Date dateMax) throws DAOException;
 	
 	/**
 	 * verifie s'il y a des occurences serialiser pour les intervale de selection en parametre
@@ -299,7 +299,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public boolean checkByRecordDate (Date dateMin, Date dateMax, int limit, int offset) throws DAOException;
+	boolean checkByRecordDate (Date dateMin, Date dateMax, int limit, int offset) throws DAOException;
 	
 	/**
 	 * compte les occures en date en parametre
@@ -307,7 +307,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public default int countByRecordDate (Date recordDate) throws DAOException{
+	default int countByRecordDate (Date recordDate) throws DAOException{
 		return this.countByRecordDate(recordDate, recordDate);
 	}
 	
@@ -318,7 +318,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public int countByRecordDate (Date dateMin, Date dateMax) throws DAOException;
+	int countByRecordDate (Date dateMin, Date dateMax) throws DAOException;
 	
 	/**
 	 * Recuperation des occurence enregistrer en date en paramere
@@ -326,7 +326,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public default List<T> findByRecordDate (Date recordDate) throws DAOException {
+	default List<T> findByRecordDate (Date recordDate) throws DAOException {
 		return this.findByRecordDate(recordDate, recordDate);
 	}
 	
@@ -337,7 +337,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public List<T> findByRecordDate (Date dateMin, Date dateMax) throws DAOException;
+	List<T> findByRecordDate (Date dateMin, Date dateMax) throws DAOException;
 	
 	/**
 	 * renvoie les occurences enregistrer en une intervale de date en parametre, en limitant la selection
@@ -347,7 +347,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public default List<T> findByRecordDate (Date dateMin, Date dateMax, int limit) throws DAOException{
+	default List<T> findByRecordDate (Date dateMin, Date dateMax, int limit) throws DAOException{
 		return this.findByRecordDate(dateMin, dateMax, limit, 0);
 	}
 	/**
@@ -359,7 +359,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 * @throws DAOException
 	 */
-	public List<T> findByRecordDate (Date dateMin, Date dateMax, int limit, int offset) throws DAOException;
+	List<T> findByRecordDate (Date dateMin, Date dateMax, int limit, int offset) throws DAOException;
 	
 	/**
 	 * surcharge recuperation d'une intervale des donnees
@@ -398,32 +398,27 @@ public interface DAOInterface <T extends DBEntity>{
 	/**
 	 * @return
 	 */
-	public List<DAOListener<T>> getListeners ();
+	List<DAOListener<T>> getListeners ();
 	
 	/**
 	 * demande de synchronisation des ecouteurs
 	 */
-	public default void reload () {
-		this.reload(DEFAULT_REQUEST_RELOAD_ID);
+	default void reload () {
+		reload(DEFAULT_REQUEST_RELOAD_ID);
+	}
+	
+	/**
+	 * Esque le DAO est encour de rechargement de donnee??
+	 * @return
+	 */
+	default boolean isReload() {
+		return false;
 	}
 	
 	/**
 	 * @param requestId
 	 */
-	public default void reload(int requestId) {
-		Thread t = new Thread(() ->  {
-			try {
-				List<T> all = this.findAll(DEFAULT_LIMIT);
-				for (DAOListener<T> ls : this.getListeners()) {
-					ls.onFindAll(all, requestId);
-				}				
-			} catch (DAOException e) {
-				for (DAOListener<T> lis : this.getListeners()) {
-					lis.onError(e, requestId);
-				}
-			}
-		});
-		
-		t.start();
+	default void reload(int requestId) {
+		throw new DAOException("Cette methode n'est pas prise en charge par ce DAO");
 	}
 }

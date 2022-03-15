@@ -19,6 +19,7 @@ import javax.swing.ImageIcon;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Orientation;
 import net.uorbutembo.dao.AcademicYearDao;
+import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.components.DefaultMenuItemModel;
 import net.uorbutembo.views.components.DefaultScenePanel;
@@ -35,7 +36,7 @@ import resources.net.uorbutembo.R;
  * Ce panieau represente l'epace de travail.
  * chaque element de l'espace de travail doit Heriter de DefaultScenePanel
  */
-public class WorkspacePanel extends Panel implements MenuItemListener{
+public class WorkspacePanel extends Panel implements MenuItemListener, AcademicYearDaoListener{
 	private static final long serialVersionUID = 3541117443197136392L;
 	
 	private final Navbar navbar = new Navbar();
@@ -47,7 +48,7 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 	private MainWindow mainWindow;
 	private Sidebar sidebar;
 	
-	private AcademicYear currentYear;
+	protected AcademicYear currentYear;
 	private AcademicYearDao academicYearDao;
 
 	
@@ -55,7 +56,7 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 		super(new BorderLayout());
 		this.mainWindow = mainWindow;
 		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
-		this.currentYear = academicYearDao.findCurrent();
+		academicYearDao.addYearListener(this);
 		this.setBorder(null);
 		
 		final Panel container = new Panel(new BorderLayout());
@@ -82,7 +83,6 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
 		this.sidebar = sidebar;
 		MenuItemModel<String> dashbord = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("dashboard")), "Tableau de bord");
 		
-		MenuItemModel<String> years = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("favorite")), "Config "+this.currentYear.getLabel());
 		MenuItemModel<String> students = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("student")), "Etudiants ");
 		MenuItemModel<Orientation> orientations = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("database")), "Orientations");
 
@@ -142,6 +142,11 @@ public class WorkspacePanel extends Panel implements MenuItemListener{
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
         g2.setColor(BKG_DARK);
         g2.fillRect(0, 0, this.getWidth(), this.getHeight());
+	}
+	
+	@Override
+	public void onCurrentYear(AcademicYear year) {
+		currentYear = year;
 	}
 
 

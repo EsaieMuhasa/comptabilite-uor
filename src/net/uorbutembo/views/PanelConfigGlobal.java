@@ -5,7 +5,6 @@ package net.uorbutembo.views;
 
 import javax.swing.ImageIcon;
 
-import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.NavbarButtonModel;
 import resources.net.uorbutembo.R;

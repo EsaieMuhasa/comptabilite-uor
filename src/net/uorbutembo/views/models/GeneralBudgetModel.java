@@ -61,6 +61,7 @@ public class GeneralBudgetModel extends DefaultPieModel {
 		cardModel.setInfo("Montant que doit payer tout les étudiants");
 		cardModel.setIcon(R.getIcon("acounting"));
 		cardModel.setSuffix("$");
+		cardModel.setValue(0d);
 		this.setTitle("Répartition général du budget");
 	}
 	

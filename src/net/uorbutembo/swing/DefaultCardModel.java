@@ -146,7 +146,7 @@ public class DefaultCardModel <T> implements CardModel <T> {
 		if (value == this.value)
 			return;
 		this.value = value;
-		
+		repaintView();
 	}
 
 	/**

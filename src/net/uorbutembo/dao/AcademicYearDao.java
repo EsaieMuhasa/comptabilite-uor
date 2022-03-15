@@ -56,4 +56,16 @@ public interface AcademicYearDao extends DAOInterface<AcademicYear> {
 	 * @throws DAOException
 	 */
 	public AcademicYear findCurrent () throws DAOException;
+	
+	/**
+	 * Ajout du dao specifique au dao des annees academique
+	 * @param listener
+	 */
+	void addYearListener (AcademicYearDaoListener listener);
+	
+	/**
+	 * supression du listener specifique au dao de l'annee academique
+	 * @param listener
+	 */
+	void removeYearListener (AcademicYearDaoListener listener);
 }
