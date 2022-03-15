@@ -15,9 +15,11 @@ import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.FeePromotion;
+import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.UniversitySpend;
 import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.AllocationCostDao;
+import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.FeePromotionDao;
 import net.uorbutembo.dao.InscriptionDao;
@@ -55,6 +57,13 @@ public class GeneralBudgetModel extends DefaultPieModel {
 		this.allocationCostDao = factory.findDao(AllocationCostDao.class);
 		this.inscriptionDao = factory.findDao(InscriptionDao.class);
 		this.universitySpendDao = factory.findDao(UniversitySpendDao.class);
+		
+		inscriptionDao.addListener(new DAOAdapter<Inscription>() {
+			@Override
+			public void onCreate(Inscription e, int requestId) {
+				
+			}
+		});
 		
 		cardModel = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
 		cardModel.setTitle("Budget général");
@@ -112,10 +121,13 @@ public class GeneralBudgetModel extends DefaultPieModel {
 	 */
 	public void setCurrentYear(AcademicYear currentYear) {
 		this.currentYear = currentYear;
-		this.calculAll();
+		Thread t = new Thread(() -> {
+			this.calculAll();			
+		});
+		t.start();
 	}
 	
-	private void calculAll() {
+	private synchronized void calculAll() {
 		this.removeAll();
 		
 		List<AcademicFee> fees = this.academicFeeDao.findByAcademicYear(currentYear);
