@@ -42,7 +42,7 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 			if(i.getStudent().getId() == 0) {
 				this.studentDao.create(connection, i.getStudent());
 			}
-			long id = this.insertInTransactionnelTable(
+			long id = this.insertInTable(
 					connection,
 					new String[] {
 							"promotion", "student", "recordDate"

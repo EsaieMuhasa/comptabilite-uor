@@ -33,7 +33,6 @@ import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.FacultyDao;
-import net.uorbutembo.dao.FeePromotionDao;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.PromotionDao;
@@ -71,7 +70,6 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 	
 	private InscriptionDao inscriptionDao;
 	private AcademicFeeDao academicFeeDao;
-	private FeePromotionDao feePromotionDao;
 	private PaymentFeeDao paymentFeeDao;
 	private FacultyDao facultyDao;
 	private DepartmentDao departmentDao;
@@ -100,7 +98,6 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 		modelPieBudget = new GeneralBudgetModel(mainWindow.factory);
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		academicFeeDao = mainWindow.factory.findDao(AcademicFeeDao.class);
-		feePromotionDao = mainWindow.factory.findDao(FeePromotionDao.class);
 		paymentFeeDao = mainWindow.factory.findDao(PaymentFeeDao.class);
 		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
 		departmentDao = mainWindow.factory.findDao(DepartmentDao.class);

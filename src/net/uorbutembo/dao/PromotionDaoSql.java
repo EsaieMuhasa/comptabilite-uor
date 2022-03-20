@@ -7,9 +7,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Promotion;
@@ -24,12 +26,14 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 	private DepartmentDao departmentDao;
 	private StudyClassDao studyClassDao;
 	private AcademicYearDao academicYearDao;
+	private AcademicFeeDao academicFeeDao;
 
 	public PromotionDaoSql(DefaultSqlDAOFactory factory) {
 		super(factory);
 		departmentDao = factory.findDao(DepartmentDao.class);
 		studyClassDao = factory.findDao(StudyClassDao.class);
 		academicYearDao = factory.findDao(AcademicYearDao.class);
+		academicFeeDao = factory.findDao(AcademicFeeDao.class);
 	}
 
 	@Override
@@ -51,7 +55,7 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 			connection.setAutoCommit(false);
 			for (int i=0; i<t.length; i++) {
 				Promotion p = t[i];
-				long id = insertInTransactionnelTable(
+				long id = insertInTable(
 						connection,
 						new String[] {"academicYear", "studyClass", "department", "recordDate"},
 						new Object[] {p.getAcademicYear().getId(), p.getStudyClass().getId(), p.getDepartment().getId(), p.getRecordDate().getTime()});
@@ -175,6 +179,46 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 	}
 
 	@Override
+	public boolean checkByAcademicFee(long feeId) throws DAOException {
+		return check("academicFee", feeId);
+	}
+
+	@Override
+	public List<Promotion> findByAcademicFee(AcademicFee fee) throws DAOException {
+		List<Promotion> data = new ArrayList<>();
+		
+		final String sql = String.format("SELECT * FROM %s WHERE academicFee = %d", getTableName(), fee.getId());
+		System.out.println(sql);
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql);
+				){
+			while (result.next()) {
+				data.add(fullMapping(result));				
+			}
+			
+			if(data.isEmpty())
+				throw new DAOException("Aucune promotion configurer pour les frais universitaire => "+fee.getAmount()+" USD");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return data;
+	}
+	
+	@Override
+	public void bindToAcademicFee(long promotionId, long academicFee) throws DAOException {
+		try {
+			updateInTable(new String[] {
+					"academicFee"
+			}, new Object[] {academicFee <=0? null : academicFee}, promotionId);
+			emitOnUpdate(findById(promotionId));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
 	protected Promotion mapping(ResultSet result) throws SQLException, DAOException {
 		Promotion p = new Promotion(result.getLong("id"));
 		p.setAcademicYear(result.getLong("academicYear"));
@@ -182,6 +226,24 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 		p.setStudyClass(this.studyClassDao.findById(result.getLong("studyClass")));
 		p.setAcademicYear(this.academicYearDao.findById(result.getLong("academicYear")));
 		p.setRecordDate(new Date(result.getLong("recordDate")));
+		if(result.getLong("academicFee") > 0)
+			p.setAcademicFee(new AcademicFee(result.getLong("academicFee")));
+		if(result.getLong("lastUpdate") != 0) {
+			p.setLastUpdate(new Date(result.getLong("lastUpdate")));
+		}
+		return p;
+	}
+	
+	@Override
+	protected Promotion fullMapping(ResultSet result) throws SQLException, DAOException {
+		Promotion p = new Promotion(result.getLong("id"));
+		p.setAcademicYear(result.getLong("academicYear"));
+		p.setDepartment(this.departmentDao.findById(result.getLong("department")));
+		p.setStudyClass(this.studyClassDao.findById(result.getLong("studyClass")));
+		p.setAcademicYear(this.academicYearDao.findById(result.getLong("academicYear")));
+		p.setRecordDate(new Date(result.getLong("recordDate")));
+		if(result.getLong("academicFee") > 0)
+			p.setAcademicFee(academicFeeDao.findById(result.getLong("academicFee")));
 		if(result.getLong("lastUpdate") != 0) {
 			p.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}

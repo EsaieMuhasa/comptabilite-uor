@@ -5,6 +5,7 @@ package net.uorbutembo.dao;
 
 import java.util.List;
 
+import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Promotion;
@@ -107,4 +108,36 @@ public interface PromotionDao extends DAOInterface<Promotion> {
 	default List<Promotion> findByAcademicYear(long academicYearId) throws DAOException{
 		return findByAcademicYear(getFactory().findDao(AcademicYearDao.class).findById(academicYearId));
 	}
+	
+	/**
+	 * Verifie s'il y a aumoin une promotion pour les frais univeritraire en parametre
+	 * @param feeId
+	 * @return
+	 * @throws DAOException
+	 */
+	boolean checkByAcademicFee (long feeId) throws DAOException;
+	default boolean checkByAcademicFee (AcademicFee fee) throws DAOException{
+		return checkByAcademicFee(fee.getId());
+	}
+	
+	/**
+	 * Renvoie les promotions qui doivenet payer les frais universitaire en parametre
+	 * @param fee
+	 * @return
+	 * @throws DAOException
+	 */
+	List<Promotion> findByAcademicFee (AcademicFee fee) throws DAOException;
+	default List<Promotion> findByAcademicFee (long feeId) throws DAOException{
+		return findByAcademicFee(getFactory().findDao(AcademicFeeDao.class).findById(feeId));
+	}
+	
+	/**
+	 * associe une promotion au frais academique
+	 * @param promotionId, identifiant de la promotion
+	 * @param academicFee, identifiant du frais universitaire.
+	 * dans le cas ou on veux detacher la promotion des tout les frais univeritaire, il suffit de passer la valeur 
+	 * 0 en deuxieme paramatre
+	 * @throws DAOException
+	 */
+	void bindToAcademicFee (long promotionId, long academicFee) throws DAOException;
 }

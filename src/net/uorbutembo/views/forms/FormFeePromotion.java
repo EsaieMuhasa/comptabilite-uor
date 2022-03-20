@@ -10,7 +10,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
@@ -24,11 +23,9 @@ import javax.swing.border.LineBorder;
 
 import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.beans.FeePromotion;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.DAOAdapter;
-import net.uorbutembo.dao.FeePromotionDao;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.MainWindow;
@@ -37,7 +34,9 @@ import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
- *
+ * formulaire permetant d'associer un promotion aux frais universitaire
+ * Les frais universitaire sont declarer separement des promotions; en plus plusieur promotion peuvent payer le
+ * meme frais universitaire:
  */
 public class FormFeePromotion extends DefaultFormPanel  {
 	private static final long serialVersionUID = 6991790198392841255L;
@@ -45,7 +44,6 @@ public class FormFeePromotion extends DefaultFormPanel  {
 	private AcademicYear currentYear;
 	private PromotionDao promotionDao;
 	private AcademicFeeDao academicFeeDao;
-	private FeePromotionDao feePromotionDao;
 
 	private final DefaultListModel<Promotion> modelUnselectedPromotion = new DefaultListModel<>();
 	
@@ -73,31 +71,28 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		}
 		
 		@Override
-		public void onRemove(PanelAcademicFeeConfig config, List<FeePromotion> fees) {
-			for (FeePromotion fee : fees) {
-				if(fee.getId() > 0)
-					feePromotionDao.delete(fee.getId());
-				
-				modelUnselectedPromotion.addElement(fee.getPromotion());
+		public void onRemove(PanelAcademicFeeConfig config, List<Promotion> promotions) {
+			for (Promotion promotion : promotions) {
+				promotionDao.bindToAcademicFee(promotion.getId(), 0);
+				promotion.setAcademicFee(null);
+				modelUnselectedPromotion.addElement(promotion);
 			}
 		}
 		
 		@Override
-		public void onAdding(FeePromotion fee) {
-			if(fee.getId() == 0)
-				feePromotionDao.create(fee);
+		public void onAdding(Promotion promotion) {
+			promotionDao.bindToAcademicFee(promotion.getId(), promotion.getAcademicFee().getId());
 		};
 	};
 	/**
 	 * 
 	 */
-	public FormFeePromotion(MainWindow mainWindow, FeePromotionDao feePromotionDao) {
+	public FormFeePromotion(MainWindow mainWindow, PromotionDao promotionDao) {
 		super(mainWindow);
 		this.setTitle("Formulaire d'enregistrement");
 		
-		this.feePromotionDao = feePromotionDao;
-		this.promotionDao  = feePromotionDao.getFactory().findDao(PromotionDao.class);
-		this.academicFeeDao = feePromotionDao.getFactory().findDao(AcademicFeeDao.class);
+		this.promotionDao  = promotionDao.getFactory().findDao(PromotionDao.class);
+		this.academicFeeDao = promotionDao.getFactory().findDao(AcademicFeeDao.class);
 
 		this.getBody().add(container, BorderLayout.CENTER);
 		
@@ -136,7 +131,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 				this.academicFeeDao.findByAcademicYear(this.currentYear.getId()) : new ArrayList<>();
 
 		for (AcademicFee fee : academicFees) {
-			PanelAcademicFeeConfig panel = new PanelAcademicFeeConfig(fee, configListener, feePromotionDao);
+			PanelAcademicFeeConfig panel = new PanelAcademicFeeConfig(fee, configListener, promotionDao);
 			panelsConfig.add(panel);
 			container.add(panel);
 		}
@@ -146,9 +141,9 @@ public class FormFeePromotion extends DefaultFormPanel  {
 			next = false;
 			for (PanelAcademicFeeConfig panel : panelsConfig) {
 				for (int i = 0, count = panel.getModel().getSize(); i<count; i++) {
-					FeePromotion fee = panel.getModel().get(i);
+					Promotion fee = panel.getModel().get(i);
 					
-					if(promotion.getId() == fee.getPromotion().getId()) {
+					if(promotion.getId() == fee.getId()) {
 						next = true;
 						break;
 					}
@@ -183,7 +178,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 				if(currentYear.getId() != fee.getAcademicYear().getId()) 
 					return;
 				
-				PanelAcademicFeeConfig panel = new PanelAcademicFeeConfig(fee, configListener, feePromotionDao);
+				PanelAcademicFeeConfig panel = new PanelAcademicFeeConfig(fee, configListener, promotionDao);
 				panelsConfig.add(panel);
 				container.add(panel);
 			}
@@ -212,13 +207,13 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		 * @param config
 		 * @param fees
 		 */
-		void onRemove (PanelAcademicFeeConfig config, List<FeePromotion> fees);
+		void onRemove (PanelAcademicFeeConfig config, List<Promotion> fees);
 		
 		/**
 		 * Apres que le paneau de configuration ait instancier la relation entre les frais est la prmotion
 		 * @param fee
 		 */
-		void onAdding (FeePromotion fee);
+		void onAdding (Promotion fee);
 	}
 	
 	/**
@@ -230,11 +225,11 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		
 		private final AcademicFee fee;
 		private final PanelConfigListener listener;
-		private final FeePromotionDao feePromotionDao;
-		private final DefaultListModel<FeePromotion> model = new DefaultListModel<>();
+		private final PromotionDao feePromotionDao;
+		private final DefaultListModel<Promotion> model = new DefaultListModel<>();
 		
 		private JLabel title = FormUtil.createSubTitle("");
-		private final JList<FeePromotion> list = new JList<>(model);
+		private final JList<Promotion> list = new JList<>(model);
 		private final JButton btnAdd = new JButton(new ImageIcon(R.getIcon("success")));
 		private final JButton btnRemove = new JButton(new ImageIcon(R.getIcon("close")));
 		private final LineBorder  border = new LineBorder(FormUtil.BORDER_COLOR), 
@@ -244,7 +239,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		 * Constructeur d'initialisation.
 		 * @param fee, les frais auquel nous voulons associer un nombre x de promotion
 		 */
-		public PanelAcademicFeeConfig(final AcademicFee fee, final PanelConfigListener listener, final FeePromotionDao feePromotionDao) {
+		public PanelAcademicFeeConfig(final AcademicFee fee, final PanelConfigListener listener, final PromotionDao feePromotionDao) {
 			super(new BorderLayout());
 			this.fee = fee;
 			this.listener = listener;
@@ -261,8 +256,8 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		 */
 		public void load () {
 			if(this.feePromotionDao.checkByAcademicFee(fee.getId())) {
-				List<FeePromotion> data = feePromotionDao.findByAcademicFee(fee);
-				for (FeePromotion f : data) {
+				List<Promotion> data = feePromotionDao.findByAcademicFee(fee);
+				for (Promotion f : data) {
 					model.addElement(f);
 				}
 			}
@@ -291,7 +286,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 				if(indexs.length == 0) 
 					return;
 				
-				List<FeePromotion> fees = new ArrayList<>();
+				List<Promotion> fees = new ArrayList<>();
 				for (int index : indexs) {
 					fees.add(model.get(index));
 				}
@@ -318,30 +313,15 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		}
 		
 		public void addItem (Promotion promotion) {
-			FeePromotion fee = null;
-			if(feePromotionDao.checkByPromotion(promotion.getId())) {
-				fee = feePromotionDao.findByPromotion(promotion.getId());
-			} else {
-				fee = new FeePromotion();
-				fee.setAcademicFee(getFee());
-				fee.setPromotion(promotion);
-				fee.setRecordDate(new Date());
-			}
-			model.addElement(fee);
-			listener.onAdding(fee);
-		}
-
-		/**
-		 * @return the fee
-		 */
-		public AcademicFee getFee() {
-			return fee;
+			promotion.setAcademicFee(fee);
+			model.addElement(promotion);
+			listener.onAdding(promotion);
 		}
 
 		/**
 		 * @return the model
 		 */
-		public DefaultListModel<FeePromotion> getModel() {
+		public DefaultListModel<Promotion> getModel() {
 			return model;
 		}
 		

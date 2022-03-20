@@ -36,7 +36,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	@Override
 	public void create(AllocationCost a) throws DAOException {
 		try {
-			int id = insertInTable(
+			long id = insertInTable(
 					new String[] {"academicFee", "amount", "annualSpend", "recordDate"},
 					new Object[] {
 							a.getAcademicFee().getId(),
@@ -55,8 +55,8 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 		try (final Connection connection = factory.getConnection()) {
 			connection.setAutoCommit(false);
 			for (AllocationCost a : t) {
-				
-				int id = insertInTable(
+				long id = insertInTable(
+						connection,
 						new String[] {"academicFee", "amount", "annualSpend","recordDate" },
 						new Object[] {
 								a.getAcademicFee().getId(),
@@ -81,6 +81,25 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 					new String[] {"amount","lastUpdate" },
 					new Object[] {a.getAmount(), a.getLastUpdate().getTime()}, id);
 			emitOnUpdate(a);
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+	
+	@Override
+	public void update(AllocationCost[] es, long[] id) throws DAOException {
+		try (Connection connection = factory.getConnection()){
+			connection.setAutoCommit(false);
+			for (int i = 0; i < id.length; i++) {
+				AllocationCost a = es[i];		
+				updateInTable(
+						connection,
+						new String[] {"amount","lastUpdate" },
+						new Object[] {a.getAmount(), a.getLastUpdate().getTime()}, id[i]);
+				a.setId(id[i]);
+			}
+			connection.commit();
+			emitOnUpdate(es);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}

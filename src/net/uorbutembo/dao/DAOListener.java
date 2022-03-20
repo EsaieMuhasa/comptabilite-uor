@@ -17,41 +17,64 @@ public interface DAOListener <T extends DBEntity> {
 	 * @param e
 	 * @param requestId
 	 */
-	public abstract void onCreate(T e, int requestId);
+	void onCreate(T e, int requestId);
+	
+	/**
+	 * Lors de la creation d'un collection d'occurence
+	 * @param e
+	 * @param requestId
+	 */
+	void onCreate (T[] e, int requestId);
 	
 	/**
 	 * Mis en jour d'une nouvelle occurence
 	 * @param e
 	 * @param requestId
 	 */
-	public abstract void onUpdate(T e, int requestId);
+	void onUpdate(T e, int requestId);
+	
+	/**
+	 * Lors de la mise en jour d'une collection d'occurence
+	 * @param e
+	 * @param requestId
+	 */
+	void onUpdate(T[] e, int requestId);
 	
 	/**
 	 * Supression d'une occurence dans la bdd
 	 * @param e
 	 * @param requestId
 	 */
-	public abstract void onDelete(T e, int requestId);
+	void onDelete(T e, int requestId);
+	
+	/**
+	 * Lors d'une supression multiple
+	 * @param e
+	 * @param requestId
+	 */
+	void onDelete(T [] e, int requestId);
 	
 	/**
 	 * relors du resultat de recherche d'une occurence unique
 	 * @param e
 	 * @param requestId
 	 */
-	public abstract void onFind (T e, int requestId) ;
+	void onFind (T e, int requestId);
+	
+	void onCheck (boolean check, int requestId);
 	
 	/**
-	 * Lors du resultat de recherche d'un
+	 * Lors du resultat de recherche d'une collection d'occurence
 	 * @param e
 	 * @param requestId
 	 */
-	public abstract void onFindAll (List<T> e, int requestId) ;
+	void onFind (List<T> e, int requestId);
 	
 	/**
 	 * Lorsque l'erreur surviens dans un processuce de communication avec le SGBD
 	 * @param e
 	 * @param requestId
 	 */
-	public abstract void onError (DAOException e, int requestId);
+	void onError (DAOException e, int requestId);
 
 }
