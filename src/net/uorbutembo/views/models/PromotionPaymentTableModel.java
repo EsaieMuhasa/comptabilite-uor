@@ -5,15 +5,14 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import net.uorbutembo.beans.FeePromotion;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOFactory;
-import net.uorbutembo.dao.FeePromotionDao;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.PaymentFeeDao;
+import net.uorbutembo.dao.PromotionDao;
 
 /**
  * 
@@ -24,19 +23,18 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	private static final long serialVersionUID = -2658546296487971536L;
 	
 	private Promotion promotion;
-	private FeePromotion feePromotion;
 	private List<InscriptionDataRow> data = new ArrayList<>();
 	
 	private PaymentFeeDao paymentFeeDao;
 	private InscriptionDao inscriptionDao;
-	private FeePromotionDao feePromotionDao;
+	private PromotionDao promotionDao;
 
 
 	public PromotionPaymentTableModel(DAOFactory factory) {
 		super();
 		paymentFeeDao = factory.findDao(PaymentFeeDao.class);
 		inscriptionDao = factory.findDao(InscriptionDao.class);
-		feePromotionDao = factory.findDao(FeePromotionDao.class);
+		promotionDao = factory.findDao(PromotionDao.class);
 	}
 
 	/**
@@ -55,7 +53,6 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	}
 	
 	private void reload () {
-		feePromotion = feePromotionDao.findByPromotion(promotion.getId());
 		removeAll();
 		if(inscriptionDao.checkByPromotion(promotion)) {
 			List<Inscription> inscriptions = inscriptionDao.findByPromotion(promotion);
@@ -85,7 +82,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 
 	@Override
 	public int getColumnCount() {
-		return 5;
+		return promotion.getAcademicFee() == null? 4 : 5;
 	}
 
 	@Override
@@ -117,7 +114,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 			case 3:
 				return data.get(rowIndex).getSold()+" USD";
 			case 4:
-				return (feePromotion.getAcademicFee().getAmount() - data.get(rowIndex).getSold()) + " USD";
+				return (promotion.getAcademicFee().getAmount() - data.get(rowIndex).getSold()) + " USD";
 		}
 		return null;
 	}

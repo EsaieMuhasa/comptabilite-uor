@@ -24,7 +24,7 @@ class StudentDaoSql extends UserDaoSql<Student> implements StudentDao {
 	@Override
 	protected void create(Connection connection, Student t) throws DAOException {
 		try {
-			long id = this.insertInTransactionnelTable(
+			long id = this.insertInTable(
 					connection, 
 					new String[] {
 							"name", "postName", "lastName",

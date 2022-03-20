@@ -61,7 +61,7 @@ public class PieRender extends JComponent implements PieModelListener{
 	}
 	
 	@Override
-	protected void paintComponent(Graphics g) {
+	protected synchronized void paintComponent(Graphics g) {
 		
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -110,7 +110,7 @@ public class PieRender extends JComponent implements PieModelListener{
 	/**
 	 * utilitaire de preparation du rendu du graphique
 	 */
-	private void prepareRender () {
+	private synchronized void prepareRender () {
 		segments.clear();
 		parts.clear();
 		

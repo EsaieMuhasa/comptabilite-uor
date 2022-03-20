@@ -605,9 +605,9 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	 * @throws SQLException
 	 * @throws DAOException
 	 */
-	protected synchronized int insertInTable(String [] columnsNames, Object [] columnsValues) throws SQLException, DAOException{
+	protected synchronized long insertInTable(String [] columnsNames, Object [] columnsValues) throws SQLException, DAOException{
 		try ( Connection connection = this.factory.getConnection() ) {
-			return this.insertInTransactionnelTable(connection, columnsNames, columnsValues);
+			return this.insertInTable(connection, columnsNames, columnsValues);
 		} 
 	}
 	
@@ -620,7 +620,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	 * @throws SQLException
 	 * @throws DAOException
 	 */
-	protected synchronized int insertInTransactionnelTable(Connection connection, String [] columnsNames, Object [] columnsValues) throws SQLException, DAOException{
+	protected synchronized long insertInTable(Connection connection, String [] columnsNames, Object [] columnsValues) throws SQLException, DAOException{
 		String 
 			SQL_QUERY = "INSERT INTO "+this.getTableName()+" (",
 			SQL_SUITE=" VALUES (";
@@ -657,6 +657,36 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	}
 	
 	/**
+	 * mise en jour d'un occurence dans une transaction demarer d'avence
+	 * apre execution de l'operation la connection reste ouverte et aucun commit n'est au rendez-voud
+	 * @param connection
+	 * @param columnsNames
+	 * @param columnsValues
+	 * @param idEntity
+	 * @throws SQLException
+	 * @throws DAOException
+	 */
+	protected synchronized void updateInTable(Connection connection, String [] columnsNames, Object [] columnsValues, long idEntity) throws SQLException, DAOException{
+		String SQL_QUERY = "UPDATE "+this.getTableName()+" SET ";
+		for (int i=0; i<columnsNames.length; i++) {
+			SQL_QUERY += columnsNames[i]+(i!=(columnsNames.length-1)? ("= ?, ") : ("=? "));
+		}
+		
+		SQL_QUERY += " WHERE id="+idEntity;
+		System.out.println(SQL_QUERY);
+		
+		try ( PreparedStatement statement = prepare(SQL_QUERY, connection, false, columnsValues) ) {
+			int statut=statement.executeUpdate();
+			if(statut == 0 ) {
+				throw new DAOException("Aucune mise ajours n'a été effectuer. Veiller re-essayer svp!");
+			}
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+	}
+	
+	/**
 	 * Mise ajour d'une occurence de la table de la base de donnee
 	 * @param columnsNames les noms de la colonnes a metre ajours
 	 * @param columnsValues les valeurs de colones de l'occurence a metre a jours
@@ -666,24 +696,8 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	 * @throws DAOException
 	 */
 	protected synchronized void updateInTable(String [] columnsNames, Object [] columnsValues, long idEntity) throws SQLException, DAOException{
-		String SQL_QUERY = "UPDATE "+this.getTableName()+" SET ";
-		for (int i=0; i<columnsNames.length; i++) {
-			SQL_QUERY += columnsNames[i]+(i!=(columnsNames.length-1)? ("= ?, ") : ("=? "));
-		}
-		
-		SQL_QUERY += " WHERE id="+idEntity;
-		System.out.println(SQL_QUERY);
-		
-		try (
-				Connection connection = this.factory.getConnection();
-				PreparedStatement statement = prepare(SQL_QUERY, connection, false, columnsValues);
-			) {
-			int statut=statement.executeUpdate();
-			if(statut == 0 ) {
-				throw new DAOException("Aucune mise ajours n'a été effectuer. Veiller re-essayer svp!");
-			}
-		} catch (SQLException e) {
-			throw new DAOException(e.getMessage(), e);
+		try ( Connection connection = this.factory.getConnection() ) {
+			updateInTable(connection, columnsNames, columnsValues, idEntity);
 		}
 	}
 	
@@ -746,7 +760,17 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 		this.emitOnUpdate(e, DAOInterface.DEFAULT_REQUEST_ID);
 	}
 	
+	protected synchronized void emitOnUpdate (T [] e) {
+		this.emitOnUpdate(e, DAOInterface.DEFAULT_REQUEST_ID);
+	}
+	
 	protected synchronized void emitOnUpdate (T e, int requestId) {
+		for (DAOListener<T> ls : listeners) {
+			ls.onUpdate(e, requestId);
+		}
+	}
+	
+	protected synchronized void emitOnUpdate (T [] e, int requestId) {
 		for (DAOListener<T> ls : listeners) {
 			ls.onUpdate(e, requestId);
 		}

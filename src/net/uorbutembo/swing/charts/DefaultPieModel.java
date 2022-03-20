@@ -149,15 +149,17 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	public void removePartAt(int index) {
 		this.parts.get(index).removeListener(this);
 		this.parts.remove(index);
+		calculRealMax();
 		this.emitRefresh();
 	}
 
 	@Override
-	public void removeAll() {
+	public synchronized void removeAll() {
 		for (PiePart part : parts) {
 			part.removeListener(this);
 		}
 		this.parts.clear();
+		calculRealMax();
 		this.emitRefresh();
 	}
 
@@ -167,7 +169,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	}
 	
 	@Override
-	public PiePart findByData(Object data) {
+	public  PiePart findByData(Object data) {
 		for (PiePart part : parts) {
 			if(part == data || part.getData() == data)
 				return part;
@@ -181,13 +183,17 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	}
 
 	@Override
-	public double getPercentOf(int index) {
+	public synchronized double getPercentOf(int index) {
 		double m = (this.realMax <= this.max )? this.max : this.realMax;
+		if(m == 0 )
+			return 0;
 		return ((this.getPartAt(index).getValue() * 100.0)/m);
 	}
 
 	@Override
-	public double getPercentOf(PiePart part) {
+	public synchronized double getPercentOf(PiePart part) {
+		if (max == 0)
+			return 0;
 		if(this.parts.contains(part)) {
 			double m = (this.realMax <= this.max )? this.max : this.realMax;
 			return ((part.getValue() * 100.0)/m);
@@ -205,20 +211,20 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 		return data;
 	}
 	
-	protected void emitRefresh () {
+	protected synchronized void emitRefresh () {
 		for (PieModelListener listener : listeners) {
 			listener.refresh(this);
 		}
 	}
 	
-	protected void emitRepaint (PiePart part) {
+	protected synchronized void emitRepaint (PiePart part) {
 		int index =  this.parts.indexOf(part);
 		for (PieModelListener listener : listeners) {
 			listener.repaintPart(this, index);
 		}
 	}
-	
-	protected void calculRealMax () {
+
+	protected synchronized void calculRealMax () {
 		this.realMax = 0;
 		for (PiePart part : parts) {
 			this.realMax += part.getValue();
@@ -226,7 +232,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	}
 
 	@Override
-	public void addListener(PieModelListener listener) {
+	public synchronized void addListener(PieModelListener listener) {
 		if(!this.listeners.contains(listener)) {
 			this.listeners.add(listener);
 			listener.refresh(this);
@@ -234,12 +240,12 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	}
 
 	@Override
-	public void removeListener(PieModelListener listener) {
+	public synchronized void removeListener(PieModelListener listener) {
 		this.listeners.remove(listener);
 	}
 
 	@Override
-	public void onChange(PiePart part) {
+	public synchronized void onChange(PiePart part) {
 		this.calculRealMax();
 		this.emitRepaint(part);
 	}

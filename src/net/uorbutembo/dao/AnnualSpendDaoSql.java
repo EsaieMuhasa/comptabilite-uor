@@ -46,7 +46,7 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 		try (Connection connection = this.factory.getConnection()) {
 			connection.setAutoCommit(false);
 			for (AnnualSpend a : t) {				
-				long id = this.insertInTransactionnelTable(
+				long id = this.insertInTable(
 						connection,
 						new String[] {"academicYear", "universitySpend", "recordDate"},
 						new Object[] {a.getAcademicYear().getId(), a.getUniversitySpend().getId(), a.getRecordDate().getTime()});

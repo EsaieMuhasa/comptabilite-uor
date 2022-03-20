@@ -71,7 +71,7 @@ public class DefaultPiePart implements PiePart {
 	
 
 	@Override
-	public void setData(Object data) {
+	public synchronized void setData(Object data) {
 		this.data = data;
 	}
 
@@ -86,7 +86,7 @@ public class DefaultPiePart implements PiePart {
 	}
 
 	@Override
-	public void setName(String name) {
+	public synchronized void setName(String name) {
 		this.name = name;
 	}
 
@@ -148,7 +148,7 @@ public class DefaultPiePart implements PiePart {
 	}
 
 	@Override
-	public void setValue(double value) {
+	public synchronized void setValue(double value) {
 		if(this.value == value)
 			return;
 		
@@ -157,7 +157,7 @@ public class DefaultPiePart implements PiePart {
 	}
 
 	@Override
-	public void setLabel(String label) {
+	public synchronized void setLabel(String label) {
 		if(this.label.equals(label))
 			return;
 		
@@ -166,7 +166,7 @@ public class DefaultPiePart implements PiePart {
 	}
 
 	@Override
-	public void setVisible(boolean visible) {
+	public synchronized void setVisible(boolean visible) {
 		if(this.visible == visible)
 			return;
 		
@@ -175,17 +175,17 @@ public class DefaultPiePart implements PiePart {
 	}
 
 	@Override
-	public void addListener(PiePartListener listener) {	
+	public synchronized void addListener(PiePartListener listener) {	
 		if(!this.listeners.contains(listener))
 			this.listeners.add(listener);
 	}
 
 	@Override
-	public void removeListener(PiePartListener listener) {
+	public synchronized void removeListener(PiePartListener listener) {
 		this.listeners.remove(listener);
 	}
 	
-	protected void emitOnChange () {
+	protected synchronized void emitOnChange () {
 		for (PiePartListener listener : listeners) {
 			listener.onChange(this);
 		}

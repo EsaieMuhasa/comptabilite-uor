@@ -91,7 +91,7 @@ public class FormGroupAllocationCost extends Panel {
 	 * @param academicFee the academicFee to set
 	 * @param annualSpends the annualSpends to set
 	 */
-	public void init (AcademicFee academicFee, List<AnnualSpend> annualSpends) {
+	public synchronized void init (AcademicFee academicFee, List<AnnualSpend> annualSpends) {
 		this.academicFee = academicFee;
 		
 		if(annualSpends != null)
@@ -126,17 +126,39 @@ public class FormGroupAllocationCost extends Panel {
 			btnSave.setEnabled(false);
 			Thread t = new Thread(() -> {				
 				Date now = new Date();
+				List<AllocationCost> toCreate = new ArrayList<>(),
+						toUpdate = new ArrayList<>();
+				
 				try {					
 					for (AllocationCostField field : fields) {
 						AllocationCost cost = field.getCost();
 						if(cost.getId() != 0) {
 							cost.setLastUpdate(now);
-							allocationCostDao.update(cost, cost.getId());
+							toUpdate.add(cost);
 						} else {
 							cost.setRecordDate(now);
-							allocationCostDao.create(cost);
+							toCreate.add(cost);
 						}
 					}
+					
+					if (toCreate.size() != 0){//creation des nouvelles rubriques
+						AllocationCost [] tabToCreate = new AllocationCost[toCreate.size()];
+						allocationCostDao.create(tabToCreate);
+						for (int i = 0; i < tabToCreate.length; i++) {
+							tabToCreate[i] = toCreate.get(i);
+						}
+					}
+
+					if (toUpdate.size() != 0) {//mis en jour
+						AllocationCost [] tabToUpdate = new AllocationCost[toUpdate.size()];
+						long [] tabId = new long [toUpdate.size()];
+						for (int i = 0; i < tabToUpdate.length; i++) {
+							tabToUpdate[i] = toUpdate.get(i);
+							tabId[i] = toUpdate.get(i).getId();
+						}
+						allocationCostDao.update(tabToUpdate, tabId);				
+					}
+					
 					JOptionPane.showMessageDialog(null, "Succès d'enregistrement de \nla répartiton du "+academicFee.getAmount()+" USD", "Alert", JOptionPane.INFORMATION_MESSAGE);
 				} catch (DAOException e) {
 					JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
@@ -147,7 +169,7 @@ public class FormGroupAllocationCost extends Panel {
 		});
 		
 		center.add(Box.createVerticalGlue());
-		center.setBorder(new EmptyBorder(0, DEFAULT_H_GAP, 0, DEFAULT_V_GAP));
+		center.setBorder(new EmptyBorder(0, 0, 0, DEFAULT_V_GAP));
 		
 		container.add(left);
 		container.add(piePanel);
@@ -167,7 +189,22 @@ public class FormGroupAllocationCost extends Panel {
 	/**
 	 * mise en jours des composant graphiques
 	 */
-	private void updateViews () {
+	private synchronized void updateViews () {
+		
+		if (!fields.isEmpty()) {//reutilisation des champs deja creer
+			for ( int i= 0, max= annualSpends.size(); i<max; i++) {
+				AllocationCostField field = fields.get(i);
+				AnnualSpend spend = annualSpends.get(i);
+				AllocationCost cost = null ;
+				if(allocationCostDao.check(spend.getId(), academicFee.getId()))
+					cost = allocationCostDao.find(spend, academicFee);
+				else 
+					cost = new AllocationCost();
+				
+				field.updateModels(spend, cost);
+			}
+			return;
+		}
 		
 		pieModel.removeAll();
 		fields.clear();
@@ -181,6 +218,7 @@ public class FormGroupAllocationCost extends Panel {
 			Color color = COLORS[c];
 			DefaultPiePart part = new DefaultPiePart(color, spend.getUniversitySpend().getTitle());
 			part.setLabel(spend.getUniversitySpend().getTitle());
+			part.setData(spend);
 			pieModel.addPart(part);
 
 			
@@ -314,6 +352,16 @@ public class FormGroupAllocationCost extends Panel {
 		}
 		
 		/**
+		 * Mis en jours du model des donnes
+		 * @param soend
+		 * @param cost
+		 */
+		public synchronized void updateModels (AnnualSpend spend, AllocationCost cost) {
+			this.spend = spend;
+			this.setCost(cost);
+		}
+		
+		/**
 		 * @return the cost
 		 */
 		public AllocationCost getCost() {
@@ -331,6 +379,8 @@ public class FormGroupAllocationCost extends Panel {
 				double percent = number.doubleValue();
 				this.percent.setValue(percent+"");
 				part = pieModel.getPartByName(cost.getAnnualSpend().getUniversitySpend().getTitle());
+				
+				part.setValue(cost.getAmount());
 			}
 		}
 

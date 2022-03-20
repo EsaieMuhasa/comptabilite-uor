@@ -124,8 +124,20 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	public void onFind(T e, int requestId) {}
 	
 	@Override
-	public void onFindAll(List<T> e, int requestId) {}
+	public void onFind(List<T> e, int requestId) {}
 	
 	@Override
 	public void onError(DAOException e, int requestId) {}
+
+	@Override
+	public void onCreate(T[] e, int requestId) {}
+
+	@Override
+	public void onUpdate(T[] e, int requestId) {}
+
+	@Override
+	public void onDelete(T[] e, int requestId) {}
+
+	@Override
+	public void onCheck(boolean check, int requestId) {}
 }

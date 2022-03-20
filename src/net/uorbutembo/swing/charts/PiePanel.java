@@ -31,7 +31,6 @@ public class PiePanel extends Panel {
 	
 	private final GridLayout layout = new GridLayout(1, 2);
 	private final Panel center = new Panel(layout);
-	private final JScrollPane scroll = FormUtil.createVerticalScrollPane(center);
 	private PieModel model;
 	
 	private PieModelListener modelListener = new PieModelListener() {
@@ -143,8 +142,9 @@ public class PiePanel extends Panel {
 	
 	private void init() {
 		this.setLayout(new BorderLayout());
+		final JScrollPane scroll = FormUtil.createVerticalScrollPane(caption);
 		
-		this.add(scroll, BorderLayout.CENTER);
+		this.add(center, BorderLayout.CENTER);
 		this.add(title, BorderLayout.SOUTH);
 		
 		this.setBackground(FormUtil.BKG_DARK);
@@ -152,7 +152,7 @@ public class PiePanel extends Panel {
 		render.setBackground(this.getBackground());
 		
 		center.add(render);
-		center.add(caption);
+		center.add(scroll);
 	}
 
 	/**

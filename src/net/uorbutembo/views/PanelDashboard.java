@@ -33,7 +33,6 @@ import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.FacultyDao;
-import net.uorbutembo.dao.FeePromotionDao;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.PromotionDao;
@@ -71,7 +70,6 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 	
 	private InscriptionDao inscriptionDao;
 	private AcademicFeeDao academicFeeDao;
-	private FeePromotionDao feePromotionDao;
 	private PaymentFeeDao paymentFeeDao;
 	private FacultyDao facultyDao;
 	private DepartmentDao departmentDao;
@@ -100,7 +98,6 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 		modelPieBudget = new GeneralBudgetModel(mainWindow.factory);
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		academicFeeDao = mainWindow.factory.findDao(AcademicFeeDao.class);
-		feePromotionDao = mainWindow.factory.findDao(FeePromotionDao.class);
 		paymentFeeDao = mainWindow.factory.findDao(PaymentFeeDao.class);
 		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
 		departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
@@ -164,7 +161,7 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 
 		this
 		.addItemMenu(new NavbarButtonModel("general", "Générale"), panelCurrent)
-		.addItemMenu(new NavbarButtonModel("payments", "Evolution des payement"), new PanelEvolution());
+		.addItemMenu(new NavbarButtonModel("payments", "Evolution de payement"), panelEvolution);
 	}
 	
 	@Override
@@ -173,10 +170,14 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 		load();
 	}
 	
-	private void load() {
+	/**
+	 * Chargement des donnees depuis la BD
+	 */
+	private void load () {
 		modelCardStudents.setValue(inscriptionDao.countByAcademicYear(currentYear));
 		List<Faculty> faculties = facultyDao.findByAcademicYear(currentYear);
-		modelPieStudents.setMax(inscriptionDao.countByAcademicYear(currentYear));
+		modelPieStudents.setMax(modelCardStudents.getValue());
+		modelPieStudents.removeAll();
 		for (int i=0, max=faculties.size(); i<max; i++) {
 			Faculty faculty = faculties.get(i);
 			Color color = COLORS[i%(COLORS.length-1)];
@@ -188,10 +189,13 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 		this.modelPieBudget.setCurrentYear(currentYear);
 	}
 	
+	/**
+	 * initialisation de l'interface graphique
+	 */
 	private void init() {
 		//students		
 		modelCardStudents.setTitle("Etudiants inscrits");
-		modelCardStudents.setInfo("Nombre des étudiants inscrits");
+		modelCardStudents.setInfo("Effectif total des étudiants inscrits");
 		modelCardStudents.setIcon(R.getIcon("toge"));
 		modelCardStudents.setValue(0);
 		inscriptionDao.addListener(new DAOAdapter<Inscription>() {
