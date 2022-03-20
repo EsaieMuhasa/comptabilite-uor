@@ -181,10 +181,10 @@ public class TextField <T> extends JTextField  implements InputComponent<T>{
 
     @Override
     public void setText(String string) {
+    	super.setText(string);
         if (!getText().equals(string)) {
-            showing(string.equals(""));
+            showing(string == null || string.isEmpty());
         }
-        super.setText(string);
     }
 
 	@Override
