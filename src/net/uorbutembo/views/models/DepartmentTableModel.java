@@ -3,8 +3,6 @@
  */
 package net.uorbutembo.views.models;
 
-import java.util.ArrayList;
-
 import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.dao.DepartmentDao;
@@ -29,18 +27,29 @@ public class DepartmentTableModel extends TableModel<Department> {
 		super(departmentDao);
 		this.faculty = faculty;
 		this.departmentDao = departmentDao;
-		if(this.departmentDao.checkByFaculty(faculty.getId())) {			
+		if(this.departmentDao.checkByFaculty(faculty.getId())) 			
 			this.data = this.departmentDao.findByFaculty(this.faculty.getId());
-		} else {
-			this.data = new ArrayList<>();
-		}
 	}
 	
 	@Override
 	public void onCreate(Department e, int requestId) {
 		if(e.getFaculty().getId() == this.faculty.getId()) {
-			this.data.add(e);
-			this.fireTableRowsInserted(this.data.size()-1, this.data.size()-1);
+			super.onCreate(e, requestId);
+		}
+	}
+	
+	@Override
+	public void onUpdate(Department e, int requestId) {
+		for (int i=0; i < data.size(); i++) {
+			Department t = data.get(i);
+			if (t.getId() == e.getId()) {
+				if (t.getFaculty().getId() != faculty.getId()) {
+					removeRow(i);
+				} else {
+					updateRow(t, i);
+				}
+				break;
+			}
 		}
 	}
 
@@ -51,15 +60,14 @@ public class DepartmentTableModel extends TableModel<Department> {
 
 	@Override
 	public int getColumnCount() {
-		return 4;
+		return 2;
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		switch (columnIndex) {
-			case 0: return (rowIndex+1);
-			case 1: return (this.data.get(rowIndex).getAcronym());
-			case 2: return (this.data.get(rowIndex).getName());
+			case 0: return (this.data.get(rowIndex).getAcronym());
+			case 1: return (this.data.get(rowIndex).getName());
 		}
 		return "";
 	}
@@ -67,9 +75,8 @@ public class DepartmentTableModel extends TableModel<Department> {
 	@Override
 	public String getColumnName(int column) {
 		switch (column) {
-			case 0: return ("N°");
-			case 1: return ("Abbreviation");
-			case 2: return ("Appelation complette");
+			case 0: return ("Abbreviation");
+			case 1: return ("Appelation complette");
 		}
 		return "Option";
 	}

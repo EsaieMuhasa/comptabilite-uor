@@ -22,20 +22,20 @@ public class StudyClassTableModel extends TableModel<StudyClass> {
 	public StudyClassTableModel(StudyClassDao studyClassDao) {
 		super(studyClassDao);
 		this.studyClassDao = studyClassDao;
-		this.data = this.studyClassDao.findAll();
+		if(studyClassDao.countAll() != 0)
+			this.data = this.studyClassDao.findAll();
 	}
 
 	@Override
 	public int getColumnCount() {
-		return 4;
+		return 2;
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		switch (columnIndex) {
-			case 0: return (rowIndex+1);
-			case 1: return (this.data.get(rowIndex).getAcronym());
-			case 2: return (this.data.get(rowIndex).getName());
+			case 0: return (this.data.get(rowIndex).getAcronym());
+			case 1: return (this.data.get(rowIndex).getName());
 		}
 		return "";
 	}
@@ -43,9 +43,8 @@ public class StudyClassTableModel extends TableModel<StudyClass> {
 	@Override
 	public String getColumnName(int column) {
 		switch (column) {
-			case 0: return ("N°");
-			case 1: return ("Abbreviation");
-			case 2: return ("Appelation complette");
+			case 0: return ("Abbreviation");
+			case 1: return ("Appelation complette");
 		}
 		return "Option";
 	}
