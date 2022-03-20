@@ -120,7 +120,7 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			x = (widht - col-5 + col/2) - wPercent + (wPercent/2);
 			y = ( h-step-10 + col/2) + metricsPercent.getHeight()/3;
 			g2.drawString(percentVal, x, y);
-			g2.fillRect(widht-5, h-step-10, 5, col);
+			g2.fillRect(widht-5, h-step-10, 4, col);
 			
 			h += step + 25;
 		}

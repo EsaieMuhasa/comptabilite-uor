@@ -57,6 +57,9 @@ public interface PromotionDao extends DAOInterface<Promotion> {
 	default boolean checkByDepartment (AcademicYear year, Department department) throws DAOException{
 		return checkByDepartment(year.getId(), department.getId());
 	}
+	default boolean checkByDepartment (long departmentId) throws DAOException{
+		return check("department", departmentId);
+	}
 	
 	/**
 	 * Renvoie la collection des promotion d'un departement en une annee
@@ -78,6 +81,9 @@ public interface PromotionDao extends DAOInterface<Promotion> {
 	 * @throws DAOException
 	 */
 	boolean checkByStudyClass (long academicYearId, long studyClassId) throws DAOException;
+	default boolean checkByStudyClass (long studyClassId) throws DAOException {
+		return check("studyClass", studyClassId);
+	}
 	
 	/**
 	 * Renvoie la collection des promotion de la classe d'etude en une annee

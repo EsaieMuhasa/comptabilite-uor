@@ -5,11 +5,19 @@ package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.ImageIcon;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicYear;
+import net.uorbutembo.beans.Promotion;
+import net.uorbutembo.dao.DAOException;
+import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
@@ -28,12 +36,16 @@ public class PanelPromotion extends Panel {
 	private Button btnNew = new Button(new ImageIcon(R.getIcon("plus")), "Ajout des promotions");
 	private Button btnList = new Button(new ImageIcon(R.getIcon("menu")), "Voir les promotions");
 	private PromotionDao promotionDao;
+	private InscriptionDao inscriptionDao;
 	private FormPromotion form;
 	
 	private AcademicYear year;//l'annee acdemique acutuelement selectionner
 	
 	private Panel center = new Panel(new BorderLayout());
 	private PromotionTableModel tableModel;
+	
+	private final JMenuItem itemDelete = new  JMenuItem("Suprimer", new ImageIcon(R.getIcon("close")));
+	private final JPopupMenu popupMenu = new JPopupMenu();
 
 
 	/**
@@ -42,6 +54,7 @@ public class PanelPromotion extends Panel {
 	public PanelPromotion(MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.promotionDao = mainWindow.factory.findDao(PromotionDao.class);
+		this.inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		
 		tableModel = new PromotionTableModel(this.promotionDao);
 		Table table = new Table(tableModel);
@@ -81,6 +94,31 @@ public class PanelPromotion extends Panel {
 		
 		this.add(top, BorderLayout.NORTH);
 		this.add(center, BorderLayout.CENTER);
+		
+		//popup
+		popupMenu.add(itemDelete);
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if(e.isPopupTrigger() && table.getSelectedRow() != -1)
+					popupMenu.show(table, e.getX(), e.getY());
+			}
+		});
+		itemDelete.addActionListener(event -> {
+			Promotion pro = tableModel.getRow(table.getSelectedRow());
+			try {						
+				if(inscriptionDao.checkByPromotion(pro.getId())) {
+					JOptionPane.showMessageDialog(null, "Impossible de supprimer la promotion '"+pro.toString()+"', \ncar certains etudiants y sont inscrits", "Echec de suppression", JOptionPane.ERROR_MESSAGE);
+				} else {
+					int status = JOptionPane.showConfirmDialog(null, "Voulez-vous vraiment supprimer cette promotion?\n=>"+pro.toString(), "Supression de la promotion", JOptionPane.YES_NO_OPTION);
+					if(status == JOptionPane.OK_OPTION) {
+						promotionDao.delete(pro.getId());
+					}
+				}
+			} catch (DAOException e) {
+				JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+			}
+		});
 	}
 	
 	public void setCurrentYear (AcademicYear year) {

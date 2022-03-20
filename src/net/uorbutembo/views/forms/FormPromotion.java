@@ -32,7 +32,6 @@ import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.Button;
-import net.uorbutembo.swing.ListCellRenderer;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
@@ -64,6 +63,7 @@ public class FormPromotion extends DefaultFormPanel {
 	
 	private JSplitPane splitGeneral;
 	private PromotionDao promotionDao;
+	private AcademicYearDao academicYearDao;
 	private AcademicYear currentYear;
 	
 	/**
@@ -72,21 +72,7 @@ public class FormPromotion extends DefaultFormPanel {
 	public FormPromotion(MainWindow mainWindow, PromotionDao promotionDao) {
 		super(mainWindow);
 		this.promotionDao = promotionDao;
-		this.currentYear = this.promotionDao.getFactory().findDao(AcademicYearDao.class).findCurrent();
-		this.setTitle("Formulaire de configuration des promotions pour l'année "+ this.currentYear.getLabel());
 		this.init();
-		
-		List<Department> deps = promotionDao.getFactory().findDao(DepartmentDao.class).findAll();
-		List<StudyClass> studys = promotionDao.getFactory().findDao(StudyClassDao.class).findAll();
-		for (Department d : deps) {
-			this.departmentsModel.addElement(d);
-		}
-		
-		for (StudyClass s : studys) {
-			this.studyClassModel.addElement(s);
-		}
-		
-		this.departments.setCellRenderer(new ListCellRenderer(departments));
 
 	}
 	
@@ -95,6 +81,22 @@ public class FormPromotion extends DefaultFormPanel {
 	 */
 	public void setCurrentYear(AcademicYear currentYear) {
 		this.currentYear = currentYear;
+		btnSave.setEnabled (currentYear != null && academicYearDao.isCurrent(currentYear));
+		
+		if(!departmentsModel.isEmpty() || currentYear == null)
+			return;
+		
+		this.setTitle("Configuration des promotions pour l'année "+ this.currentYear.getLabel());
+		departmentsModel.removeAllElements();
+		studyClassModel.removeAllElements();
+		
+		List<Department> deps = promotionDao.getFactory().findDao(DepartmentDao.class).findAll();
+		List<StudyClass> studys = promotionDao.getFactory().findDao(StudyClassDao.class).findAll();
+		for (Department d : deps)
+			this.departmentsModel.addElement(d);
+		
+		for (StudyClass s : studys) 
+			this.studyClassModel.addElement(s);
 	}
 
 	/**

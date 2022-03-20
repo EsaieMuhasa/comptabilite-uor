@@ -67,6 +67,25 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 		this.data.add(index, row);
 		fireTableRowsInserted(index, data.size()-1);
 	}
+	
+	/**
+	 * supression d'un ligne du table
+	 * @param index
+	 */
+	public void removeRow (int index) {
+		this.data.remove(index);
+		fireTableRowsDeleted(index, index);
+	}
+	
+	/**
+	 * Mis en jour d'une ligne du model
+	 * @param t
+	 * @param index
+	 */
+	public void updateRow (T t, int index) {
+		data.set(index, t);
+		fireTableRowsUpdated(index, index);
+	}
 
 	/**
 	 * @return the data

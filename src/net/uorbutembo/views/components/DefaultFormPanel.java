@@ -30,6 +30,10 @@ import resources.net.uorbutembo.R;
 public abstract class DefaultFormPanel extends Panel implements ActionListener {
 	private static final long serialVersionUID = 3940623605438304561L;
 
+	protected static final String 
+		TITLE_1 = "Formulaire d'enregistrement",
+		TITLE_2 = "Formulaire de modification";
+
 	private String title;
 	private JLabel label;
 	protected JButton btnSave;
@@ -46,7 +50,7 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 	public DefaultFormPanel(MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.mainWindow = mainWindow;
-		this.title = "";
+		this.title = TITLE_1;
 		
 		this.setOpaque(false);
 		this.setBorder(new LineBorder(BORDER_COLOR, 1));

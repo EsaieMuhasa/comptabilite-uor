@@ -77,9 +77,13 @@ public class GeneralBudgetModel extends DefaultPieModel {
 		
 		allocationCostDao.addListener(new DAOAdapter<AllocationCost>() {
 			@Override
+			public void onCreate(AllocationCost[] e, int requestId) {reload();}
+			@Override
 			public void onCreate(AllocationCost e, int requestId) {reload();}
 			@Override
 			public void onUpdate(AllocationCost e, int requestId) {reload();}
+			@Override
+			public void onUpdate(AllocationCost[] e, int requestId) {reload();}
 			@Override
 			public void onDelete(AllocationCost e, int requestId) {reload();}
 		});
@@ -161,7 +165,7 @@ public class GeneralBudgetModel extends DefaultPieModel {
 	 * rechargement de donnees 
 	 * et on refais tout les calculs
 	 */
-	public void reload () {
+	public synchronized void reload () {
 		Thread t = new Thread(() -> {
 			academicFees.clear();
 			if(currentYear != null && academicFeeDao.checkByAcademicYear(currentYear.getId())) {

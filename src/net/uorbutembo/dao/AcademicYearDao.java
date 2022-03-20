@@ -48,7 +48,33 @@ public interface AcademicYearDao extends DAOInterface<AcademicYear> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public boolean checkCurrent () throws DAOException;
+	boolean checkCurrent () throws DAOException;
+	
+	/**
+	 * Est-ce l'annee academique proprietaire de l'id en parametre qui est l'annee academique courente??s
+	 * @param id
+	 * @return
+	 */
+	default boolean isCurrent (long id) throws DAOException{
+		if(checkCurrent() && id > 0) {
+			return findCurrent().getId() == id;
+		}
+		return false;
+	}
+	
+	/**
+	 * Est-ce cette annee qui est l'annee academique courante??
+	 * @param year
+	 * @return
+	 * @throws DAOException
+	 */
+	default boolean isCurrent (AcademicYear year) throws DAOException{
+		if(checkCurrent() && year != null) {
+			AcademicYear a = findCurrent();
+			return  a == year || a.getId() == year.getId();
+		}
+		return false;
+	}
 	
 	/**
 	 * Renvoie l'annee actuel

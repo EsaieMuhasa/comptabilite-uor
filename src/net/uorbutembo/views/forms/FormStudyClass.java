@@ -28,6 +28,8 @@ public class FormStudyClass extends DefaultFormPanel {
 	private final FormGroup<String> fullname = FormGroup.createTextField("Appelation complete");
 	private StudyClassDao studyClassDao;
 	
+	private StudyClass studyClass;
+	
 	public FormStudyClass(MainWindow mainWindow, StudyClassDao studyClassDao) {
 		super(mainWindow);
 		this.studyClassDao = studyClassDao;
@@ -35,6 +37,22 @@ public class FormStudyClass extends DefaultFormPanel {
 		this.init();
 	}
 	
+	/**
+	 * @param studyClass the studyClass to set
+	 */
+	public void setStudyClass(StudyClass studyClass) {
+		this.studyClass = studyClass;
+		if(studyClass != null) {
+			acronym.getField().setValue(studyClass.getAcronym());
+			fullname.getField().setValue(studyClass.getName());
+			setTitle(TITLE_2);
+		} else {
+			acronym.getField().setValue("");
+			fullname.getField().setValue("");
+			setTitle(TITLE_1);
+		}
+	}
+
 	private void init() {
 		final Box box = Box.createVerticalBox();
 		box.setOpaque(false);
@@ -48,15 +66,22 @@ public class FormStudyClass extends DefaultFormPanel {
 	public void actionPerformed(ActionEvent event) {
 		String acronym = this.acronym.getValue();
 		String name = this.fullname.getValue();
+		
+		Date now = new Date();
 		StudyClass sc = new StudyClass();
 		sc.setName(name);
 		sc.setAcronym(acronym);
-		sc.setRecordDate(new Date());
+		
 		try {
-			this.studyClassDao.create(sc);
+			if (studyClass == null) {
+				sc.setRecordDate(now);
+				this.studyClassDao.create(sc);
+			} else {
+				sc.setLastUpdate(now);
+				studyClassDao.update(sc, studyClass.getId());
+			}
 			this.showMessageDialog("Info", name+"\nEnregistrer avec succes", JOptionPane.INFORMATION_MESSAGE);
-			this.acronym.getField().setValue("");
-			this.fullname.getField().setValue("");
+			setStudyClass(null);
 		} catch (DAOException e) {
 			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}
