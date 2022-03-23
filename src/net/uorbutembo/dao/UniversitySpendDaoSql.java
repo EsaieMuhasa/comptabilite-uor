@@ -3,10 +3,15 @@
  */
 package net.uorbutembo.dao;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
+import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.UniversitySpend;
 
 /**
@@ -43,6 +48,25 @@ class UniversitySpendDaoSql extends UtilSql<UniversitySpend> implements Universi
 		} catch (SQLException e) {
 			throw new DAOException("Une erreur est survenue dans le processuce de modification\n"+e.getMessage(), e);
 		}
+	}
+
+	@Override
+	public List<UniversitySpend> findByAcademicYear(long academicYearId) throws DAOException {
+		List<UniversitySpend> data = new ArrayList<>();
+		String sql = String.format("SELECT * FROM %s WHERE id IN(SELECT id FROM %s WHERE academicYear = %d)", getTableName(), AnnualSpend.class.getSimpleName(), academicYearId);
+		System.out.println(sql);
+		try(Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next()) 
+				data.add(mapping(result));
+			
+			if(data.isEmpty()) 
+				throw new DAOException("Aucune rubrique configurer pour l'annee academique ayant pour index => "+academicYearId);
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return data;
 	}
 
 	@Override

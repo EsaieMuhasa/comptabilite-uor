@@ -72,6 +72,7 @@ public class FormPromotion extends DefaultFormPanel {
 	public FormPromotion(MainWindow mainWindow, PromotionDao promotionDao) {
 		super(mainWindow);
 		this.promotionDao = promotionDao;
+		this.academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
 		this.init();
 
 	}

@@ -27,7 +27,8 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	 */
 	public TableModel(DAOInterface<T> daoInterface) {
 		super();
-		daoInterface.addListener(this);
+		if(daoInterface != null)
+			daoInterface.addListener(this);
 	}
 	
 	@Override
@@ -56,6 +57,16 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	public void addRow (T row) {
 		this.data.add(row);
 		fireTableRowsInserted(data.size()-1, data.size()-1);	
+	}
+	/**
+	 * Ajout d'une suite d'elemenets dans le tableau
+	 * @param rows
+	 */
+	public void addRows (T [] rows) {
+		for (T t : rows) {
+			data.add(t);
+		}
+		fireTableRowsInserted( rows.length - data.size() -1, data.size()-1);	
 	}
 	
 	/**
@@ -140,22 +151,32 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	}
 	
 	@Override
-	public void onFind(T e, int requestId) {}
+	public void onFind (T e, int requestId) {}
 	
 	@Override
-	public void onFind(List<T> e, int requestId) {}
+	public void onFind (List<T> e, int requestId) {}
 	
 	@Override
-	public void onError(DAOException e, int requestId) {}
+	public void onError (DAOException e, int requestId) {}
 
 	@Override
-	public void onCreate(T[] e, int requestId) {}
+	public void onCreate (T[] e, int requestId) {
+		addRows(e);
+	}
 
 	@Override
-	public void onUpdate(T[] e, int requestId) {}
+	public void onUpdate (T[] e, int requestId) {
+		for (T t : e) {
+			onUpdate(t, requestId);
+		}
+	}
 
 	@Override
-	public void onDelete(T[] e, int requestId) {}
+	public void onDelete (T[] e, int requestId) {
+		for (T t : e) {
+			onDelete(t, requestId);
+		}
+	}
 
 	@Override
 	public void onCheck(boolean check, int requestId) {}
