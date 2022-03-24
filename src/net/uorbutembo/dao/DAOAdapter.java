@@ -31,10 +31,10 @@ public abstract class DAOAdapter <H extends DBEntity> implements DAOListener<H>,
 	public void onFind(H e, int requestId) {}
 
 	@Override
-	public void onFind(List<H> e, int requestId) {}
+	public synchronized void onFind(List<H> e, int requestId) {}
 
 	@Override
-	public void onError(DAOException e, int requestId) {}
+	public synchronized void onError(DAOException e, int requestId) {}
 
 	@Override
 	public void onCurrentYear(AcademicYear year) {}
@@ -49,6 +49,6 @@ public abstract class DAOAdapter <H extends DBEntity> implements DAOListener<H>,
 	public void onDelete(H[] e, int requestId) {}
 
 	@Override
-	public void onCheck(boolean check, int requestId) {}
+	public synchronized void onCheck(boolean check, int requestId) {}
 
 }

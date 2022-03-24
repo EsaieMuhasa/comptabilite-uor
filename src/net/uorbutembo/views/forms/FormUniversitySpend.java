@@ -8,12 +8,15 @@ import java.awt.event.ActionEvent;
 import java.util.Date;
 
 import javax.swing.Box;
+import javax.swing.JButton;
 import javax.swing.JOptionPane;
 
 import net.uorbutembo.beans.UniversitySpend;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.FormGroup;
+import net.uorbutembo.swing.TextArea;
+import net.uorbutembo.swing.TextField;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
@@ -24,8 +27,11 @@ import net.uorbutembo.views.components.DefaultFormPanel;
 public class FormUniversitySpend extends DefaultFormPanel {
 	private static final long serialVersionUID = 6428356255918143364L;
 	
-	private final FormGroup<String> title = FormGroup.createTextField("Titre");
-	private final FormGroup<String> description = FormGroup.createTextArea("Description", 5, 5);
+	private final TextField<String> title = new TextField<>("Titre");
+	private final TextArea description = new TextArea("Description", 5, 5);
+	
+	private final FormGroup<String> titleGroup = FormGroup.createTextField(title);
+	private final FormGroup<String> descriptionGroup = FormGroup.createTextArea(description);
 	
 	private UniversitySpendDao universitySpendDao;
 
@@ -35,10 +41,35 @@ public class FormUniversitySpend extends DefaultFormPanel {
 		this.universitySpendDao = universitySpendDao;
 		this.setTitle("Formultaire d'enregistrement");
 		Box box = Box.createVerticalBox();
-		box.add(this.title);
-		box.add(this.description);
+		box.add(this.titleGroup);
+		box.add(this.descriptionGroup);
 		
 		this.getBody().add(box, BorderLayout.CENTER);
+		title.addCaretListener(event -> {
+			validateFields();
+		});
+		
+		description.addCaretListener(event -> {
+			validateFields();
+		});
+		
+		validateFields();
+	}
+	
+	/**
+	 * activation/desativation du bouton d'enregistrement.
+	 */
+	private void validateFields () {
+		boolean enable = (title.getText().trim().length() >= 4) && (description.getText().trim().length() >= 20);
+		btnSave.setEnabled(enable);
+	}
+	
+	/**
+	 * Renvoie la reference vers le bouton de validation de l'enregistremnt
+	 * @return
+	 */
+	public JButton getBtnSave () {
+		return btnSave;
 	}
 
 	@Override

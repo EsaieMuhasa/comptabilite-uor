@@ -9,8 +9,7 @@ import static net.uorbutembo.views.forms.FormUtil.createScrollPane;
 import static net.uorbutembo.views.forms.FormUtil.createSubTitle;
 
 import java.awt.BorderLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
@@ -23,6 +22,7 @@ import javax.swing.ListSelectionModel;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.dao.AcademicYearDao;
+import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.components.Navbar;
 import net.uorbutembo.views.forms.FormUtil;
@@ -48,6 +48,8 @@ public class PanelAcademicYear extends Panel {
 		super(new BorderLayout());
 		
 		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
+		academicYearDao.addListener(new DAOAdapter<AcademicYear>() {
+		});
 		config = new PanelConfigAcademicYear(mainWindow);
 		
 		final Panel center = new Panel(new BorderLayout());
@@ -75,30 +77,26 @@ public class PanelAcademicYear extends Panel {
 	
 	
 	private void init() {
-		this.listMenu.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		List<AcademicYear> years = this.academicYearDao.findAll();
+		listMenu.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
+		listMenu.setBackground(FormUtil.BKG_END);
+		listMenu.setForeground(FormUtil.BORDER_COLOR);
+		List<AcademicYear> years = this.academicYearDao.countAll() != 0? this.academicYearDao.findAll() : new ArrayList<>();
 		for (AcademicYear year : years)
 			listModel.addElement(year);
-		listMenu.setBackground(FormUtil.BKG_END);
-		this.listMenu.setSelectedIndex(0);
-		this.listMenu.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(e.getClickCount() == 2 && listMenu.getSelectedIndex() != -1) {
-					AcademicYear year = listModel.get(listMenu.getSelectedIndex());
-					title.setText(year.toString());
-					config.setCurrentYear(year);
-				}
-			}
+		
+		this.listMenu.addListSelectionListener(event ->{
+			int index = listMenu.getSelectedIndex();
+			AcademicYear year = (index == -1)? null : listModel.get(index);
+			title.setText(year != null? year.toString() : "");
+			config.setCurrentYear(year);
 		});
 		
-		AcademicYear year = listModel.get(listMenu.getSelectedIndex());
-		config.setCurrentYear(year);
+		if(!years.isEmpty())
+			this.listMenu.setSelectedIndex(0);
 		
-		title.setText(year.toString());
-		this.title.setOpaque(true);
-		this.title.setBackground(FormUtil.BKG_START);
-		
+		title.setOpaque(true);
+		title.setBackground(FormUtil.BKG_START);
 	}
 
 }

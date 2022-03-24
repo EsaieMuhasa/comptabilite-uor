@@ -10,6 +10,7 @@ import javax.swing.ImageIcon;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
+import net.uorbutembo.beans.UniversitySpend;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.UniversitySpendDao;
@@ -51,9 +52,43 @@ public class PanelAnnualSpend extends Panel {
 		this.annualSpendDao.addListener(new DAOAdapter<AnnualSpend>() {
 			@Override
 			public void onCreate(AnnualSpend e, int requestId) {
-				if(!btnList.isVisible()) 
+				if(!btnList.isVisible()) {
 					btnList.doClick();
+					reload();
+				}
 			}
+			
+			@Override
+			public void onCreate(AnnualSpend[] e, int requestId) {
+				btnList.doClick();
+				reload();
+			}
+			
+			@Override
+			public void onDelete(AnnualSpend e, int requestId) { reload(); }
+			
+			@Override
+			public void onDelete(AnnualSpend[] e, int requestId) { reload(); }
+		});
+		
+		this.universitySpendDao.addListener(new DAOAdapter<UniversitySpend>() {
+			@Override
+			public void onCreate(UniversitySpend e, int requestId) { reload(); }
+			
+			@Override
+			public void onCreate(UniversitySpend[] e, int requestId) { reload(); }
+			
+			@Override
+			public void onUpdate(UniversitySpend e, int requestId) { reload(); }
+			
+			@Override
+			public void onUpdate(UniversitySpend[] e, int requestId) { reload(); }
+			
+			@Override
+			public void onDelete(UniversitySpend e, int requestId) { reload(); }
+			
+			@Override
+			public void onDelete(UniversitySpend[] e, int requestId) { reload(); }
 		});
 		
 		tableModel = new UniversitySpendTableModel(mainWindow.factory.findDao(UniversitySpendDao.class));
@@ -98,6 +133,19 @@ public class PanelAnnualSpend extends Panel {
 		this.center.add(this.panelTable, BorderLayout.CENTER);
 		this.add(this.center, BorderLayout.CENTER);
 	}
+	
+	/**
+	 * rechargement des donnees
+	 */
+	private void reload() {
+		if(form != null)
+			form.loadData();
+		
+		if(universitySpendDao.countAll() == annualSpendDao.countByAcademicYear(currentYear.getId())) {
+			this.btnList.setVisible(false);
+			this.btnNew.setVisible(false);
+		}
+	}
 
 	/**
 	 * @param currentYear the currentYear to set
@@ -109,8 +157,7 @@ public class PanelAnnualSpend extends Panel {
 		if(form!= null) 
 			form.setCurrentYear(currentYear);
 		
-		boolean visible = !(tableModel.getRowCount() == universitySpendDao.countAll());
-		btnNew.setVisible(visible);
+		reload();
 	}
 
 

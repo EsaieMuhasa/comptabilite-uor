@@ -35,6 +35,8 @@ import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.dao.AllocationCostDao;
+import net.uorbutembo.dao.AnnualSpendDao;
+import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
@@ -60,6 +62,7 @@ public class FormGroupAllocationCost extends Panel {
 	private List<AllocationCostField> fields = new ArrayList<>();
 	
 	private AllocationCostDao allocationCostDao;
+	private AnnualSpendDao annualSpendDao;
 	
 	private final GridLayout layout = new GridLayout(1, 1);
 	
@@ -81,9 +84,32 @@ public class FormGroupAllocationCost extends Panel {
 	public FormGroupAllocationCost(AllocationCostDao allocationCostDao) {
 		super(new BorderLayout(DEFAULT_H_GAP, DEFAULT_V_GAP));
 		this.allocationCostDao = allocationCostDao;
+		this.annualSpendDao= allocationCostDao.getFactory().findDao(AnnualSpendDao.class);
 		
 		this.initViews();
 		this.setBorder(new EmptyBorder(0, 0, DEFAULT_V_GAP*2, 0));
+		
+		annualSpendDao.addListener(new DAOAdapter<AnnualSpend>() {
+			@Override
+			public void onCreate(AnnualSpend e, int requestId) {
+				if(academicFee != null && academicFee.getAcademicYear().getId() == e.getAcademicYear().getId()) 
+					createFieldGroup(e);
+			}
+			
+			@Override
+			public void onCreate(AnnualSpend[] e, int requestId) {
+				for (AnnualSpend spend : e) {
+					if(academicFee != null && academicFee.getAcademicYear().getId() == spend.getAcademicYear().getId()) 
+						createFieldGroup(spend);
+				}
+			}
+			
+			@Override
+			public void onDelete(AnnualSpend e, int requestId) {}
+			
+			@Override
+			public void onDelete(AnnualSpend[] e, int requestId) {}
+		});
 	}
 	
 	/**
@@ -122,14 +148,23 @@ public class FormGroupAllocationCost extends Panel {
 		final Panel bottom = new Panel();
 		
 		bottom.add(btnSave);
-		btnSave.addActionListener(event -> {
+		btnSave.addActionListener(event -> {//lors du click sur le bouton d'enregistrement
 			btnSave.setEnabled(false);
-			Thread t = new Thread(() -> {				
+			
+			/**
+			 * le processuce peut prendre +/- du temps, car le operations ci-dessous sont au rendez-vous
+			 * -ceparation des proportions a creer a seux a metre en jours
+			 * -demande d'enregistrement
+			 * -demande de mise en jours
+			 * 
+			 * => I execute all operations in a new thread
+			 */
+			Thread t = new Thread(() -> {	
 				Date now = new Date();
 				List<AllocationCost> toCreate = new ArrayList<>(),
 						toUpdate = new ArrayList<>();
 				
-				try {					
+				try {
 					for (AllocationCostField field : fields) {
 						AllocationCost cost = field.getCost();
 						if(cost.getId() != 0) {
@@ -213,64 +248,69 @@ public class FormGroupAllocationCost extends Panel {
 		//les champs de text
 		for ( int i= 0, max= annualSpends.size(); i<max; i++) {
 			AnnualSpend spend = annualSpends.get(i);
-
-			int c = i % (COLORS.length-1);
-			Color color = COLORS[c];
-			DefaultPiePart part = new DefaultPiePart(color, spend.getUniversitySpend().getTitle());
-			part.setLabel(spend.getUniversitySpend().getTitle());
-			part.setData(spend);
-			pieModel.addPart(part);
-
-			
-			final TextField<String> fieldAmount = new TextField<>("Montant en USD");
-			final TextField<String> fieldPercent = new TextField<>("Valeur en %");
-			final Panel panel = new Panel(new BorderLayout(DEFAULT_V_GAP, DEFAULT_H_GAP));
-			final Panel panelPadding = new Panel(new BorderLayout());
-			final JLabel label = new JLabel(spend.getUniversitySpend().getTitle());
-			final Box box = Box.createHorizontalBox();
-			final AllocationCostField field = new AllocationCostField(fieldAmount, fieldPercent, spend);
-			
-			
-			if(this.allocationCostDao.check(spend.getId(), this.academicFee.getId())) {
-				AllocationCost cost = this.allocationCostDao.find(spend, academicFee);
-				field.setCost(cost);
-				part.setValue(cost.getAmount());
-			} else {
-				AllocationCost cost = new AllocationCost();
-				cost.setAnnualSpend(spend);
-				cost.setAcademicFee(academicFee);
-				
-				field.setCost(cost);
-				fieldPercent.setValue("0");
-				fieldAmount.setValue("0");
-				part.setValue(0.0);
-			}
-			
-			
-			label.setForeground(color);
-			label.setOpaque(true);
-			label.setBackground(color.darker().darker().darker());
-			Border border = new LineBorder(label.getBackground());
-			label.setBorder(border);
-			
-			panelPadding.add(label, BorderLayout.NORTH);
-			panel.add(box, BorderLayout.CENTER);
-			
-			box.add(fieldAmount);
-			box.add(Box.createHorizontalStrut(DEFAULT_H_GAP));
-			box.add(fieldPercent);
-			
-			
-			panel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-			panelPadding.setBorder(border);
-			panelPadding.add(panel, BorderLayout.CENTER);
-			
-			fields.add(field);
-			center.add(panelPadding);
-			center.add(Box.createVerticalStrut(DEFAULT_H_GAP));
+			createFieldGroup(spend);
 		}
 
 		center.repaint();
+	}
+	
+	/**
+	 * utilitaire de creation du group des champs qui permet de cofigurer
+	 * la portion d'une rubique du budjet
+	 * @param spend
+	 */
+	private void createFieldGroup (AnnualSpend spend) {
+		int c = pieModel.getCountPart() % (COLORS.length-1);
+		Color color = COLORS[c];
+		
+		DefaultPiePart part = new DefaultPiePart(color, spend.getUniversitySpend().getTitle());
+		part.setLabel(spend.getUniversitySpend().getTitle());
+		part.setData(spend);
+		pieModel.addPart(part);
+		
+		final TextField<String> fieldAmount = new TextField<>("Montant en USD");
+		final TextField<String> fieldPercent = new TextField<>("Valeur en %");
+		final Panel panel = new Panel(new BorderLayout(DEFAULT_V_GAP, DEFAULT_H_GAP));
+		final Panel panelPadding = new Panel(new BorderLayout());
+		final JLabel label = new JLabel(spend.getUniversitySpend().getTitle());
+		final Box box = Box.createHorizontalBox();
+		final AllocationCostField field = new AllocationCostField(fieldAmount, fieldPercent, spend);
+		
+		if(this.allocationCostDao.check(spend.getId(), this.academicFee.getId())) {
+			AllocationCost cost = this.allocationCostDao.find(spend, academicFee);
+			field.setCost(cost);
+			part.setValue(cost.getAmount());
+		} else {
+			AllocationCost cost = new AllocationCost();
+			cost.setAnnualSpend(spend);
+			cost.setAcademicFee(academicFee);
+			
+			field.setCost(cost);
+			fieldPercent.setValue("0");
+			fieldAmount.setValue("0");
+			part.setValue(0.0);
+		}
+		
+		label.setForeground(color);
+		label.setOpaque(true);
+		label.setBackground(color.darker().darker().darker());
+		Border border = new LineBorder(label.getBackground());
+		label.setBorder(border);
+		
+		panelPadding.add(label, BorderLayout.NORTH);
+		panel.add(box, BorderLayout.CENTER);
+		
+		box.add(fieldAmount);
+		box.add(Box.createHorizontalStrut(DEFAULT_H_GAP));
+		box.add(fieldPercent);
+		
+		panel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		panelPadding.setBorder(border);
+		panelPadding.add(panel, BorderLayout.CENTER);
+		
+		fields.add(field);
+		center.add(panelPadding);
+		center.add(Box.createVerticalStrut(DEFAULT_H_GAP));
 	}
 	
 	/**

@@ -8,7 +8,9 @@ import java.util.List;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.UniversitySpend;
+import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AnnualSpendDao;
+import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.TableModel;
 
@@ -27,12 +29,40 @@ public class UniversitySpendTableModel extends TableModel <UniversitySpend> {
 		super(daoInterface);
 		this.universitySpendDao = daoInterface;
 		this.annualSpendDao = daoInterface.getFactory().findDao(AnnualSpendDao.class);
+		daoInterface.getFactory().findDao(AcademicYearDao.class).addListener(new DAOAdapter<AcademicYear>() {
+			@Override
+			public void onDelete(AcademicYear e, int requestId) {
+				if(currentYear != null && e.getId() == currentYear.getId()) {
+					setCurrentYear(null);
+				}
+			}
+		});
+		
+		this.annualSpendDao.addListener(new DAOAdapter<AnnualSpend>() {
+			@Override
+			public void onCreate(AnnualSpend e, int requestId) { reload(); }
+			
+			@Override
+			public void onCreate(AnnualSpend[] e, int requestId) { reload(); }
+			
+			@Override
+			public void onUpdate(AnnualSpend e, int requestId) { reload(); }
+			
+			@Override
+			public void onUpdate(AnnualSpend[] e, int requestId) { reload(); }
+			
+			@Override
+			public void onDelete(AnnualSpend e, int requestId) { reload(); }
+			
+			@Override
+			public void onDelete(AnnualSpend[] e, int requestId) { reload(); }
+		});
 	}
 	
 	/**
 	 * @param currentYear the currentYear to set
 	 */
-	public void setCurrentYear(AcademicYear currentYear) {
+	public synchronized void setCurrentYear(AcademicYear currentYear) {
 		this.currentYear = currentYear;
 		this.reload();
 	}
@@ -49,7 +79,19 @@ public class UniversitySpendTableModel extends TableModel <UniversitySpend> {
 		return null;
 	}
 	
+	@Override
+	public void onCreate(UniversitySpend e, int requestId) {
+		if(currentYear != null)
+			return;
+		super.onCreate(e, requestId);
+	}
 	
+	@Override
+	public void onCreate(UniversitySpend[] e, int requestId) {
+		if(currentYear != null )
+			return;
+		super.onCreate(e, requestId);
+	}
 
 	/**
 	 * rechargement des donnes

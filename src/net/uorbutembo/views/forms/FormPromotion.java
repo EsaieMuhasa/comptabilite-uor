@@ -9,6 +9,7 @@ import static net.uorbutembo.views.forms.FormUtil.DEFAULT_V_GAP;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -27,6 +28,7 @@ import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.AcademicYearDao;
+import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.PromotionDao;
@@ -63,6 +65,8 @@ public class FormPromotion extends DefaultFormPanel {
 	
 	private JSplitPane splitGeneral;
 	private PromotionDao promotionDao;
+	private DepartmentDao departmentDao;
+	private StudyClassDao studyClassDao;
 	private AcademicYearDao academicYearDao;
 	private AcademicYear currentYear;
 	
@@ -73,7 +77,149 @@ public class FormPromotion extends DefaultFormPanel {
 		super(mainWindow);
 		this.promotionDao = promotionDao;
 		this.academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
+		this.departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
+		this.studyClassDao = mainWindow.factory.findDao(StudyClassDao.class);
 		this.init();
+		
+		departmentDao.addListener(new DAOAdapter<Department>() {
+			@Override
+			public void onCreate(Department e, int requestId) {
+				departmentsModel.addElement(e);
+			}
+			
+			@Override
+			public void onCreate(Department[] e, int requestId) {
+				for (Department department : e) {
+					onCreate(department, requestId);
+				}
+			}
+			
+			@Override
+			public void onUpdate(Department e, int requestId) {
+				boolean updated = false;
+				for (int i = 0; i < departmentsModel.getSize(); i++) {
+					if(e.getId() == departmentsModel.get(i).getId())  {
+						departmentsModel.setElementAt(e, i);
+						updated = true;
+						break;
+					}
+				}
+				
+				if(!updated) {
+					for (int i = 0, count = selectedDepartmentsModel.getSize(); i < count; i++) {
+						if(e.getId() == selectedDepartmentsModel.get(i).getId()){
+							selectedDepartmentsModel.remove(i);
+							break;
+						}
+					}	
+				}
+			}
+			
+			@Override
+			public void onUpdate(Department[] e, int requestId) {
+				for (Department department : e) {
+					onUpdate(department, requestId);
+				}
+			}
+			
+			@Override
+			public void onDelete(Department e, int requestId) {
+				boolean deleted = false;
+				for (int i = 0, count = departmentsModel.getSize(); i < count; i++) {
+					if(e.getId() == departmentsModel.get(i).getId()){
+						departmentsModel.remove(i);
+						deleted = true;
+						break;
+					}
+				}
+				
+				if(!deleted) {
+					for (int i = 0, count = selectedDepartmentsModel.getSize(); i < count; i++) {
+						if(e.getId() == selectedDepartmentsModel.get(i).getId()){
+							selectedDepartmentsModel.remove(i);
+							break;
+						}
+					}	
+				}
+			}
+			
+			@Override
+			public void onDelete(Department[] e, int requestId) {
+				for (Department department : e) {
+					onDelete(department, requestId);
+				}
+			}
+		});
+		
+		studyClassDao.addListener(new DAOAdapter<StudyClass>() {
+			@Override
+			public void onCreate(StudyClass e, int requestId) {
+				studyClassModel.addElement(e);
+			}
+			
+			@Override
+			public void onCreate(StudyClass[] e, int requestId) {
+				for (StudyClass studyClass : e) {
+					onCreate(studyClass, requestId);
+				}
+			}
+			
+			@Override
+			public void onUpdate(StudyClass e, int requestId) {
+				boolean updated = false;
+				for (int i = 0, count = studyClassModel.getSize(); i < count; i++){
+					if (studyClassModel.get(i).getId() == e.getId() ) {
+						studyClassModel.set(i, e);
+						updated = true;
+						break;
+					}
+				}
+				
+				if(!updated) {
+					for (int i = 0, count = selectedStudyClassModel.getSize(); i < count; i++){
+						if (selectedStudyClassModel.get(i).getId() == e.getId() ) {
+							selectedStudyClassModel.set(i, e);
+							break;
+						}
+					}
+				}
+			}
+			
+			@Override
+			public void onUpdate(StudyClass[] e, int requestId) {
+				for (StudyClass studyClass : e) {
+					onUpdate(studyClass, requestId);
+				}
+			}
+			
+			@Override
+			public void onDelete(StudyClass e, int requestId) {
+				boolean deleted = false;
+				for (int i = 0, count = studyClassModel.getSize(); i < count; i++) {
+					if (studyClassModel.get(i).getId() == e.getId() ) {
+						studyClassModel.remove(i);
+						deleted = true;
+						break;
+					}
+				}
+				
+				if(!deleted) {
+					for (int i = 0, count = selectedStudyClassModel.getSize(); i < count; i++){
+						if (selectedStudyClassModel.get(i).getId() == e.getId() ) {
+							selectedStudyClassModel.remove(i);
+							break;
+						}
+					}
+				}
+			}
+			
+			@Override
+			public void onDelete(StudyClass[] e, int requestId) {
+				for (StudyClass studyClass : e) {
+					onDelete(studyClass, requestId);
+				}
+			}
+		});
 
 	}
 	
@@ -91,8 +237,8 @@ public class FormPromotion extends DefaultFormPanel {
 		departmentsModel.removeAllElements();
 		studyClassModel.removeAllElements();
 		
-		List<Department> deps = promotionDao.getFactory().findDao(DepartmentDao.class).findAll();
-		List<StudyClass> studys = promotionDao.getFactory().findDao(StudyClassDao.class).findAll();
+		List<Department> deps = departmentDao.countAll() != 0 ? departmentDao.findAll() : new ArrayList<>();
+		List<StudyClass> studys = studyClassDao.countAll() != 0 ? studyClassDao.findAll() : new ArrayList<>();
 		for (Department d : deps)
 			this.departmentsModel.addElement(d);
 		

@@ -218,7 +218,8 @@ public class FormFeePromotion extends DefaultFormPanel  {
 	
 	/**
 	 * @author Esaie MUHASA
-	 * Panel de de configuration des frais universitaire
+	 * Panel de configuration des frais universitaire.
+	 * facilite l'association d'un groupe des promotion aux frais universitaire
 	 */
 	private static final class PanelAcademicFeeConfig extends Panel {
 		private static final long serialVersionUID = -3831549572169534221L; 
