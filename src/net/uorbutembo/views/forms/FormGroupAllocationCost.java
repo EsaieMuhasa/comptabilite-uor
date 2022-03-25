@@ -178,10 +178,10 @@ public class FormGroupAllocationCost extends Panel {
 					
 					if (toCreate.size() != 0){//creation des nouvelles rubriques
 						AllocationCost [] tabToCreate = new AllocationCost[toCreate.size()];
-						allocationCostDao.create(tabToCreate);
 						for (int i = 0; i < tabToCreate.length; i++) {
 							tabToCreate[i] = toCreate.get(i);
 						}
+						allocationCostDao.create(tabToCreate);
 					}
 
 					if (toUpdate.size() != 0) {//mis en jour
@@ -233,8 +233,11 @@ public class FormGroupAllocationCost extends Panel {
 				AllocationCost cost = null ;
 				if(allocationCostDao.check(spend.getId(), academicFee.getId()))
 					cost = allocationCostDao.find(spend, academicFee);
-				else 
+				else {
 					cost = new AllocationCost();
+					cost.setAcademicFee(academicFee);
+					cost.setAnnualSpend(spend);
+				}
 				
 				field.updateModels(spend, cost);
 			}
@@ -276,20 +279,17 @@ public class FormGroupAllocationCost extends Panel {
 		final Box box = Box.createHorizontalBox();
 		final AllocationCostField field = new AllocationCostField(fieldAmount, fieldPercent, spend);
 		
-		if(this.allocationCostDao.check(spend.getId(), this.academicFee.getId())) {
-			AllocationCost cost = this.allocationCostDao.find(spend, academicFee);
+		AllocationCost cost = null;
+		if(this.allocationCostDao.check(spend.getId(), academicFee.getId())) {//pour ceux qui existe deja
+			cost = this.allocationCostDao.find(spend, academicFee);
 			field.setCost(cost);
-			part.setValue(cost.getAmount());
-		} else {
-			AllocationCost cost = new AllocationCost();
+		} else {//pour ceux qui n'existe pas
+			cost = new AllocationCost();
 			cost.setAnnualSpend(spend);
 			cost.setAcademicFee(academicFee);
-			
-			field.setCost(cost);
-			fieldPercent.setValue("0");
-			fieldAmount.setValue("0");
-			part.setValue(0.0);
 		}
+		field.setCost(cost);
+		part.setValue(cost.getAmount());
 		
 		label.setForeground(color);
 		label.setOpaque(true);
@@ -421,6 +421,9 @@ public class FormGroupAllocationCost extends Panel {
 				part = pieModel.getPartByName(cost.getAnnualSpend().getUniversitySpend().getTitle());
 				
 				part.setValue(cost.getAmount());
+				
+				if (cost.getAcademicFee() == null || cost.getAcademicFee().getId() <= 0)
+					cost.setAcademicFee(academicFee);
 			}
 		}
 
@@ -431,6 +434,8 @@ public class FormGroupAllocationCost extends Panel {
 			if(cost != null)
 				part = pieModel.getPartByName(cost.getAnnualSpend().getUniversitySpend().getTitle());
 			
+			//lors du changemet du montant, on recalcule les pourcentage 
+			//=> seuelement dans le cas où le champ amount est la source de l'evenement
 			this.amount.addCaretListener(event -> {
 				
 				if(cost == null)
@@ -443,7 +448,6 @@ public class FormGroupAllocationCost extends Panel {
 						part.setValue(cost.getAmount());
 					}
 				} catch (NumberFormatException e) {
-					//amount.setValue(cost.getAmount()+"");
 					return;
 				}
 				
@@ -465,6 +469,8 @@ public class FormGroupAllocationCost extends Panel {
 				}
 			});
 			
+			//dans le cas où le pourcentage change, on recalcule montant
+			//=> operation faite, uniquement dans le cas où, le field percenage est source du changement
 			this.percent.addCaretListener(event -> {
 				if(!this.percent.hasFocus()) 
 					return;

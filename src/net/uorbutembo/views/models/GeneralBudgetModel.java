@@ -65,9 +65,11 @@ public class GeneralBudgetModel extends DefaultPieModel {
 			public void onCreate(Inscription e, int requestId) {
 				AcademicFee fee = e.getPromotion().getAcademicFee();
 				
-				setMax(getMax() + fee.getAmount());
-				List<AllocationCost> costs = allocationCostDao.findByAcademicFee(fee);
-				updateParts(costs, 1);
+				if (fee != null) {					
+					setMax(getMax() + fee.getAmount());
+					List<AllocationCost> costs = allocationCostDao.findByAcademicFee(fee);
+					updateParts(costs, 1);
+				}
 			}
 			@Override
 			public void onUpdate(Inscription e, int requestId) {reload();}
@@ -166,17 +168,14 @@ public class GeneralBudgetModel extends DefaultPieModel {
 	 * et on refais tout les calculs
 	 */
 	public synchronized void reload () {
-		Thread t = new Thread(() -> {
-			academicFees.clear();
-			if(currentYear != null && academicFeeDao.checkByAcademicYear(currentYear.getId())) {
-				List<AcademicFee> fees = this.academicFeeDao.findByAcademicYear(currentYear);
-				for (AcademicFee af : fees) {
-					academicFees.add(af);
-				}
+		academicFees.clear();
+		if(currentYear != null && academicFeeDao.checkByAcademicYear(currentYear.getId())) {
+			List<AcademicFee> fees = this.academicFeeDao.findByAcademicYear(currentYear);
+			for (AcademicFee af : fees) {
+				academicFees.add(af);
 			}
-			this.calculAll();			
-		});
-		t.start();
+		}
+		this.calculAll();
 	}
 	
 	/**
