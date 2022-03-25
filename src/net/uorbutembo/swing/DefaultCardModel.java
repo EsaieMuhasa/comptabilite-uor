@@ -176,7 +176,8 @@ public class DefaultCardModel <T> implements CardModel <T> {
 	/**
 	 * @param view the view to set
 	 */
-	public void setView(Card view) {
+	@Override
+	public void setCard(Card view) {
 		this.view = view;
 	}
 
