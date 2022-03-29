@@ -40,6 +40,7 @@ public class IndividualSheet extends Panel {
 
 	private static final long serialVersionUID = 4342531142487279020L;
 	public static final Dimension A4_LAND = new Dimension(1123, 794);
+	public static final Dimension MIN_SIZE = new Dimension(1123, 300);
 	private static final String TITLE = "Fiche individuelle de paiement des frais académiques exercice ";
 	
 	private Panel page = new Panel(new BorderLayout());
@@ -85,10 +86,9 @@ public class IndividualSheet extends Panel {
 	 */
 	public IndividualSheet (MainWindow mainWindow) {
 		super(new BorderLayout());
-		page.setPreferredSize(A4_LAND);
-		page.setSize(A4_LAND);
-		page.setMaximumSize(A4_LAND);
-		page.setMinimumSize(A4_LAND);
+		page.setPreferredSize(MIN_SIZE);
+		page.setSize(MIN_SIZE);
+		page.setMinimumSize(MIN_SIZE);
 		page.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		this.paymentFeeDao = mainWindow.factory.findDao(PaymentFeeDao.class);

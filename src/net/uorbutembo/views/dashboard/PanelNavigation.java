@@ -5,6 +5,7 @@ package net.uorbutembo.views.dashboard;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.util.ArrayList;
 import java.util.List;
@@ -297,19 +298,32 @@ public class PanelNavigation extends Panel{
 	 * Emission de l'evenement de filtrage
 	 */
 	protected void emitOnFilter () {
-		if(checkFilter.isSelected()) {			
-			FacultyFilter [] filters = new FacultyFilter[this.lastPathFilter.size()];
-			for (int i=0; i < lastPathFilter.size(); i++) {
-				filters[i] = lastPathFilter.get(i);
+		Thread t = new Thread(() -> {
+			checkFilter.setEnabled(false);
+			tree.setEnabled(false);
+			tree.setCursor(FormUtil.WAIT_CURSOR);
+			setCursor(FormUtil.WAIT_CURSOR);
+			
+			if(checkFilter.isSelected() && !lastPathFilter.isEmpty()) {			
+				FacultyFilter [] filters = new FacultyFilter[this.lastPathFilter.size()];
+				for (int i=0; i < lastPathFilter.size(); i++) {
+					filters[i] = lastPathFilter.get(i);
+				}
+				for (NavigationListener ls : listeners) {
+					ls.onFilter(filters);
+				}
+			} else {
+				for (NavigationListener ls : listeners) {
+					ls.onFilter(faculties);
+				}			
 			}
-			for (NavigationListener ls : listeners) {
-				ls.onFilter(filters);
-			}
-		} else {
-			for (NavigationListener ls : listeners) {
-				ls.onFilter(faculties);
-			}			
-		}
+			
+			checkFilter.setEnabled(true);
+			tree.setEnabled(checkFilter.isSelected());
+			tree.setCursor(Cursor.getDefaultCursor());
+			setCursor(Cursor.getDefaultCursor());
+		});
+		t.start();
 	}
 	
 	/**

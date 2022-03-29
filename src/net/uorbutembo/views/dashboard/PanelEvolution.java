@@ -8,26 +8,19 @@ import java.awt.BorderLayout;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JProgressBar;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 
 import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.beans.Promotion;
-import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOFactory;
-import net.uorbutembo.dao.InscriptionDao;
-import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.swing.Table;
-import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.views.MainWindow;
-import net.uorbutembo.views.dashboard.PanelNavigation.DepartmentFilter;
 import net.uorbutembo.views.dashboard.PanelNavigation.FacultyFilter;
 import net.uorbutembo.views.dashboard.PanelNavigation.NavigationListener;
 import net.uorbutembo.views.forms.FormUtil;
-import net.uorbutembo.views.models.PromotionPaymentTableModel;
 import resources.net.uorbutembo.R;
 
 /**
@@ -37,9 +30,6 @@ import resources.net.uorbutembo.R;
 public class PanelEvolution extends Panel {
 	private static final long serialVersionUID = 2483552038817065024L;
 	
-	private PromotionDao promotionDao;
-	private InscriptionDao inscriptionDao;
-	
 	private AcademicYear currentYear;
 	private DAOFactory factory;
 	
@@ -48,11 +38,15 @@ public class PanelEvolution extends Panel {
 	private final JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, center, right);
 	private PanelNavigation navigation;
 	
+	private JProgressBar progress = new JProgressBar();
+	
 	//btn d'exportation
 	private JButton btnToExcel = new JButton("Excel", new ImageIcon(R.getIcon("export")));
 	private JButton btnToPdf = new JButton("PDF", new ImageIcon(R.getIcon("pdf")));
 	private JButton btnToPrint = new JButton("Imprimer", new ImageIcon(R.getIcon("print")));
 	//==
+	
+	private DatatableView datatableView;
 	
 	/**
 	 * la construction du panel de manipulation de l'evolution des pyements
@@ -62,8 +56,6 @@ public class PanelEvolution extends Panel {
 	public PanelEvolution(MainWindow mainWindow) {
 		super(new BorderLayout());
 		factory = mainWindow.factory;
-		inscriptionDao = factory.findDao(InscriptionDao.class);
-		promotionDao = factory.findDao(PromotionDao.class);
 		navigation = new PanelNavigation(factory);
 		init();
 		
@@ -92,11 +84,14 @@ public class PanelEvolution extends Panel {
 		//btn expo
 		Box box = Box.createHorizontalBox();
 		
+		box.add(progress);
 		box.add(Box.createHorizontalGlue());
 		box.add(btnToExcel);
 		box.add(btnToPdf);
 		box.add(btnToPrint);
 		box.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		progress.setBorderPainted(false);
+		progress.setStringPainted(true);
 		//==
 		
 		listContainer.add(FormUtil.createVerticalScrollPane(panelData), BorderLayout.CENTER);
@@ -115,30 +110,26 @@ public class PanelEvolution extends Panel {
 		navigation.addListener(new NavigationListener() {			
 			@Override
 			public void onFilter(FacultyFilter [] filters) {
-				panelData.removeAll();
-				Box box = Box.createVerticalBox();
-				for (FacultyFilter f : filters) {
-					Panel panelFaculty = new Panel(new BorderLayout());
-					Box boxFaculty = Box.createVerticalBox();
-					panelFaculty.add(FormUtil.createTitle(f.getFaculty().toString()), BorderLayout.NORTH);
-					for (DepartmentFilter d : f.getDepartments()) {
-						for (StudyClass s : d.getClasses()) {
-							Promotion promotion = promotionDao.find(currentYear, d.getDepartment(), s);
-							if(inscriptionDao.checkByPromotion(promotion)) {
-								PromotionPaymentTableModel tableModel = new PromotionPaymentTableModel(factory);
-								tableModel.setPromotion(promotion);
-								Table table = new Table(tableModel);
-								boxFaculty.add(new TablePanel(table, s.getAcronym()+" "+d.getDepartment().getName(), false));
-								boxFaculty.add(Box.createVerticalStrut(10));
-							}
-						}
-					}
-					panelFaculty.add(boxFaculty, BorderLayout.CENTER);
-					box.add(panelFaculty);
+				
+				//disable exports buttons
+				btnToExcel.setEnabled(false);
+				btnToPdf.setEnabled(false);
+				btnToPrint.setEnabled(false);
+				//==
+				
+				if(datatableView == null) {
+					datatableView = new DatatableView(factory, progress);
+					datatableView.firstLoad(filters, currentYear);
+					panelData.add(datatableView, BorderLayout.CENTER);
+				} else {
+					datatableView.setFilter(filters);
 				}
-				box.add(Box.createVerticalGlue());
-				panelData.add(box, BorderLayout.CENTER);
-				panelData.repaint();
+				
+				//enable exports buttons
+				btnToExcel.setEnabled(true);
+				btnToPdf.setEnabled(true);
+				btnToPrint.setEnabled(true);
+				//==
 			}
 		});
 	}
