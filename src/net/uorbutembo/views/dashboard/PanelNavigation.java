@@ -5,6 +5,7 @@ package net.uorbutembo.views.dashboard;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,6 @@ import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.AcademicYearDao;
-import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOFactory;
@@ -37,7 +37,7 @@ import net.uorbutembo.views.forms.FormUtil;
  * @author Esaie MUHASA
  * Panel du menu de navigation d'une scene du dashboard
  */
-public class PanelNavigation extends Panel  implements AcademicYearDaoListener{
+public class PanelNavigation extends Panel{
 	private static final long serialVersionUID = -26597150295854443L;
 	
 	private final DefaultMutableTreeNode root = new DefaultMutableTreeNode();
@@ -49,7 +49,8 @@ public class PanelNavigation extends Panel  implements AcademicYearDaoListener{
 	
 	private final List<NavigationListener> listeners = new ArrayList<>();
 	private final List<FacultyFilter> lastPathFilter = new ArrayList<>();//la derniere collection des chemains filtrer
-	
+	private FacultyFilter [] faculties;
+			
 	private FacultyDao facultyDao;
 	private DepartmentDao departmentDao;
 	private StudyClassDao studyClassDao;
@@ -65,8 +66,7 @@ public class PanelNavigation extends Panel  implements AcademicYearDaoListener{
 		
 		tree.setSelectionModel(treeSelection);
 		init();
-		
-		factory.findDao(AcademicYearDao.class).addYearListener(this);
+
 		factory.findDao(AcademicYearDao.class).addListener(new DAOAdapter<AcademicYear>() {
 			@Override
 			public void onError(DAOException e, int requestId) {
@@ -74,14 +74,26 @@ public class PanelNavigation extends Panel  implements AcademicYearDaoListener{
 			}
 		});
 	}
-	
-	@Override
-	public void onCurrentYear(AcademicYear year) {
-		this.currentYear = year;
-		Thread  t = new Thread (() -> {			
-			this.reload();
-		});
-		t.start();
+
+	/**
+	 * @return the currentYear
+	 */
+	public AcademicYear getCurrentYear() {
+		return currentYear;
+	}
+
+	/**
+	 * @param currentYear the currentYear to set
+	 */
+	public void setCurrentYear(AcademicYear currentYear) {
+		this.currentYear = currentYear;
+	}
+
+	/**
+	 * @return the faculties
+	 */
+	public FacultyFilter [] getFaculties() {
+		return faculties;
 	}
 
 	private void init() {
@@ -107,7 +119,7 @@ public class PanelNavigation extends Panel  implements AcademicYearDaoListener{
 		checkFilter.setForeground(Color.WHITE);
 		checkFilter.addActionListener(event -> {
 			tree.setEnabled(checkFilter.isSelected());
-			emitOnFilterStatusChange();
+			emitOnFilter();
 		});
 		
 		bottom.add(checkFilter);
@@ -191,17 +203,23 @@ public class PanelNavigation extends Panel  implements AcademicYearDaoListener{
 	/**
 	 * Chargement des contenues de l'arbre
 	 */
-	public void reload () {
-		checkFilter.setSelected(false);
+	public synchronized void reload () {
+		
+		if(lastPathFilter != null && !lastPathFilter.isEmpty())
+			lastPathFilter.clear();
+			
 		if(!root.isLeaf())
 			root.removeAllChildren();
 
 		root.setUserObject(currentYear);
 		List<Faculty> faculties = facultyDao.findByAcademicYear(currentYear);
+		this.faculties = new FacultyFilter[faculties.size()];
+		
 		for (int index = 0, countFac = faculties.size(); index < countFac; index++) {
 			
 			Faculty faculty = faculties.get(index);
 			List<Department> departments = departmentDao.findByFaculty(faculty, currentYear);
+			List<DepartmentFilter> deps = new ArrayList<>();
 			DefaultMutableTreeNode facNode = new DefaultMutableTreeNode(faculty);
 			
 			treeModel.insertNodeInto(facNode, root, root.getChildCount());
@@ -216,11 +234,17 @@ public class PanelNavigation extends Panel  implements AcademicYearDaoListener{
 					depNode.add(stNode);
 				}
 				facNode.add(depNode);
+				deps.add(new DepartmentFilter(department, studys, depNode));
 			}
+			
+			this.faculties[index] = new FacultyFilter(faculty, deps, facNode);
 		}
 
 		treeModel.reload();
 		tree.expandPath(rootPath);
+		
+		checkFilter.setSelected(false);
+		emitOnFilter();
 	}
 	
 	/**
@@ -271,21 +295,35 @@ public class PanelNavigation extends Panel  implements AcademicYearDaoListener{
 	}
 	
 	/**
-	 * Emission du changement de statut du filtre
-	 */
-	protected void emitOnFilterStatusChange () {
-		for (NavigationListener ls : listeners) {
-			ls.onFilterStatusChange(checkFilter.isSelected());
-		}
-	}
-	
-	/**
 	 * Emission de l'evenement de filtrage
 	 */
 	protected void emitOnFilter () {
-		for (NavigationListener ls : listeners) {
-			ls.onFilter(lastPathFilter);
-		}
+		Thread t = new Thread(() -> {
+			checkFilter.setEnabled(false);
+			tree.setEnabled(false);
+			tree.setCursor(FormUtil.WAIT_CURSOR);
+			setCursor(FormUtil.WAIT_CURSOR);
+			
+			if(checkFilter.isSelected() && !lastPathFilter.isEmpty()) {			
+				FacultyFilter [] filters = new FacultyFilter[this.lastPathFilter.size()];
+				for (int i=0; i < lastPathFilter.size(); i++) {
+					filters[i] = lastPathFilter.get(i);
+				}
+				for (NavigationListener ls : listeners) {
+					ls.onFilter(filters);
+				}
+			} else {
+				for (NavigationListener ls : listeners) {
+					ls.onFilter(faculties);
+				}			
+			}
+			
+			checkFilter.setEnabled(true);
+			tree.setEnabled(checkFilter.isSelected());
+			tree.setCursor(Cursor.getDefaultCursor());
+			setCursor(Cursor.getDefaultCursor());
+		});
+		t.start();
 	}
 	
 	/**
@@ -297,13 +335,7 @@ public class PanelNavigation extends Panel  implements AcademicYearDaoListener{
 		 * Lors du filtrage
 		 * @param filters
 		 */
-		void onFilter(List<FacultyFilter> filters);
-		
-		/**
-		 * Lors de l'activation ou de la desactivation du filtre
-		 * @param filter
-		 */
-		void onFilterStatusChange (boolean filter);
+		void onFilter(FacultyFilter [] filters);
 	}
 	
 	/**

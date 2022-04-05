@@ -7,6 +7,7 @@ import java.util.List;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
+import net.uorbutembo.beans.UniversitySpend;
 
 /**
  * @author Esaie MUHASA
@@ -15,13 +16,30 @@ import net.uorbutembo.beans.AnnualSpend;
 public interface AnnualSpendDao extends DAOInterface<AnnualSpend> {
 	
 	/**
-	 * renvoie le ligne budgetaire pour une annee academique
-	 * @param academicYear
+	 * verfication de l'existance de l'unicite des clee
+	 * @param yearId identifiant de l'annee academique 
+	 * @param spendId identifiant du dep
 	 * @return
 	 * @throws DAOException
 	 */
-	public List<AnnualSpend> findkByAcademicYear (long academicYear) throws DAOException;
+	boolean check (long yearId, long spendId) throws DAOException;
+	default boolean check (AcademicYear year, UniversitySpend spend) throws DAOException{
+		return check (year.getId(), spend.getId());
+	}
 	
+	/**
+	 * Renvoie la configuration du depasse annuel
+	 * @param year
+	 * @param spend
+	 * @return
+	 * @throws DAOException
+	 */
+	AnnualSpend find (AcademicYear year, UniversitySpend spend) throws DAOException;
+	default AnnualSpend find (long yearId, long spendId) throws DAOException {
+		return find(
+				getFactory().findDao(AcademicYearDao.class).findById(yearId),
+				getFactory().findDao(UniversitySpendDao.class).findById(spendId));
+	}
 	
 	/**
 	 * Renvoie les linge budgetaire pour une annee academique complet
@@ -29,7 +47,10 @@ public interface AnnualSpendDao extends DAOInterface<AnnualSpend> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public List<AnnualSpend> findkByAcademicYear (AcademicYear academicYear) throws DAOException;
+	List<AnnualSpend> findkByAcademicYear (AcademicYear academicYear) throws DAOException;
+	default List<AnnualSpend> findkByAcademicYear (long academicYear) throws DAOException {
+		return findkByAcademicYear(getFactory().findDao(AcademicYearDao.class).findById(academicYear));
+	}
 	
 	/**
 	 * Verifie s'il y a des linges budgetaire pour une annees academique
@@ -37,7 +58,7 @@ public interface AnnualSpendDao extends DAOInterface<AnnualSpend> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public default boolean checkByAcademicYear (long academicYear) throws DAOException{
+	default boolean checkByAcademicYear (long academicYear) throws DAOException{
 		return this.check("academicYear", academicYear);		
 	}
 	
@@ -47,6 +68,6 @@ public interface AnnualSpendDao extends DAOInterface<AnnualSpend> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public int countByAcademicYear (long academicYear) throws DAOException ;
+	int countByAcademicYear (long academicYear) throws DAOException ;
 
 }

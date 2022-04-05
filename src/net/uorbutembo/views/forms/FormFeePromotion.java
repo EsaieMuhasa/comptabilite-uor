@@ -81,8 +81,13 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		
 		@Override
 		public void onAdding(Promotion promotion) {
-			promotionDao.bindToAcademicFee(promotion.getId(), promotion.getAcademicFee().getId());
+			promotionDao.bindToAcademicFee(promotion, promotion.getAcademicFee());
 		};
+		
+		@Override
+		public void onAdding(Promotion[] promotions, AcademicFee fee) {
+			promotionDao.bindToAcademicFee(promotions, fee);
+		}
 	};
 	/**
 	 * 
@@ -214,11 +219,19 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		 * @param fee
 		 */
 		void onAdding (Promotion fee);
+		
+		/**
+		 * apres association d'une collection des promotions au frais universitaires
+		 * @param promotions
+		 * @param fee
+		 */
+		void onAdding (Promotion [] promotions, AcademicFee fee);
 	}
 	
 	/**
 	 * @author Esaie MUHASA
-	 * Panel de de configuration des frais universitaire
+	 * Panel de configuration des frais universitaire.
+	 * facilite l'association d'un groupe des promotion aux frais universitaire
 	 */
 	private static final class PanelAcademicFeeConfig extends Panel {
 		private static final long serialVersionUID = -3831549572169534221L; 
@@ -291,8 +304,8 @@ public class FormFeePromotion extends DefaultFormPanel  {
 					fees.add(model.get(index));
 				}
 				
-				for (int i : indexs) {
-					model.remove(i);
+				for (int index = indexs.length-1; index != -1; index--) {
+					model.remove(indexs[index]);
 				}
 				
 				listener.onRemove(this, fees);
@@ -316,6 +329,18 @@ public class FormFeePromotion extends DefaultFormPanel  {
 			promotion.setAcademicFee(fee);
 			model.addElement(promotion);
 			listener.onAdding(promotion);
+		}
+		
+		/**
+		 * ajout association d'une collection des promotions
+		 * @param promotions
+		 */
+		public void addItems(Promotion [] promotions) {
+			for (Promotion promotion : promotions) {
+				promotion.setAcademicFee(fee);
+				model.addElement(promotion);
+			}
+			listener.onAdding(promotions, fee);
 		}
 
 		/**
@@ -383,16 +408,29 @@ public class FormFeePromotion extends DefaultFormPanel  {
 			this.addWindowListener(listener);
 			
 			btnAccept.addActionListener(event -> {
-				int [] indexs = listPromotion.getSelectedIndices();
-				for (int i : indexs) {
-					receiver.addItem(modelUnselectedPromotion.getElementAt(i));
-				}
-				
-				for (int i = indexs.length; i > 0; i--) {
-					modelUnselectedPromotion.remove(indexs[i-1]);
-				}
-				
-				btnCancel.doClick();
+				btnAccept.setEnabled(false);
+				Thread t = new Thread(() -> {
+					setCursor(FormUtil.WAIT_CURSOR);
+					getParent().setCursor(FormUtil.WAIT_CURSOR);
+					int [] indexs = listPromotion.getSelectedIndices();
+					Promotion [] promotions = new Promotion[indexs.length];
+					
+					for (int i = indexs.length - 1; i >= 0; i--) {
+						promotions[i] = modelUnselectedPromotion.getElementAt(indexs[i]);
+						modelUnselectedPromotion.remove(indexs[i]);
+					}
+					
+					if(promotions.length == 1)
+						receiver.addItem(promotions[0]);
+					else 
+						receiver.addItems(promotions);
+					
+					btnCancel.doClick();
+					setCursor(FormUtil.DEFAULT_CURSOR);
+					getParent().setCursor(FormUtil.DEFAULT_CURSOR);
+					btnAccept.setEnabled(true);
+				});
+				t.start();
 			});
 			
 			btnCancel.addActionListener(event -> {

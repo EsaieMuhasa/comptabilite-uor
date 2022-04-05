@@ -41,7 +41,7 @@ public class Card extends JComponent {
 		super();
 		DefaultCardModel<?> model = new DefaultCardModel<>(CardType.PRIMARY);
 		this.model = model;
-		model.setView(this);
+		model.setCard(this);
 		this.init();
 	}
 	
@@ -52,6 +52,7 @@ public class Card extends JComponent {
 	public Card(CardModel<?> model) {
 		super();
 		this.model = model;
+		model.setCard(this);
 		this.init();
 	}
 	

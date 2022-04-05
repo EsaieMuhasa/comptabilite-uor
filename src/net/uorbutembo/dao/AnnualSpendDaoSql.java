@@ -6,6 +6,7 @@ package net.uorbutembo.dao;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Date;
 import java.util.List;
 
@@ -62,9 +63,31 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 	}
 
 	@Override
-	public void update(AnnualSpend e, long id) throws DAOException {
-		// TODO Auto-generated method stub
-		
+	public boolean check(long yearId, long spendId) throws DAOException {
+		return check(
+				new String[] {"academicYear", "universitySpend"},
+				new Object[] {yearId, spendId});
+	}
+
+	@Override
+	public AnnualSpend find(AcademicYear year, UniversitySpend spend) throws DAOException {
+		String sql = String.format("SELEC * FROM %s WHERE academicYear = %d AND universitySpend = %d", getTableName(), getTableName(), year.getId(), spend.getId());
+		System.out.println(sql);
+		try(Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)){
+			AnnualSpend a = mapping(result, false, false);
+			a.setAcademicYear(year);
+			a.setUniversitySpend(spend);
+			return a;
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public void update (AnnualSpend e, long id) throws DAOException {
+		throw new DAOException("Opération non prise en charge");
 	}
 
 	@Override

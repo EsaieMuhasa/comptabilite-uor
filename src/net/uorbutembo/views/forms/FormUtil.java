@@ -5,6 +5,7 @@ package net.uorbutembo.views.forms;
 
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.text.SimpleDateFormat;
@@ -46,6 +47,11 @@ public abstract class FormUtil {
 	
 	
 	public static SimpleDateFormat DEFAULT_FROMATER = new SimpleDateFormat("dd-MM-yyyy");
+	
+	//les curseur les plus utiliser
+	public static final Cursor DEFAULT_CURSOR = new Cursor(Cursor.DEFAULT_CURSOR);
+	public static final Cursor WAIT_CURSOR = new Cursor(Cursor.WAIT_CURSOR);
+	
 	/**
 	 * Utilitaire de creation d'un titre
 	 * @param title
@@ -132,8 +138,8 @@ public abstract class FormUtil {
 	
 	//pouleurs
 	public static final Color [] COLORS = new Color[] {
-			new Color(0xFFCE30), new Color(0xE83845), new Color(0xE3889B), new Color(0x746AB0), new Color(0x288BA8),
-			new Color(0x7F222F), new Color(0xFF7F50), new Color(0xF0F80F), new Color(0xD72631), new Color(0xA2D5C6),
+			new Color(0xFFCE30), new Color(0xE83845), new Color(0xE9889F), new Color(0x746AB0), new Color(0x288BA8),
+			new Color(0x7F222F), new Color(0xFF7F50), new Color(0x90C86F), new Color(0x0756FF), new Color(0xA2D5C6),
 			new Color(0x077B8A), new Color(0x5C3C92), new Color(0xE2D810), new Color(0xD9138A), new Color(0x12A4D9)
 	};
 }

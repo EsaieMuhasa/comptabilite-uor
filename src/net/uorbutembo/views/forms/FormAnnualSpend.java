@@ -53,8 +53,8 @@ public class FormAnnualSpend extends DefaultFormPanel {
 	 * rechargement des donnees
 	 * cette methode est automatiquement appeler lors de la modification de l'annee academique
 	 */
-	private void loadData() {
-		if(this.currentYear == null) {
+	public void loadData() {
+		if(this.currentYear == null || (universitySpendDao.countAll() == 0)) {
 			this.setVisible(false);
 			return;
 		}
@@ -64,12 +64,16 @@ public class FormAnnualSpend extends DefaultFormPanel {
 		checkBoxs.clear();
 		
 		for (UniversitySpend spend : spends) {
+			if(annualSpendDao.check(currentYear, spend))
+					continue;
+			
 			CheckBox<UniversitySpend> check = FormUtil.createCheckBox(spend.getTitle(), spend);
 			checkBoxs.add(check);
 			box.add(check);
 		}
 		
-		this.setVisible(true);
+		if (!checkBoxs.isEmpty())
+			this.setVisible(true);
 	}
 
 	/**

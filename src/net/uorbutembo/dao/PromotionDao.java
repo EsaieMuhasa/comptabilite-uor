@@ -139,11 +139,23 @@ public interface PromotionDao extends DAOInterface<Promotion> {
 	
 	/**
 	 * associe une promotion au frais academique
-	 * @param promotionId, identifiant de la promotion
-	 * @param academicFee, identifiant du frais universitaire.
+	 * @param promotion, la promotion concerner
+	 * @param academicFee, les frais universitaire auquels nous voulons binder la promotion
 	 * dans le cas ou on veux detacher la promotion des tout les frais univeritaire, il suffit de passer la valeur 
 	 * 0 en deuxieme paramatre
 	 * @throws DAOException
 	 */
-	void bindToAcademicFee (long promotionId, long academicFee) throws DAOException;
+	void bindToAcademicFee (Promotion promotion, AcademicFee academicFee) throws DAOException;
+	default void bindToAcademicFee (long promotionId, long academicFeeId) throws DAOException {
+		bindToAcademicFee(findById(promotionId), getFactory().findDao(AcademicFeeDao.class).findById(academicFeeId));
+	}
+	
+	
+	/**
+	 * pour binder une collection des promotions sur un frais universitaire
+	 * @param promotions
+	 * @param academicFee
+	 * @throws DAOException
+	 */
+	void bindToAcademicFee (Promotion[] promotions, AcademicFee academicFee) throws DAOException;
 }

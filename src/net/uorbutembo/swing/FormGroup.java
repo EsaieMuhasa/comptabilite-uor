@@ -90,6 +90,11 @@ public class FormGroup <T> extends Panel{
 		return form;
 	}
 	
+	public static FormGroup<String> createTextArea (TextArea area) {
+		FormGroup<String> form = new FormGroup<>(area);
+		return form;
+	}
+	
 	/**
 	 * @return the field
 	 */

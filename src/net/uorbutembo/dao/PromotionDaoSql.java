@@ -207,12 +207,41 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 	}
 	
 	@Override
-	public void bindToAcademicFee(long promotionId, long academicFee) throws DAOException {
+	public void bindToAcademicFee(Promotion promotion, AcademicFee academicFee) throws DAOException {
 		try {
-			updateInTable(new String[] {
-					"academicFee"
-			}, new Object[] {academicFee <=0? null : academicFee}, promotionId);
-			emitOnUpdate(findById(promotionId));
+			Date now  = new Date();
+			promotion.setLastUpdate(now);
+			updateInTable(
+					new String[] { "academicFee", "lastUpdate" },
+					new Object[] { academicFee == null || academicFee.getId() <= 0? null : academicFee, now.getTime() },
+					promotion.getId()
+				);
+			emitOnUpdate(promotion);
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+	
+	@Override
+	public void bindToAcademicFee(Promotion[] promotions, AcademicFee academicFee) throws DAOException {
+		try (Connection connection = factory.getConnection()) {
+			connection.setAutoCommit(false);
+			Date now = new Date();
+			for (Promotion promotion : promotions) {
+				promotion.setLastUpdate(now);
+				updateInTable(connection, 
+					new String[] {
+						"academicFee",
+						"lastUpdate"
+					}, 
+					new Object[] {
+						academicFee == null || academicFee.getId() <= 0? null : academicFee,
+						now.getTime()
+					}, promotion.getId()
+				);
+			}
+			connection.commit();
+			emitOnUpdate(promotions);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
