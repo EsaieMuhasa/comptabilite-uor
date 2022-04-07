@@ -208,7 +208,7 @@ public class TextField <T> extends JTextField  implements InputComponent<T>{
 	
 	@Override
 	public void setValue(T value) {
-		this.setText(value.toString());
+		this.setText(value!=null? value.toString() : null);
 	}
 
 	@Override

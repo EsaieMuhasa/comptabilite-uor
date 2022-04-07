@@ -8,6 +8,7 @@ import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.swing.TableModel;
 import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.views.models.PromotionPaymentTableModel.InscriptionDataRow;
 
 /**
  * @author Esaie MUHASA
@@ -16,12 +17,10 @@ import net.uorbutembo.views.forms.FormUtil;
 public class PaymentFeeTableModel extends TableModel<PaymentFee> {
 	private static final long serialVersionUID = 7032190897666231971L;
 
-	private PaymentFeeDao paymentFeeDao;	
 	private Inscription inscription;
 	
 	public PaymentFeeTableModel(PaymentFeeDao paymentFeeDao) {
 		super(paymentFeeDao);
-		this.paymentFeeDao = paymentFeeDao;
 	}
 
 	/**
@@ -34,13 +33,12 @@ public class PaymentFeeTableModel extends TableModel<PaymentFee> {
 	/**
 	 * @param inscription the inscription to set
 	 */
-	public void setInscription(Inscription inscription) {
-		this.inscription = inscription;
-		if (paymentFeeDao.checkByInscription(inscription)) 
-			this.data = this.paymentFeeDao.findByInscription(inscription);
-		else
-			this.data.clear();
-		
+	public void setInscription(InscriptionDataRow inscription) {
+		this.inscription = inscription.getInscription();
+		this.data.clear();
+		for (PaymentFee paymentFee : inscription.getPayments()) {
+			data.add(paymentFee);
+		}
 		this.fireTableDataChanged();
 	}
 	

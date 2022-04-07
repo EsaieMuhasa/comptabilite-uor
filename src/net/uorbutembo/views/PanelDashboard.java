@@ -34,7 +34,6 @@ import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.NavbarButtonModel;
-import net.uorbutembo.views.dashboard.PanelEvolution;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.GeneralBudgetModel;
 import resources.net.uorbutembo.R;
@@ -48,7 +47,6 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 	
 	private Box panelCards = Box.createHorizontalBox();
 	private Panel panelCurrent = new Panel(new BorderLayout());
-	private PanelEvolution panelEvolution;
 	
 	private InscriptionDao inscriptionDao;
 	private FacultyDao facultyDao;
@@ -69,7 +67,6 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 	
 	public PanelDashboard(MainWindow mainWindow) {
 		super("Tableau de board", new ImageIcon(R.getIcon("dashboard")), mainWindow, false);
-		panelEvolution = new PanelEvolution(mainWindow);
 		modelPieBudget = new GeneralBudgetModel(mainWindow.factory);
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
@@ -128,8 +125,7 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 		radio.doClick();
 
 		this
-		.addItemMenu(new NavbarButtonModel("general", "Générale"), panelCurrent)
-		.addItemMenu(new NavbarButtonModel("payments", "Evolution de payement"), panelEvolution);
+		.addItemMenu(new NavbarButtonModel("general", "Générale"), panelCurrent);
 	}
 	
 	@Override
