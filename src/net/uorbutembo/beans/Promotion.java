@@ -24,6 +24,12 @@ public class Promotion extends DBEntity {
 	 * L'annee d'etude de la dite promotion
 	 */
 	private AcademicYear academicYear;
+	
+	
+	/**
+	 * reference vers les frais academique
+	 */
+	private AcademicFee academicFee;
 
 	/**
 	 * 
@@ -91,6 +97,21 @@ public class Promotion extends DBEntity {
 	
 	public void setAcademicYear (long academicYear) {
 		this.academicYear = new AcademicYear(academicYear);
+	}
+	
+
+	/**
+	 * @return the academicFee
+	 */
+	public AcademicFee getAcademicFee() {
+		return academicFee;
+	}
+
+	/**
+	 * @param academicFee the academicFee to set
+	 */
+	public void setAcademicFee(AcademicFee academicFee) {
+		this.academicFee = academicFee;
 	}
 	
 	@Override

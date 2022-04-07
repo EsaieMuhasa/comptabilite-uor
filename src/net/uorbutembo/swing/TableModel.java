@@ -27,7 +27,8 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	 */
 	public TableModel(DAOInterface<T> daoInterface) {
 		super();
-		daoInterface.addListener(this);
+		if(daoInterface != null)
+			daoInterface.addListener(this);
 	}
 	
 	@Override
@@ -57,6 +58,16 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 		this.data.add(row);
 		fireTableRowsInserted(data.size()-1, data.size()-1);	
 	}
+	/**
+	 * Ajout d'une suite d'elemenets dans le tableau
+	 * @param rows
+	 */
+	public void addRows (T [] rows) {
+		for (T t : rows) {
+			data.add(t);
+		}
+		fireTableRowsInserted( rows.length - data.size() -1, data.size()-1);	
+	}
 	
 	/**
 	 * Insersion d'une ligne dans la collection des donnees du model d'un table
@@ -66,6 +77,25 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	public void addRow (T row, int index) {
 		this.data.add(index, row);
 		fireTableRowsInserted(index, data.size()-1);
+	}
+	
+	/**
+	 * supression d'un ligne du table
+	 * @param index
+	 */
+	public void removeRow (int index) {
+		this.data.remove(index);
+		fireTableRowsDeleted(index, index);
+	}
+	
+	/**
+	 * Mis en jour d'une ligne du model
+	 * @param t
+	 * @param index
+	 */
+	public void updateRow (T t, int index) {
+		data.set(index, t);
+		fireTableRowsUpdated(index, index);
 	}
 
 	/**
@@ -121,11 +151,33 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	}
 	
 	@Override
-	public void onFind(T e, int requestId) {}
+	public void onFind (T e, int requestId) {}
 	
 	@Override
-	public void onFindAll(List<T> e, int requestId) {}
+	public void onFind (List<T> e, int requestId) {}
 	
 	@Override
-	public void onError(DAOException e, int requestId) {}
+	public void onError (DAOException e, int requestId) {}
+
+	@Override
+	public void onCreate (T[] e, int requestId) {
+		addRows(e);
+	}
+
+	@Override
+	public void onUpdate (T[] e, int requestId) {
+		for (T t : e) {
+			onUpdate(t, requestId);
+		}
+	}
+
+	@Override
+	public void onDelete (T[] e, int requestId) {
+		for (T t : e) {
+			onDelete(t, requestId);
+		}
+	}
+
+	@Override
+	public void onCheck(boolean check, int requestId) {}
 }

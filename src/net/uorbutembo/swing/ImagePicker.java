@@ -52,6 +52,8 @@ public class ImagePicker extends Panel {
 	
 	private JFileChooser fileChooser = new JFileChooser();
 	private Frame mainFrame;
+	
+	private String file;//pour afficher une image x dans l'image picker
 
 	/**
 	 * 
@@ -68,6 +70,15 @@ public class ImagePicker extends Panel {
 	
 	public void setMaintFrame (Frame frame) {
 		this.mainFrame = frame;
+	}
+	
+	/**
+	 * Demande d'affichage d'une image
+	 * @param imageFileName
+	 */
+	public void show (String imageFileName) {
+		this.file = imageFileName;
+		this.render.setFileName(this.file);
 	}
 	
 	private void init() {

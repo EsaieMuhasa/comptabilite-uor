@@ -12,6 +12,12 @@ import java.awt.Color;
 public interface CardModel <T> {
 	
 	/**
+	 * injection du card qui doit etre informers des changements
+	 * @param card
+	 */
+	void setCard(Card card);
+	
+	/**
 	 * Renvoie la valeur du card
 	 * @return
 	 */

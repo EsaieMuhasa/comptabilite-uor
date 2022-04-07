@@ -41,8 +41,8 @@ abstract class OrientationDaoSql <T extends Orientation> extends UtilSql <T> imp
 	public synchronized void update(T f, long id) throws DAOException {
 		try {
 			updateInTable(
-					new String [] {"acronym", "name", "recordDate"},
-					new Object[] {f.getAcronym(), f.getName(), f.getRecordDate().getTime()}, id);
+					new String [] {"acronym", "name", "lastUpdate"},
+					new Object[] {f.getAcronym(), f.getName(), f.getLastUpdate().getTime()}, id);
 			f.setId(id);
 			this.emitOnUpdate(f);
 		} catch (SQLException e) {

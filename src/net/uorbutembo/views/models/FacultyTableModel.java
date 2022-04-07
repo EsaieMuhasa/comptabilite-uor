@@ -22,20 +22,20 @@ public class FacultyTableModel extends TableModel<Faculty> {
 	public FacultyTableModel(FacultyDao facultyDao) {
 		super(facultyDao);
 		this.facultyDao = facultyDao;
-		this.data = this.facultyDao.findAll();
+		if(facultyDao.countAll() != 0)
+			this.data = this.facultyDao.findAll();
 	}
 
 	@Override
 	public int getColumnCount() {
-		return 4;
+		return 2;
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		switch (columnIndex) {
-			case 0: return (rowIndex+1);
-			case 1: return (this.data.get(rowIndex).getAcronym());
-			case 2: return (this.data.get(rowIndex).getName());
+			case 0: return (this.data.get(rowIndex).getAcronym());
+			case 1: return (this.data.get(rowIndex).getName());
 		}
 		return "";
 	}
@@ -43,11 +43,10 @@ public class FacultyTableModel extends TableModel<Faculty> {
 	@Override
 	public String getColumnName(int column) {
 		switch (column) {
-			case 0: return ("N°");
-			case 1: return ("Abbreviation");
-			case 2: return ("Appelation complette");
+			case 0: return ("Abbreviation");
+			case 1: return ("Appelation complette");
 		}
-		return "Option";
+		return null;
 	}
-
+	
 }

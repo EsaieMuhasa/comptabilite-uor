@@ -38,6 +38,13 @@ public class TablePanel extends Panel {
 		this.init(true);
 	}
 	
+	/**
+	 * @return the table
+	 */
+	public Table getTable() {
+		return table;
+	}
+
 	private void init(boolean scrollable) {
 		Panel header = new Panel(new BorderLayout());
 		Panel body = new Panel(new BorderLayout());

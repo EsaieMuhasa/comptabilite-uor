@@ -5,15 +5,15 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import net.uorbutembo.beans.FeePromotion;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.beans.Promotion;
+import net.uorbutembo.beans.Student;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOFactory;
-import net.uorbutembo.dao.FeePromotionDao;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.PaymentFeeDao;
+import net.uorbutembo.dao.StudentDao;
 
 /**
  * 
@@ -24,19 +24,51 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	private static final long serialVersionUID = -2658546296487971536L;
 	
 	private Promotion promotion;
-	private FeePromotion feePromotion;
 	private List<InscriptionDataRow> data = new ArrayList<>();
 	
 	private PaymentFeeDao paymentFeeDao;
 	private InscriptionDao inscriptionDao;
-	private FeePromotionDao feePromotionDao;
+	private StudentDao studentDao;
 
 
 	public PromotionPaymentTableModel(DAOFactory factory) {
 		super();
 		paymentFeeDao = factory.findDao(PaymentFeeDao.class);
 		inscriptionDao = factory.findDao(InscriptionDao.class);
-		feePromotionDao = factory.findDao(FeePromotionDao.class);
+		studentDao = factory.findDao(StudentDao.class);
+		
+		inscriptionDao.addListener(new DAOAdapter<Inscription>() {
+			@Override
+			public void onCreate(Inscription e, int requestId) {
+				if( promotion!= null && e.getPromotion().getId() == promotion.getId())
+					addRow(new InscriptionDataRow(e, data.size()));
+			}
+			
+			@Override
+			public void onDelete(Inscription e, int requestId) {
+				if( promotion!= null && e.getPromotion().getId() == promotion.getId()) {
+					for (InscriptionDataRow row : data) {
+						if(row.getInscription().getId() == e.getId()) {
+							removeRow(row.index);
+							break;
+						}
+					}
+				}
+			}
+		});
+		
+		studentDao.addListener(new DAOAdapter<Student>() {
+			@Override
+			public void onUpdate(Student e, int requestId) {
+				for (InscriptionDataRow row : data) {
+					if(row.getInscription().getStudent().getId() == e.getId()) {
+						row.getInscription().setStudent(e);
+						fireTableRowsUpdated(row.index, row.index);
+						break;
+					}
+				}
+			}
+		});
 	}
 
 	/**
@@ -44,6 +76,49 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	 */
 	public Promotion getPromotion() {
 		return promotion;
+	}
+	
+	/**
+	 * Renvoie la ligne a l'index en parametre
+	 * @param index
+	 * @return
+	 */
+	public InscriptionDataRow  getRow (int index) {
+		return data.get(index);
+	}
+	
+	/**
+	 * Ajout d'une line
+	 * @param row
+	 */
+	public void addRow (InscriptionDataRow row) {
+		data.add(row);
+		if(row.getPayments() == null)
+			row.setPayments(new ArrayList<>());
+		fireTableRowsInserted(data.size()-1, data.size()-1);
+	}
+	
+	/**
+	 * Suppression d'une ligne
+	 * @param index
+	 */
+	public void removeRow (int index) {
+		data.get(index).dispose();
+		data.remove(index);
+		fireTableRowsDeleted(index, index);
+	}
+	
+	/**
+	 * insersion de plusieur ligne
+	 * @param rows
+	 */
+	public void addRows (InscriptionDataRow...rows) {
+		for (InscriptionDataRow row : rows) {
+			data.add(row);
+			if(row.getPayments() == null)
+				row.setPayments(new ArrayList<>());
+		}
+		fireTableRowsInserted(data.size()- rows.length, data.size()-1);
 	}
 
 	/**
@@ -55,7 +130,6 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	}
 	
 	private void reload () {
-		feePromotion = feePromotionDao.findByPromotion(promotion.getId());
 		removeAll();
 		if(inscriptionDao.checkByPromotion(promotion)) {
 			List<Inscription> inscriptions = inscriptionDao.findByPromotion(promotion);
@@ -85,7 +159,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 
 	@Override
 	public int getColumnCount() {
-		return 5;
+		return promotion.getAcademicFee() == null? 4 : 5;
 	}
 
 	@Override
@@ -96,7 +170,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 			case 1:
 				return "Nom, Post-nom et prenom";
 			case 2:
-				return "Telephone";
+				return "Téléphone";
 			case 3:
 				return "Solde";
 			case 4:
@@ -117,7 +191,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 			case 3:
 				return data.get(rowIndex).getSold()+" USD";
 			case 4:
-				return (feePromotion.getAcademicFee().getAmount() - data.get(rowIndex).getSold()) + " USD";
+				return (promotion.getAcademicFee().getAmount() - data.get(rowIndex).getSold()) + " USD";
 		}
 		return null;
 	}
@@ -227,7 +301,9 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		public void reload () {
 			if (paymentFeeDao.checkByInscription(inscription)) {
 				setPayments(paymentFeeDao.findByInscription(inscription));
-			}
+			} else if(payments == null) 
+				payments = new ArrayList<>();
+			
 			fireTableCellUpdated(index, 3);
 		}
 		

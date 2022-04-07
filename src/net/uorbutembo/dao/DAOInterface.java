@@ -109,6 +109,16 @@ public interface DAOInterface <T extends DBEntity>{
 	void update (T e, long id) throws DAOException;
 	
 	/**
+	 * mis en jours d'un collection d'occurences
+	 * @param e
+	 * @param id
+	 * @throws DAOException
+	 */
+	default void update (T[] e, long [] id) throws DAOException{
+		throw new DAOException("Mis en jours multiple non pris en charge");
+	}
+	
+	/**
 	 * mis en jour
 	 * la tache c fait dans un nouveau thread
 	 * @param e
@@ -200,7 +210,7 @@ public interface DAOInterface <T extends DBEntity>{
 			try {
 				List<T> data = this.findAll();
 				for (DAOListener<T> lis : this.getListeners()) {
-					lis.onFindAll(data, requestId);
+					lis.onFind(data, requestId);
 				}
 			} catch (DAOException e) {
 				for (DAOListener<T> lis : this.getListeners()) {
@@ -228,7 +238,7 @@ public interface DAOInterface <T extends DBEntity>{
 			try {
 				List<T> data = this.findAll(limit);
 				for (DAOListener<T> lis : this.getListeners()) {
-					lis.onFindAll(data, requestId);
+					lis.onFind(data, requestId);
 				}
 			} catch (DAOException e) {
 				for (DAOListener<T> lis : this.getListeners()) {
@@ -251,7 +261,7 @@ public interface DAOInterface <T extends DBEntity>{
 			try {
 				List<T> data = this.findAll(limit, offset);
 				for (DAOListener<T> lis : this.getListeners()) {
-					lis.onFindAll(data, requestId);
+					lis.onFind(data, requestId);
 				}
 			} catch (DAOException e) {
 				for (DAOListener<T> lis : this.getListeners()) {

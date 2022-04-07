@@ -5,6 +5,7 @@ package net.uorbutembo.dao;
 
 import java.util.List;
 
+import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Promotion;
@@ -56,6 +57,9 @@ public interface PromotionDao extends DAOInterface<Promotion> {
 	default boolean checkByDepartment (AcademicYear year, Department department) throws DAOException{
 		return checkByDepartment(year.getId(), department.getId());
 	}
+	default boolean checkByDepartment (long departmentId) throws DAOException{
+		return check("department", departmentId);
+	}
 	
 	/**
 	 * Renvoie la collection des promotion d'un departement en une annee
@@ -77,6 +81,9 @@ public interface PromotionDao extends DAOInterface<Promotion> {
 	 * @throws DAOException
 	 */
 	boolean checkByStudyClass (long academicYearId, long studyClassId) throws DAOException;
+	default boolean checkByStudyClass (long studyClassId) throws DAOException {
+		return check("studyClass", studyClassId);
+	}
 	
 	/**
 	 * Renvoie la collection des promotion de la classe d'etude en une annee
@@ -107,4 +114,48 @@ public interface PromotionDao extends DAOInterface<Promotion> {
 	default List<Promotion> findByAcademicYear(long academicYearId) throws DAOException{
 		return findByAcademicYear(getFactory().findDao(AcademicYearDao.class).findById(academicYearId));
 	}
+	
+	/**
+	 * Verifie s'il y a aumoin une promotion pour les frais univeritraire en parametre
+	 * @param feeId
+	 * @return
+	 * @throws DAOException
+	 */
+	boolean checkByAcademicFee (long feeId) throws DAOException;
+	default boolean checkByAcademicFee (AcademicFee fee) throws DAOException{
+		return checkByAcademicFee(fee.getId());
+	}
+	
+	/**
+	 * Renvoie les promotions qui doivenet payer les frais universitaire en parametre
+	 * @param fee
+	 * @return
+	 * @throws DAOException
+	 */
+	List<Promotion> findByAcademicFee (AcademicFee fee) throws DAOException;
+	default List<Promotion> findByAcademicFee (long feeId) throws DAOException{
+		return findByAcademicFee(getFactory().findDao(AcademicFeeDao.class).findById(feeId));
+	}
+	
+	/**
+	 * associe une promotion au frais academique
+	 * @param promotion, la promotion concerner
+	 * @param academicFee, les frais universitaire auquels nous voulons binder la promotion
+	 * dans le cas ou on veux detacher la promotion des tout les frais univeritaire, il suffit de passer la valeur 
+	 * 0 en deuxieme paramatre
+	 * @throws DAOException
+	 */
+	void bindToAcademicFee (Promotion promotion, AcademicFee academicFee) throws DAOException;
+	default void bindToAcademicFee (long promotionId, long academicFeeId) throws DAOException {
+		bindToAcademicFee(findById(promotionId), getFactory().findDao(AcademicFeeDao.class).findById(academicFeeId));
+	}
+	
+	
+	/**
+	 * pour binder une collection des promotions sur un frais universitaire
+	 * @param promotions
+	 * @param academicFee
+	 * @throws DAOException
+	 */
+	void bindToAcademicFee (Promotion[] promotions, AcademicFee academicFee) throws DAOException;
 }

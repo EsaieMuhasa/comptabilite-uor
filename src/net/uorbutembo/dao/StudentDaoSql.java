@@ -24,19 +24,19 @@ class StudentDaoSql extends UserDaoSql<Student> implements StudentDao {
 	@Override
 	protected void create(Connection connection, Student t) throws DAOException {
 		try {
-			long id = this.insertInTransactionnelTable(
+			long id = this.insertInTable(
 					connection, 
 					new String[] {
 							"name", "postName", "lastName",
 							"birthDate", "birthPlace", "kind", 
-							"email", "matricul", "picture",
-							"telephone", "recordDate"
+							"email", "matricul", "picture", 
+							"originalSchool", "telephone", "recordDate"
 					},
 					new Object[] {
 							t.getName(), t.getPostName(), t.getFirstName(),
 							t.getBirthDate().getTime(), t.getBirthPlace(), t.getKind().getShortName(),
-							t.getEmail(), t.getMatricul(),
-							t.getPicture(), t.getTelephone(),
+							t.getEmail(), t.getMatricul(), t.getPicture(),
+							t.getOriginalSchool(),t.getTelephone(),
 							t.getRecordDate().getTime()
 					});
 			t.setId(id);
@@ -46,9 +46,33 @@ class StudentDaoSql extends UserDaoSql<Student> implements StudentDao {
 	}
 
 	@Override
-	public void update(Student e, long id) throws DAOException {
+	public void update(Student t, long id) throws DAOException {
+		try {
+			updateInTable (
+					new String[] {
+							"name", "postName", "lastName",
+							"birthDate", "birthPlace", "kind", 
+							"email", "matricul", "picture", 
+							"originalSchool", "telephone", "lastUpdate"
+					},
+					new Object[] {
+							t.getName(), t.getPostName(), t.getFirstName(),
+							t.getBirthDate().getTime(), t.getBirthPlace(), t.getKind().getShortName(),
+							t.getEmail(), t.getMatricul(), t.getPicture(),
+							t.getOriginalSchool(),t.getTelephone(),
+							t.getLastUpdate().getTime()
+					}, id);
+			t.setId(id);
+			emitOnUpdate(t);
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public Student findByMatricul(String matricul) throws DAOException {
 		// TODO Auto-generated method stub
-		
+		return null;
 	}
 
 	@Override
@@ -67,6 +91,7 @@ class StudentDaoSql extends UserDaoSql<Student> implements StudentDao {
 		s.setBirthPlace(result.getString("birthPlace"));
 		s.setMatricul(result.getString("matricul"));
 		s.setPicture(result.getString("picture"));
+		s.setOriginalSchool(result.getString("originalSchool"));
 		s.setKind(result.getString("kind"));
 		s.setBirthDate(new Date(result.getLong("birthDate")));
 		s.setRecordDate(new Date(result.getLong("recordDate")));

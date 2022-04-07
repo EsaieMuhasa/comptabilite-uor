@@ -3,13 +3,12 @@
  */
 package net.uorbutembo.views.models;
 
-import net.uorbutembo.beans.FeePromotion;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
-import net.uorbutembo.dao.FeePromotionDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.swing.TableModel;
 import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.views.models.PromotionPaymentTableModel.InscriptionDataRow;
 
 /**
  * @author Esaie MUHASA
@@ -18,17 +17,10 @@ import net.uorbutembo.views.forms.FormUtil;
 public class PaymentFeeTableModel extends TableModel<PaymentFee> {
 	private static final long serialVersionUID = 7032190897666231971L;
 
-	private PaymentFeeDao paymentFeeDao;
-	private FeePromotionDao feePromotionDao;
-	
 	private Inscription inscription;
-	private FeePromotion feePromotion;//le montant qu doit payer la promotion
-	
 	
 	public PaymentFeeTableModel(PaymentFeeDao paymentFeeDao) {
 		super(paymentFeeDao);
-		this.paymentFeeDao = paymentFeeDao;
-		this.feePromotionDao = paymentFeeDao.getFactory().findDao(FeePromotionDao.class);
 	}
 
 	/**
@@ -41,18 +33,12 @@ public class PaymentFeeTableModel extends TableModel<PaymentFee> {
 	/**
 	 * @param inscription the inscription to set
 	 */
-	public void setInscription(Inscription inscription) {
-		this.inscription = inscription;
-		if (paymentFeeDao.checkByInscription(inscription)) 
-			this.data = this.paymentFeeDao.findByInscription(inscription);
-		else
-			this.data.clear();
-		
-		if(this.feePromotion == null || inscription.getPromotion().getId() != this.feePromotion.getPromotion().getId()) {
-			if(this.feePromotionDao.checkByPromotion(inscription.getPromotion().getId()))
-				this.feePromotion = this.feePromotionDao.findByPromotion(inscription.getPromotion().getId());
+	public void setInscription(InscriptionDataRow inscription) {
+		this.inscription = inscription.getInscription();
+		this.data.clear();
+		for (PaymentFee paymentFee : inscription.getPayments()) {
+			data.add(paymentFee);
 		}
-		
 		this.fireTableDataChanged();
 	}
 	
@@ -100,7 +86,7 @@ public class PaymentFeeTableModel extends TableModel<PaymentFee> {
 	 * @return
 	 */
 	private double calculDebit (int rowIndex) {
-		double amount = this.feePromotion.getAcademicFee().getAmount();
+		double amount = this.inscription.getPromotion().getAcademicFee().getAmount();
 		if(rowIndex == 0) 
 			return amount;
 		

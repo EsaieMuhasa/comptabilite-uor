@@ -13,15 +13,14 @@ import java.awt.event.MouseListener;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.border.LineBorder;
 
-import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.swing.Panel;
@@ -30,6 +29,7 @@ import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.forms.FormPaymentFee;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.PaymentFeeTableModel;
+import net.uorbutembo.views.models.PromotionPaymentTableModel.InscriptionDataRow;
 import resources.net.uorbutembo.R;
 
 /**
@@ -40,6 +40,7 @@ public class IndividualSheet extends Panel {
 
 	private static final long serialVersionUID = 4342531142487279020L;
 	public static final Dimension A4_LAND = new Dimension(1123, 794);
+	public static final Dimension MIN_SIZE = new Dimension(1123, 300);
 	private static final String TITLE = "Fiche individuelle de paiement des frais académiques exercice ";
 	
 	private Panel page = new Panel(new BorderLayout());
@@ -50,7 +51,7 @@ public class IndividualSheet extends Panel {
 	private PaymentFeeTableModel tableModel;
 	private Table table;
 	
-	private Inscription inscription;
+	private InscriptionDataRow inscription;
 	private PaymentFeeDao paymentFeeDao;
 	private JLabel title = FormUtil.createSubTitle("");
 	
@@ -61,8 +62,6 @@ public class IndividualSheet extends Panel {
 	private JMenuItem itemPrint = new JMenuItem("Imprimer la fiche", new ImageIcon(R.getIcon("print")));
 	private JMenuItem itemExportPDF = new JMenuItem("Exporter en PDF", new ImageIcon(R.getIcon("pdf")));
 	private JMenuItem itemExportEXEL = new JMenuItem("Exporter en Excel", new ImageIcon(R.getIcon("export")));
-	private JMenuItem itemUpdate = new JMenuItem("Editer l'identité", new ImageIcon(R.getIcon("usredit")));
-	private JMenuItem itemPalmaresse = new JMenuItem("Consulter le palmaresse", new ImageIcon(R.getIcon("report")));
 	
 	private MouseListener popupListener = new MouseAdapter() {
 		@Override
@@ -77,7 +76,6 @@ public class IndividualSheet extends Panel {
 	};
 	
 	private FormPaymentFee form;
-	private JDialog formDialog;
 
 	/**
 	 * constucteur d'initialisation
@@ -85,10 +83,9 @@ public class IndividualSheet extends Panel {
 	 */
 	public IndividualSheet (MainWindow mainWindow) {
 		super(new BorderLayout());
-		page.setPreferredSize(A4_LAND);
-		page.setSize(A4_LAND);
-		page.setMaximumSize(A4_LAND);
-		page.setMinimumSize(A4_LAND);
+		page.setPreferredSize(MIN_SIZE);
+		page.setSize(MIN_SIZE);
+		page.setMinimumSize(MIN_SIZE);
 		page.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		this.paymentFeeDao = mainWindow.factory.findDao(PaymentFeeDao.class);
@@ -96,21 +93,23 @@ public class IndividualSheet extends Panel {
 		tableModel = new PaymentFeeTableModel(paymentFeeDao);
 		table = new Table(tableModel);
 		
-		formDialog = new JDialog(mainWindow, "Payement de frais universitaire");
-		form = new FormPaymentFee(mainWindow, formDialog, mainWindow.factory.findDao(PaymentFeeDao.class));
-		formDialog.getContentPane().setBackground(FormUtil.BKG_DARK);
-		formDialog.getContentPane().add(form, BorderLayout.CENTER);
-		formDialog.pack();
-		formDialog.setSize(500, formDialog.getHeight());
-		formDialog.setLocationRelativeTo(mainWindow);
-		formDialog.setModal(true);
-		formDialog.setResizable(false);
-		formDialog.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+		form = new FormPaymentFee(mainWindow, mainWindow.factory.findDao(PaymentFeeDao.class));
+		form.setVisible(false);
+		form.setPreferredSize(new Dimension(300, 500));
 		
-		this.add(scroll, BorderLayout.CENTER);
+		final Panel pan = new Panel(new BorderLayout());
+		pan.add(scroll, BorderLayout.CENTER);
+		pan.setBorder(page.getBorder());
+		pan.setOpaque(true);
+		pan.setBackground(FormUtil.BKG_DARK);
+		scroll.setBorder(new LineBorder(FormUtil.BORDER_COLOR));
+		
+		this.add(pan, BorderLayout.CENTER);
+		this.add(form, BorderLayout.EAST);
 		this.setBorder(BorderFactory.createLineBorder(FormUtil.BORDER_COLOR));
 		
 		page.add(container, BorderLayout.CENTER);
+		container.setBorder(new LineBorder(Color.BLACK));
 		
 		initPopup();
 		init();
@@ -155,16 +154,13 @@ public class IndividualSheet extends Panel {
 		popup.add(itemPrint);
 		popup.add(itemExportEXEL);
 		popup.add(itemExportPDF);
-		popup.addSeparator();
-		popup.add(itemUpdate);
-		popup.add(itemPalmaresse);
 		
 		itemPayement.addActionListener(event -> {
-			formDialog.setVisible(true);
+			form.setVisible(true);
 		});
 		itemUpdatePayement.addActionListener(event -> {
 			form.setFee(tableModel.getRow(table.getSelectedRow()));
-			formDialog.setVisible(true);
+			form.setVisible(true);
 		});
 		itemDeletePayement.addActionListener(event -> {
 			
@@ -185,21 +181,21 @@ public class IndividualSheet extends Panel {
 	/**
 	 * @return the inscription
 	 */
-	public Inscription getInscription() {
+	public InscriptionDataRow getInscription() {
 		return inscription;
 	}
 
 	/**
 	 * @param inscription the inscription to set
 	 */
-	public void setInscription (Inscription inscription) {
+	public void setInscription (InscriptionDataRow inscription) {
 		this.inscription = inscription;
-		popup.setLabel(inscription.getStudent().toString());
-		header.setInscription(inscription);
+		popup.setLabel(inscription.getInscription().getStudent().toString());
+		header.setInscription(inscription.getInscription());
 		tableModel.setInscription(inscription);
-		form.setInscription(inscription);
+		form.setInscription(inscription.getInscription());
 		
-		String txt = TITLE+inscription.getPromotion().getAcademicYear().toString();
+		String txt = TITLE+inscription.getInscription().getPromotion().getAcademicYear().toString();
 		title.setText(txt.toUpperCase());
 	}
 

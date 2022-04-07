@@ -9,12 +9,10 @@ import java.util.Date;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
-import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.Student;
 import net.uorbutembo.beans.User.Kind;
-import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.StudentDao;
@@ -56,18 +54,13 @@ public class FormInscription extends AbstractInscriptionForm{
 		birthDate = FormGroup.createTextField("Date de naissance");
 		groupKind = FormGroup.createComboBox(comboKind);
 	}
-	
-	private AcademicYear currentYear;
-	
 
 	public FormInscription(MainWindow mainWindow, InscriptionDao inscriptionDao, StudentDao studentDao) {
-		super(mainWindow, inscriptionDao, studentDao);
-		this.currentYear = inscriptionDao.getFactory().findDao(AcademicYearDao.class).findCurrent();		
+		super(mainWindow, inscriptionDao, studentDao);	
 		
 		this.setTitle("Formulaire d'inscription");
 
 		init();
-		this.loadData(currentYear);
 	}
 	
 	@Override
@@ -81,8 +74,9 @@ public class FormInscription extends AbstractInscriptionForm{
 		responsiveFileds.add(school);
 		responsiveFileds.add(birthDate);
 		responsiveFileds.add(birthPlace);
-		responsiveFileds.add(groupKind);
+		responsiveFileds.add(adresse);
 		responsiveFileds.add(matricul);
+		responsiveFileds.add(groupKind);
 		
 		for(Kind k : Student.KINDS) {
 			comboKind.addItem(k);
@@ -101,13 +95,13 @@ public class FormInscription extends AbstractInscriptionForm{
 		super.onResize(width);
 		
 		if(width <= 650 && width > 100) {
-			if(fieldsLayout.getRows()<=6) {
-				fieldsLayout.setRows(12);
+			if(fieldsLayout.getRows()<=7) {
+				fieldsLayout.setRows(13);
 				fieldsLayout.setColumns(1);
 			}
 		} else {
-			if(width >= 700 && fieldsLayout.getRows() != 6) {
-				fieldsLayout.setRows(6);
+			if(width >= 700 && fieldsLayout.getRows() != 7) {
+				fieldsLayout.setRows(7);
 				fieldsLayout.setColumns(2);
 			}
 		}
