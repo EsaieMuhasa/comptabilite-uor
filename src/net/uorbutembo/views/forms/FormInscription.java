@@ -74,8 +74,9 @@ public class FormInscription extends AbstractInscriptionForm{
 		responsiveFileds.add(school);
 		responsiveFileds.add(birthDate);
 		responsiveFileds.add(birthPlace);
-		responsiveFileds.add(groupKind);
+		responsiveFileds.add(adresse);
 		responsiveFileds.add(matricul);
+		responsiveFileds.add(groupKind);
 		
 		for(Kind k : Student.KINDS) {
 			comboKind.addItem(k);
@@ -94,13 +95,13 @@ public class FormInscription extends AbstractInscriptionForm{
 		super.onResize(width);
 		
 		if(width <= 650 && width > 100) {
-			if(fieldsLayout.getRows()<=6) {
-				fieldsLayout.setRows(12);
+			if(fieldsLayout.getRows()<=7) {
+				fieldsLayout.setRows(13);
 				fieldsLayout.setColumns(1);
 			}
 		} else {
-			if(width >= 700 && fieldsLayout.getRows() != 6) {
-				fieldsLayout.setRows(6);
+			if(width >= 700 && fieldsLayout.getRows() != 7) {
+				fieldsLayout.setRows(7);
 				fieldsLayout.setColumns(2);
 			}
 		}

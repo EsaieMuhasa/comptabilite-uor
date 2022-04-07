@@ -8,10 +8,12 @@ import javax.swing.table.AbstractTableModel;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.beans.Promotion;
+import net.uorbutembo.beans.Student;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.PaymentFeeDao;
+import net.uorbutembo.dao.StudentDao;
 
 /**
  * 
@@ -26,12 +28,14 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	
 	private PaymentFeeDao paymentFeeDao;
 	private InscriptionDao inscriptionDao;
+	private StudentDao studentDao;
 
 
 	public PromotionPaymentTableModel(DAOFactory factory) {
 		super();
 		paymentFeeDao = factory.findDao(PaymentFeeDao.class);
 		inscriptionDao = factory.findDao(InscriptionDao.class);
+		studentDao = factory.findDao(StudentDao.class);
 		
 		inscriptionDao.addListener(new DAOAdapter<Inscription>() {
 			@Override
@@ -52,6 +56,19 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 				}
 			}
 		});
+		
+		studentDao.addListener(new DAOAdapter<Student>() {
+			@Override
+			public void onUpdate(Student e, int requestId) {
+				for (InscriptionDataRow row : data) {
+					if(row.getInscription().getStudent().getId() == e.getId()) {
+						row.getInscription().setStudent(e);
+						fireTableRowsUpdated(row.index, row.index);
+						break;
+					}
+				}
+			}
+		});
 	}
 
 	/**
@@ -59,6 +76,15 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	 */
 	public Promotion getPromotion() {
 		return promotion;
+	}
+	
+	/**
+	 * Renvoie la ligne a l'index en parametre
+	 * @param index
+	 * @return
+	 */
+	public InscriptionDataRow  getRow (int index) {
+		return data.get(index);
 	}
 	
 	/**

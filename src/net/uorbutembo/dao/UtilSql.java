@@ -152,7 +152,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			if(result.next()) {
 				t = this.fullMapping(result);
 			} else {
-				throw new DAOException("Aucune donnée ne correspond aux critere de la requêtte de selection");
+				throw new DAOException("Aucune donnée ne correspond aux critere de la requêtte de selection => "+columnName+" = "+value);
 			}
 			
 		} catch (SQLException e) {

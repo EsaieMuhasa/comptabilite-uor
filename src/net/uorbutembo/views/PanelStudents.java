@@ -4,8 +4,6 @@
 package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import javax.swing.Box;
 import javax.swing.ImageIcon;
@@ -13,36 +11,25 @@ import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.border.EmptyBorder;
 
-import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.beans.Department;
-import net.uorbutembo.beans.Faculty;
-import net.uorbutembo.beans.Inscription;
-import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.StudentDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.views.components.DefaultScenePanel;
-import net.uorbutembo.views.components.IndividualSheet;
 import net.uorbutembo.views.components.NavbarButton;
 import net.uorbutembo.views.components.NavbarButtonModel;
-import net.uorbutembo.views.components.SidebarStudents;
-import net.uorbutembo.views.components.SidebarStudents.SidebarListener;
 import net.uorbutembo.views.forms.FormInscription;
 import net.uorbutembo.views.forms.FormReRegister;
 import net.uorbutembo.views.forms.FormUtil;
-import net.uorbutembo.views.models.InscritTableModel;
 import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
  * 
  */
-public class PanelStudents extends DefaultScenePanel implements SidebarListener{
+public class PanelStudents extends DefaultScenePanel{
 	private static final long serialVersionUID = -356861410803019685L;
 
 	//dao
@@ -51,11 +38,8 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 	//==dao
 	
 	private Table table;
-	private InscritTableModel tableModel;
 	private JLabel title = FormUtil.createTitle("");
-	private SidebarStudents sidebar;
 	private Panel workspace = new Panel(new BorderLayout());
-	private IndividualSheet sheet;
 
 	private Panel scene = new Panel(new BorderLayout());
 	private JScrollPane scrollTable;
@@ -77,20 +61,12 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 		
 		this.setTitle("Etudiants");
 		
-		sheet = new IndividualSheet(mainWindow);
-		
-		tableModel = new InscritTableModel(inscriptionDao);
-		table = new Table(tableModel);
+		table = new Table();
 		table.setBackground(FormUtil.BKG_DARK);
-		
-		sidebar = new SidebarStudents(mainWindow, this, tableModel);
-		
-		final JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.sidebar, workspace);
-		split.setDividerLocation(300);
 		
 		final Panel inscriptionFormPanel = new Panel(new BorderLayout());
 		final Panel registerFormPanel = new Panel(new BorderLayout());
-		final Panel listPanel = new Panel(new BorderLayout());
+		final Panel listPanel = new PanelListStudents(mainWindow);
 		
 		final FormInscription inscription = new FormInscription(mainWindow, inscriptionDao, studentDao);
 		final FormReRegister register = new FormReRegister(mainWindow, inscriptionDao, studentDao);
@@ -103,8 +79,6 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 		
 		final JScrollPane inscriptionFormScroll = FormUtil.createVerticalScrollPane(inscriptionFormPanel);
 		final JScrollPane registerFormScroll = FormUtil.createVerticalScrollPane(registerFormPanel);
-		
-		listPanel.add(split, BorderLayout.CENTER);
 		
 		//menu secondaire
 		this
@@ -155,46 +129,9 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 		popup.add(itemListSolde);
 		popup.add(itemListExportPDF);
 		popup.add(itemListExportEXEL);
+		//--popup
 		
-		itemStudentFiche.addActionListener(event -> {
-			Inscription in = tableModel.getRow(table.getSelectedRow());
-			onSelectInscription(in);
-		});
-		// --popup
 		
-		table.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() == 2) {
-					Inscription in = tableModel.getRow(table.getSelectedRow());
-					onSelectInscription(in);
-				}
-				
-			}
-			
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				if(e.isPopupTrigger()) {
-					
-					if(tableModel.getRowCount() == 0)
-						return;
-					
-					if(table.getSelectedRow() <= -1) {
-						itemStudentFiche.setEnabled(false);
-						itemStudentUpdate.setEnabled(false);
-					} else {
-						Inscription in = tableModel.getRow(table.getSelectedRow());
-						popup.setLabel(in.getStudent().toString());
-						itemStudentFiche.setEnabled(true);
-						itemStudentUpdate.setEnabled(true);
-					}
-					
-					int x = e.getX(), y = e.getY();
-					popup.show(table, x, y);
-				}
-			}
-			
-		});
 	}
 
 	@Override
@@ -206,56 +143,4 @@ public class PanelStudents extends DefaultScenePanel implements SidebarListener{
 	public void onAction(NavbarButton view) {
 		super.onAction(view);
 	}
-	
-	
-	//interfacage avec le sidebar
-	//=========================================
-
-	@Override
-	public void onSelectAcademicYear(AcademicYear year) {
-		this.title.setText("Etudiants inscrit pour l'année " + year.getLabel());
-		
-		if(btnClose.isVisible())
-			btnClose.doClick();
-	}
-	
-	@Override
-	public void onSelectFaulty(Faculty faculty, AcademicYear year) {
-		this.title.setText(year.toString()+" / "+faculty);
-		if(btnClose.isVisible())
-			btnClose.doClick();
-	}
-
-	@Override
-	public void onSelectDepartment(Department department, AcademicYear year) {
-		this.title.setText(year.toString()+" / "+department.getFaculty().getAcronym()+" / "+department);
-		if(btnClose.isVisible())
-			btnClose.doClick();
-	}
-
-	@Override
-	public void onSelectPromotion(Promotion promotion) {
-		this.title.setText(promotion.getAcademicYear().toString()+" / "+promotion.getDepartment().getFaculty().getAcronym()+" / "+promotion);
-		if(btnClose.isVisible())
-			btnClose.doClick();
-	}
-	
-	private static final EmptyBorder BORDER_CONTENT_SHEET = new EmptyBorder(0, 5, 5, 0);
-
-	@Override
-	public void onSelectInscription(Inscription inscription) {
-		Promotion promotion = inscription.getPromotion();
-		
-		title.setName(title.getText());
-		this.title.setText(promotion.getAcademicYear().toString()+" / "+promotion.getDepartment().getFaculty().getAcronym()+" / "+promotion+" / "+inscription.getStudent().getMatricul());
-		
-		scene.removeAll();
-		scene.add(sheet, BorderLayout.CENTER);
-		scene.revalidate();
-		scene.repaint();
-		scene.setBorder(BORDER_CONTENT_SHEET);
-		btnClose.setVisible(true);
-		sheet.setInscription(inscription);
-	}
-
 }

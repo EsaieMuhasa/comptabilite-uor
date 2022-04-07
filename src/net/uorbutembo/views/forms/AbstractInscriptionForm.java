@@ -64,6 +64,7 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 	protected final FormGroup<Department> groupDepartment = FormGroup.createComboBox(comboDepartment);
 	protected final FormGroup<StudyClass> groupStudyClass = FormGroup.createComboBox(comboStudyClass);
 	protected final FormGroup<String> matricul = FormGroup.createTextField("Matricule");
+	protected final FormGroup<String> adresse = FormGroup.createTextField("Adresse de residence");
 	protected final ImagePicker imagePicker = new ImagePicker("photo paceport");
 	//fields
 	

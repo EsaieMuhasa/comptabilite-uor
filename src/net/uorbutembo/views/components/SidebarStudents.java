@@ -4,298 +4,518 @@
 package net.uorbutembo.views.components;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.FlowLayout;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JCheckBox;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
-import javax.swing.border.EmptyBorder;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeModel;
+import javax.swing.tree.DefaultTreeSelectionModel;
 import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Faculty;
-import net.uorbutembo.beans.Inscription;
-import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.AcademicYearDao;
+import net.uorbutembo.dao.DAOAdapter;
+import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.FacultyDao;
-import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.ComboBox;
+import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.swing.SearchField;
 import net.uorbutembo.swing.TreeCellRender;
-import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.forms.FormUtil;
 
 /**
  * @author Esaie MUHASA
- *
+ * Panel du menu de navigation d'une scene du dashboard
  */
-public class SidebarStudents extends Panel implements TreeSelectionListener{
-	private static final long serialVersionUID = 7076526607851240031L;
-	
-	/**
-	 * interface permetant le paneau parent d'ecouter les changements 
-	 * des etats de l'arbre du sidebar
-	 * @author Esaie MUHASA
-	 *
-	 */
-	public interface SidebarListener {
-		
-		/**
-		 * Lors de la selection d'une anne academique
-		 * @param year
-		 */
-		void onSelectAcademicYear (AcademicYear year);
-		
-		/**
-		 * Losque l'utilisateur selectionne une faculte dans le menu
-		 * @param faculty
-		 * @param year
-		 */
-		void onSelectFaulty (Faculty faculty, AcademicYear year);
-		
-		/**
-		 * Lorsque l'utilisateur selectionne un departement dans le menu
-		 * @param department
-		 * @param year
-		 */
-		void onSelectDepartment (Department department, AcademicYear year);
-		
-		/**
-		 * Lors l'utilisateur selectionne la promotion dans le menu
-		 * @param promotion
-		 */
-		void onSelectPromotion (Promotion promotion);
-		
-		/**
-		 * Losque l'utilisateur selectionne un inscrit dans la liste des inscrit du menu
-		 * @param inscription
-		 */
-		void onSelectInscription (Inscription inscription);
-	}
-	
-	private DefaultComboBoxModel<AcademicYear> comboYearModel = new DefaultComboBoxModel<>();
-	private ComboBox<AcademicYear> comboAcademic = new ComboBox<>("Année Academique", comboYearModel);
-	private SearchField fieldSearch = new SearchField("Recherche");
+public class SidebarStudents extends Panel{
+	private static final long serialVersionUID = -26597150295854443L;
 	
 	private final DefaultMutableTreeNode root = new DefaultMutableTreeNode();
-	private final TreeModel treeModel = new DefaultTreeModel(root);
+	private final TreePath rootPath = new TreePath(root);
+	private final DefaultTreeModel treeModel = new DefaultTreeModel(root);
 	private final JTree tree = new JTree(treeModel);
+	private final DefaultTreeSelectionModel treeSelection = new DefaultTreeSelectionModel();
+	private final JCheckBox checkFilter = new JCheckBox("Filtrage");
 	
-	private Map<AcademicYear, List<Faculty>> facultyByAcademicYear = new HashMap<>();//collection regroupant les faculté par annee academique
-	private Map<Faculty, List<Department>> departmentByAcademicYear = new HashMap<>();//collection des departements pour chaque faculte
-	private Map<Department, List<StudyClass>> studyClassByAcademicYear = new HashMap<>();//classe d'etude pour chaque department
-	
-	private AcademicYearDao academicYearDao;
+	private final List<NavigationListener> listeners = new ArrayList<>();
+	private final List<FacultyFilter> lastPathFilter = new ArrayList<>();//la derniere collection des chemains filtrer
+	private FacultyFilter [] faculties;
+			
 	private FacultyDao facultyDao;
 	private DepartmentDao departmentDao;
 	private StudyClassDao studyClassDao;
-	private PromotionDao promotionDao;
+	private AcademicYearDao academicYearDao;
 	
-	private final List<SidebarListener> listeners = new ArrayList<>();
+	private AcademicYear currentYear;
+	
+	
+	//selection d'une annee academique
+	private DefaultComboBoxModel<AcademicYear> comboModel = new DefaultComboBoxModel<>();
+	private ComboBox<AcademicYear> comboBox = new ComboBox<>("Année Académique", comboModel);
+	private FormGroup<AcademicYear> comboGroup = FormGroup.createComboBox(comboBox);
+	//==
+	
+	public SidebarStudents(DAOFactory factory) {
+		super(new BorderLayout());	
+		facultyDao = factory.findDao(FacultyDao.class);
+		departmentDao = factory.findDao(DepartmentDao.class);
+		studyClassDao = factory.findDao(StudyClassDao.class);
+		academicYearDao = factory.findDao(AcademicYearDao.class);
+		
+		tree.setSelectionModel(treeSelection);
+		init();
+		
+		academicYearDao.addYearListener(new DAOAdapter<AcademicYear>() {
+			@Override
+			public void onCurrentYear(AcademicYear year) {
+				setCurrentYear(year);
+				checkFilter.setSelected(true);
+				checkFilter.setSelected(false);
+			}
+		});
+	}
 
 	/**
-	 * @param mainWindow
-	 * @param listener
+	 * @return the currentYear
 	 */
-	public SidebarStudents(MainWindow mainWindow, SidebarListener ...listener) {
-		super(new BorderLayout());
+	public AcademicYear getCurrentYear() {
+		return currentYear;
+	}
+
+	/**
+	 * @param currentYear the currentYear to set
+	 */
+	public synchronized void setCurrentYear(AcademicYear currentYear) {
+		if(this.currentYear == currentYear)
+			return;
 		
-		for (SidebarListener ls : listener) {			
-			this.listeners.add(ls);
-		}
-		
-		//les dao
-		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
-		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
-		departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
-		studyClassDao = mainWindow.factory.findDao(StudyClassDao.class);
-		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
-		//-- dao
-		
-		this.setBorder(new EmptyBorder(5, 10, 5, 5));
-		
-		final Box top = Box.createVerticalBox();
-		final JScrollPane scrollPane = new JScrollPane(tree);
-		
-		scrollPane.setOpaque(false);
-		scrollPane.setBorder(null);
-		scrollPane.getViewport().setBorder(null);
-		
-		top.add(fieldSearch);
-		top.add(Box.createVerticalStrut(5));
-		
-		
-		this.add(top, BorderLayout.NORTH);
-		this.add(scrollPane, BorderLayout.CENTER);
-		this.add(comboAcademic, BorderLayout.SOUTH);
-		
-		List<AcademicYear> years = this.academicYearDao.findAll();
-		for (AcademicYear year : years) {
-			comboYearModel.addElement(year);
-			if(this.facultyDao.checkByAcademicYear(year)) {
-				
-				List<Faculty> faculties = this.facultyDao.findByAcademicYear(year);
-				this.facultyByAcademicYear.put(year, faculties);
-				
-				for (Faculty faculty : faculties) {
-					if(this.departmentDao.checkByFaculty(faculty, year)) {
-						
-						List<Department> deps =this.departmentDao.findByFaculty(faculty, year);
-						departmentByAcademicYear.put(faculty, deps);
-						
-						for (Department dep : deps) {
-							if(this.studyClassDao.checkByAcademicYear(year, dep)) {
-								this.studyClassByAcademicYear.put(dep, this.studyClassDao.findByAcademicYear(year, dep));
-							}
-						}
-					}
-				}
+		this.currentYear = currentYear;
+		for (int i = 0, count = comboModel.getSize(); i < count; i++) {
+			if(comboModel.getElementAt(i).getId() == currentYear.getId() && comboBox.getSelectedIndex() != i) {
+				comboBox.setSelectedIndex(i);
+				return;
 			}
 		}
 		
-		comboAcademic.addItemListener(event -> {
-			root.removeAllChildren();
-			AcademicYear year  =comboYearModel.getElementAt(comboAcademic.getSelectedIndex());
-			this.updateTree(year);
-		});
+		wait(true);
+		this.reload();
+		wait(false);
+	}
+
+	/**
+	 * @return the faculties
+	 */
+	public FacultyFilter [] getFaculties() {
+		return faculties;
+	}
+
+	/**
+	 * initialisation de l'interface graphique
+	 */
+	private void init() {
+		final JScrollPane scroll = new JScrollPane(tree);
+		final Panel top = new Panel(new FlowLayout(FlowLayout.LEFT));
+		final Panel bottom = new Panel(new BorderLayout());
+		final Panel center = new Panel(new BorderLayout());
 		
-		AcademicYear year = comboYearModel.getElementAt(comboAcademic.getSelectedIndex());
-		this.updateTree(year);
-		
-		
+		scroll.setBorder(null);
+		scroll.setBackground(FormUtil.BKG_END);
+		scroll.getViewport().setOpaque(false);
+		scroll.getViewport().setBorder(null);
+		scroll.setViewportBorder(null);
+		scroll.setOpaque(false);
+
+		tree.setScrollsOnExpand(true);
+		tree.setExpandsSelectedPaths(true);
 		tree.setRowHeight(25);
 		tree.setCellRenderer(new TreeCellRender());
 		tree.setRootVisible(false);
-		tree.expandPath(new TreePath(root));
 		tree.setBackground(FormUtil.BKG_END);
-		tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		tree.setEnabled(false);
 		
-		tree.addTreeSelectionListener(this);
-	}
-	
-	private void updateTree (AcademicYear year) {
+		checkFilter.setForeground(Color.WHITE);
+		checkFilter.addActionListener(event -> {
+			tree.setEnabled(checkFilter.isSelected());
+			emitOnFilter(false);
+		});
 		
-		List<Faculty> facs = facultyByAcademicYear.get(year);
-		this.root.setUserObject(year);
-		this.root.removeAllChildren();
+		top.add(checkFilter);
+		top.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
-		if(facs != null) {
-			for (Faculty faculty : facs) {
-				
-				DefaultMutableTreeNode nodeFaculty = new DefaultMutableTreeNode(faculty);
-				List<Department> deps = this.departmentByAcademicYear.get(faculty);
-				
-				if(deps != null) {
-					for (Department dep : deps) {
-						
-						DefaultMutableTreeNode nodeDepartment = new DefaultMutableTreeNode(dep);
-						dep.setFaculty(faculty);
-						List<StudyClass> studys = this.studyClassByAcademicYear.get(dep);
-						
-						if(studys != null) {
-							for (StudyClass st : studys) {
-								nodeDepartment.add(new DefaultMutableTreeNode(st));
-							}
-						}
-						
-						nodeFaculty.add(nodeDepartment);
+		center.add(scroll, BorderLayout.CENTER);
+		center.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		
+		bottom.add(comboGroup, BorderLayout.CENTER);
+		comboBox.addItemListener(event -> {
+			setCurrentYear(comboModel.getElementAt(comboBox.getSelectedIndex()));
+		});
+		if(academicYearDao.countAll() != 0) {
+			List<AcademicYear> years = academicYearDao.findAll();
+			for (AcademicYear y : years) {
+				comboModel.addElement(y);
+			}
+		}
+		
+		this.add(top, BorderLayout.NORTH);
+		this.add(center, BorderLayout.CENTER);
+		this.add(bottom, BorderLayout.SOUTH);
+		
+		//evenements sur l'arbre (filtrage)
+		tree.addTreeSelectionListener(event -> {
+			TreePath [] paths = tree.getSelectionPaths();
+			if(paths == null)
+				return;
+			
+			lastPathFilter.clear();
+			
+			for (TreePath p : paths) {					
+				Object [] pathDatas = p.getPath();//decomposition du path
+				for (int i = 1; i< pathDatas.length ; i++) {//on laisse la racine
+					DefaultMutableTreeNode node = (DefaultMutableTreeNode) pathDatas[i];
+					switch (i) {
+						case 1:{//niveau faculte
+							Faculty fac = (Faculty) node.getUserObject();
+							if(!check(lastPathFilter, fac))
+								lastPathFilter.add(new FacultyFilter(fac, new ArrayList<>(), node));
+						} break;
+						case 2:{//niveau departement d'un faculte
+							Department dep = (Department) node.getUserObject();
+							FacultyFilter fac = find(lastPathFilter, dep);
+							if(!fac.hasDepartment(dep))
+								fac.getDepartments().add(new DepartmentFilter(dep, new ArrayList<>(), node));
+						} break;
+						case 3:{//niveau classe d'etude
+							Department dep = (Department) ( (DefaultMutableTreeNode) node.getParent()).getUserObject();
+							FacultyFilter fac = find(lastPathFilter, dep);
+							StudyClass cl = (StudyClass) node.getUserObject();
+							fac.get(dep).getClasses().add(cl);
+						} break;
 					}
 				}
-				
-				root.add(nodeFaculty);
+			}
+			if(checkFilter.isSelected() && !lastPathFilter.isEmpty())
+				prepareFilter();
+		});
+		
+	}
+	
+	/**
+	 * preparation du filtre
+	 */
+	private void prepareFilter () {
+		for (FacultyFilter filter : lastPathFilter) {
+			if(filter.getDepartments().isEmpty()) {
+				//tree.expandPath(new TreePath(filter.getNode().getPath()));//expension du contenue de la faculte
+				for (int i = 0, fCount = filter.getNode().getChildCount(); i < fCount; i++) {
+					DefaultMutableTreeNode node = (DefaultMutableTreeNode) filter.getNode().getChildAt(i);
+					filter.getDepartments().add(new DepartmentFilter((Department) node.getUserObject(), new ArrayList<>(), node));
+					treeSelection.addSelectionPath(new TreePath(node.getPath()));//ajout du departement au element selectoiner
+				}
+			}
+			
+			//pour chaque departement de la faculte
+			for(DepartmentFilter depFilter : filter.getDepartments()) {
+				if(depFilter.getClasses().isEmpty()) {
+					tree.expandPath(new TreePath(depFilter.getNode()));
+					for (int i = 0, fCount = depFilter.getNode().getChildCount(); i < fCount; i++) {
+						DefaultMutableTreeNode node = (DefaultMutableTreeNode) depFilter.getNode().getChildAt(i);
+						depFilter.getClasses().add((StudyClass) node.getUserObject());
+						treeSelection.addSelectionPath(new TreePath(node.getPath()));
+					}
+				}
 			}
 		}
+
+		emitOnFilter(false);
+	}
+	
+	/**
+	 * Chargement des contenues de l'arbre
+	 */
+	public synchronized void reload () {
 		
+		if(lastPathFilter != null && !lastPathFilter.isEmpty())
+			lastPathFilter.clear();
+			
+		if(!root.isLeaf())
+			root.removeAllChildren();
+
+		root.setUserObject(currentYear);
+		List<Faculty> faculties = facultyDao.findByAcademicYear(currentYear);
+		this.faculties = new FacultyFilter[faculties.size()];
+		
+		for (int index = 0, countFac = faculties.size(); index < countFac; index++) {
+			
+			Faculty faculty = faculties.get(index);
+			List<Department> departments = departmentDao.findByFaculty(faculty, currentYear);
+			List<DepartmentFilter> deps = new ArrayList<>();
+			DefaultMutableTreeNode facNode = new DefaultMutableTreeNode(faculty);
+			
+			treeModel.insertNodeInto(facNode, root, root.getChildCount());
+			treeModel.nodeChanged(root);
+			
+			for (Department department : departments) {
+				department.setFaculty(faculty);
+				DefaultMutableTreeNode depNode = new DefaultMutableTreeNode(department);
+				List<StudyClass> studys = studyClassDao.findByAcademicYear(currentYear, department);
+				for (StudyClass st : studys) {
+					DefaultMutableTreeNode stNode = new DefaultMutableTreeNode(st);
+					depNode.add(stNode);
+				}
+				facNode.add(depNode);
+				deps.add(new DepartmentFilter(department, studys, depNode));
+			}
+			
+			this.faculties[index] = new FacultyFilter(faculty, deps, facNode);
+		}
+
+		treeModel.reload();
+		tree.expandPath(rootPath);
+		
+		checkFilter.setSelected(false);
+		emitOnFilter(true);
+	}
+	
+	/**
+	 * Verification si la faculte est deja selectionner
+	 * @param filters
+	 * @param faculty
+	 * @return
+	 */
+	private boolean check (List<FacultyFilter> filters, Faculty faculty) {
+		for (FacultyFilter filter : filters) {
+			if(filter.getFaculty() == faculty )
+				return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Recuperation du classeur de selection d'un faculte, connaissant le departement
+	 * @param filters
+	 * @param department
+	 * @return
+	 */
+	private FacultyFilter find (List<FacultyFilter> filters, Department department) {
+		for (FacultyFilter filter : filters) {
+			if(filter.getFaculty() == department.getFaculty()) {
+				return filter;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Abonnement d'un listener
+	 * @param listener
+	 */
+	public void addListener (NavigationListener listener) {
+		if(!listeners.contains(listener)) {
+			listeners.add(listener);
+		}
+	}
+	
+	/**
+	 * desabonnement d'un listener
+	 * @param listener
+	 */
+	public void removeListener (NavigationListener listener) {
+		listeners.remove(listener);
+	}
+	
+	/**
+	 * pour notifier certains composant du menu 
+	 * qu'il y a un traitement lourd encours d'execution
+	 * @param wait
+	 */
+	private void wait (boolean wait) {
+		checkFilter.setEnabled(!wait);
+		
+		if(wait) {
+			tree.setEnabled(false);
+			tree.setCursor(FormUtil.WAIT_CURSOR);
+			setCursor(FormUtil.WAIT_CURSOR);			
+		} else {
+			tree.setEnabled(checkFilter.isSelected());
+			tree.setCursor(Cursor.getDefaultCursor());
+			setCursor(Cursor.getDefaultCursor());
+		}
+	}
+	
+	/**
+	 * Emission de l'evenement de filtrage
+	 * @param first s'il s'ajit du changement de l'annee academique
+	 */
+	protected void emitOnFilter (boolean first) {
+		Thread t = new Thread(() -> {
+			wait(true);
+			if(checkFilter.isSelected() && !lastPathFilter.isEmpty()) {			
+				FacultyFilter [] filters = new FacultyFilter[this.lastPathFilter.size()];
+				for (int i=0; i < lastPathFilter.size(); i++) {
+					filters[i] = lastPathFilter.get(i);
+				}
+				for (NavigationListener ls : listeners) {
+					if(first) 
+						ls.onFilter(currentYear, filters);
+					else
+						ls.onFilter(filters);
+				}
+			} else {
+				for (NavigationListener ls : listeners) {
+					if(first) 
+						ls.onFilter(currentYear, faculties);
+					else
+						ls.onFilter(faculties);
+				}			
+			}
+			
+			wait(false);
+		});
+		t.start();
+	}
+	
+	/**
+	 * @author Esaie MUHASA
+	 * Listener specifique au panel de navigation
+	 */
+	public static interface NavigationListener {
+		
+		/**
+		 * Lors du filtrage sans changemnt de l'annee academique
+		 * @param filters
+		 */
+		void onFilter(FacultyFilter [] filters);
+		
+		/**
+		 * Lors du filtrage apres changement de l'annee academique
+		 * @param year
+		 * @param filters
+		 */
+		void onFilter(AcademicYear year, FacultyFilter [] filters);
+	}
+	
+	/**
+	 * 
+	 * @author Esaie MUHASA
+	 * Empacketage du path de filtrage pour une faculté
+	 */
+	public static class FacultyFilter {
+		private final Faculty faculty;
+		private final List<DepartmentFilter> departments;
+		private final DefaultMutableTreeNode node;
+		
+		/**
+		 * @param faculty
+		 * @param departments
+		 * @param node
+		 */
+		public FacultyFilter(Faculty faculty, List<DepartmentFilter> departments, DefaultMutableTreeNode node) {
+			super();
+			this.faculty = faculty;
+			this.departments = departments;
+			this.node = node;
+		}
+		
+		/**
+		 * @return the faculty
+		 */
+		public Faculty getFaculty() {
+			return faculty;
+		}
+		/**
+		 * @return the departments
+		 */
+		public List<DepartmentFilter> getDepartments() {
+			return departments;
+		}
+		
+		/**
+		 * @return the node
+		 */
+		public DefaultMutableTreeNode getNode() {
+			return node;
+		}
+
+		/**
+		 * Verifie si le departement est dans la pile de filtrage de la faculte
+		 * @param department
+		 * @return
+		 */
+		public boolean hasDepartment (Department department) {
+			for (DepartmentFilter filter : departments) {
+				if(filter.getDepartment().getId() == department.getId())
+					return true;
+			}
+			
+			return false;
+		}
+		
+		/**
+		 * Enenvoie les informations de filtrage pour le departement en oparemtre
+		 * @param department
+		 * @return
+		 */
+		public DepartmentFilter get (Department department) {
+			for (DepartmentFilter filter : departments) {
+				if(filter.getDepartment().getId() == department.getId())
+					return filter;
+			}
+			return null;
+		}
+	}
+	
+	/**
+	 * 
+	 * @author Esaie MUHASA
+	 * Empacketage du path de filtrage pour un departement
+	 */
+	public static class DepartmentFilter {
+		private final Department department;
+		private final List<StudyClass> classes;
+		private final DefaultMutableTreeNode node;
+		
+		/**
+		 * @param department
+		 * @param classes
+		 * @param node
+		 */
+		public DepartmentFilter(Department department, List<StudyClass> classes, DefaultMutableTreeNode node) {
+			super();
+			this.department = department;
+			this.classes = classes;
+			this.node = node;
+		}
+		/**
+		 * @return the department
+		 */
+		public Department getDepartment() {
+			return department;
+		}
+		/**
+		 * @return the classes
+		 */
+		public List<StudyClass> getClasses() {
+			return classes;
+		}
+		/**
+		 * @return the node
+		 */
+		public DefaultMutableTreeNode getNode() {
+			return node;
+		}
 	}
 
-	@Override
-	public void valueChanged(TreeSelectionEvent e) {
-		TreePath path = e.getPath();
-		
-		AcademicYear year = null;
-		Faculty faculty = null;
-		Department department = null;
-		StudyClass study = null;
-		
-		for (Object o : path.getPath()) {//recuperation de reference des objet dont on a besoin
-			DefaultMutableTreeNode node = (DefaultMutableTreeNode) o;
-			
-			if (node.getUserObject().getClass() == StudyClass.class) {
-				study = (StudyClass) node.getUserObject();
-			} else if(node.getUserObject().getClass() == Department.class) {
-				department = (Department) node.getUserObject();
-			} else if (node.getUserObject().getClass() == Faculty.class) {
-				faculty = (Faculty) node.getUserObject(); 
-			} else if (node.getUserObject().getClass() == AcademicYear.class) {
-				year = (AcademicYear) node.getUserObject();
-			}
-		}
-		
-		int count = path.getPath().length;
-		
-		switch (count) {
-			case 1:
-				this.emitSelectYear(year);;
-				break;
-			case 2:
-				this.emitSelectFaculty(faculty, year);
-				break;
-			case 3:
-				this.emitSelectDepartment(department, year);
-				break;
-			case 4:
-				this.emitSelectPromotion(promotionDao.find(year, department, study));
-				break;
-				
-			default:
-				System.out.println("->Error: "+path);
-				break;
-		}
-	}
 	
-	public void addListener (SidebarListener listener) {
-		if(!this.listeners.contains(listener))
-			this.listeners.add(listener);
-	}	
-	
-	//emit events
-	private void emitSelectYear (AcademicYear year) {
-		for (SidebarListener l : listeners) {
-			l.onSelectAcademicYear(year);
-		}
-	}
-	
-	private void emitSelectFaculty (Faculty faculty, AcademicYear year) {
-		for (SidebarListener l : listeners) {
-			l.onSelectFaulty(faculty, year);
-		}
-	}
-	
-	private void emitSelectDepartment (Department department, AcademicYear year) {
-		for (SidebarListener l : listeners) {
-			l.onSelectDepartment(department, year);
-		}
-	}
-	
-	private void emitSelectPromotion (Promotion promotion) {
-		for (SidebarListener l : listeners) {
-			l.onSelectPromotion(promotion);
-		}
-	}
-	// -- emit events
 }

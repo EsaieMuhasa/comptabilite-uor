@@ -118,6 +118,10 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 				if(result.getLong("lastUpdate") != 0) {
 					pro.setLastUpdate(new Date(result.getLong("lastUpdate")));
 				}
+				
+				if (result.getLong("academicFee") != 0) {
+					pro.setAcademicFee(this.academicFeeDao.findById(result.getLong("academicFee")));
+				}
 				return pro;
 			} 
 			
