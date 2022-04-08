@@ -24,7 +24,6 @@ public class PanelConfigAcademicYear extends DefaultScenePanel {
 	private PanelPromotion panelPromotion;
 	private PanelFeePromotion panelFeePromotion;
 	private PanelAnnualSpend panelAnnualSpend;
-//	private PanelAllocationCost panelAllocationCost;
 	
 	/**
 	 * @param mainWindow

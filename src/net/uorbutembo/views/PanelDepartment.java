@@ -4,7 +4,6 @@
 package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -14,6 +13,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
+import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Faculty;
@@ -28,6 +28,7 @@ import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.views.forms.FormDepartment;
+import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.DepartmentTableModel;
 import resources.net.uorbutembo.R;
 
@@ -67,8 +68,10 @@ public class PanelDepartment extends Panel {
 			}
 		});
 		
-		Panel top = new Panel(new FlowLayout(FlowLayout.RIGHT));
-		top.add(btnNew);
+		Panel top = new Panel(new BorderLayout());
+		top.add(btnNew, BorderLayout.EAST);
+		top.add(FormUtil.createTitle("Départements"), BorderLayout.CENTER);
+		top.setBorder(new EmptyBorder(0, 0, 10, 0));
 		this.add(top, BorderLayout.NORTH);
 		
 		this.btnNew.addActionListener(event -> {
@@ -77,7 +80,7 @@ public class PanelDepartment extends Panel {
 			formDialog.setVisible(true);
 		});
 		
-		this.tabbedPane = new JTabbedPane();
+		this.tabbedPane = new JTabbedPane(JTabbedPane.RIGHT);
 		
 		final List<Faculty> faculties = mainWindow.factory.findDao(FacultyDao.class).findAll();
 		final MouseAdapter listener = new MouseAdapter() {
@@ -97,7 +100,7 @@ public class PanelDepartment extends Panel {
 		for (Faculty faculty : faculties) {
 			DepartmentTableModel tableModel = new DepartmentTableModel(this.departmentDao, faculty);
 			Table table = new Table(tableModel);
-			TablePanel tablePanel = new TablePanel(table, faculty.getName());
+			TablePanel tablePanel = new TablePanel(table, faculty.getName(), false);
 			tabbedPane.addTab(faculty.getAcronym(), tablePanel);
 			
 			table.addMouseListener(listener);
@@ -131,6 +134,7 @@ public class PanelDepartment extends Panel {
 		});
 		
 		this.add(tabbedPane, BorderLayout.CENTER);
+		this.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		initPopup();
 	}
 	

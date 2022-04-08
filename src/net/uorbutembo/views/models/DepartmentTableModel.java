@@ -27,7 +27,7 @@ public class DepartmentTableModel extends TableModel<Department> {
 		super(departmentDao);
 		this.faculty = faculty;
 		this.departmentDao = departmentDao;
-		if(this.departmentDao.checkByFaculty(faculty.getId())) 			
+		if(this.departmentDao.checkByFaculty(faculty.getId()))	
 			this.data = this.departmentDao.findByFaculty(this.faculty.getId());
 	}
 	
@@ -40,9 +40,11 @@ public class DepartmentTableModel extends TableModel<Department> {
 	
 	@Override
 	public void onUpdate(Department e, int requestId) {
+		boolean exist = false;
 		for (int i=0; i < data.size(); i++) {
 			Department t = data.get(i);
 			if (t.getId() == e.getId()) {
+				exist = true;
 				if (t.getFaculty().getId() != faculty.getId()) {
 					removeRow(i);
 				} else {
@@ -50,6 +52,10 @@ public class DepartmentTableModel extends TableModel<Department> {
 				}
 				break;
 			}
+		}
+		
+		if(!exist && e.getFaculty().getId() == faculty.getId()) {
+			addRow(e);
 		}
 	}
 

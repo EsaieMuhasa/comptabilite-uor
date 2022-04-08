@@ -28,6 +28,7 @@ public class PanelConfigGlobal extends DefaultScenePanel {
 		panelAcademicYear =  new PanelAcademicYear(mainWindow);
 		this
 			.addItemMenu(new NavbarButtonModel("academicYear", "Année Academique"), panelAcademicYear)		
+			.addItemMenu(new NavbarButtonModel("orientations", "Orientations"), new PanelOrientation(this.mainWindow))
 			.addItemMenu(new NavbarButtonModel("univeritySpend", "Rubrique budgetaire"), new PanelUniversitySpend(mainWindow));
 	}
 

@@ -19,7 +19,6 @@ import javax.swing.JLabel;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.beans.Orientation;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.swing.Panel;
@@ -85,21 +84,17 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 	public void init (Sidebar sidebar) {
 		this.sidebar = sidebar;
 		MenuItemModel<String> dashbord = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("dashboard")), "Tableau de bord");
-		
 		MenuItemModel<String> students = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("student")), "Etudiants ");
-		MenuItemModel<Orientation> orientations = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("database")), "Orientations");
-
-		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Autres configurations");
+		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Configurations globales");
 		MenuItemModel<String> param = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("console")), "Configuration logiciel");
 		MenuItemModel<String> help = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("help")), "Manuel d'utilisation");
 		
 		this
 		.add(dashbord, new PanelDashboard(this.mainWindow))
 		.add(students, new PanelStudents(this.mainWindow))
-		.add(orientations, new PanelOrientation(this.mainWindow))
 		.add(config, new PanelConfigGlobal(this.mainWindow))
-		.add(param, new PanelConfigSoftware(this.mainWindow))
-		.add(help, new PanelHelp(mainWindow));
+		.add(help, new PanelHelp(mainWindow))
+		.add(param, new PanelConfigSoftware(this.mainWindow));
 		
 		head.setVisible(false);
 		navbar.hideItems();

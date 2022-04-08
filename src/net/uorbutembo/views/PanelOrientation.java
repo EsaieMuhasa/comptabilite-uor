@@ -3,35 +3,31 @@
  */
 package net.uorbutembo.views;
 
-import javax.swing.ImageIcon;
+import java.awt.BorderLayout;
 
-import net.uorbutembo.views.components.DefaultScenePanel;
-import net.uorbutembo.views.components.NavbarButtonModel;
-import resources.net.uorbutembo.R;
+import javax.swing.JTabbedPane;
+
+import net.uorbutembo.swing.Panel;
 
 /**
  * @author Esaie MUHASA
  *
  */
-public class PanelOrientation extends DefaultScenePanel {
+public class PanelOrientation extends Panel {
 	private static final long serialVersionUID = 1706520118231790169L;
 	
 	/**
 	 * 
 	 */
 	public PanelOrientation(MainWindow mainWindow) {
-		super("Orientations", new ImageIcon(R.getIcon("database")), mainWindow);
+		super(new BorderLayout());
 		
-		//menu
-		this
-		.addItemMenu(new NavbarButtonModel("facultys", "Facultés"), new PanelFaculty(mainWindow))
-		.addItemMenu(new NavbarButtonModel("departments", "Départements"), new PanelDepartment(mainWindow))
-		.addItemMenu(new NavbarButtonModel("studyClass", "Classe d'étude"), new PanelStudyClass(mainWindow));
-	}
+		JTabbedPane tabbed = new JTabbedPane(JTabbedPane.BOTTOM);
+		tabbed.addTab("Facultés", new PanelFaculty(mainWindow));
+		tabbed.addTab("Départements", new PanelDepartment(mainWindow));
+		tabbed.addTab("Classe d'étude", new PanelStudyClass(mainWindow));
 
-	@Override
-	public String getNikeName() {
-		return "orientations";
+		this.add(tabbed, BorderLayout.CENTER);
 	}
 
 }

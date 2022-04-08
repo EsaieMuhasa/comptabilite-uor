@@ -4,7 +4,6 @@
 package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -64,8 +63,9 @@ public class PanelFaculty extends Panel {
 				dialogForm.setVisible(false);
 			}
 		});
-		Panel top = new Panel(new FlowLayout(FlowLayout.RIGHT));
-		top.add(btnNew);
+		Panel top = new Panel(new BorderLayout());
+		top.add(btnNew, BorderLayout.EAST);
+		top.add(FormUtil.createTitle("Facultés"), BorderLayout.CENTER);
 		this.add(top, BorderLayout.NORTH);
 		
 		this.btnNew.addActionListener(event -> {
@@ -82,6 +82,7 @@ public class PanelFaculty extends Panel {
 		center.add(FormUtil.createVerticalScrollPane(table), BorderLayout.CENTER);
 		center.setBorder(new EmptyBorder(10, 0, 10, 0));
 		this.add(center, BorderLayout.CENTER);
+		this.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		initPopup();
 	}

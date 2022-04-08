@@ -4,8 +4,6 @@
 package net.uorbutembo;
 
 import java.awt.EventQueue;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
@@ -55,16 +53,12 @@ public class Launcher {
 			
 			StartWindow st = new StartWindow();
 			st.setVisible(true);
+			
+			MainWindow frame = new MainWindow(factory);
 			EventQueue.invokeLater(() -> {
-				MainWindow frame = new MainWindow(factory);
-				frame.addWindowListener(new WindowAdapter() {
-					@Override
-					public void windowActivated(WindowEvent e) {
-						st.setVisible(false);
-					}
-				});
-				frame.setVisible(true);
 				factory.reload();
+				st.setVisible(false);
+				frame.setVisible(true);
 			});
 		} catch (DAOConfigException e) {
 			//Logger.getLogger(Launcher.class.getName()).log( Level.SEVERE, null, e);

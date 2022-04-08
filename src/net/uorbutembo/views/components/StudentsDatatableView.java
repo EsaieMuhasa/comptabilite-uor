@@ -22,7 +22,14 @@ import javax.swing.JScrollPane;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -212,8 +219,9 @@ public class StudentsDatatableView extends Panel {
 				if(data.getFaculty().getId() == filter.getFaculty().getId()){
 					data.setShowing(true, filter);
 					show = true;
-					if(data.hasData() && !data.isAutohide())
+					if(data.hasData() && !data.isAutohide() && !lastFilterData.contains(data)){
 						lastFilterData.add(data);
+					}
 					break;
 				}
 			}
@@ -249,7 +257,8 @@ public class StudentsDatatableView extends Panel {
 				}
 			}
 		}
-		progress.setMaximum(max);		
+		progress.setMaximum(max);
+		progress.setIndeterminate(false);
 
 		try (
 				XSSFWorkbook book = new XSSFWorkbook();
@@ -258,6 +267,9 @@ public class StudentsDatatableView extends Panel {
 			
 			String names [] = PromotionPaymentTableModel.COLUMN_NAMES;
 			int columnCount = fullRow? names.length : names.length - 2;
+			short rowHeight = 400;
+			int current = 0;
+			
 			for (FacultyData fData : lastFilterData) {
 				//Pour chaque faculte, on cree un sheet excel
 				XSSFSheet sheet = book.createSheet(fData.getFaculty().getAcronym());
@@ -267,36 +279,67 @@ public class StudentsDatatableView extends Panel {
 				XSSFRow row = sheet.createRow(rowCount++);
 				XSSFCell cell = row.createCell(0);
 				cell.setCellValue(fData.getFaculty().getName());
-				//==
+				sheet.addMergedRegion(new CellRangeAddress(rowCount-1, rowCount-1, 0, columnCount-1));
 				
-				//titre des colones
-				row = sheet.createRow(rowCount++);
-				for (int i = 0; i < columnCount; i++) {					
-					XSSFCell cel = row.createCell(i);
-					cel.setCellValue(names[i]);
-				}
-				//==
+				XSSFCellStyle style = book.createCellStyle();
+				XSSFFont font = book.createFont();
+				font.setFontName("Arial");
+				font.setFontHeight(18);
+				font.setBold(true);
+				font.setColor(IndexedColors.WHITE.index);
 				
+				style.setFillForegroundColor(IndexedColors.DARK_BLUE.index);
+				style.setFont(font);
+				style.setAlignment(HorizontalAlignment.CENTER);
+				style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				
+				cell.setCellStyle(style);
+				//==
+
 				for (DepartmentData dData : fData.getLastFilterData()) {
 					
-					//department name
-					row = sheet.createRow(rowCount++);
-					cell = row.createCell(0);
-					cell.setCellValue(dData.getDepartment().getName());
-					//==
-					
 					for (PromotionData pData : dData.getLastFilterData()) {
+						PromotionPaymentTableModel data = pData.tableModel;
+						
+						if(data.getRowCount() == 0)
+							continue;
+						
 						//class name
+						style = book.createCellStyle();
+						font = book.createFont();
+						
+						font.setFontName("Arial");
+						font.setFontHeight(14);
+						font.setItalic(true);
+						font.setColor(IndexedColors.WHITE.index);
+						
+						style.setFont(font);
+						style.setFillForegroundColor(IndexedColors.BLACK.index);
+						style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+						
 						row = sheet.createRow(rowCount++);
 						cell = row.createCell(0);
-						cell.setCellValue(pData.getPromotion().getStudyClass().getAcronym()+" ("+pData.getPromotion().getStudyClass().getName()+") ");
+						cell.setCellValue(pData.getPromotion().getStudyClass().getAcronym()+" "+pData.getPromotion().getDepartment().getName());
+						sheet.addMergedRegion(new CellRangeAddress(rowCount-1, rowCount-1, 0, columnCount-1));
+						cell.setCellStyle(style);
 						//==
 						
-						PromotionPaymentTableModel data = pData.tableModel;
+						//titre des colones
+						row = sheet.createRow(rowCount++);
+						style = book.createCellStyle();
+						style.setBorderBottom(BorderStyle.DOUBLE);
+						for (int i = 0; i < columnCount; i++) {					
+							cell = row.createCell(i);
+							cell.setCellValue(names[i]);
+							cell.setCellStyle(style);
+						}
+						//==
+						
 						for (int i = 0, count = data.getRowCount(); i < count; i++) {
 							row = sheet.createRow(rowCount++);
+							row.setHeight(rowHeight);
 							
-							int current = progress.getValue()+1;
+							current++;
 							progress.setValue(current);
 							progress.setString("("+current+"/"+max + ") "+data.getValueAt(i, 1));
 							
@@ -305,14 +348,20 @@ public class StudentsDatatableView extends Panel {
 								cell.setCellValue(data.getValueAt(i, j).toString());
 							}
 						}
+						
+						rowCount++;
 					}
+				}
+				
+				for (int i = 0; i < columnCount; i++) {
+					sheet.autoSizeColumn(i);
 				}
 			}
 			
 			book.write(out);
 			
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(null, "Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
 		}
 		
 		progress.setVisible(false);
@@ -451,7 +500,7 @@ public class StudentsDatatableView extends Panel {
 					for (DepartmentData d : datas) {
 						if(d.getDepartment().getId() == df.getDepartment().getId()){
 							d.setShowing(showing, df);
-							if(d.hasData() && d.isShowing() && !d.isAutohide())
+							if(d.hasData() && d.isShowing() && !d.isAutohide() && !lastFilterData.contains(d))
 								lastFilterData.add(d);
 							break;
 						}
@@ -537,7 +586,7 @@ public class StudentsDatatableView extends Panel {
 		public void setShowing (boolean showing, DepartmentFilter lastFilter) {
 			super.setShowing(showing);
 			this.lastFilter = lastFilter;
-			this.lastFilterData.clear();
+			lastFilterData.clear();
 			
 			if(this.lastFilter == null) {
 				for (PromotionData p : datas) {
@@ -555,7 +604,7 @@ public class StudentsDatatableView extends Panel {
 						}
 					}
 					p.setShowing(show);
-					if(show)
+					if(show && hasData() && !lastFilterData.contains(p))
 						lastFilterData.add(p);
 				}
 			}

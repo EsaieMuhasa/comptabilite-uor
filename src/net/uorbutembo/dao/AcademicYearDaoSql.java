@@ -103,31 +103,27 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 	
 	@Override
 	public synchronized void reload(int requestId) {
-		if(reloadRunning) 
-			return;
-		
 		reloadRunning = true;
-		Thread t = new Thread(()-> {
-			try {
-				if(currentYear == null && checkCurrent())
-					findCurrent();
-				
-				if(currentYear == null){
-					reloadRunning = false;
-					return;
-				}
-				
-				for (AcademicYearDaoListener ls : yearListeners) {
-					ls.onCurrentYear(currentYear);
-				}				
-			} catch (DAOException e) {
-				emitOnError(e);
-			} catch (Exception e) {
-				emitOnError(new DAOException(e.getMessage(), e));
+		
+		try {
+			if(currentYear == null && checkCurrent())
+				findCurrent();
+			
+			if(currentYear == null){
+				reloadRunning = false;
+				return;
 			}
-			reloadRunning = false;
-		});
-		t.start();
+			
+			for (AcademicYearDaoListener ls : yearListeners) {
+				ls.onCurrentYear(currentYear);
+			}				
+		} catch (DAOException e) {
+			emitOnError(e);
+		} catch (Exception e) {
+			emitOnError(new DAOException(e.getMessage(), e));
+		}
+		
+		reloadRunning = false;
 	}
 
 	@Override

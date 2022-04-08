@@ -5,17 +5,22 @@ package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
 import java.awt.Cursor;
+import java.io.File;
+import java.util.Date;
 
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.filechooser.FileFilter;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.dao.DAOFactory;
@@ -59,6 +64,9 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 	
 	private JDialog dialog;//boite de dialogue de consultation des fiches de payements
 	private IndividualSheet sheet;
+	
+	private JFileChooser fileChooser = new JFileChooser();
+	private ExcelFileFilter filterExcel = new ExcelFileFilter();
 	
 	/**
 	 * la construction du panel de manipulation de l'evolution des pyements
@@ -114,21 +122,35 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 		box.add(btnToPrint);
 		box.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		
 		btnToExcel.addActionListener(event -> {
+			Date now = new Date();
+			File old = fileChooser.getCurrentDirectory();
+			File newFile = new File(old.getAbsolutePath()+"/uor-data-manager-export-"+FormUtil.DEFAULT_FROMATER.format(now)+".xlsx");
+			
+			fileChooser.setFileFilter(filterExcel);
+			fileChooser.setSelectedFile(newFile);
+			
+			int status = fileChooser.showSaveDialog(null);
+			if(status != JFileChooser.APPROVE_OPTION)
+				return;
+			
+			File file = fileChooser.getSelectedFile();
+			if(file == null )
+				return;
+			
+			String filename = file.getAbsolutePath()+ (file.getName().endsWith(".xlsx")?  "" : ".xlsx");
 			navigation.wait(true);
 			statusButtonsExport(false);
 			setCursor(FormUtil.WAIT_CURSOR);
 			
-			
-			
 			Thread t = new Thread(()-> {
-				
-				String filename = "Fichier.xlsx";
 				datatableView.exportToExcel(filename, true);
-				
 				statusButtonsExport(true);
 				navigation.wait(false);
 				setCursor(Cursor.getDefaultCursor());
+				JOptionPane.showMessageDialog(null, "Success d'exportation des donnee\nau format excel dans le fichier \n"+filename, "Success", JOptionPane.INFORMATION_MESSAGE);
 			});
 			
 			t.start();
@@ -169,16 +191,12 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 			public void onFilter(FacultyFilter [] filters) {
 				
 				//disable exports buttons
-				btnToExcel.setEnabled(false);
-				btnToPdf.setEnabled(false);
-				btnToPrint.setEnabled(false);
+				statusButtonsExport(false);
 				//==
 				datatableView.setFilter(filters);
 				
 				//enable exports buttons
-				btnToExcel.setEnabled(true);
-				btnToPdf.setEnabled(true);
-				btnToPrint.setEnabled(true);
+				statusButtonsExport(true);
 				//==
 			}
 			
@@ -208,5 +226,25 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 	public void onAction(InscriptionDataRow row) {
 		sheet.setInscription(row);
 		dialog.setVisible(true);
+	}
+	
+	/**
+	 * @author Esaie MUHASA
+	 * Filtre de detection des fichiers excels
+	 */
+	private static class ExcelFileFilter extends FileFilter {
+
+		@Override
+		public boolean accept(File f) {
+			if(f.getName().endsWith(".xlsx"))
+				return true;
+			return f.isDirectory();
+		}
+
+		@Override
+		public String getDescription() {
+			return "Fichier excel 2007 ou plus (.xlsx)";
+		}
+		
 	}
 }
