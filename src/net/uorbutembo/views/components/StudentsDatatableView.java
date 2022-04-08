@@ -6,6 +6,7 @@ package net.uorbutembo.views.components;
 import java.awt.BorderLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +21,11 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
@@ -65,6 +71,7 @@ public class StudentsDatatableView extends Panel {
 	
 	private JProgressBar progress;
 	private FacultyFilter [] lastFilter;
+	private List<FacultyData> lastFilterData = new ArrayList<>();
 	
 	private DatatableViewListener listener;
 	private JDialog dialogStudent;//dialogue de modification de l'identite d'un etudiant
@@ -128,6 +135,8 @@ public class StudentsDatatableView extends Panel {
 	public void firstLoad (FacultyFilter [] filters, AcademicYear currentYear) {
 		this.currentYear = currentYear;
 		this.lastFilter = filters;
+		this.lastFilterData.clear();
+		
 		this.doStartFilter(filters);
 		for (FacultyFilter filter : filters) {
 			FacultyData  dataManager = new FacultyData(filter.getFaculty(), filter.getDepartments());
@@ -184,6 +193,7 @@ public class StudentsDatatableView extends Panel {
 	public void setFilter (FacultyFilter [] filters) {
 		
 		this.lastFilter = filters;
+		this.lastFilterData.clear();
 		this.doStartFilter(filters);
 		
 		if(filters == null) {
@@ -202,6 +212,8 @@ public class StudentsDatatableView extends Panel {
 				if(data.getFaculty().getId() == filter.getFaculty().getId()){
 					data.setShowing(true, filter);
 					show = true;
+					if(data.hasData() && !data.isAutohide())
+						lastFilterData.add(data);
 					break;
 				}
 			}
@@ -212,6 +224,100 @@ public class StudentsDatatableView extends Panel {
 		
 		progress.setVisible(false);
 	}
+	
+	//EXPORATION DES DONNEE
+	//		=== || ====
+	
+	/**
+	 * Exportation des donnees au format excel
+	 * @param fileName chemain du fichier de serialisation
+	 * @param fullRow faut-il exporter la ligne compte??
+	 */
+	public synchronized void exportToExcel (String fileName, boolean fullRow) {
+		progress.setIndeterminate(true);
+		progress.setVisible(true);
+		progress.setValue(0);
+		
+		//collection des facultes
+		progress.setString("Préparation des données");
+		
+		int max = 0;
+		for (FacultyData fData : lastFilterData) {
+			for (DepartmentData dData : fData.getLastFilterData()) {
+				for (PromotionData pData : dData.getLastFilterData()) {
+					max += pData.tableModel.getRowCount();
+				}
+			}
+		}
+		progress.setMaximum(max);		
+
+		try (
+				XSSFWorkbook book = new XSSFWorkbook();
+				FileOutputStream out = new FileOutputStream(fileName);
+			){
+			
+			String names [] = PromotionPaymentTableModel.COLUMN_NAMES;
+			int columnCount = fullRow? names.length : names.length - 2;
+			for (FacultyData fData : lastFilterData) {
+				//Pour chaque faculte, on cree un sheet excel
+				XSSFSheet sheet = book.createSheet(fData.getFaculty().getAcronym());
+				int rowCount = 0;
+				
+				//faculty name
+				XSSFRow row = sheet.createRow(rowCount++);
+				XSSFCell cell = row.createCell(0);
+				cell.setCellValue(fData.getFaculty().getName());
+				//==
+				
+				//titre des colones
+				row = sheet.createRow(rowCount++);
+				for (int i = 0; i < columnCount; i++) {					
+					XSSFCell cel = row.createCell(i);
+					cel.setCellValue(names[i]);
+				}
+				//==
+				
+				for (DepartmentData dData : fData.getLastFilterData()) {
+					
+					//department name
+					row = sheet.createRow(rowCount++);
+					cell = row.createCell(0);
+					cell.setCellValue(dData.getDepartment().getName());
+					//==
+					
+					for (PromotionData pData : dData.getLastFilterData()) {
+						//class name
+						row = sheet.createRow(rowCount++);
+						cell = row.createCell(0);
+						cell.setCellValue(pData.getPromotion().getStudyClass().getAcronym()+" ("+pData.getPromotion().getStudyClass().getName()+") ");
+						//==
+						
+						PromotionPaymentTableModel data = pData.tableModel;
+						for (int i = 0, count = data.getRowCount(); i < count; i++) {
+							row = sheet.createRow(rowCount++);
+							
+							int current = progress.getValue()+1;
+							progress.setValue(current);
+							progress.setString("("+current+"/"+max + ") "+data.getValueAt(i, 1));
+							
+							for (int j = 0; j < columnCount; j++) {
+								cell = row.createCell(j);
+								cell.setCellValue(data.getValueAt(i, j).toString());
+							}
+						}
+					}
+				}
+			}
+			
+			book.write(out);
+			
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(null, "Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+		}
+		
+		progress.setVisible(false);
+	}
+	//	=== || ====	export
 	
 	/**
 	 * @author Esaie MUHASA
@@ -282,7 +388,8 @@ public class StudentsDatatableView extends Panel {
 		private static final long serialVersionUID = 5845359552859770355L;
 
 		private final Faculty faculty;
-		private FacultyFilter lastFilter;//dernier filtre
+		private FacultyFilter lastFilter;//dernier filtre pour cette faculte
+		private List<DepartmentData> lastFilterData = new ArrayList<>();//collection des departements concerner par le derneir filtre
 		
 		private JLabel title = FormUtil.createTitle("");
 		private List<DepartmentData> datas = new ArrayList<>();
@@ -325,10 +432,13 @@ public class StudentsDatatableView extends Panel {
 		public void setShowing(boolean showing, FacultyFilter lastFilter) {
 			super.setShowing(showing);
 			this.lastFilter = lastFilter;
+			lastFilterData.clear();
 			
 			if (this.lastFilter == null) {
 				for (DepartmentData d : datas) {
 					d.setShowing(showing, null);
+					if(d.hasData() && showing)
+						lastFilterData.add(d);
 				}
 			} else  {
 				
@@ -341,13 +451,22 @@ public class StudentsDatatableView extends Panel {
 					for (DepartmentData d : datas) {
 						if(d.getDepartment().getId() == df.getDepartment().getId()){
 							d.setShowing(showing, df);
+							if(d.hasData() && d.isShowing() && !d.isAutohide())
+								lastFilterData.add(d);
 							break;
 						}
 						
 					}
 				}
 			}
-			
+		}
+		
+		/**
+		 * Renvoie le tableau des depatements pris en compte dans le dernier filtee
+		 * @return
+		 */
+		public List<DepartmentData> getLastFilterData () {
+			return lastFilterData;
 		}
 		
 		@Override
@@ -372,7 +491,10 @@ public class StudentsDatatableView extends Panel {
 		private final Department department;
 		private final List<StudyClass> classes;
 		private final List<PromotionData> datas = new ArrayList<>();
-		private DepartmentFilter lastFilter;
+		
+		private DepartmentFilter lastFilter;//dernier filtee pour le departement
+		private List<PromotionData> lastFilterData = new ArrayList<>();//protions qui ont satisfait au dernier filtre pour le departement
+		
 		private Box container = Box.createVerticalBox();
 		
 		private PromotionDao promotionDao;
@@ -415,9 +537,13 @@ public class StudentsDatatableView extends Panel {
 		public void setShowing (boolean showing, DepartmentFilter lastFilter) {
 			super.setShowing(showing);
 			this.lastFilter = lastFilter;
+			this.lastFilterData.clear();
+			
 			if(this.lastFilter == null) {
 				for (PromotionData p : datas) {
 					p.setShowing(showing);
+					if(p.hasData() && showing)
+						lastFilterData.add(p);
 				}
 			} else {
 				for (PromotionData p : datas) {
@@ -429,10 +555,19 @@ public class StudentsDatatableView extends Panel {
 						}
 					}
 					p.setShowing(show);
+					if(show)
+						lastFilterData.add(p);
 				}
 			}
 		}
 		
+		/**
+		 * @return the lastFilterData
+		 */
+		public List<PromotionData> getLastFilterData() {
+			return lastFilterData;
+		}
+
 		@Override
 		public boolean hasData() {
 			for (PromotionData p : datas) {

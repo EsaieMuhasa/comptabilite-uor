@@ -340,7 +340,7 @@ public class SidebarStudents extends Panel{
 	 * qu'il y a un traitement lourd encours d'execution
 	 * @param wait
 	 */
-	private void wait (boolean wait) {
+	public void wait (boolean wait) {
 		checkFilter.setEnabled(!wait);
 		
 		if(wait) {

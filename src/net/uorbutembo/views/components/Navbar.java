@@ -3,9 +3,10 @@
  */
 package net.uorbutembo.views.components;
 
-import static net.uorbutembo.views.forms.FormUtil.BORDER_COLOR;
+import static net.uorbutembo.views.forms.FormUtil.*;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -83,11 +84,25 @@ public class Navbar extends JPanel {
 	}
 	
 	@Override
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+        
+        Color color = BKG_END;
+        g2.setColor(color);
+        g2.fillRect(1, 0, getWidth(), getHeight());
+	}
+	
+	@Override
 	protected void paintBorder(Graphics g) {
 		super.paintBorder(g);
 		Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+        
+        
         g2.setColor(BORDER_COLOR);
         g2.drawLine(0, this.getHeight()-1, this.getWidth(), this.getHeight()-1);
 	}

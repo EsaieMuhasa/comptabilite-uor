@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Orientation;
@@ -29,6 +31,7 @@ import net.uorbutembo.views.components.MenuItemListener;
 import net.uorbutembo.views.components.MenuItemModel;
 import net.uorbutembo.views.components.Navbar;
 import net.uorbutembo.views.components.Sidebar;
+import net.uorbutembo.views.forms.FormUtil;
 import resources.net.uorbutembo.R;
 
 /**
@@ -42,7 +45,7 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 	private final Navbar navbar = new Navbar();
 	private final CardLayout layout = new CardLayout();
 	private final Panel body = new Panel(layout);
-	private final Panel head = new Panel(new BorderLayout());
+	private final Header head = new Header();
 
 	private Map<String, DefaultScenePanel> scenes = new HashMap<>();//references vers tout les scenes
 	private MainWindow mainWindow;
@@ -88,21 +91,19 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 
 		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Autres configurations");
 		MenuItemModel<String> param = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("console")), "Configuration logiciel");
-		
-		MenuItemModel<String> exportData = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("export")), "Exporter");
-		MenuItemModel<String> importData = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("import")), "Importer");
 		MenuItemModel<String> help = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("help")), "Manuel d'utilisation");
-		MenuItemModel<String> journal = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("status")), "Journal d'erreurs");
-		
-
-		importData.addItems("Exel 2007 ou plus (.xlsx)", "Exel 2003 (.xls)", "SQL File");
 		
 		this
 		.add(dashbord, new PanelDashboard(this.mainWindow))
 		.add(students, new PanelStudents(this.mainWindow))
 		.add(orientations, new PanelOrientation(this.mainWindow))
 		.add(config, new PanelConfigGlobal(this.mainWindow))
-		.add(param, new PanelConfigSoftware(this.mainWindow));
+		.add(param, new PanelConfigSoftware(this.mainWindow))
+		.add(help, new PanelHelp(mainWindow));
+		
+		head.setVisible(false);
+		navbar.hideItems();
+		navbar.setVisible(false);
 	}
 
 	/**
@@ -142,6 +143,7 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
         g2.setColor(BKG_DARK);
         g2.fillRect(0, 0, this.getWidth(), this.getHeight());
+        
 	}
 	
 	@Override
@@ -173,9 +175,13 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 		if(this.scenes.containsKey(item.getModel().getName())) {	
 			DefaultScenePanel scene = this.scenes.get(item.getModel().getName());
 			this.body.add(scene, item.getModel().getName());
-			this.head.removeAll();
-			this.head.add(scene.getHeader(), BorderLayout.CENTER);
-			this.head.repaint();
+			if(scene.hasHeader()) {		
+				head.setVisible(true);
+				head.setTitle(scene.getTitle());
+				head.setIcon(scene.getIcon());
+			}else {
+				head.setVisible(false);
+			}
 			
 			if(scene.getNavbarItems().isEmpty()) {
 				this.navbar.setVisible(false);
@@ -192,6 +198,55 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 		
 		this.body.revalidate();
 		this.body.repaint();
+	}
+	
+	/**
+	 * @author Esaie MUHASA
+	 * En-tete de l'espace de travaille
+	 */
+	public static class Header extends Panel {
+		private static final long serialVersionUID = -1499973340320709177L;
+		
+		private JLabel title = FormUtil.createTitle("");
+		private JLabel icon = new JLabel();
+		
+		public Header() {
+			super(new BorderLayout());
+			add(title, BorderLayout.CENTER);
+			add(icon, BorderLayout.WEST);
+			setBorder(new EmptyBorder(5, 10, 5, 10));
+			icon.setBorder(new EmptyBorder(0, 0, 0, 10));
+		}
+		
+		/**
+		 * @param title
+		 */
+		public void setTitle (String title) {
+			this.title.setText(title);
+		}
+		
+		/**
+		 * @param icon
+		 */
+		public void setIcon (ImageIcon icon) {
+			this.icon.setIcon(icon);
+		}
+		
+		@Override
+		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			Graphics2D g2 = (Graphics2D) g;
+	        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+	        g2.setColor(BORDER_COLOR);
+	        g2.drawLine(0, getHeight()-1, getWidth(), getHeight()-1);
+		}
+		
+		@Override
+		protected void paintBorder(Graphics g) {
+			super.paintBorder(g);
+		}
+		
 	}
 
 }

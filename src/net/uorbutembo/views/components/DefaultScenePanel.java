@@ -5,8 +5,6 @@ package net.uorbutembo.views.components;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +12,6 @@ import java.util.Map;
 
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
@@ -31,8 +28,7 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	public static final EmptyBorder BODY_BORDER = new EmptyBorder(10, 10, 10, 10); 
 	
 	private ImageIcon icon;
-	private JComponent header;
-	private JLabel title = FormUtil.createTitle("");
+	private String title;
 	
 	private List<NavbarButtonModel> navbarItems = new ArrayList<>();
 	
@@ -61,7 +57,7 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	 */
 	public DefaultScenePanel(String title, MainWindow mainWindow, boolean scrollable) {
 		super(new BorderLayout());
-		this.title.setText(title);
+		this.title = title;
 		this.mainWindow = mainWindow;
 		this.init(scrollable);
 	}
@@ -85,7 +81,7 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	 */
 	public DefaultScenePanel(String title, ImageIcon icon, MainWindow mainWindow, boolean scrollable) {
 		super(new BorderLayout());
-		this.title.setText(title);
+		this.title= title;
 		this.icon = icon;
 		this.mainWindow = mainWindow;
 		this.init(scrollable);
@@ -97,43 +93,38 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	public MainWindow getMainWindow() {
 		return mainWindow;
 	}
-
-	@Override
-	protected void paintComponent(Graphics g) {
-		super.paintComponent(g);
-//		Graphics2D g2 = (Graphics2D) g;
-//        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-//        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
-//        g2.setColor(BORDER_COLOR);
-//        g2.drawLine(this.header.getX(), this.header.getHeight()-1, (int)this.header.getBounds().getMaxX(), this.header.getHeight()-1);
-	}
 	
 	/**
 	 * modification du titre du paneau
 	 * @param title
 	 */
 	public void setTitle (String title) {
-		this.title.setText(title);
+		this.title = title;
 	}
 	
-	public JLabel getTitle () {
+	public String getTitle () {
 		return this.title;
 	}
 	
+	/**
+	 * @return the icon
+	 */
+	public ImageIcon getIcon() {
+		return icon;
+	}
+
+	/**
+	 * @param icon the icon to set
+	 */
+	public void setIcon(ImageIcon icon) {
+		this.icon = icon;
+	}
+
 	/**
 	 * initialisation des composants pricipaux de la scene
 	 * @param scrollable
 	 */
 	protected void init(boolean scrollable) {
-		header = new Panel(new BorderLayout());
-		header.add(this.title, BorderLayout.CENTER);
-		header.setBackground(Color.BLACK);
-		this.header.setBorder(new EmptyBorder(0, 10, 0, 10));
-		if(this.icon != null) {
-			JLabel icon = new JLabel(this.icon);
-			header.add(icon, BorderLayout.WEST);
-		}
-		
 		final Panel container = new Panel(new BorderLayout());
 		
 		container.add(body, BorderLayout.CENTER);
@@ -157,12 +148,13 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	public Panel getBody() {
 		return body;
 	}
-
+	
 	/**
-	 * @return the header
+	 * Permet de confirmer s'il faut prendre en compte l'entete
+	 * @return
 	 */
-	public JComponent getHeader() {
-		return header;
+	public boolean hasHeader () {
+		return true;
 	}
 
 	//item-menu

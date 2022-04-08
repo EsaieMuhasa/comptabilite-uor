@@ -4,6 +4,7 @@
 package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 
 import javax.swing.Box;
 import javax.swing.ImageIcon;
@@ -79,6 +80,16 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 		dialog.setTitle("Fiche de payement");
 		dialog.getContentPane().add(sheet, BorderLayout.CENTER);
 	}
+	
+	/**
+	 * Changement d'etat des boutons d'exportation des donnees
+	 * @param enable
+	 */
+	private synchronized void statusButtonsExport (boolean enable) {
+		btnToExcel.setEnabled(enable);
+		btnToPdf.setEnabled(enable);
+		btnToPrint.setEnabled(enable);
+	}
 
 	/**
 	 * initialisation de l'intierface graphique,
@@ -102,6 +113,26 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 		box.add(btnToPdf);
 		box.add(btnToPrint);
 		box.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		
+		btnToExcel.addActionListener(event -> {
+			navigation.wait(true);
+			statusButtonsExport(false);
+			setCursor(FormUtil.WAIT_CURSOR);
+			
+			
+			
+			Thread t = new Thread(()-> {
+				
+				String filename = "Fichier.xlsx";
+				datatableView.exportToExcel(filename, true);
+				
+				statusButtonsExport(true);
+				navigation.wait(false);
+				setCursor(Cursor.getDefaultCursor());
+			});
+			
+			t.start();
+		});
 		progress.setBorderPainted(false);
 		progress.setStringPainted(true);
 		//==
@@ -155,9 +186,7 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 			public void onFilter(AcademicYear year, FacultyFilter [] filters) {
 				
 				//disable exports buttons
-				btnToExcel.setEnabled(false);
-				btnToPdf.setEnabled(false);
-				btnToPrint.setEnabled(false);
+				statusButtonsExport(false);
 				//==
 				
 				if(datatableView == null) {
@@ -169,9 +198,7 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 				}
 				
 				//enable exports buttons
-				btnToExcel.setEnabled(true);
-				btnToPdf.setEnabled(true);
-				btnToPrint.setEnabled(true);
+				statusButtonsExport(true);
 				//==
 			}
 		});

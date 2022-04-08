@@ -30,6 +30,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	private InscriptionDao inscriptionDao;
 	private StudentDao studentDao;
 
+	public static final String [] COLUMN_NAMES = new String[] {"Matricule", "Nom, post-nom et prenom", "Téléphone", "Solde", "Reste"};
 
 	public PromotionPaymentTableModel(DAOFactory factory) {
 		super();
@@ -164,18 +165,8 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		switch (column) {
-			case 0:
-				return "Matricule";
-			case 1:
-				return "Nom, Post-nom et prenom";
-			case 2:
-				return "Téléphone";
-			case 3:
-				return "Solde";
-			case 4:
-				return "Reste";
-		}
+		if(column < COLUMN_NAMES.length)
+			return COLUMN_NAMES[column];
 		return super.getColumnName(column);
 	}
 
