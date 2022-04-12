@@ -24,6 +24,11 @@ public class Inscription extends DBEntity {
 	 * L'appariteur centrale qui aurait valider l'inscription
 	 */
 	private CentralApparitor centralApparitor;
+	
+	/**
+	 * l'adresse de residence de l'inscrit
+	 */
+	private String adress;
 
 	/**
 	 * 
@@ -79,6 +84,20 @@ public class Inscription extends DBEntity {
 	 */
 	public void setCentralApparitor(CentralApparitor centralApparitor) {
 		this.centralApparitor = centralApparitor;
+	}
+
+	/**
+	 * @return the adress
+	 */
+	public String getAdress() {
+		return adress;
+	}
+
+	/**
+	 * @param adress the adress to set
+	 */
+	public void setAdress(String adress) {
+		this.adress = adress;
 	}
 
 }

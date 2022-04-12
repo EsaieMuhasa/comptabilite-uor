@@ -700,15 +700,17 @@ public class StudentsDatatableView extends Panel {
 					dialogInscription.setModal(true);
 					dialogInscription.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
 					
-					formRegister = new FormReRegister(mainWindow, inscriptionDao, studentDao);
+					formRegister = new FormReRegister(mainWindow, inscriptionDao, studentDao, false);
+					formRegister.setCurrentYear(currentYear);
 					dialogInscription.getContentPane().add(formRegister, BorderLayout.CENTER);
+					dialogInscription.getContentPane().setBackground(FormUtil.BKG_START);
 					
 					dialogInscription.pack();
-					dialogInscription.setLocationRelativeTo(null);
 				}
 				
 				InscriptionDataRow row = tableModel.getRow(table.getSelectedRow());
 				formRegister.setInscription(row.getInscription());
+				dialogInscription.setLocationRelativeTo(mainWindow);
 				dialogInscription.setVisible(true);
 			});
 			//==
@@ -721,7 +723,6 @@ public class StudentsDatatableView extends Panel {
 					dialogStudent.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
 					dialogStudent.setSize(650, 450);
 					dialogStudent.setResizable(false);
-					dialogStudent.setLocationRelativeTo(null);
 					dialogStudent.getContentPane().setBackground(FormUtil.BKG_START);
 					
 					formStudent = new FormStudent(mainWindow);
@@ -730,6 +731,7 @@ public class StudentsDatatableView extends Panel {
 				
 				InscriptionDataRow row = tableModel.getRow(table.getSelectedRow());
 				formStudent.setStudent(row.getInscription().getStudent());
+				dialogStudent.setLocationRelativeTo(mainWindow);
 				dialogStudent.setVisible(true);
 			});
 			//==

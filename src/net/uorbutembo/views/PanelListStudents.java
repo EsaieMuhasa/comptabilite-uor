@@ -6,6 +6,7 @@ package net.uorbutembo.views;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 
 import javax.swing.Box;
@@ -84,7 +85,7 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 		this.dialog = new JDialog(mainWindow, true);
 		dialog.setSize(mainWindow.getWidth()-mainWindow.getWidth()/4, mainWindow.getHeight()-mainWindow.getHeight()/4);
 		dialog.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
-		dialog.setLocationRelativeTo(null);
+		dialog.setLocationRelativeTo(mainWindow);
 		dialog.setTitle("Fiche de payement");
 		dialog.getContentPane().add(sheet, BorderLayout.CENTER);
 	}
@@ -150,7 +151,17 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 				statusButtonsExport(true);
 				navigation.wait(false);
 				setCursor(Cursor.getDefaultCursor());
-				JOptionPane.showMessageDialog(null, "Success d'exportation des donnee\nau format excel dans le fichier \n"+filename, "Success", JOptionPane.INFORMATION_MESSAGE);
+				
+				int response = JOptionPane.showConfirmDialog(mainWindow, "Succès d'exportation des données\nau format excel dans le fichier \n"+filename+
+						"\nVoulez-vous l'ouvrir?", "Ouvrir le fichier exporter", JOptionPane.YES_NO_OPTION);
+				if(response == JOptionPane.OK_OPTION) {
+					Runtime run = Runtime.getRuntime();
+					try {
+						Process process = run.exec("excel \""+filename+"\"");
+					} catch (IOException e) {
+						JOptionPane.showMessageDialog(mainWindow, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+					}
+				}
 			});
 			
 			t.start();
@@ -225,6 +236,7 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 	@Override
 	public void onAction(InscriptionDataRow row) {
 		sheet.setInscription(row);
+		dialog.setLocationRelativeTo(mainWindow);
 		dialog.setVisible(true);
 	}
 	

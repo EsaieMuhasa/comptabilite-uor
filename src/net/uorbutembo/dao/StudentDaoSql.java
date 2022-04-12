@@ -71,8 +71,7 @@ class StudentDaoSql extends UserDaoSql<Student> implements StudentDao {
 
 	@Override
 	public Student findByMatricul(String matricul) throws DAOException {
-		// TODO Auto-generated method stub
-		return null;
+		return find("matricul", matricul);
 	}
 
 	@Override

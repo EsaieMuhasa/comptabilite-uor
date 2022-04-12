@@ -86,8 +86,7 @@ public class IndividualSheetHeader extends JComponent {
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 		
-		int width = this.getWidth(), height = this.getHeight();
-		
+		int height = this.getHeight();
 		
 		//photo de profil
 		String picture = inscription.getStudent().getPicture() != null? R.getConfig().get("workspace")+""+inscription.getStudent().getPicture(): null;

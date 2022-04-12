@@ -69,7 +69,7 @@ public class PanelStudents extends DefaultScenePanel{
 		final Panel listPanel = new PanelListStudents(mainWindow);
 		
 		final FormInscription inscription = new FormInscription(mainWindow, inscriptionDao, studentDao);
-		final FormReRegister register = new FormReRegister(mainWindow, inscriptionDao, studentDao);
+		final FormReRegister register = new FormReRegister(mainWindow, inscriptionDao, studentDao, true);
 		
 		inscriptionFormPanel.add(inscription, BorderLayout.NORTH);
 		inscriptionFormPanel.setBorder(BODY_BORDER);

@@ -113,6 +113,7 @@ public class FormInscription extends AbstractInscriptionForm{
 		Promotion promotion = this.promotionDao.find(currentYear, 
 				this.modelComboDepartment.getElementAt(this.comboDepartment.getSelectedIndex()), 
 				this.modelComboStudyClass.getElementAt(this.comboStudyClass.getSelectedIndex()));
+		String adress = this.adresse.getField().getValue();
 		
 		String name = this.name.getField().getValue(),
 				postName = this.postName.getField().getValue(),
@@ -150,6 +151,7 @@ public class FormInscription extends AbstractInscriptionForm{
 		inscription.setStudent(student);
 		inscription.setPromotion(promotion);
 		inscription.setRecordDate(now);
+		inscription.setAdress(adress);
 		
 		try {
 			this.inscriptionDao.create(inscription);

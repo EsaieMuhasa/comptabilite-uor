@@ -162,6 +162,18 @@ public class FormFeePromotion extends DefaultFormPanel  {
 				modelUnselectedPromotion.addElement(promotion);
 		}
 
+		changeStateButtonAdding(!modelUnselectedPromotion.isEmpty());
+	}
+	
+	/**
+	 * Changement d'etat des boutons d'association d'une promotion aux frais universitaire
+	 * pour chaque panel de configuration
+	 * @param enable
+	 */
+	private void changeStateButtonAdding (boolean enable) {
+		for (PanelAcademicFeeConfig panel : panelsConfig) {
+			panel.btnAdd.setEnabled(enable);
+		}
 	}
 
 	/**
@@ -172,9 +184,26 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		this.promotionDao.addListener(new DAOAdapter<Promotion>() {
 			@Override
 			public void onCreate(Promotion p, int requestId) {
-				if(currentYear.getId() == p.getAcademicYear().getId())
+				if(currentYear.getId() == p.getAcademicYear().getId()){
 					modelUnselectedPromotion.addElement(p);
+					changeStateButtonAdding(!modelUnselectedPromotion.isEmpty());
+				}
 			}
+			
+			@Override
+			public void onDelete(Promotion e, int requestId) {
+				if(e.getAcademicYear().getId() == currentYear.getId()) {
+					for (int i = 0, count = modelUnselectedPromotion.getSize(); i < count; i++) {
+						if(e.getId() == modelUnselectedPromotion.get(i).getId()) {
+							modelUnselectedPromotion.remove(i);
+							break;
+						}
+					}
+					changeStateButtonAdding(!modelUnselectedPromotion.isEmpty());
+				}
+			}
+			
+			
 		});
 		
 		this.academicFeeDao.addListener(new DAOAdapter<AcademicFee>() {
@@ -243,7 +272,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		
 		private JLabel title = FormUtil.createSubTitle("");
 		private final JList<Promotion> list = new JList<>(model);
-		private final JButton btnAdd = new JButton(new ImageIcon(R.getIcon("success")));
+		private final JButton btnAdd = new JButton(new ImageIcon(R.getIcon("plus")));
 		private final JButton btnRemove = new JButton(new ImageIcon(R.getIcon("close")));
 		private final LineBorder  border = new LineBorder(FormUtil.BORDER_COLOR), 
 				borderActive = new LineBorder(new Color(0xFF0000), 1);

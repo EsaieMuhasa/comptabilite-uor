@@ -45,11 +45,12 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 			long id = this.insertInTable(
 					connection,
 					new String[] {
-							"promotion", "student", "recordDate"
+							"promotion", "student", "adress", "recordDate"
 					},
 					new Object[] {
 							i.getPromotion().getId(),
 							i.getStudent().getId(),
+							i.getAdress(),
 							i.getRecordDate().getTime()
 					});
 			connection.commit();
@@ -64,10 +65,11 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	public void update(Inscription i, long id) throws DAOException {
 		try {
 			this.updateInTable(
-					new String[] {"promotion", "student", "lastUpdate"},
+					new String[] {"promotion", "student", "adress", "lastUpdate"},
 					new Object[] {
 							i.getPromotion().getId(),
 							i.getStudent().getId(),
+							i.getAdress(),
 							i.getLastUpdate().getTime()
 					}, id);
 			this.emitOnUpdate(i);

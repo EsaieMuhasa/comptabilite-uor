@@ -40,13 +40,35 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		
 		inscriptionDao.addListener(new DAOAdapter<Inscription>() {
 			@Override
-			public void onCreate(Inscription e, int requestId) {
+			public synchronized void onCreate(Inscription e, int requestId) {
 				if( promotion!= null && e.getPromotion().getId() == promotion.getId())
 					addRow(new InscriptionDataRow(e, data.size()));
 			}
 			
 			@Override
-			public void onDelete(Inscription e, int requestId) {
+			public synchronized void onUpdate(Inscription e, int requestId) {
+				if(promotion == null)
+					return;
+				
+				boolean exist = false;
+				for (int i = 0, count = data.size(); i < count; i++) {
+					InscriptionDataRow row = data.get(i);
+					if(row.getInscription().getId() == e.getId()) {
+						exist= true;
+						if(e.getPromotion().getId() != promotion.getId()) {//modification de la promotion
+							removeRow(i);
+						} else {//meme promotion
+							
+						}
+					}
+				}
+				
+				if(!exist && e.getPromotion().getId() == promotion.getId())
+					addRow(new InscriptionDataRow(e, data.size()));
+			}
+			
+			@Override
+			public synchronized void onDelete(Inscription e, int requestId) {
 				if( promotion!= null && e.getPromotion().getId() == promotion.getId()) {
 					for (InscriptionDataRow row : data) {
 						if(row.getInscription().getId() == e.getId()) {
@@ -60,7 +82,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		
 		studentDao.addListener(new DAOAdapter<Student>() {
 			@Override
-			public void onUpdate(Student e, int requestId) {
+			public synchronized void onUpdate(Student e, int requestId) {
 				for (InscriptionDataRow row : data) {
 					if(row.getInscription().getStudent().getId() == e.getId()) {
 						row.getInscription().setStudent(e);
@@ -104,9 +126,15 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	 * @param index
 	 */
 	public void removeRow (int index) {
+		int count = getRowCount();
+		
 		data.get(index).dispose();
 		data.remove(index);
-		fireTableRowsDeleted(index, index);
+		
+		if(count == 1) 
+			reload();
+		else
+			fireTableRowsDeleted(index, index);
 	}
 	
 	/**
@@ -130,7 +158,10 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		reload();
 	}
 	
-	private void reload () {
+	/**
+	 * Rechargement des comptes des inscrits de la dite promotion
+	 */
+	private synchronized void reload () {
 		removeAll();
 		if(inscriptionDao.checkByPromotion(promotion)) {
 			List<Inscription> inscriptions = inscriptionDao.findByPromotion(promotion);
@@ -146,7 +177,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		}
 	}
 	
-	private void removeAll () {
+	private synchronized void removeAll () {
 		for (InscriptionDataRow row : data) {
 			row.dispose();
 		}

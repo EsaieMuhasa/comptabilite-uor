@@ -751,9 +751,12 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	}
 	
 	protected synchronized void emitOnCreate (T e, int requestId) {
-		for (DAOListener<T> ls : listeners) {
-			ls.onCreate(e, DAOInterface.DEFAULT_REQUEST_ID);
-		}
+		Thread t = new Thread(() -> {			
+			for (DAOListener<T> ls : listeners) {
+				ls.onCreate(e, DAOInterface.DEFAULT_REQUEST_ID);
+			}
+		});
+		t.start();
 	}
 	
 	protected synchronized void emitOnUpdate (T e) {
@@ -765,15 +768,21 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	}
 	
 	protected synchronized void emitOnUpdate (T e, int requestId) {
-		for (DAOListener<T> ls : listeners) {
-			ls.onUpdate(e, requestId);
-		}
+		Thread t = new Thread(() -> {			
+			for (DAOListener<T> ls : listeners) {
+				ls.onUpdate(e, requestId);
+			}
+		});
+		t.start();
 	}
 	
 	protected synchronized void emitOnUpdate (T [] e, int requestId) {
-		for (DAOListener<T> ls : listeners) {
-			ls.onUpdate(e, requestId);
-		}
+		Thread t = new Thread(() -> {			
+			for (DAOListener<T> ls : listeners) {
+				ls.onUpdate(e, requestId);
+			}
+		});
+		t.start();
 	}
 	
 	
@@ -782,9 +791,12 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	}
 	
 	protected synchronized void emitOnDelete (T e, int requestId) {
-		for (DAOListener<T> ls : listeners) {
-			ls.onDelete(e, requestId);
-		}
+		Thread t = new Thread(() -> {			
+			for (DAOListener<T> ls : listeners) {
+				ls.onDelete(e, requestId);
+			}
+		});
+		t.start();
 	}
 	
 	protected synchronized void emitOnError (DAOException e) {
@@ -792,9 +804,12 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	}
 	
 	protected synchronized void emitOnError (DAOException e, int requestId) {
-		for (DAOListener<T> ls : listeners) {
-			ls.onError(e, requestId);
-		}
+		Thread t = new Thread(() -> {			
+			for (DAOListener<T> ls : listeners) {
+				ls.onError(e, requestId);
+			}
+		});
+		t.start();
 	}
 
 }
