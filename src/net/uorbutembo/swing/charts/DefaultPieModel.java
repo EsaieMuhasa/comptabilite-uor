@@ -118,7 +118,6 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	public void addParts(PiePart... parts) {
 		for (PiePart part : parts) {
 			if(!this.parts.contains(part)){
-				
 				this.parts.add(part);
 				part.addListener(this);
 			}
@@ -170,6 +169,9 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	
 	@Override
 	public  PiePart findByData(Object data) {
+		if(data == null)
+			return null;
+		
 		for (PiePart part : parts) {
 			if(part == data || part.getData() == data)
 				return part;

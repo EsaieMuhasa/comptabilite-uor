@@ -18,6 +18,11 @@ public class R {
 		return icon;
 	}
 	
+	public static final String getHelp (String name) {
+		String file = R.class.getResource("/resources/net/uorbutembo/helps/"+name+".html").getFile();
+		return file;
+	}
+	
 	/**
 	 * Recuperation de la configiration de 
 	 * @return

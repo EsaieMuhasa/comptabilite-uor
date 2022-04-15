@@ -25,6 +25,7 @@ import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.dao.AcademicFeeDao;
+import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Panel;
@@ -44,6 +45,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 	private AcademicYear currentYear;
 	private PromotionDao promotionDao;
 	private AcademicFeeDao academicFeeDao;
+	private AcademicYearDao academicYearDao;
 
 	private final DefaultListModel<Promotion> modelUnselectedPromotion = new DefaultListModel<>();
 	
@@ -59,7 +61,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		public void requireAdding(PanelAcademicFeeConfig config) {
 			
 			if(modelUnselectedPromotion.getSize() == 0) {
-				JOptionPane.showMessageDialog(mainWindow, "Toute les promotions sont déjà \nassocier au frais universitaires.", "Alert", JOptionPane.WARNING_MESSAGE);
+				JOptionPane.showMessageDialog(mainWindow, "Toute les promotions sont déjà \nassocier aux frais universitaires.", "Information", JOptionPane.WARNING_MESSAGE);
 				return;
 			}
 			
@@ -97,7 +99,36 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		this.setTitle("Formulaire d'enregistrement");
 		
 		this.promotionDao  = promotionDao.getFactory().findDao(PromotionDao.class);
-		this.academicFeeDao = promotionDao.getFactory().findDao(AcademicFeeDao.class);
+		academicFeeDao = promotionDao.getFactory().findDao(AcademicFeeDao.class);
+		academicYearDao = promotionDao.getFactory().findDao(AcademicYearDao.class);
+		
+		academicFeeDao.addListener(new DAOAdapter<AcademicFee>() {
+			@Override
+			public void onCreate(AcademicFee fee, int requestId) {
+				if(currentYear == null || fee.getAcademicYear().getId() != currentYear.getId())
+					return;
+				
+				PanelAcademicFeeConfig panel = new PanelAcademicFeeConfig(fee, configListener, promotionDao);
+				panelsConfig.add(panel);
+				container.add(panel);
+			}
+			
+			@Override
+			public void onDelete(AcademicFee fee, int requestId) {
+				if(currentYear == null || fee.getAcademicYear().getId() != currentYear.getId())
+					return;
+				
+				for (int i = 0, count = panelsConfig.size(); i < count; i++) {
+					PanelAcademicFeeConfig p = panelsConfig.get(i);
+					if(p.getFee().getId() == fee.getId()) {
+						container.remove(p);
+						panelsConfig.remove(i);
+						container.repaint();
+						break;
+					}
+				}
+			}
+		});
 
 		this.getBody().add(container, BorderLayout.CENTER);
 		
@@ -113,10 +144,15 @@ public class FormFeePromotion extends DefaultFormPanel  {
 	 * @param currentYear the currentYear to set
 	 */
 	public void setCurrentYear(AcademicYear currentYear) {
-		if(this.currentYear == null || currentYear.getId() != this.currentYear.getId()) {			
+		if(currentYear == null || this.currentYear == null || currentYear.getId() != this.currentYear.getId()) {			
 			this.currentYear = currentYear;
 			this.loadData();
 		}
+		
+		if(currentYear != null && !academicYearDao.isCurrent(currentYear)) 
+			this.setTitle("Classement des promotions");
+		else
+			this.setTitle(currentYear != null? TITLE_1 : "");
 	}
 	
 	
@@ -126,7 +162,14 @@ public class FormFeePromotion extends DefaultFormPanel  {
 	 */
 	private void loadData() {
 		
-		if(this.currentYear == null) 
+		container.removeAll();
+		panelsConfig.clear();
+		modelUnselectedPromotion.clear();
+		
+		container.revalidate();
+		container.repaint();
+		
+		if(this.currentYear == null)
 			return;
 		
 		final List<Promotion> promotions = this.promotionDao.checkByAcademicYear(this.currentYear.getId())?
@@ -267,7 +310,8 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		
 		private final AcademicFee fee;
 		private final PanelConfigListener listener;
-		private final PromotionDao feePromotionDao;
+		private final PromotionDao promotionDao;
+		private final AcademicYearDao academicYearDao;
 		private final DefaultListModel<Promotion> model = new DefaultListModel<>();
 		
 		private JLabel title = FormUtil.createSubTitle("");
@@ -281,11 +325,12 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		 * Constructeur d'initialisation.
 		 * @param fee, les frais auquel nous voulons associer un nombre x de promotion
 		 */
-		public PanelAcademicFeeConfig(final AcademicFee fee, final PanelConfigListener listener, final PromotionDao feePromotionDao) {
+		public PanelAcademicFeeConfig(final AcademicFee fee, final PanelConfigListener listener, final PromotionDao promotionDao) {
 			super(new BorderLayout());
 			this.fee = fee;
 			this.listener = listener;
-			this.feePromotionDao = feePromotionDao;
+			this.promotionDao = promotionDao;
+			academicYearDao = promotionDao.getFactory().findDao(AcademicYearDao.class);
 			title.setText(fee.getAmount()+" "+FormUtil.UNIT_MONEY);
 			title.setHorizontalAlignment(JLabel.CENTER);
 			
@@ -294,11 +339,18 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		}
 		
 		/**
+		 * @return the fee
+		 */
+		public AcademicFee getFee() {
+			return fee;
+		}
+
+		/**
 		 * Chargement des prmotions concerner par le frais
 		 */
 		public void load () {
-			if(this.feePromotionDao.checkByAcademicFee(fee.getId())) {
-				List<Promotion> data = feePromotionDao.findByAcademicFee(fee);
+			if(this.promotionDao.checkByAcademicFee(fee.getId())) {
+				List<Promotion> data = promotionDao.findByAcademicFee(fee);
 				for (Promotion f : data) {
 					model.addElement(f);
 				}
@@ -318,6 +370,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 			add(bottom, BorderLayout.SOUTH);
 			setBorder(border);
 			
+			btnAdd.setVisible(academicYearDao.isCurrent(fee.getAcademicYear()));
 			btnAdd.addActionListener(event -> {
 				listener.requireAdding(this);
 			});
@@ -341,6 +394,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 			});
 			
 			btnRemove.setEnabled(false);
+			btnRemove.setVisible(academicYearDao.isCurrent(fee.getAcademicYear()));
 			list.addListSelectionListener(event -> {
 				btnRemove.setEnabled(list.getSelectedIndex() != -1);
 			});

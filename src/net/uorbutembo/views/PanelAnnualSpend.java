@@ -11,6 +11,7 @@ import javax.swing.ImageIcon;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.UniversitySpend;
+import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.UniversitySpendDao;
@@ -39,6 +40,7 @@ public class PanelAnnualSpend extends Panel {
 	
 	private AnnualSpendDao annualSpendDao;
 	private UniversitySpendDao universitySpendDao;
+	private AcademicYearDao academicYearDao;
 	private AcademicYear currentYear;
 
 	/**
@@ -46,10 +48,11 @@ public class PanelAnnualSpend extends Panel {
 	 */
 	public PanelAnnualSpend(MainWindow mainWindow) {
 		super(new BorderLayout());
-		this.annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
-		this.universitySpendDao = mainWindow.factory.findDao(UniversitySpendDao.class);
+		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
+		universitySpendDao = mainWindow.factory.findDao(UniversitySpendDao.class);
+		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
 		
-		this.annualSpendDao.addListener(new DAOAdapter<AnnualSpend>() {
+		annualSpendDao.addListener(new DAOAdapter<AnnualSpend>() {
 			@Override
 			public void onCreate(AnnualSpend e, int requestId) {
 				if(!btnList.isVisible()) {
@@ -71,7 +74,7 @@ public class PanelAnnualSpend extends Panel {
 			public void onDelete(AnnualSpend[] e, int requestId) { reload(); }
 		});
 		
-		this.universitySpendDao.addListener(new DAOAdapter<UniversitySpend>() {
+		universitySpendDao.addListener(new DAOAdapter<UniversitySpend>() {
 			@Override
 			public void onCreate(UniversitySpend e, int requestId) { reload(); }
 			
@@ -156,6 +159,9 @@ public class PanelAnnualSpend extends Panel {
 		
 		if(form!= null) 
 			form.setCurrentYear(currentYear);
+		
+		btnList.doClick();
+		btnNew.setVisible(currentYear != null && academicYearDao.isCurrent(currentYear));//0975612604
 		
 		reload();
 	}

@@ -35,6 +35,17 @@ public class DefaultPiePart implements PiePart {
 		this.label = "";
 		this.visible = true;
 	}
+	
+	/**
+	 * Constructeur de copie
+	 * @param part
+	 */
+	public DefaultPiePart(PiePart part) {
+		this(part.getBackgroundColor(), part.getBorderColor(), part.getValue(), part.getLabel());
+		this.setData(part.getData());
+		this.name = part.getName();
+		this.foregroundColor = part.getForegrounColor();
+	}
 
 	/**
 	 * @param backgroundColor

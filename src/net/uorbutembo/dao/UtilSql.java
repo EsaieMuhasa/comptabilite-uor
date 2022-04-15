@@ -20,9 +20,8 @@ import net.uorbutembo.beans.DBEntity;
  */
 abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	
-	protected DefaultSqlDAOFactory factory;
-	
-	protected List<DAOListener<T>> listeners;
+	protected final DefaultSqlDAOFactory factory;
+	protected final List<DAOListener<T>> listeners;
 
 	/**
 	 * @param factory
@@ -188,8 +187,8 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	}
 
 	@Override
-	public synchronized List<T> findAll() throws DAOException {
-		final String SQL_QUERY = String.format("SELECT * FROM %s", this.getViewName());
+	public synchronized List<T> findAll () throws DAOException {
+		final String SQL_QUERY = String.format("SELECT * FROM %s ORDER BY recordDate DESC", this.getViewName());
 		System.out.println(SQL_QUERY);
 		List<T> t = new ArrayList<>();
 		try (
@@ -326,7 +325,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 
 	@Override
 	public synchronized boolean checkByRecordDate(Date dateMin, Date dateMax) throws DAOException {
-		final String SQL_QUERY = String.format("SELECT recordDate FROM %s WHERE recordDate IN (%d, %d) LIMIT 1", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
+		final String SQL_QUERY = String.format("SELECT recordDate FROM %s WHERE recordDate BETWEEN(%d, %d) LIMIT 1", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
 		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();
@@ -343,7 +342,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 
 	@Override
 	public synchronized boolean checkByRecordDate(Date dateMin, Date dateMax, int limit, int offset) throws DAOException {
-		final String SQL_QUERY = String.format("SELECT recordDate FROM %s WHERE recordDate IN (%d, %d) LIMIT %d OFFSET %d", this.getViewName(),  dateMin.getTime(), dateMax.getTime(), limit, offset);
+		final String SQL_QUERY = String.format("SELECT recordDate FROM %s WHERE recordDate BETWEEN(%d, %d) LIMIT %d OFFSET %d", this.getViewName(),  dateMin.getTime(), dateMax.getTime(), limit, offset);
 		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();
@@ -360,7 +359,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 
 	@Override
 	public synchronized int countByRecordDate(Date dateMin, Date dateMax) throws DAOException {
-		final String SQL_QUERY = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE recordDate IN (%d, %d)", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
+		final String SQL_QUERY = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE recordDate IBETWEEN(%d, %d)", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
 		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.factory.getConnection();
@@ -380,7 +379,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 
 	@Override
 	public synchronized List<T> findByRecordDate(Date dateMin, Date dateMax) throws DAOException {
-		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE recordDate IN (%d, %d)", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
+		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE recordDate BETWEEN(%d, %d) ORDER BY recordDate DESC", this.getViewName(),  dateMin.getTime(), dateMax.getTime());
 		List<T> t = new ArrayList<>();
 		System.out.println(SQL_QUERY);
 		try (
@@ -406,7 +405,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 
 	@Override
 	public synchronized List<T> findByRecordDate(Date dateMin, Date dateMax, int limit, int offset) throws DAOException {
-		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE recordDate IN (%d, %d) LIMIT %d OFFSET %d", this.getViewName(),  dateMin.getTime(), dateMax.getTime(), limit, offset);
+		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE recordDate BETWEEN(%d, %d) ORDER BY recordDate DESC LIMIT %d OFFSET %d", this.getViewName(),  dateMin.getTime(), dateMax.getTime(), limit, offset);
 		System.out.println(SQL_QUERY);
 		List<T> t = new ArrayList<>();
 		try (
@@ -432,7 +431,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 
 	@Override
 	public synchronized List<T> findAll(int limit, int offset) throws DAOException {
-		final String SQL_QUERY = String.format("SELECT * FROM %s LIMIT %d OFFSET %d", this.getViewName(),  limit, offset);
+		final String SQL_QUERY = String.format("SELECT * FROM %s ORDER BY recordDate DESC LIMIT %d OFFSET %d", this.getViewName(),  limit, offset);
 		System.out.println(SQL_QUERY);
 		List<T> t = new ArrayList<>();
 		try (
@@ -669,7 +668,7 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	protected synchronized void updateInTable(Connection connection, String [] columnsNames, Object [] columnsValues, long idEntity) throws SQLException, DAOException{
 		String SQL_QUERY = "UPDATE "+this.getTableName()+" SET ";
 		for (int i=0; i<columnsNames.length; i++) {
-			SQL_QUERY += columnsNames[i]+(i!=(columnsNames.length-1)? ("= ?, ") : ("=? "));
+			SQL_QUERY += columnsNames[i]+"=? "+(i!=(columnsNames.length-1)? (", ") : (""));
 		}
 		
 		SQL_QUERY += " WHERE id="+idEntity;
@@ -753,7 +752,11 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	protected synchronized void emitOnCreate (T e, int requestId) {
 		Thread t = new Thread(() -> {			
 			for (DAOListener<T> ls : listeners) {
-				ls.onCreate(e, DAOInterface.DEFAULT_REQUEST_ID);
+				try {					
+					ls.onCreate(e, requestId);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 			}
 		});
 		t.start();
@@ -770,7 +773,11 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	protected synchronized void emitOnUpdate (T e, int requestId) {
 		Thread t = new Thread(() -> {			
 			for (DAOListener<T> ls : listeners) {
-				ls.onUpdate(e, requestId);
+				try {					
+					ls.onUpdate(e, requestId);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 			}
 		});
 		t.start();
@@ -779,7 +786,11 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	protected synchronized void emitOnUpdate (T [] e, int requestId) {
 		Thread t = new Thread(() -> {			
 			for (DAOListener<T> ls : listeners) {
-				ls.onUpdate(e, requestId);
+				try {					
+					ls.onUpdate(e, requestId);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 			}
 		});
 		t.start();
@@ -793,7 +804,11 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	protected synchronized void emitOnDelete (T e, int requestId) {
 		Thread t = new Thread(() -> {			
 			for (DAOListener<T> ls : listeners) {
-				ls.onDelete(e, requestId);
+				try {					
+					ls.onDelete(e, requestId);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 			}
 		});
 		t.start();
@@ -806,7 +821,11 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	protected synchronized void emitOnError (DAOException e, int requestId) {
 		Thread t = new Thread(() -> {			
 			for (DAOListener<T> ls : listeners) {
-				ls.onError(e, requestId);
+				try {					
+					ls.onError(e, requestId);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 			}
 		});
 		t.start();

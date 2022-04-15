@@ -34,6 +34,7 @@ import javax.swing.border.LineBorder;
 import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.AnnualSpend;
+import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AllocationCostDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
@@ -63,8 +64,9 @@ public class FormGroupAllocationCost extends Panel {
 	
 	private AllocationCostDao allocationCostDao;
 	private AnnualSpendDao annualSpendDao;
+	private AcademicYearDao academicYearDao;
 	
-	private final GridLayout layout = new GridLayout(1, 1);
+	private final GridLayout layout = new GridLayout(1, 2);
 	
 	//paneau principeau
 	private final Panel container = new Panel(layout);
@@ -82,9 +84,10 @@ public class FormGroupAllocationCost extends Panel {
 	 * @param feePromotionDao
 	 */
 	public FormGroupAllocationCost(AllocationCostDao allocationCostDao) {
-		super(new BorderLayout(DEFAULT_H_GAP, DEFAULT_V_GAP));
+		super(new BorderLayout());
 		this.allocationCostDao = allocationCostDao;
 		this.annualSpendDao= allocationCostDao.getFactory().findDao(AnnualSpendDao.class);
+		this.academicYearDao = allocationCostDao.getFactory().findDao(AcademicYearDao.class);
 		
 		this.initViews();
 		this.setBorder(new EmptyBorder(0, 0, DEFAULT_V_GAP*2, 0));
@@ -113,7 +116,7 @@ public class FormGroupAllocationCost extends Panel {
 	}
 	
 	/**
-	 * Modification de la repartion des frais encours de vistaalisation
+	 * Modification de la repartion des frais encours de visualisation
 	 * @param academicFee the academicFee to set
 	 * @param annualSpends the annualSpends to set
 	 */
@@ -123,11 +126,22 @@ public class FormGroupAllocationCost extends Panel {
 		if(annualSpends != null)
 			this.annualSpends = annualSpends;
 		
-		//this.pieModel.setTitle("Repartition du "+academicFee.getAmount()+" USD");
 		this.pieModel.setMax(academicFee.getAmount());
-		this.title.setText("Repartition du "+academicFee.getAmount()+" "+UNIT_MONEY);
+		this.title.setText("Répartition du "+academicFee.getAmount()+" "+UNIT_MONEY);
 		
 		this.updateViews();
+		
+		//la repartiton est modificable uniquement pour l'annee courante
+		//les archives ne sont plus modifiable
+		if(academicYearDao.isCurrent(academicFee.getAcademicYear())) {	
+			container.add(left, 0);
+			layout.setColumns(2);
+		} else {
+			container.remove(left);
+			layout.setColumns(1);
+		}
+		
+		container.repaint();
 	}
 	
 	/**
@@ -208,6 +222,7 @@ public class FormGroupAllocationCost extends Panel {
 		
 		container.add(left);
 		container.add(piePanel);
+		container.setBorder(new LineBorder(FormUtil.BORDER_COLOR));
 		piePanel.setBackground(BKG_END);
 
 		left.add(FormUtil.createScrollPane(center), BorderLayout.CENTER);
@@ -255,6 +270,7 @@ public class FormGroupAllocationCost extends Panel {
 		}
 
 		center.repaint();
+		btnSave.setEnabled(academicFee != null && pieModel.getCountPart() != 0 && academicYearDao.isCurrent(academicFee.getAcademicYear()));
 	}
 	
 	/**
@@ -282,12 +298,12 @@ public class FormGroupAllocationCost extends Panel {
 		AllocationCost cost = null;
 		if(this.allocationCostDao.check(spend.getId(), academicFee.getId())) {//pour ceux qui existe deja
 			cost = this.allocationCostDao.find(spend, academicFee);
-			field.setCost(cost);
 		} else {//pour ceux qui n'existe pas
 			cost = new AllocationCost();
 			cost.setAnnualSpend(spend);
 			cost.setAcademicFee(academicFee);
 		}
+		
 		field.setCost(cost);
 		part.setValue(cost.getAmount());
 		
@@ -316,9 +332,14 @@ public class FormGroupAllocationCost extends Panel {
 	/**
 	 * Liberation des resources utiliser par le groupe
 	 */
-	public void dispose() {
-		// TODO Auto-generated method stub
-
+	public void clear() {
+		fields.clear();
+		btnSave.setEnabled(false);
+		title.setText(" ");
+		pieModel.removeAll();
+		center.removeAll();
+		center.repaint();
+		academicFee = null;
 	}
 	
 	@Override
@@ -329,7 +350,6 @@ public class FormGroupAllocationCost extends Panel {
       g2.setColor(FormUtil.BKG_DARK);
       g2.fillRect(0, this.getHeight()-5, this.getWidth(), 5);
       super.paintBorder(g);
-      
 	}
 	
 	
@@ -346,17 +366,6 @@ public class FormGroupAllocationCost extends Panel {
 	public List<AllocationCostField> getFields() {
 		return fields;
 	}
-	
-	@Override
-	public void doLayout() {
-		super.doLayout();
-		if(this.getWidth()<=900) {
-			this.layout.setRows(2);
-		} else {
-			this.layout.setRows(1);
-		}
-	}
-
 
 	/**
 	 * @author Esaie MUHASA

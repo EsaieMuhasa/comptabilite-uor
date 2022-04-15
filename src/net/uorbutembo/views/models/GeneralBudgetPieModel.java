@@ -20,6 +20,7 @@ import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.UniversitySpend;
 import net.uorbutembo.dao.AcademicFeeDao;
+import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AllocationCostDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOFactory;
@@ -31,43 +32,54 @@ import net.uorbutembo.swing.CardModel;
 import net.uorbutembo.swing.DefaultCardModel;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
+import net.uorbutembo.swing.charts.PieModel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.forms.FormUtil;
 import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
- *
+ * Model du graphique pie. Cette classe inclue les model ci-dessous:
+ * + le model du card du bujet jenerale
+ * + le model du card du montant deja payer
+ * + le model du pie de repartition du montant deja payer, selon la configuration des rubrique budgetaite
  */
-public class GeneralBudgetModel extends DefaultPieModel {
+public class GeneralBudgetPieModel extends DefaultPieModel {
 	
 	private DefaultCardModel<Double> cardModel;
-	private DefaultCardModel<Double> cardPaymentModel;
 	private AcademicYear currentYear;
 	private final List<AcademicFee> academicFees = new ArrayList<>();
 	
+	private final AcademicYearDao academicYearDao;
 	private final AcademicFeeDao academicFeeDao;
+	private final PaymentFeeDao paymentFeeDao;
 	private final PromotionDao promotionDao;
 	private final AllocationCostDao allocationCostDao;
 	private final InscriptionDao inscriptionDao;
 	private final UniversitySpendDao universitySpendDao;
-	private final PaymentFeeDao paymentFeeDao;
 
-	/**
-	 * 
-	 */
-	public GeneralBudgetModel(DAOFactory factory) {
+	//pour le montant deja payer
+	private DefaultCardModel<Double> cardModelPayment;
+	private DefaultPieModel pieModelPayment;
+	//==
+	
+
+	public GeneralBudgetPieModel(DAOFactory factory) {
 		super();
-		this.academicFeeDao = factory.findDao(AcademicFeeDao.class);
-		this.promotionDao = factory.findDao(PromotionDao.class);
-		this.allocationCostDao = factory.findDao(AllocationCostDao.class);
-		this.inscriptionDao = factory.findDao(InscriptionDao.class);
-		this.universitySpendDao = factory.findDao(UniversitySpendDao.class);
-		this.paymentFeeDao = factory.findDao(PaymentFeeDao.class);
+		academicFeeDao = factory.findDao(AcademicFeeDao.class);
+		promotionDao = factory.findDao(PromotionDao.class);
+		allocationCostDao = factory.findDao(AllocationCostDao.class);
+		inscriptionDao = factory.findDao(InscriptionDao.class);
+		universitySpendDao = factory.findDao(UniversitySpendDao.class);
+		paymentFeeDao = factory.findDao(PaymentFeeDao.class);
+		academicYearDao = factory.findDao(AcademicYearDao.class);
 		
 		inscriptionDao.addListener(new DAOAdapter<Inscription>() {
 			@Override
 			public void onCreate(Inscription e, int requestId) {
+				if (!academicYearDao.isCurrent(currentYear))
+					return;
+				
 				AcademicFee fee = e.getPromotion().getAcademicFee();
 				
 				if (fee != null) {					
@@ -77,36 +89,73 @@ public class GeneralBudgetModel extends DefaultPieModel {
 				}
 			}
 			@Override
-			public void onUpdate(Inscription e, int requestId) {reload();}
+			public void onUpdate(Inscription e, int requestId) {
+				if(academicYearDao.isCurrent(currentYear)) {
+					reload();
+					reloadPayment();
+				}
+			}
 			@Override
-			public void onDelete(Inscription e, int requestId) {reload();}
+			public void onDelete(Inscription e, int requestId) {
+				if(academicYearDao.isCurrent(currentYear)) 
+					reload();
+			}
 		});
 		
 		allocationCostDao.addListener(new DAOAdapter<AllocationCost>() {
 			@Override
-			public void onCreate(AllocationCost[] e, int requestId) {reload();}
+			public void onCreate(AllocationCost[] e, int requestId) {
+				if(academicYearDao.isCurrent(currentYear)){
+					reload();
+					reloadPayment();
+				}
+			}
 			@Override
-			public void onCreate(AllocationCost e, int requestId) {reload();}
+			public void onCreate(AllocationCost e, int requestId) {
+				if(academicYearDao.isCurrent(currentYear)) {					
+					reload();
+					reloadPayment();
+				}
+			}
 			@Override
-			public void onUpdate(AllocationCost e, int requestId) {reload();}
+			public void onUpdate(AllocationCost e, int requestId) {
+				if(academicYearDao.isCurrent(currentYear)){
+					reload();
+					reloadPayment();
+				}
+			}
 			@Override
-			public void onUpdate(AllocationCost[] e, int requestId) {reload();}
+			public void onUpdate(AllocationCost[] e, int requestId) {
+				if(academicYearDao.isCurrent(currentYear)){
+					reload();
+					reloadPayment();
+				}
+			}
 			@Override
-			public void onDelete(AllocationCost e, int requestId) {reload();}
+			public void onDelete(AllocationCost e, int requestId) {
+				if(academicYearDao.isCurrent(currentYear)){
+					reload();
+					reloadPayment();
+				}
+			}
 		});
 		
 		promotionDao.addListener(new DAOAdapter<Promotion>() {
 			@Override
-			public void onUpdate(Promotion e, int requestId) {reload();}
-			@Override
-			public void onDelete(Promotion e, int requestId) {reload();}
+			public void onUpdate(Promotion e, int requestId) {
+				reload();
+				reloadPayment();
+			}
 		});
 		
 		academicFeeDao.addListener(new DAOAdapter<AcademicFee>() {
 			@Override
 			public void onDelete(AcademicFee e, int requestId) {reload();}
 			@Override
-			public void onUpdate(AcademicFee e, int requestId) {reload();}
+			public void onUpdate(AcademicFee e, int requestId) {
+				reload();
+				reloadPayment();
+			}
 		});
 		
 		//card du budget generale
@@ -119,16 +168,16 @@ public class GeneralBudgetModel extends DefaultPieModel {
 		//==
 		
 		//card de l'etat des payements
-		cardPaymentModel = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
-		cardPaymentModel.setValue(0d);
-		cardPaymentModel.setTitle("Payer par les etudiants");
-		cardPaymentModel.setInfo("Montant déjà payer par tout les étudiants");
-		cardPaymentModel.setIcon(R.getIcon("caisse"));
-		cardPaymentModel.setSuffix("$");
+		cardModelPayment = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
+		cardModelPayment.setValue(0d);
+		cardModelPayment.setTitle("Payer par les etudiants");
+		cardModelPayment.setInfo("Montant déjà payer par tout les étudiants");
+		cardModelPayment.setIcon(R.getIcon("caisse"));
+		cardModelPayment.setSuffix("$");
 		paymentFeeDao.addListener(new DAOAdapter <PaymentFee>() {
 			@Override
 			public void onCreate(PaymentFee e, int requestId) {
-				cardPaymentModel.setValue(cardPaymentModel.getValue()+e.getAmount());
+				cardModelPayment.setValue(cardModelPayment.getValue()+e.getAmount());
 			}
 			
 			@Override
@@ -137,23 +186,17 @@ public class GeneralBudgetModel extends DefaultPieModel {
 				for (PaymentFee e : payments) {
 					amount += e.getAmount();
 				}
-				cardPaymentModel.setValue(cardPaymentModel.getValue()+amount);
+				cardModelPayment.setValue(cardModelPayment.getValue()+amount);
 			}
 			
 			@Override
-			public void onUpdate(PaymentFee e, int requestId) {
-				reloadCardPayment();
-			}
+			public void onUpdate(PaymentFee e, int requestId) {reload();}
 			
 			@Override
-			public void onUpdate(PaymentFee[] e, int requestId) {
-				reloadCardPayment();
-			}
+			public void onUpdate(PaymentFee[] e, int requestId) {reload();}
 			
 			@Override
-			public void onDelete(PaymentFee e, int requestId) {
-				cardPaymentModel.setValue(cardPaymentModel.getValue() - e.getAmount());
-			}
+			public void onDelete(PaymentFee e, int requestId) {cardModelPayment.setValue(cardModelPayment.getValue() - e.getAmount());}
 			
 			@Override
 			public void onDelete(PaymentFee[] payments, int requestId) {
@@ -161,10 +204,13 @@ public class GeneralBudgetModel extends DefaultPieModel {
 				for (PaymentFee e : payments) {
 					amount += e.getAmount();
 				}
-				cardPaymentModel.setValue(cardPaymentModel.getValue() - amount);
+				cardModelPayment.setValue(cardModelPayment.getValue() - amount);
 			}
 		});
 		//==
+		
+		pieModelPayment = new DefaultPieModel();
+		pieModelPayment.setTitle("Payement par faculté");
 		this.setTitle("Répartition général du budget");
 	}
 	
@@ -173,7 +219,7 @@ public class GeneralBudgetModel extends DefaultPieModel {
 		if(data instanceof AnnualSpend) {
 			AnnualSpend dt = (AnnualSpend) data;
 			for (PiePart part : parts) {
-				if(!(data instanceof AnnualSpend)) 
+				if(!(part.getData() instanceof AnnualSpend)) 
 					continue;
 				
 				AnnualSpend spend = (AnnualSpend) part.getData();
@@ -202,12 +248,19 @@ public class GeneralBudgetModel extends DefaultPieModel {
 	public CardModel<Double> getCardModel() {
 		return cardModel;
 	}
+	
+	/**
+	 * @return the cardModelPayment
+	 */
+	public DefaultCardModel<Double> getCardModelPayment() {
+		return cardModelPayment;
+	}
 
 	/**
-	 * @return the cardPaymentModel
+	 * @return the pieModelPayment
 	 */
-	public CardModel<Double> getCardPaymentModel() {
-		return cardPaymentModel;
+	public DefaultPieModel getPieModelPayment() {
+		return pieModelPayment;
 	}
 
 	/**
@@ -223,7 +276,7 @@ public class GeneralBudgetModel extends DefaultPieModel {
 	public synchronized void setCurrentYear(AcademicYear currentYear) {
 		this.currentYear = currentYear;
 		reload();
-		reloadCardPayment();
+		reloadPayment();
 	}
 	
 	/**
@@ -242,19 +295,57 @@ public class GeneralBudgetModel extends DefaultPieModel {
 	}
 	
 	/**
-	 * recharge les donnees du card qui visualise l'etat des payements
-	 * generale
+	 * Rechargement du model du pie des montants deja payer
+	 * En plus tout les calculs sont refaite
 	 */
-	public synchronized void reloadCardPayment () {
-		double sold = 0d;
-		if(currentYear != null && paymentFeeDao.checkByAcademicYear(currentYear)) {
-			List<PaymentFee> payments = paymentFeeDao.findByAcademicYear(currentYear);
-			
-			for (PaymentFee payment : payments) {
-				sold += payment.getAmount();
-			}
+	private synchronized void reloadPayment () {
+		
+		pieModelPayment.removeAll();
+		pieModelPayment.setMax(0);
+		for (int i = 0, count = getCountPart(); i < count; i++) {//creation des copies de part du model du budget generale
+			PiePart part = new DefaultPiePart(getPartAt(i));
+			part.setValue(0);
+			pieModelPayment.addPart(part);
 		}
-		cardPaymentModel.setValue(sold);
+		
+		if (!inscriptionDao.checkByAcademicYear(currentYear))
+			return;
+		
+		List<Inscription> inscriptions = inscriptionDao.findByAcademicYear(currentYear);
+		double max = 0;
+		for (Inscription i : inscriptions) {
+			if (!paymentFeeDao.checkByInscription(i)) 
+				continue;
+			
+			List<PaymentFee> payments = paymentFeeDao.findByInscription(i);
+			List<AllocationCost> costs = allocationCostDao.findByAcademicFee(i.getPromotion().getAcademicFee());
+			max += updateParts(pieModelPayment, costs, payments);
+		}
+		
+		pieModelPayment.setMax(max);
+		cardModelPayment.setValue(max);
+		
+	}
+	
+	/**
+	 * mise en jours des parts du model des payements
+	 * @param model
+	 * @param costs
+	 * @param payments
+	 */
+	private double updateParts (PieModel model, List<AllocationCost> costs, List<PaymentFee> payments) {
+		double sold = 0, percent;
+		for (PaymentFee fee : payments) {
+			for (int i=0, max = costs.size(); i< max; i++) {
+				AllocationCost al = costs.get(i);
+				PiePart globalPart = findByData(al.getAnnualSpend());
+				PiePart part = model.findByData(globalPart.getData());
+				percent = (fee.getAmount() / 100.0) * getPercentOf(globalPart);
+				part.setValue(part.getValue() + percent);
+			}
+			sold += fee.getAmount();
+		}
+		return sold;
 	}
 	
 	/**
@@ -262,13 +353,13 @@ public class GeneralBudgetModel extends DefaultPieModel {
 	 * Cette methode ecrase tout les calculs deja fais bien avant et re-commence tout a zero
 	 */
 	private synchronized void calculAll() {
-		this.removeAll();
 		
 		removeAll();
 		setMax(0);
 		
+		double max = 0;
 		for (AcademicFee fee : academicFees) {
-			List<AllocationCost> costs = this.allocationCostDao.findByAcademicFee(fee);
+			List<AllocationCost> costs = allocationCostDao.checkByAcademicFee(fee.getId())? this.allocationCostDao.findByAcademicFee(fee) : new ArrayList<>();
 			List<Promotion> promotions = promotionDao.checkByAcademicFee(fee)? promotionDao.findByAcademicFee(fee) : new ArrayList<>();
 			
 			//comptage des inscriptions dans chaque promotion
@@ -278,8 +369,9 @@ public class GeneralBudgetModel extends DefaultPieModel {
 			}
 			
 			updateParts(costs, count);
-			this.setMax(this.getMax() + (count * fee.getAmount()));
+			max += count * fee.getAmount();
 		}
+		this.setMax(max);
 	}
 	
 	/**

@@ -12,10 +12,12 @@ import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Promotion;
+import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.PromotionDao;
@@ -37,6 +39,7 @@ public class PanelPromotion extends Panel {
 	private Button btnList = new Button(new ImageIcon(R.getIcon("menu")), "Voir les promotions");
 	private PromotionDao promotionDao;
 	private InscriptionDao inscriptionDao;
+	private AcademicYearDao academicYearDao;
 	private FormPromotion form;
 	
 	private AcademicYear year;//l'annee acdemique acutuelement selectionner
@@ -44,7 +47,7 @@ public class PanelPromotion extends Panel {
 	private Panel center = new Panel(new BorderLayout());
 	private PromotionTableModel tableModel;
 	
-	private final JMenuItem itemDelete = new  JMenuItem("Suprimer", new ImageIcon(R.getIcon("close")));
+	private final JMenuItem itemDelete = new  JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
 	private final JPopupMenu popupMenu = new JPopupMenu();
 
 
@@ -53,10 +56,11 @@ public class PanelPromotion extends Panel {
 	 */
 	public PanelPromotion(MainWindow mainWindow) {
 		super(new BorderLayout());
-		this.promotionDao = mainWindow.factory.findDao(PromotionDao.class);
-		this.inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
+		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
+		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
+		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
 		
-		tableModel = new PromotionTableModel(this.promotionDao);
+		tableModel = new PromotionTableModel(promotionDao);
 		Table table = new Table(tableModel);
 		
 		Panel top = new Panel(new FlowLayout(FlowLayout.RIGHT));
@@ -64,29 +68,29 @@ public class PanelPromotion extends Panel {
 		top.add(btnList);
 		
 		this.btnNew.addActionListener(event -> {
-			this.center.removeAll();
-			if(this.form == null) {
-				this.form = new FormPromotion(mainWindow, this.promotionDao);
+			center.removeAll();
+			if(form == null) {
+				form = new FormPromotion(mainWindow, promotionDao);
 				form.setCurrentYear(year);
 			}
-			this.center.add(this.form, BorderLayout.CENTER);
-			this.center.revalidate();
-			this.center.repaint();
-			this.btnList.setVisible(true);
-			this.btnNew.setVisible(false);
+			center.add(form, BorderLayout.CENTER);
+			center.revalidate();
+			center.repaint();
+			btnList.setVisible(true);
+			btnNew.setVisible(false);
 		});
 		
 		this.btnList.addActionListener(event -> {
-			this.center.removeAll();
+			center.removeAll();
 			center.add(table.getTableHeader(), BorderLayout.NORTH);
-			this.center.add(table, BorderLayout.CENTER);
-			this.center.revalidate();
-			this.center.repaint();
+			center.add(table, BorderLayout.CENTER);
+			center.revalidate();
+			center.repaint();
 			
-			this.btnList.setVisible(false);
-			this.btnNew.setVisible(true);
+			btnList.setVisible(false);
+			btnNew.setVisible(true);
 		});
-		this.btnList.setVisible(false);
+		btnList.setVisible(false);
 		
 		center.add(table.getTableHeader(), BorderLayout.NORTH);
 		center.add(table, BorderLayout.CENTER);
@@ -100,17 +104,18 @@ public class PanelPromotion extends Panel {
 		table.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if(e.isPopupTrigger() && table.getSelectedRow() != -1)
+				if(e.isPopupTrigger() && table.getSelectedRow() != -1 && academicYearDao.isCurrent(year))
 					popupMenu.show(table, e.getX(), e.getY());
 			}
 		});
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		itemDelete.addActionListener(event -> {
 			Promotion pro = tableModel.getRow(table.getSelectedRow());
 			try {						
 				if(inscriptionDao.checkByPromotion(pro.getId())) {
-					JOptionPane.showMessageDialog(null, "Impossible de supprimer la promotion '"+pro.toString()+"', \ncar certains etudiants y sont inscrits", "Echec de suppression", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Impossible de supprimer la promotion '"+pro.toString()+"', \ncar certains étudiants y sont inscrits", "Echec de suppression", JOptionPane.ERROR_MESSAGE);
 				} else {
-					int status = JOptionPane.showConfirmDialog(null, "Voulez-vous vraiment supprimer cette promotion?\n=>"+pro.toString(), "Supression de la promotion", JOptionPane.YES_NO_OPTION);
+					int status = JOptionPane.showConfirmDialog(null, "Voulez-vous vraiment supprimer cette promotion?\n=>"+pro.toString(), "Suppression de la promotion", JOptionPane.YES_NO_OPTION);
 					if(status == JOptionPane.OK_OPTION) {
 						promotionDao.delete(pro.getId());
 					}
@@ -130,6 +135,9 @@ public class PanelPromotion extends Panel {
 		
 		if(form != null)
 			this.form.setCurrentYear(year);
+		
+		btnList.doClick();
+		btnNew.setVisible(year != null && academicYearDao.isCurrent(year));
 	}
 
 }

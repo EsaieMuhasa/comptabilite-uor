@@ -33,7 +33,7 @@ public class PromotionTableModel extends TableModel<Promotion> {
 	 */
 	public void setAcademicYear(AcademicYear academicYear) {
 		this.academicYear = academicYear;
-		if(this.promotionDao.checkByAcademicYear(academicYear.getId())) {			
+		if(academicYear != null && this.promotionDao.checkByAcademicYear(academicYear.getId())) {			
 			this.data = this.promotionDao.findByAcademicYear(academicYear.getId());
 		} else {
 			this.data.clear();

@@ -146,10 +146,14 @@ public class MenuItem extends JPanel{
 		 //si menu curent
 		 
 		 if(this.isCurrent()) {
-			 g2.setColor(FormUtil.BKG_DARK);
 			 int xs [] = {this.getWidth(), this.getWidth()-19, this.getWidth()};
 			 int ys [] = {2, 19, 38};
+			 
+			 g2.setColor(FormUtil.BKG_DARK);
 			 g2.fillPolygon(xs, ys, 3);
+			 
+			 g2.setColor(FormUtil.BORDER_COLOR);
+			 g2.drawPolygon(xs, ys, 3);
 		 }
     }
 	

@@ -33,7 +33,13 @@ public class FormAcademicYear extends DefaultFormPanel {
 	private FormGroup<String> startDate = FormGroup.createTextField("Date d'ouverture");
 	private FormGroup<String> closeDate = FormGroup.createTextField("Date de fermeture");
 	private FormGroup<String> label = FormGroup.createTextField("Label de l'année");
+	
+	private AcademicYear academicYear;// != null lors de la modification
 
+	/**
+	 * @param mainWindow
+	 * @param academicYearDao
+	 */
 	public FormAcademicYear(MainWindow mainWindow, AcademicYearDao academicYearDao) {
 		super(mainWindow);
 		this.academicYearDao = academicYearDao;
@@ -58,6 +64,17 @@ public class FormAcademicYear extends DefaultFormPanel {
 		this.getBody().add(center, BorderLayout.CENTER);
 	}
 	
+	/**
+	 * @param academicYear the academicYear to set
+	 */
+	public void setAcademicYear(AcademicYear academicYear) {
+		this.academicYear = academicYear;
+		label.getField().setValue(academicYear.getLabel());
+		startDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(academicYear.getStartDate()));
+		if(academicYear.getCloseDate() != null)
+			closeDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(academicYear.getCloseDate()));
+	}
+
 	@Override
 	public void actionPerformed(ActionEvent event) {
 		String start  = this.startDate.getValue();
@@ -81,9 +98,17 @@ public class FormAcademicYear extends DefaultFormPanel {
 		}
 		
 		if(year.getStartDate() != null && year.getLabel() != null && !year.getLabel().isEmpty()) {
-			year.setRecordDate(new Date());
+			Date now = new Date();
 			try {
-				this.academicYearDao.create(year);
+				if(academicYear == null){
+					year.setRecordDate(now);
+					this.academicYearDao.create(year);
+				} else {
+					year.setLastUpdate(now);
+					year.setRecordDate(academicYear.getRecordDate());
+					this.academicYearDao.update(year, academicYear.getId());
+				}
+				academicYear = null;
 				this.showMessageDialog("Information", "Année académique enregistrer avec success", JOptionPane.INFORMATION_MESSAGE);
 			} catch (DAOException e) {
 				this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);

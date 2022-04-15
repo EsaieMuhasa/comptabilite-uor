@@ -86,15 +86,13 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 		MenuItemModel<String> dashbord = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("dashboard")), "Tableau de bord");
 		MenuItemModel<String> students = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("student")), "Etudiants ");
 		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Configurations globales");
-		MenuItemModel<String> param = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("console")), "Configuration logiciel");
 		MenuItemModel<String> help = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("help")), "Manuel d'utilisation");
 		
 		this
 		.add(dashbord, new PanelDashboard(this.mainWindow))
 		.add(students, new PanelStudents(this.mainWindow))
 		.add(config, new PanelConfigGlobal(this.mainWindow))
-		.add(help, new PanelHelp(mainWindow))
-		.add(param, new PanelConfigSoftware(this.mainWindow));
+		.add(help, new PanelHelp(mainWindow));
 		
 		head.setVisible(false);
 		navbar.hideItems();

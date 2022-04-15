@@ -157,7 +157,7 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 				if(response == JOptionPane.OK_OPTION) {
 					Runtime run = Runtime.getRuntime();
 					try {
-						Process process = run.exec("excel \""+filename+"\"");
+						run.exec("excel \""+filename+"\"");
 					} catch (IOException e) {
 						JOptionPane.showMessageDialog(mainWindow, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
 					}
@@ -166,6 +166,14 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 			
 			t.start();
 		});
+		
+		btnToPdf.addActionListener(event -> {
+			JOptionPane.showMessageDialog(mainWindow, "Aucune implémentation d'exportation\n des données au format PDF", "Information", JOptionPane.WARNING_MESSAGE);
+		});
+		btnToPrint.addActionListener(event -> {
+			JOptionPane.showMessageDialog(mainWindow, "Aucune implémentation d'envoie \ndu flux des données vers une imprimante", "Information", JOptionPane.WARNING_MESSAGE);
+		});
+		
 		progress.setBorderPainted(false);
 		progress.setStringPainted(true);
 		//==
@@ -200,24 +208,19 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 		navigation.addListener(new NavigationListener() {		
 			@Override
 			public void onFilter(FacultyFilter [] filters) {
-				
-				//disable exports buttons
-				statusButtonsExport(false);
-				//==
-				datatableView.setFilter(filters);
-				
-				//enable exports buttons
-				statusButtonsExport(true);
-				//==
+				if(datatableView == null) {
+					onFilter(navigation.getCurrentYear(), filters);
+				} else {
+					statusButtonsExport(false);//disable exports buttons
+					datatableView.setFilter(filters);
+					statusButtonsExport(datatableView.hasData());//enable exports buttons if datatable has data match filters				
+				}
 			}
 			
 			@Override
 			public void onFilter(AcademicYear year, FacultyFilter [] filters) {
-				
-				//disable exports buttons
-				statusButtonsExport(false);
-				//==
-				
+
+				statusButtonsExport(false);//disable exports buttons
 				if(datatableView == null) {
 					datatableView = new StudentsDatatableView(mainWindow, progress, PanelListStudents.this);
 					datatableView.firstLoad(filters, year);
@@ -225,10 +228,7 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 				} else {
 					datatableView.firstLoad(filters, year);
 				}
-				
-				//enable exports buttons
-				statusButtonsExport(true);
-				//==
+				statusButtonsExport(datatableView.hasData());//enable exports buttons if datatable has data match filter
 			}
 		});
 	}

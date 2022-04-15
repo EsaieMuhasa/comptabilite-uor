@@ -41,6 +41,7 @@ import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.Student;
 import net.uorbutembo.beans.StudyClass;
+import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.InscriptionDao;
@@ -74,7 +75,7 @@ public class StudentsDatatableView extends Panel {
 	
 	private Box container = Box.createVerticalBox();
 	private JScrollPane scroll = FormUtil.createScrollPane(container);
-	private AcademicYear currentYear;
+	private AcademicYear currentYear;//annee encours de consultation
 	
 	private JProgressBar progress;
 	private FacultyFilter [] lastFilter;
@@ -88,6 +89,7 @@ public class StudentsDatatableView extends Panel {
 	
 	private InscriptionDao inscriptionDao;
 	private StudentDao studentDao;
+	private AcademicYearDao academicYearDao;
 	
 	/**
 	 * construction d'un datatable
@@ -101,6 +103,7 @@ public class StudentsDatatableView extends Panel {
 		this.daoFactory = mainWindow.factory;
 		this.inscriptionDao = daoFactory.findDao(InscriptionDao.class);
 		this.studentDao = daoFactory.findDao(StudentDao.class);
+		this.academicYearDao = daoFactory.findDao(AcademicYearDao.class);
 		this.progress = progress;
 		this.listener = listener;
 		
@@ -143,6 +146,7 @@ public class StudentsDatatableView extends Panel {
 		this.currentYear = currentYear;
 		this.lastFilter = filters;
 		this.lastFilterData.clear();
+		container.removeAll();
 		
 		this.doStartFilter(filters);
 		for (FacultyFilter filter : filters) {
@@ -154,6 +158,11 @@ public class StudentsDatatableView extends Panel {
 		
 		container.add(Box.createVerticalGlue());
 		progress.setVisible(false);
+		
+		//pour forcer la reorganisation des composants graphiques
+		setFilter(null);
+		setFilter(filters);
+		//==
 	}
 	
 	/**
@@ -231,6 +240,18 @@ public class StudentsDatatableView extends Panel {
 		}
 		
 		progress.setVisible(false);
+	}
+	
+	/**
+	 * Verifie s'il y a aumoin un panel visible avec des donnee
+	 * @return
+	 */
+	public boolean hasData () {
+		for (FacultyData fData : lastFilterData) {
+			if(fData.hasData())
+				return true;
+		}
+		return false;
 	}
 	
 	//EXPORATION DES DONNEE
@@ -669,6 +690,8 @@ public class StudentsDatatableView extends Panel {
 				@Override
 				public void mouseReleased(MouseEvent e) {
 					if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
+						itemDelete.setEnabled(academicYearDao.isCurrent(promotion.getAcademicYear()));
+						itemEditInscription.setEnabled(academicYearDao.isCurrent(promotion.getAcademicYear()));
 						popupMenu.show(table, e.getX(), e.getY());
 					}
 				}

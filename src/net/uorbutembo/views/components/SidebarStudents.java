@@ -22,12 +22,15 @@ import javax.swing.tree.TreePath;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Faculty;
+import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOAdapter;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.FacultyDao;
+import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
@@ -57,6 +60,7 @@ public class SidebarStudents extends Panel{
 	private DepartmentDao departmentDao;
 	private StudyClassDao studyClassDao;
 	private AcademicYearDao academicYearDao;
+	private PromotionDao promotionDao;
 	
 	private AcademicYear currentYear;
 	
@@ -73,17 +77,42 @@ public class SidebarStudents extends Panel{
 		departmentDao = factory.findDao(DepartmentDao.class);
 		studyClassDao = factory.findDao(StudyClassDao.class);
 		academicYearDao = factory.findDao(AcademicYearDao.class);
+		promotionDao = factory.findDao(PromotionDao.class);
 		
 		tree.setSelectionModel(treeSelection);
 		init();
-		
-		academicYearDao.addYearListener(new DAOAdapter<AcademicYear>() {
+		DAOAdapter<AcademicYear> listener = new DAOAdapter<AcademicYear>() {
 			@Override
 			public void onCurrentYear(AcademicYear year) {
 				setCurrentYear(year);
-				checkFilter.setSelected(true);
 				checkFilter.setSelected(false);
 			}
+			
+			@Override
+			public synchronized void onError(DAOException e, int requestId) {
+				e.printStackTrace();
+			}
+		};
+		academicYearDao.addYearListener(listener);
+		academicYearDao.addListener(listener);
+		promotionDao.addListener(new DAOAdapter<Promotion>() {
+			@Override
+			public synchronized void onCreate(Promotion e, int requestId) {
+				if(currentYear!=null && e.getAcademicYear().getId() == currentYear.getId()) 
+					insertPromotion(e);
+			}
+			
+			@Override
+			public synchronized void onCreate(Promotion[] e, int requestId) {reload();}
+			
+			@Override
+			public void onDelete(Promotion e, int requestId) {removePromotion(e);}
+			
+			@Override
+			public void onUpdate(Promotion e, int requestId) {reload();}
+			
+			@Override
+			public void onUpdate(Promotion[] e, int requestId) {reload();}
 		});
 	}
 
@@ -102,16 +131,36 @@ public class SidebarStudents extends Panel{
 			return;
 		
 		this.currentYear = currentYear;
-		for (int i = 0, count = comboModel.getSize(); i < count; i++) {
-			if(comboModel.getElementAt(i).getId() == currentYear.getId() && comboBox.getSelectedIndex() != i) {
-				comboBox.setSelectedIndex(i);
-				return;
+		if(comboBox.getSelectedIndex() != -1 && comboModel.getElementAt(comboBox.getSelectedIndex()).getId() != currentYear.getId()) {
+			for (int i = 0, count = comboModel.getSize(); i < count; i++) {
+				if(comboModel.getElementAt(i).getId() == currentYear.getId()) {
+					comboBox.setSelectedIndex(i);
+					break;
+				}
 			}
 		}
 		
 		wait(true);
 		this.reload();
 		wait(false);
+		
+		checkFilter.setEnabled(root.getChildCount() != 0);
+	}
+	
+	/**
+	 * Insersion d'une promotion dans l'arbre de filtrage
+	 * @param promotion
+	 */
+	private void insertPromotion(Promotion promotion) {
+		reload();//pas efficace, s'il y a d'autres promotion où il y a des inscription
+	}
+	
+	/**
+	 * Supression d'une promotion dans l'arbre de filtrage
+	 * @param promotion
+	 */
+	private void removePromotion(Promotion promotion) {
+		reload();
 	}
 
 	/**
@@ -253,7 +302,7 @@ public class SidebarStudents extends Panel{
 			root.removeAllChildren();
 
 		root.setUserObject(currentYear);
-		List<Faculty> faculties = facultyDao.findByAcademicYear(currentYear);
+		List<Faculty> faculties = facultyDao.checkByAcademicYear(currentYear)? facultyDao.findByAcademicYear(currentYear) : new ArrayList<>();
 		this.faculties = new FacultyFilter[faculties.size()];
 		
 		for (int index = 0, countFac = faculties.size(); index < countFac; index++) {
@@ -366,22 +415,24 @@ public class SidebarStudents extends Panel{
 				for (int i=0; i < lastPathFilter.size(); i++) {
 					filters[i] = lastPathFilter.get(i);
 				}
-				for (NavigationListener ls : listeners) {
-					if(first) 
+				
+				if (first) {
+					for (NavigationListener ls : listeners)
 						ls.onFilter(currentYear, filters);
-					else
-						ls.onFilter(filters);
-				}
+				} else
+					for (NavigationListener ls : listeners)
+						ls.onFilter(filters);	
 			} else {
-				for (NavigationListener ls : listeners) {
-					if(first) 
+				if (first) {
+					for (NavigationListener ls : listeners)
 						ls.onFilter(currentYear, faculties);
-					else
-						ls.onFilter(faculties);
-				}			
+				} else
+					for (NavigationListener ls : listeners)
+						ls.onFilter(faculties);		
 			}
 			
 			wait(false);
+			checkFilter.setEnabled(root.getChildCount() != 0);
 		});
 		t.start();
 	}

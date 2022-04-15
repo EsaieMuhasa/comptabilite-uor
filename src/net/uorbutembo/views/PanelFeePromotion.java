@@ -10,6 +10,7 @@ import static net.uorbutembo.views.forms.FormUtil.createScrollPane;
 
 import java.awt.BorderLayout;
 import java.awt.Cursor;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -25,8 +26,10 @@ import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.dao.AcademicFeeDao;
+import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AllocationCostDao;
 import net.uorbutembo.dao.AnnualSpendDao;
+import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Dialog;
 import net.uorbutembo.swing.Panel;
@@ -50,6 +53,7 @@ public class PanelFeePromotion extends Panel {
 	
 	private AllocationCostDao allocationCostDao;
 	private AcademicFeeDao academicFeeDao;
+	private AcademicYearDao academicYearDao;
 	private AnnualSpendDao annualSpendDao;
 	private PromotionDao promotionDao;
 	
@@ -76,10 +80,11 @@ public class PanelFeePromotion extends Panel {
 	 */
 	public PanelFeePromotion(MainWindow mainWindow) {
 		super(new BorderLayout());
-		this.academicFeeDao = mainWindow.factory.findDao(AcademicFeeDao.class);
-		this.promotionDao = mainWindow.factory.findDao(PromotionDao.class);
-		this.allocationCostDao = mainWindow.factory.findDao(AllocationCostDao.class);
-		this.annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
+		academicFeeDao = mainWindow.factory.findDao(AcademicFeeDao.class);
+		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
+		allocationCostDao = mainWindow.factory.findDao(AllocationCostDao.class);
+		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
+		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
 		
 		tableModel = new PromotionTableModel(promotionDao);
 		table =  new Table(tableModel);
@@ -108,6 +113,39 @@ public class PanelFeePromotion extends Panel {
 		
 		center.add(tabbedPane, BorderLayout.CENTER);
 		this.add(center, BorderLayout.CENTER);
+		
+		academicFeeDao.addListener(new DAOAdapter<AcademicFee>() {
+			@Override
+			public void onCreate(AcademicFee e, int requestId) {
+				if(academicYearDao.isCurrent(currentYear))
+					listModel.addElement(e);
+			}
+			
+			@Override
+			public void onUpdate (AcademicFee e, int requestId) {
+				if(academicYearDao.isCurrent(currentYear)) {					
+					for (int i = 0, count = listModel.getSize(); i < count; i++) {						
+						if(listModel.get(i).getId() == e.getId()){
+							listModel.set(i, e);
+							break;
+						}
+					}
+				}
+			}
+			
+			@Override
+			public void onDelete(AcademicFee e, int requestId) {
+				if(academicYearDao.isCurrent(currentYear)) {					
+					for (int i = 0, count = listModel.getSize(); i < count; i++) {						
+						if(listModel.get(i).getId() == e.getId()){
+							listModel.remove(i);
+							setCurrentYear(currentYear);
+							break;
+						}
+					}
+				}
+			}
+		});
 	}
 	
 	/**
@@ -120,7 +158,7 @@ public class PanelFeePromotion extends Panel {
 		
 		JTabbedPane tabbed = new JTabbedPane(JTabbedPane.BOTTOM);
 		tabbed.addTab("Promotions", createScrollPane(centerPanel));
-		tabbed.addTab("Repartition", formCost);
+		tabbed.addTab("Répartition", formCost);
 		
 		westPanel.add(createScrollPane(feeList), BorderLayout.CENTER);
 		westPanel.add(btnNewFee, BorderLayout.SOUTH);
@@ -137,7 +175,11 @@ public class PanelFeePromotion extends Panel {
 		
 		feeList.setBackground(FormUtil.BKG_END);
 		feeList.addListSelectionListener(event -> {
-			AcademicFee fee = listModel.get(feeList.getSelectedIndex());
+			int index = feeList.getSelectedIndex();
+			if (index == -1)
+				return;
+			
+			AcademicFee fee = listModel.get(index);
 			
 			tableModel.clear();
 			waiting(true);
@@ -160,7 +202,7 @@ public class PanelFeePromotion extends Panel {
 					}
 				}
 				
-				List<AnnualSpend> spends = annualSpendDao.findkByAcademicYear(currentYear);
+				List<AnnualSpend> spends = annualSpendDao.checkByAcademicYear(currentYear.getId())? annualSpendDao.findkByAcademicYear(currentYear) : new ArrayList<>();
 				
 				formCost.init(fee, spends);
 				waiting(false);
@@ -177,8 +219,10 @@ public class PanelFeePromotion extends Panel {
 		this.currentYear = currentYear;
 		
 		listModel.clear();
+		tableModel.clear();
+		formCost.clear();
 		
-		if(this.academicFeeDao.checkByAcademicYear(currentYear.getId())) {
+		if(currentYear != null && this.academicFeeDao.checkByAcademicYear(currentYear.getId())) {
 			List<AcademicFee> data = this.academicFeeDao.findByAcademicYear(currentYear);
 			for (AcademicFee fee : data) {
 				listModel.addElement(fee);
@@ -187,7 +231,7 @@ public class PanelFeePromotion extends Panel {
 		}
 		
 		formFeePromotion.setCurrentYear(currentYear);
-		
+		btnNewFee.setVisible(academicYearDao.isCurrent(currentYear));
 	}
 	
 	private void waiting (boolean wait) {

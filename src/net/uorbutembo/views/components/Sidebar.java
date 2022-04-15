@@ -70,12 +70,12 @@ public class Sidebar extends Panel {
 	 * initialisation du header du sidebar
 	 */
 	private void initHeader() {
-		this.header.add(logo, BorderLayout.WEST);
-		this.header.add(this.title, BorderLayout.CENTER);
+		header.add(title, BorderLayout.CENTER);
+		header.add(logo, BorderLayout.WEST);
 		
-		this.title.setFont(new Font("Arial", Font.PLAIN, 40));
-		this.title.setForeground(Color.LIGHT_GRAY);
-		this.header.setBorder(new EmptyBorder(0, 5, 0, 10));
+		title.setFont(new Font("Arial", Font.PLAIN, 40));
+		title.setForeground(Color.LIGHT_GRAY);
+		header.setBorder(new EmptyBorder(0, 5, 0, 10));
 		
 		this.add(header, BorderLayout.NORTH);
 	}
@@ -112,7 +112,7 @@ public class Sidebar extends Panel {
 	 */
 	public  <H> MenuItem addMenu (MenuItemModel<H> model) {
 		MenuItem item = new MenuItem  (this, model, this.listener);
-//        panel.add(item, "h "+(40 * model.getItems().size())+"!");
+        //body.add(item, "h "+(40 * model.getItems().size())+"!");
 		body.add(item, "h 40!");
 		
 		if(this.items.isEmpty()) {//le premier item est active par defaut

@@ -8,11 +8,13 @@ import static net.uorbutembo.views.forms.FormUtil.COLORS;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 import javax.swing.border.EmptyBorder;
 
@@ -34,7 +36,7 @@ import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.forms.FormUtil;
-import net.uorbutembo.views.models.GeneralBudgetModel;
+import net.uorbutembo.views.models.GeneralBudgetPieModel;
 import resources.net.uorbutembo.R;
 
 /**
@@ -51,6 +53,7 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 	private FacultyDao facultyDao;
 	
 	private AcademicYear currentYear;
+	private JLabel labelTitle = FormUtil.createTitle("");
 	
 	//models cards
 	private final DefaultCardModel<Integer> modelCardStudents = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
@@ -58,15 +61,14 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 	
 	//model pie
 	private final DefaultPieModel modelPieStudents = new DefaultPieModel(0, "Etudiant par faculté");
-	private final GeneralBudgetModel modelPieBudget;
-	private final DefaultPieModel modelPiePaymentFee = new DefaultPieModel(0, "Payement par faculté");
+	private final GeneralBudgetPieModel modelPieBudget;
 	
 	private PiePanel piePanel = new PiePanel();
 	private Panel panelBottom = new Panel();
 	
 	public PanelDashboard(MainWindow mainWindow) {
 		super("Tableau de board", new ImageIcon(R.getIcon("dashboard")), mainWindow, false);
-		modelPieBudget = new GeneralBudgetModel(mainWindow.factory);
+		modelPieBudget = new GeneralBudgetPieModel(mainWindow.factory);
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
 		
@@ -81,11 +83,16 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 		init();
 		
 		Panel center = new Panel(new BorderLayout());
+		Panel top = new Panel(new BorderLayout());
 		center.setBorder(new EmptyBorder(10, 0, 0, 0));
 		center.add(piePanel, BorderLayout.CENTER);
 		piePanel.setBorderColor(FormUtil.BORDER_COLOR);
 		
-		panelCurrent.add(panelCards, BorderLayout.NORTH);
+		labelTitle.setHorizontalAlignment(JLabel.RIGHT);
+		top.add(labelTitle, BorderLayout.NORTH);
+		top.add(panelCards, BorderLayout.CENTER);
+		
+		panelCurrent.add(top, BorderLayout.NORTH);
 		panelCurrent.add(center, BorderLayout.CENTER);
 		panelCurrent.add(panelBottom, BorderLayout.SOUTH);
 		panelCurrent.setBorder(BODY_BORDER);
@@ -99,7 +106,7 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 			if(event.getSource() == radio) {
 				piePanel.setModel(modelPieStudents);
 			} else if(event.getSource() == payment) {
-				piePanel.setModel(modelPiePaymentFee);
+				piePanel.setModel(modelPieBudget.getPieModelPayment());
 			} else if (event.getSource() == budget) {
 				piePanel.setModel(modelPieBudget);
 			} else {
@@ -134,6 +141,8 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 	@Override
 	public void onCurrentYear(AcademicYear year) {
 		currentYear = year;
+		if(year != null) 
+			labelTitle.setText(year.getLabel());
 		load();
 	}
 	
@@ -142,7 +151,7 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 	 */
 	private void load () {
 		modelCardStudents.setValue(inscriptionDao.countByAcademicYear(currentYear));
-		List<Faculty> faculties = facultyDao.findByAcademicYear(currentYear);
+		List<Faculty> faculties = facultyDao.checkByAcademicYear(currentYear)? facultyDao.findByAcademicYear(currentYear) : new ArrayList<>();
 		modelPieStudents.setMax(modelCardStudents.getValue());
 		modelPieStudents.removeAll();
 		for (int i=0, max=faculties.size(); i<max; i++) {
@@ -184,7 +193,7 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 		
 		panelCards.add(new Card(modelCardStudents));
 		panelCards.add(Box.createHorizontalStrut(10));
-		panelCards.add(new Card(modelPieBudget.getCardPaymentModel()));
+		panelCards.add(new Card(modelPieBudget.getCardModelPayment()));
 		panelCards.add(Box.createHorizontalStrut(10));
 		panelCards.add( new Card(modelPieBudget.getCardModel()));
 	}

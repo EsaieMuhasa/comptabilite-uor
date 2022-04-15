@@ -239,7 +239,7 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 						"lastUpdate"
 					}, 
 					new Object[] {
-						academicFee == null || academicFee.getId() <= 0? null : academicFee,
+						academicFee == null || academicFee.getId() <= 0? null : academicFee.getId(),
 						now.getTime()
 					}, promotion.getId()
 				);
