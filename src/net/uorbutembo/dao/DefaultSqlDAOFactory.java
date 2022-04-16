@@ -8,11 +8,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import net.uorbutembo.beans.DBEntity;
+import net.uorbutembo.dao.DAOBaseListener.DAOEvent;
+import net.uorbutembo.dao.DAOBaseListener.EventType;
 import resources.net.uorbutembo.Config;
 
 /**
@@ -34,6 +38,7 @@ class DefaultSqlDAOFactory implements DAOFactory{
 	
 	//contiens les references des instances des implementations des interfaces du DAO
 	protected Map<String, DAOInterface<?>> daos = new HashMap<String, DAOInterface<?>>();
+	private final List<DAOBaseListener> listeners = new ArrayList<>();
 
 	/**
 	 * constructeur d'initialisation
@@ -86,7 +91,49 @@ class DefaultSqlDAOFactory implements DAOFactory{
 					Constructor<?> cons = c.getConstructor(this.getClass());
 					T instance = (T) cons.newInstance(this);
 					this.daos.put(daoClass.getSimpleName(), instance);
-					//instance.addListener(this);//on ecoute l'interface de la table
+					instance.addListener(new DAOAdapter<H> () {
+						@Override
+						public synchronized void onError(DAOException e, int requestId) {
+							DAOEvent event = new DAOEvent(instance, e, EventType.ERROR, requestId);
+							emitEvent(event);
+						}
+						
+						@Override
+						public synchronized void onCreate(H e, int requestId) {
+							DAOEvent event = new DAOEvent(instance, e, EventType.CREATE, requestId);
+							emitEvent(event);
+						}
+						
+						@Override
+						public synchronized void onCreate(H[] e, int requestId) {
+							DAOEvent event = new DAOEvent(instance, e, EventType.CREATE, requestId);
+							emitEvent(event);
+						}
+						
+						@Override
+						public synchronized void onUpdate(H e, int requestId) {
+							DAOEvent event = new DAOEvent(instance, e, EventType.UPDATE, requestId);
+							emitEvent(event);
+						}
+						
+						@Override
+						public synchronized void onUpdate(H[] e, int requestId) {
+							DAOEvent event = new DAOEvent(instance, e, EventType.UPDATE, requestId);
+							emitEvent(event);
+						}
+						
+						@Override
+						public synchronized void onDelete(H e, int requestId) {
+							DAOEvent event = new DAOEvent(instance, e, EventType.DELETE, requestId);
+							emitEvent(event);
+						}
+						
+						@Override
+						public synchronized void onDelete(H[] e, int requestId) {
+							DAOEvent event = new DAOEvent(instance, e, EventType.DELETE, requestId);
+							emitEvent(event);
+						}
+					});
 					return instance;
 				} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | ClassCastException |
 						InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
@@ -98,6 +145,27 @@ class DefaultSqlDAOFactory implements DAOFactory{
 		throw new DAOConfigException("Aucune implementation n'a ete specifier dans le fichier de configuration du DAO pour l'interface \""+daoClass.getName()+"\"");
 	}
 	
+	/**
+	 * Transmission de l'evenement
+	 * @param event
+	 */
+	private synchronized void emitEvent (DAOEvent event) {
+		for (DAOBaseListener listener : listeners) {
+			listener.onEvent(event);
+		}
+	}
+	
+	@Override
+	public void addListener(DAOBaseListener lisnster) {
+		if(!listeners.contains(lisnster))
+			listeners.add(lisnster);
+	}
+
+	@Override
+	public void removeListener(DAOBaseListener listener) {
+		listeners.remove(listener);
+	}
+
 	@Override
 	public void reload() {
 		this.findDao(AcademicYearDao.class).reload();

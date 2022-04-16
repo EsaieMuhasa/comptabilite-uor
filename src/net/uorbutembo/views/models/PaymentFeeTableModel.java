@@ -43,7 +43,7 @@ public class PaymentFeeTableModel extends TableModel<PaymentFee> {
 	}
 	
 	@Override
-	public void onCreate (PaymentFee e, int requestId) {
+	public void onCreate(PaymentFee e, int requestId) {
 		if(e.getInscription().getId() == inscription.getId())
 			super.onCreate(e, requestId);
 	}

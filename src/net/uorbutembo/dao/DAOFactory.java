@@ -50,6 +50,18 @@ public interface DAOFactory {
 	}
 	
 	/**
+	 * Ajout d'un ecouteur
+	 * @param lisnster
+	 */
+	void addListener (DAOBaseListener lisnster);
+	
+	/**
+	 * supression d'un ecoteur
+	 * @param listener
+	 */
+	void removeListener (DAOBaseListener listener);
+	
+	/**
 	 * Demande de rechargement de donnee pour tout le DAO
 	 */
 	void reload ();

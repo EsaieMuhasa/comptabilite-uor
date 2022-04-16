@@ -14,6 +14,8 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import net.uorbutembo.dao.DAOBaseListener;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.views.components.Sidebar;
 import resources.net.uorbutembo.R;
@@ -23,7 +25,7 @@ import resources.net.uorbutembo.R;
  * @author Esaie MUHASA
  *
  */
-public class MainWindow extends JFrame {
+public class MainWindow extends JFrame implements DAOBaseListener{
 
 	private static final long serialVersionUID = 1L;
 	private Sidebar sidebar;
@@ -37,6 +39,7 @@ public class MainWindow extends JFrame {
 	public MainWindow(DAOFactory factory) {
 		super("U.O.R. Data Manager");
 		this.factory = factory;
+		factory.addListener(this);
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int w = (int) (screenSize.getWidth() - screenSize.getWidth()/10);
 		int h = (int) (screenSize.getHeight() - screenSize.getHeight()/10); 
@@ -72,5 +75,13 @@ public class MainWindow extends JFrame {
 //			if(state == JOptionPane.OK_OPTION) {
 //			}
 //		});
+	}
+	
+	@Override
+	public void onEvent(DAOEvent event) {
+		if(event.getType() == EventType.ERROR) {
+			DAOException e = (DAOException) event.getData();
+			e.printStackTrace();
+		}
 	}
 }
