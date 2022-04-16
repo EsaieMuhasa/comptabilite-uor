@@ -47,9 +47,9 @@ public interface AnnualSpendDao extends DAOInterface<AnnualSpend> {
 	 * @return
 	 * @throws DAOException
 	 */
-	List<AnnualSpend> findkByAcademicYear (AcademicYear academicYear) throws DAOException;
-	default List<AnnualSpend> findkByAcademicYear (long academicYear) throws DAOException {
-		return findkByAcademicYear(getFactory().findDao(AcademicYearDao.class).findById(academicYear));
+	List<AnnualSpend> findByAcademicYear (AcademicYear academicYear) throws DAOException;
+	default List<AnnualSpend> findByAcademicYear (long academicYear) throws DAOException {
+		return findByAcademicYear(getFactory().findDao(AcademicYearDao.class).findById(academicYear));
 	}
 	
 	/**

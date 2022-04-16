@@ -67,23 +67,7 @@ public class DepartmentDaoSql extends OrientationDaoSql<Department> implements D
 
 	@Override
 	public int countByFaculty(long facultyId) throws DAOException {
-		final String SQL_QUERY = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE faculty=%d", this.getViewName(),  facultyId);
-		System.out.println(SQL_QUERY);
-		try (
-				Connection connection =  this.getFactory().getConnection();
-				Statement statement = connection.createStatement();
-				ResultSet result = statement.executeQuery(SQL_QUERY);
-			) {
-			
-			if(result.next()) {
-				return result.getInt("nombre");
-			}
-			
-		} catch (SQLException e) {
-			throw new DAOException(
-					"Une erreur est survenue lors du comptage de départements de la faculté dont identifier par [ "+facultyId+" ]\n"+e.getMessage(), e);
-		}
-		return 0;
+		return count("faculty", facultyId);
 	}
 
 	@Override
@@ -189,7 +173,21 @@ public class DepartmentDaoSql extends OrientationDaoSql<Department> implements D
 	
 	@Override
 	public int countByFaculty(Faculty faculty, AcademicYear year) throws DAOException {
-		// TODO Auto-generated method stub
+		final String SQL_QUERY = getSQLRequestCountByAcademicYear(year.getId())+String.format(" AND %s.faculty=%d", getTableName(),  faculty.getId());
+		System.out.println(SQL_QUERY);
+		try (
+				Connection connection =  factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY);
+			) {
+			
+			if(result.next())
+				return result.getInt("nombre");
+			
+		} catch (SQLException e) {
+			throw new DAOException(
+					"Une erreur est survenue lors du comptage de départements de la faculté dont identifier par [ "+faculty.getAcronym()+" ]\n"+e.getMessage(), e);
+		}
 		return 0;
 	}
 

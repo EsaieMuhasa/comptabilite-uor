@@ -91,7 +91,7 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 	}
 
 	@Override
-	public List<AnnualSpend> findkByAcademicYear(long academicYear) throws DAOException {
+	public List<AnnualSpend> findByAcademicYear(long academicYear) throws DAOException {
 		List<AnnualSpend> data = this.findAll(new String[] {"academicYear"}, new Object[] {academicYear});
 		AcademicYear academic = this.academicYearDao.findById(academicYear);
 		for (AnnualSpend spend : data) {
@@ -102,7 +102,7 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 	}
 	
 	@Override
-	public List<AnnualSpend> findkByAcademicYear(AcademicYear academicYear) throws DAOException {
+	public List<AnnualSpend> findByAcademicYear(AcademicYear academicYear) throws DAOException {
 		List<AnnualSpend> data = this.findAll(new String[] {"academicYear"}, new Object[] {academicYear.getId()});
 		for (AnnualSpend spend : data) {
 			spend.setAcademicYear(academicYear);
@@ -113,7 +113,7 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 
 	@Override
 	public int countByAcademicYear(long academicYear) throws DAOException {
-		return 0;
+		return count("academicYear", academicYear);
 	}
 
 	@Override

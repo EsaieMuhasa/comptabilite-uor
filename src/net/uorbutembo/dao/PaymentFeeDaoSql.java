@@ -81,15 +81,9 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 
 	@Override
 	public List<PaymentFee> findByAcademicYear(long academicYearId, int limit, int offset) throws DAOException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<PaymentFee> findByAcademicYear(long academicYearId) throws DAOException {
 		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d ", Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), academicYearId);
-		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN (%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
-		final String sql = String.format("SELECT * FROM %s WHERE inscription IN (%s)", getTableName(), sqlInscrits);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) LIMIT %d OFFSET %d", getTableName(), sqlInscrits, limit, offset);
 		
 		System.out.println(sql);
 		List<PaymentFee> data = new ArrayList<>();
@@ -101,7 +95,31 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 				data.add(mapping(result));
 			
 			if(data.isEmpty())
-				throw new DAOException("Aucun payement pour l'annee academique indexer pr  "+academicYearId);
+				throw new DAOException("Aucun payement pour l'annee academique indexer par  "+academicYearId);
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return data;
+	}
+
+	@Override
+	public List<PaymentFee> findByAcademicYear(long academicYearId) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d ", Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), academicYearId);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s)", getTableName(), sqlInscrits);
+		
+		System.out.println(sql);
+		List<PaymentFee> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next())
+				data.add(mapping(result));
+			
+			if(data.isEmpty())
+				throw new DAOException("Aucun payement pour l'annee academique indexer par  "+academicYearId);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
@@ -119,7 +137,7 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	public boolean checkByAcademicYear(long year) throws DAOException {
 		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d ", Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year);
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN (%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
-		final String sql = String.format("SELECT * FROM %s WHERE inscription IN (%s) LIMIT 1 OFFSET 0", getTableName(), sqlInscrits);
+		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) LIMIT 1 OFFSET 0", getTableName(), sqlInscrits);
 		
 		System.out.println(sql);
 		try (

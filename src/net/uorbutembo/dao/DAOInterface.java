@@ -53,7 +53,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @throws DAOException
 	 */
 	default boolean checkById (long id) throws DAOException {
-		return this.check("id", id);
+		return check("id", id);
 	}
 	
 	/**
@@ -69,7 +69,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @throws DAOException
 	 */
 	default void create (T [] t) throws DAOException {
-		throw new DAOException("La creation de occurence pultiple n'est pas prise en charge \npar le DAO -> "+this.getClass().getName()+" <-");
+		throw new DAOException("La creation de occurence multiple n'est pas prise en charge \npar le DAO -> "+getClass().getName()+" <-");
 	}
 	
 	/**
@@ -86,7 +86,7 @@ public interface DAOInterface <T extends DBEntity>{
 					lis.onError(ex, requestId);
 				}
 			}
-		}, this.getClass().getSimpleName()+"_"+System.currentTimeMillis());
+		}, getClass().getSimpleName()+"_"+System.currentTimeMillis());
 		t.start();
 	}
 	
@@ -95,7 +95,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param e
 	 */
 	default void doCreate(T e) {
-		this.doCreate(e, DEFAULT_REQUEST_ID);
+		doCreate(e, DEFAULT_REQUEST_ID);
 	}
 	
 	
@@ -128,13 +128,13 @@ public interface DAOInterface <T extends DBEntity>{
 	default void doUpdate(T e, long id, int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
-				this.update(e, id);
+				update(e, id);
 			} catch (DAOException ex) {
-				for (DAOListener<T> lis : this.getListeners()) {
+				for (DAOListener<T> lis : getListeners()) {
 					lis.onError(ex, requestId);
 				}
 			}
-		}, this.getClass().getSimpleName()+"_"+System.currentTimeMillis());
+		}, getClass().getSimpleName()+"_"+System.currentTimeMillis());
 		t.start();
 	}
 	
@@ -143,7 +143,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param id
 	 */
 	default void doUpdate(T e, long id) {
-		this.doUpdate(e, id, DEFAULT_REQUEST_ID);
+		doUpdate(e, id, DEFAULT_REQUEST_ID);
 	}
 	
 	/**
@@ -159,13 +159,13 @@ public interface DAOInterface <T extends DBEntity>{
 	default void doDelete(long id, int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
-				this.delete(id);
+				delete(id);
 			} catch (DAOException e) {
-				for (DAOListener<T> lis : this.getListeners()) {
+				for (DAOListener<T> lis : getListeners()) {
 					lis.onError(e, requestId);
 				}
 			}
-		}, this.getClass().getSimpleName()+"_delete_"+System.currentTimeMillis());
+		}, getClass().getSimpleName()+"_delete_"+System.currentTimeMillis());
 		t.start();
 	}
 	
@@ -186,7 +186,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @throws DAOException
 	 */
 	default T findById (long id)  throws DAOException {
-		return this.find("id", id);
+		return find("id", id);
 	}
 	
 	/**
@@ -208,17 +208,17 @@ public interface DAOInterface <T extends DBEntity>{
 	default void  doFindAll (int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
-				List<T> data = this.findAll();
-				for (DAOListener<T> lis : this.getListeners()) {
+				List<T> data = findAll();
+				for (DAOListener<T> lis : getListeners()) {
 					lis.onFind(data, requestId);
 				}
 			} catch (DAOException e) {
-				for (DAOListener<T> lis : this.getListeners()) {
+				for (DAOListener<T> lis : getListeners()) {
 					lis.onError(e, requestId);
 				}
 			}
 			
-		}, this.getClass().getSimpleName()+"_findAll_"+System.currentTimeMillis());
+		}, getClass().getSimpleName()+"_findAll_"+System.currentTimeMillis());
 		t.start();
 	}
 	
@@ -226,7 +226,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * 
 	 */
 	default void  doFindAll () {
-		this.doFindAll(DEFAULT_REQUEST_ID);
+		doFindAll(DEFAULT_REQUEST_ID);
 	}
 	
 	/**
@@ -236,17 +236,17 @@ public interface DAOInterface <T extends DBEntity>{
 	default void  doFindAll (int limit, int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
-				List<T> data = this.findAll(limit);
-				for (DAOListener<T> lis : this.getListeners()) {
+				List<T> data = findAll(limit);
+				for (DAOListener<T> lis : getListeners()) {
 					lis.onFind(data, requestId);
 				}
 			} catch (DAOException e) {
-				for (DAOListener<T> lis : this.getListeners()) {
+				for (DAOListener<T> lis : getListeners()) {
 					lis.onError(e, requestId);
 				}
 			}
 			
-		}, this.getClass().getSimpleName()+"_findAll_"+System.currentTimeMillis());
+		}, getClass().getSimpleName()+"_findAll_"+System.currentTimeMillis());
 		t.start();
 	}
 	
@@ -259,16 +259,16 @@ public interface DAOInterface <T extends DBEntity>{
 	default void  doFindAll (int limit, int offset, int requestId) {
 		Thread t = new Thread( () ->  {
 			try {
-				List<T> data = this.findAll(limit, offset);
-				for (DAOListener<T> lis : this.getListeners()) {
+				List<T> data = findAll(limit, offset);
+				for (DAOListener<T> lis : getListeners()) {
 					lis.onFind(data, requestId);
 				}
 			} catch (DAOException e) {
-				for (DAOListener<T> lis : this.getListeners()) {
+				for (DAOListener<T> lis : getListeners()) {
 					lis.onError(e, requestId);
 				}
 			}
-		}, this.getClass().getSimpleName()+"_findAll_"+System.currentTimeMillis());
+		}, getClass().getSimpleName()+"_findAll_"+System.currentTimeMillis());
 		t.start();
 	}
 	
@@ -278,7 +278,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @return
 	 */
 	default List<T> findAll(int limit) throws DAOException {
-		return this.findAll(limit, 0);
+		return findAll(limit, 0);
 	}
 	
 	/**
@@ -288,7 +288,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @throws DAOException
 	 */
 	default boolean checkByRecordDate (Date recordDate) throws DAOException {
-		return this.checkByRecordDate(recordDate, recordDate);
+		return checkByRecordDate(recordDate, recordDate);
 	}
 	
 	/**
@@ -318,7 +318,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @throws DAOException
 	 */
 	default int countByRecordDate (Date recordDate) throws DAOException{
-		return this.countByRecordDate(recordDate, recordDate);
+		return countByRecordDate(recordDate, recordDate);
 	}
 	
 	/**
@@ -337,7 +337,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @throws DAOException
 	 */
 	default List<T> findByRecordDate (Date recordDate) throws DAOException {
-		return this.findByRecordDate(recordDate, recordDate);
+		return findByRecordDate(recordDate, recordDate);
 	}
 	
 	/**
@@ -358,7 +358,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @throws DAOException
 	 */
 	default List<T> findByRecordDate (Date dateMin, Date dateMax, int limit) throws DAOException{
-		return this.findByRecordDate(dateMin, dateMax, limit, 0);
+		return findByRecordDate(dateMin, dateMax, limit, 0);
 	}
 	/**
 	 * renveoie les occurences serialiser en une intervale de date en parametre.
@@ -384,10 +384,10 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param listener
 	 */
 	default void addListener (DAOListener<T> listener) {
-		if(this.getListeners().contains(listener)) {
+		if(getListeners().contains(listener)) {
 			return;
 		}
-		this.getListeners().add(listener);
+		getListeners().add(listener);
 	}
 	
 	/**
@@ -395,14 +395,14 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param listener
 	 */
 	default void removeListener (DAOListener<T> listener) {
-		this.getListeners().remove(listener);
+		getListeners().remove(listener);
 	}
 	
 	/**
 	 * retire tout les ecouteurs
 	 */
 	default void clearListener () {
-		this.getListeners().clear();
+		getListeners().clear();
 	}
 	
 	/**

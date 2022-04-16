@@ -322,6 +322,34 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 		
 		return 0;
 	}
+	
+	/**
+	 * Comptage des occurence en faisant restruction sur une colleconne
+	 * @param columnName
+	 * @param value
+	 * @return
+	 * @throws DAOException
+	 */
+	protected synchronized int count (String columnName, Object value) throws DAOException{
+		
+		final String SQL_QUERY = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE %s = ?", this.getViewName(), columnName);
+		System.out.println(SQL_QUERY);
+		try (
+				Connection connection =  this.factory.getConnection();
+				PreparedStatement statement = prepare(SQL_QUERY, connection, false, value);
+				ResultSet result = statement.executeQuery();
+			) {
+			
+			if(result.next()) {
+				return result.getInt("nombre");
+			} 
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return 0;
+	}
 
 	@Override
 	public synchronized boolean checkByRecordDate(Date dateMin, Date dateMax) throws DAOException {

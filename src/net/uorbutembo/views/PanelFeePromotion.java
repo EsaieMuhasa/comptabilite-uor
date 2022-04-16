@@ -202,7 +202,7 @@ public class PanelFeePromotion extends Panel {
 					}
 				}
 				
-				List<AnnualSpend> spends = annualSpendDao.checkByAcademicYear(currentYear.getId())? annualSpendDao.findkByAcademicYear(currentYear) : new ArrayList<>();
+				List<AnnualSpend> spends = annualSpendDao.checkByAcademicYear(currentYear.getId())? annualSpendDao.findByAcademicYear(currentYear) : new ArrayList<>();
 				
 				formCost.init(fee, spends);
 				waiting(false);

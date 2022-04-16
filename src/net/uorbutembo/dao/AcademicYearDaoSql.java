@@ -194,6 +194,10 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 			data.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}
 		
+		if(result.getLong("previous") > 0) {
+			data.setPrevious(new AcademicYear(result.getLong("previous")));
+		}
+		
 		return data;
 	}
 	

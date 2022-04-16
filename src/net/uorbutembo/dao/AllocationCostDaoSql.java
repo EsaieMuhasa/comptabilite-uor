@@ -34,7 +34,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	}
 
 	@Override
-	public void create(AllocationCost a) throws DAOException {
+	public synchronized void create(AllocationCost a) throws DAOException {
 		try {
 			long id = insertInTable(
 					new String[] {"academicFee", "amount", "annualSpend", "recordDate"},
@@ -51,7 +51,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	}
 	
 	@Override
-	public void create(AllocationCost[] t) throws DAOException {
+	public synchronized void create(AllocationCost[] t) throws DAOException {
 		try (final Connection connection = factory.getConnection()) {
 			connection.setAutoCommit(false);
 			for (AllocationCost a : t) {
@@ -75,7 +75,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	}
 
 	@Override
-	public void update(AllocationCost a, long id) throws DAOException {
+	public synchronized void update(AllocationCost a, long id) throws DAOException {
 		try {
 			updateInTable(
 					new String[] {"amount","lastUpdate" },
@@ -87,7 +87,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	}
 	
 	@Override
-	public void update(AllocationCost[] es, long[] id) throws DAOException {
+	public synchronized void update(AllocationCost[] es, long[] id) throws DAOException {
 		try (Connection connection = factory.getConnection()){
 			connection.setAutoCommit(false);
 			for (int i = 0; i < id.length; i++) {
@@ -194,8 +194,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 
 	@Override
 	public int countByAcademicFee(long academicFeeId) throws DAOException {
-		// TODO Auto-generated method stub
-		return 0;
+		return count("academicFee", academicFeeId);
 	}
 
 	@Override
