@@ -67,7 +67,8 @@ public class PanelPromotion extends Panel {
 		top.add(btnNew);
 		top.add(btnList);
 		
-		this.btnNew.addActionListener(event -> {
+		btnNew.setEnabled(false);
+		btnNew.addActionListener(event -> {
 			center.removeAll();
 			if(form == null) {
 				form = new FormPromotion(mainWindow, promotionDao);
@@ -80,7 +81,7 @@ public class PanelPromotion extends Panel {
 			btnNew.setVisible(false);
 		});
 		
-		this.btnList.addActionListener(event -> {
+		btnList.addActionListener(event -> {
 			center.removeAll();
 			center.add(table.getTableHeader(), BorderLayout.NORTH);
 			center.add(table, BorderLayout.CENTER);
@@ -137,6 +138,7 @@ public class PanelPromotion extends Panel {
 			this.form.setCurrentYear(year);
 		
 		btnList.doClick();
+		btnNew.setEnabled(true);
 		btnNew.setVisible(year != null && academicYearDao.isCurrent(year));
 	}
 

@@ -31,6 +31,11 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 			daoInterface.addListener(this);
 	}
 	
+	/**
+	 * Demande au model de recharger les donnees depuis la sources
+	 */
+	public synchronized void reload() {}
+	
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
 		return false;
@@ -85,7 +90,10 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	 */
 	public void removeRow (int index) {
 		this.data.remove(index);
-		fireTableRowsDeleted(index, index);
+		if(getRowCount() == 0)
+			fireTableDataChanged();
+		else 
+			fireTableRowsDeleted(index, index);
 	}
 	
 	/**
@@ -96,6 +104,19 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	public void updateRow (T t, int index) {
 		data.set(index, t);
 		fireTableRowsUpdated(index, index);
+	}
+	
+	/**
+	 * Mise en jour d'une ligne
+	 * @param t
+	 */
+	public void updateRow (T t ) {
+		for (int i = 0, count = getRowCount(); i < count; i++) {
+			if(data.get(i).getId() == t.getId()) {
+				updateRow(t, i);
+				return;
+			}
+		}
 	}
 
 	/**

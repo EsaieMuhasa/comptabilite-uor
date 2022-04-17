@@ -6,6 +6,7 @@ package net.uorbutembo.views;
 import java.awt.BorderLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.ImageIcon;
@@ -44,6 +45,7 @@ public class PanelDepartment extends Panel {
 	private Dialog formDialog;
 	private DepartmentDao departmentDao;
 	private PromotionDao promotionDao;
+	private FacultyDao facultyDao;
 	
 	private final JMenuItem itemUpdate = new  JMenuItem("Modifier", new ImageIcon(R.getIcon("edit")));
 	private final JMenuItem itemDelete = new  JMenuItem("Suprimer", new ImageIcon(R.getIcon("close")));
@@ -58,13 +60,47 @@ public class PanelDepartment extends Panel {
 	public PanelDepartment(MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.mainWindow = mainWindow;
-		this.departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
-		this.promotionDao = mainWindow.factory.findDao(PromotionDao.class);
+		departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
+		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
+		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
 		
-		this.departmentDao.addListener(new DAOAdapter<Department> () {
+		departmentDao.addListener(new DAOAdapter<Department> () {
 			@Override
 			public void onCreate(Department e, int requestId) {
 				formDialog.setVisible(false);
+			}
+		});
+		
+		facultyDao.addListener(new DAOAdapter<Faculty>() {
+			@Override
+			public synchronized void onCreate(Faculty e, int requestId) {
+				tabbedPane.addTab(e.getAcronym(), new GroupDepartments(e));
+				btnNew.setEnabled(true);
+			}
+			
+			@Override
+			public synchronized void onUpdate(Faculty e, int requestId) {
+				int count  = tabbedPane.getTabCount();
+				for (int i = 0; i < count; i++) {
+					GroupDepartments panel = (GroupDepartments)tabbedPane.getTabComponentAt(i);
+					if(panel.faculty.getId() == e.getId()) {
+						tabbedPane.setTitleAt(i, e.getAcronym());
+						break;
+					}
+				}
+			}
+			
+			@Override
+			public synchronized void onDelete(Faculty e, int requestId) {
+				int count  = tabbedPane.getTabCount();
+				for (int i = 0; i < count; i++) {
+					GroupDepartments panel = (GroupDepartments)tabbedPane.getTabComponentAt(i);
+					if(panel.faculty.getId() == e.getId()) {
+						panel.dispose();
+						tabbedPane.removeTabAt(i);
+						break;
+					}
+				}
 			}
 		});
 		
@@ -74,42 +110,19 @@ public class PanelDepartment extends Panel {
 		top.setBorder(new EmptyBorder(0, 0, 10, 0));
 		this.add(top, BorderLayout.NORTH);
 		
-		this.btnNew.addActionListener(event -> {
+		btnNew.setEnabled(false);
+		btnNew.addActionListener(event -> {
 			createDialog();
 			formDialog.setTitle("Enregistrement d'un nouveau departement");
 			formDialog.setVisible(true);
 		});
 		
 		this.tabbedPane = new JTabbedPane(JTabbedPane.RIGHT);
-		
-		final List<Faculty> faculties = mainWindow.factory.findDao(FacultyDao.class).findAll();
-		final MouseAdapter listener = new MouseAdapter() {
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				if(e.isPopupTrigger() ) {
-					Table table = (Table) e.getSource();
-					if(table.getSelectedRow() != -1) {						
-						popupMenu.show(table, e.getX(), e.getY());
-					} else {
-						JOptionPane.showMessageDialog(null, "Impossible d'effectuer cette operations\nselectionner d'abord une faculté", "Erreur", JOptionPane.ERROR_MESSAGE);
-					}
-				}
-			}
-		};
-		
-		for (Faculty faculty : faculties) {
-			DepartmentTableModel tableModel = new DepartmentTableModel(this.departmentDao, faculty);
-			Table table = new Table(tableModel);
-			TablePanel tablePanel = new TablePanel(table, faculty.getName(), false);
-			tabbedPane.addTab(faculty.getAcronym(), tablePanel);
-			
-			table.addMouseListener(listener);
-		}
-		
+
 		itemDelete.addActionListener(event -> {
-			TablePanel panel = (TablePanel) tabbedPane.getSelectedComponent();
-			DepartmentTableModel model = (DepartmentTableModel) panel.getTable().getModel();
-			Department dep = model.getRow(panel.getTable().getSelectedRow());
+			GroupDepartments panel = (GroupDepartments) tabbedPane.getSelectedComponent();
+			DepartmentTableModel model = panel.tableModel;
+			Department dep = model.getRow(panel.table.getSelectedRow());
 			try {						
 				if(promotionDao.checkByDepartment(dep.getId())) {
 					JOptionPane.showMessageDialog(null, "Impossible de supprimer le departement '"+dep.toString()+"', \ncar certain promotions y font references", "Echec de suppression", JOptionPane.ERROR_MESSAGE);
@@ -125,10 +138,10 @@ public class PanelDepartment extends Panel {
 		});
 		
 		itemUpdate.addActionListener(event -> {
-			TablePanel panel = (TablePanel) tabbedPane.getSelectedComponent();
-			DepartmentTableModel model = (DepartmentTableModel) panel.getTable().getModel();
+			GroupDepartments panel = (GroupDepartments) tabbedPane.getSelectedComponent();
+			DepartmentTableModel model = panel.tableModel;
 			createDialog();
-			form.setDepartment(model.getRow(panel.getTable().getSelectedRow()));
+			form.setDepartment(model.getRow(panel.table.getSelectedRow()));
 			formDialog.setTitle("Modification de la description d'un département");
 			formDialog.setVisible(true);
 		});
@@ -148,12 +161,75 @@ public class PanelDepartment extends Panel {
 		this.formDialog.setLocationRelativeTo(mainWindow);
 	}
 	
+	public synchronized void load () {
+		final List<Faculty> faculties = facultyDao.countAll()!=0? facultyDao.findAll() : new ArrayList<>();
+		for (Faculty faculty : faculties) {
+			GroupDepartments group = new GroupDepartments(faculty);
+			tabbedPane.addTab(faculty.getAcronym(), group);
+		}
+		
+		btnNew.setEnabled(!faculties.isEmpty());
+	}
+	
 	/**
 	 * Initialisation des composants graphique du popup menu
 	 */
 	private void initPopup() {
 		popupMenu.add(itemUpdate);
 		popupMenu.add(itemDelete);
+	}
+	
+	
+	protected class GroupDepartments extends Panel{
+		private static final long serialVersionUID = 6347417595220397581L;
+		
+		private Faculty faculty;
+		private DepartmentTableModel tableModel;
+		private Table table;
+		private TablePanel tablePanel;
+
+		private final MouseAdapter listener = new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
+					popupMenu.show(table, e.getX(), e.getY());
+				}
+			}
+		};
+		
+		private final DAOAdapter<Faculty> daoAdapter = new DAOAdapter<Faculty>() {
+			@Override
+			public synchronized void onUpdate(Faculty e, int requestId) {
+				if(faculty.getId() == e.getId()) {
+					faculty = e;
+					tablePanel.setTitle(e.getName());
+				}
+			}
+		};
+
+		/**
+		 * @param faculty
+		 */
+		public GroupDepartments(Faculty faculty) {
+			super(new BorderLayout());
+			this.faculty = faculty;
+			tableModel = new DepartmentTableModel(departmentDao, faculty);
+			table = new Table(tableModel);
+			tablePanel = new TablePanel(table, faculty.getName(), false);
+			
+			table.addMouseListener(listener);
+			facultyDao.addListener(daoAdapter);
+			
+			add(tablePanel, BorderLayout.CENTER);
+			tableModel.reload();
+		}
+		
+		public void dispose() {
+			table.removeMouseListener(listener);
+			facultyDao.removeListener(daoAdapter);
+			departmentDao.removeListener(tableModel);
+		}
+		
 	}
 
 

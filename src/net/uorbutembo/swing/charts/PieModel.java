@@ -35,6 +35,14 @@ public interface PieModel {
 	PiePart getPartAt (int index);
 	
 	/**
+	 * Renvoie l'index du part en parametre
+	 * renvoie -1 dans le cas où le part n'appartien pas au model du pie
+	 * @param part
+	 * @return
+	 */
+	int indexOf (PiePart part);
+	
+	/**
 	 * Renvoei les pourcentages de l'indem a l'index
 	 * @param index
 	 * @return
@@ -72,6 +80,20 @@ public interface PieModel {
 	 * @param index
 	 */
 	void removePartAt (int index);
+	/**
+	 * Depamande de supression d'un part dont la reference est en parametre
+	 * @param part
+	 * @return
+	 */
+	boolean removePart (PiePart part);
+	
+	/**
+	 * Supression du part dont la donnee est en parametre
+	 * @param data
+	 * @return
+	 */
+	boolean removeByData (Object data);
+	
 	void removeAll ();
 	PiePart [] getParts ();
 	

@@ -153,6 +153,13 @@ public interface DAOInterface <T extends DBEntity>{
 	void delete (long id)  throws DAOException;
 	
 	/**
+	 * Supression d'une collection d'occurences
+	 * @param ids
+	 * @throws DAOException
+	 */
+	void delete (long [] ids)  throws DAOException;
+	
+	/**
 	 * @param id
 	 * @param requestId
 	 */
@@ -194,6 +201,14 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @throws DAOException
 	 */
 	List<T>  findAll ()  throws DAOException;
+	
+	/**
+	 * selection d'une collection d'occurence dont leurs ID sont connue
+	 * @param ids
+	 * @return
+	 * @throws DAOException
+	 */
+	List<T>  findAll (long ...ids)  throws DAOException;
 	
 	/**
 	 * compte tout les occures

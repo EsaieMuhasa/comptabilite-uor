@@ -143,7 +143,7 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 		
 		promotionDao.addListener(new DAOAdapter<Promotion>() {
 			@Override
-			public void onCreate(Promotion e, int requestId) {
+			public synchronized void onCreate(Promotion e, int requestId) {
 				Faculty faculty = null;
 				for (int i = 0, count = modelComboFaculty.getSize(); i<count; i++) {
 					Faculty fac = modelComboFaculty.getElementAt(i);
@@ -192,6 +192,23 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 					modelComboStudyClass.addElement(e.getStudyClass());
 				}
 			}
+			
+			@Override
+			public synchronized void onCreate (Promotion[] e, int requestId) {
+				for (Promotion promotion : e) {
+					onCreate(promotion, requestId);
+				}
+			}
+			
+			@Override
+			public synchronized void onDelete(Promotion e, int requestId) {
+				loadData();
+			}
+			
+			@Override
+			public synchronized void onDelete(Promotion[] e, int requestId) {
+				loadData();
+			}
 		});
 	}
 	
@@ -235,13 +252,17 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 		modelComboStudyClass.removeAllElements();
 		studyClassByDepartment.clear();
 			
-		if(currentYear == null)
+		if(currentYear == null){
+			setEnabled(false);
 			return;
+		}
 		
 		List<Faculty> facs = this.facultyDao.checkByAcademicYear(currentYear) ? this.facultyDao.findByAcademicYear(currentYear) : null;
 
-		if(facs == null)
+		if(facs == null){
+			setEnabled(false);
 			return;
+		}
 		
 		for (Faculty fac : facs) {
 			if(this.departmentDao.checkByFaculty(fac, currentYear)) {
@@ -264,8 +285,23 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 			this.modelComboStudyClass.addElement(cl);
 		}
 
+		setEnabled(true);
 	}
 	
 	protected void onResize(int width) {}
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		
+		comboFaculty.setEnabled(enabled);
+		comboDepartment.setEnabled(enabled);
+		comboStudyClass.setEnabled(enabled);
+		matricul.setEnabled(enabled);
+		adresse.setEnabled(enabled);
+		btnSave.setEnabled(enabled);
+		imagePicker.setEnabled(enabled);
+		
+	}
 	
 }

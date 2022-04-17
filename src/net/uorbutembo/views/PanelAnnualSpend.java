@@ -5,22 +5,28 @@ package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.ImageIcon;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.ListSelectionModel;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
-import net.uorbutembo.beans.UniversitySpend;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.views.forms.FormAnnualSpend;
 import net.uorbutembo.views.forms.FormUtil;
-import net.uorbutembo.views.models.UniversitySpendTableModel;
+import net.uorbutembo.views.models.AnnualSpendTableModel;
 import resources.net.uorbutembo.R;
 
 /**
@@ -36,12 +42,15 @@ public class PanelAnnualSpend extends Panel {
 	private FormAnnualSpend form;
 	private Panel panelTable = new Panel(new BorderLayout());
 	private Table table;
-	private UniversitySpendTableModel tableModel;
+	private AnnualSpendTableModel tableModel;
 	
 	private AnnualSpendDao annualSpendDao;
 	private UniversitySpendDao universitySpendDao;
 	private AcademicYearDao academicYearDao;
 	private AcademicYear currentYear;
+	
+	private JPopupMenu popupMenu = new JPopupMenu();
+	private JMenuItem itemDelete = new JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
 
 	/**
 	 * @param mainWindow
@@ -74,67 +83,76 @@ public class PanelAnnualSpend extends Panel {
 			public void onDelete(AnnualSpend[] e, int requestId) { reload(); }
 		});
 		
-		universitySpendDao.addListener(new DAOAdapter<UniversitySpend>() {
-			@Override
-			public void onCreate(UniversitySpend e, int requestId) { reload(); }
-			
-			@Override
-			public void onCreate(UniversitySpend[] e, int requestId) { reload(); }
-			
-			@Override
-			public void onUpdate(UniversitySpend e, int requestId) { reload(); }
-			
-			@Override
-			public void onUpdate(UniversitySpend[] e, int requestId) { reload(); }
-			
-			@Override
-			public void onDelete(UniversitySpend e, int requestId) { reload(); }
-			
-			@Override
-			public void onDelete(UniversitySpend[] e, int requestId) { reload(); }
-		});
-		
-		tableModel = new UniversitySpendTableModel(mainWindow.factory.findDao(UniversitySpendDao.class));
+		tableModel = new AnnualSpendTableModel(annualSpendDao);
 		table = new Table(tableModel);
 		Panel panel = new Panel(new BorderLayout());
 		panel.add(table, BorderLayout.CENTER);
 		panel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		panelTable.add(FormUtil.createVerticalScrollPane(panel), BorderLayout.CENTER);
 		
-		Panel top = new Panel(new FlowLayout(FlowLayout.RIGHT));
-		top.add(this.btnNew);
-		top.add(this.btnList);
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
+					popupMenu.show(table, e.getX(), e.getY());
+				}
+			}
+		});
 		
-		this.btnNew.addActionListener(event -> {
-			this.center.removeAll();
+		//popup
+		popupMenu.add(itemDelete);
+		itemDelete.addActionListener(event -> {
+			AnnualSpend spend = tableModel.getRow(table.getSelectedRow());
+			String message = "Voulez-vous vraiment supprimer la rubrique \n\""+spend.getUniversitySpend().getTitle()+"\"\n";
+			message += "pour le budget de l'année academique "+currentYear.getLabel()+" ?";
+			message += "\nN.B: Cette suppression est definitive!";
+			int status = JOptionPane.showConfirmDialog(mainWindow, message, "Suppression", JOptionPane.YES_NO_OPTION);
+			if(status == JOptionPane.OK_OPTION) {
+				try {
+					annualSpendDao.delete(spend.getId());
+				} catch (DAOException e) {
+					JOptionPane.showMessageDialog(mainWindow, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});
+		//==
+		
+		Panel top = new Panel(new FlowLayout(FlowLayout.RIGHT));
+		top.add(btnNew);
+		top.add(btnList);
+		
+		btnNew.setEnabled(false);
+		btnNew.addActionListener(event -> {
+			center.removeAll();
 			
-			if(this.form == null ) {
-				this.form = new FormAnnualSpend(mainWindow, this.annualSpendDao);
+			if(form == null ) {
+				form = new FormAnnualSpend(mainWindow, this.annualSpendDao);
 				form.setCurrentYear(currentYear);
 			}
 			
-			this.center.add(this.form, BorderLayout.NORTH);
-			this.center.revalidate();
-			this.center.repaint();
-			this.btnNew.setVisible(false);
-			this.btnList.setVisible(true);
+			center.add(form, BorderLayout.NORTH);
+			center.revalidate();
+			center.repaint();
+			btnNew.setVisible(false);
+			btnList.setVisible(true);
 		});
 		
-		this.btnList.addActionListener(event -> {
-			this.center.removeAll();
-			this.center.add(this.panelTable, BorderLayout.CENTER);
-			this.center.revalidate();
-			this.center.repaint();
+		btnList.setVisible(false);
+		btnList.addActionListener(event -> {
+			center.removeAll();
+			center.add(panelTable, BorderLayout.CENTER);
+			center.revalidate();
+			center.repaint();
 			
-			this.btnList.setVisible(false);
-			this.btnNew.setVisible(true);
+			btnList.setVisible(false);
+			btnNew.setVisible(true);
 		});
-		this.btnList.setVisible(false);
 		
+		
+		center.add(panelTable, BorderLayout.CENTER);
 		this.add(top, BorderLayout.NORTH);
-		
-		this.center.add(this.panelTable, BorderLayout.CENTER);
-		this.add(this.center, BorderLayout.CENTER);
+		this.add(center, BorderLayout.CENTER);
 	}
 	
 	/**
@@ -145,9 +163,11 @@ public class PanelAnnualSpend extends Panel {
 			form.loadData();
 		
 		if(universitySpendDao.countAll() == annualSpendDao.countByAcademicYear(currentYear.getId())) {
-			this.btnList.setVisible(false);
-			this.btnNew.setVisible(false);
+			btnList.setVisible(false);
+			btnNew.setVisible(false);
 		}
+		
+		btnNew.setEnabled(true);
 	}
 
 	/**

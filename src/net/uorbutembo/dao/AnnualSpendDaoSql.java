@@ -7,10 +7,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import net.uorbutembo.beans.AcademicYear;
+import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.UniversitySpend;
 
@@ -89,6 +91,46 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 	public void update (AnnualSpend e, long id) throws DAOException {
 		throw new DAOException("Opération non prise en charge");
 	}
+	
+	@Override
+	public synchronized void delete (long id) throws DAOException {
+		AllocationCostDaoSql childsDao = (AllocationCostDaoSql) factory.findDao(AllocationCostDao.class);
+		List<AllocationCost> costs = childsDao.checkByAnnualSpend(id)? childsDao.findByAnnualSpend(id) : new ArrayList<>();
+		AnnualSpend spend = findById(id);
+		
+		long [] ids = new long [costs.size()];
+		AllocationCost [] cs = new AllocationCost[costs.size()];
+		for (int i = 0; i < costs.size(); i++) {
+			ids[i] = costs.get(i).getId();
+			cs[i] = costs.get(i);
+		}
+		
+		try (Connection connection = factory.getConnection()){
+			connection.setAutoCommit(false);
+			if(!costs.isEmpty())
+				childsDao.delete(connection, ids);
+			delete(connection, id);
+			connection.commit();
+			
+			Thread t = new Thread(() -> {
+				if(!costs.isEmpty()) {
+					if(cs.length == 1)
+						for(DAOListener<AllocationCost> ls : childsDao.getListeners())
+							ls.onDelete(cs[0], DEFAULT_REQUEST_ID);
+					else
+						for(DAOListener<AllocationCost> ls : childsDao.getListeners())
+							ls.onDelete(cs, DEFAULT_REQUEST_ID);
+				}
+				
+				for (DAOListener<AnnualSpend> ls : listeners) {
+					ls.onDelete(spend, DEFAULT_REQUEST_ID);
+				}
+			});
+			t.start();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
 
 	@Override
 	public List<AnnualSpend> findByAcademicYear(long academicYear) throws DAOException {
@@ -123,7 +165,7 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 		if(result.getLong("lastUpdate") != 0) {
 			a.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}
-		a.setUniversitySpend(new UniversitySpend(result.getLong("universitySpend")));
+		a.setUniversitySpend(universitySpendDao.findById(result.getLong("universitySpend")));
 		a.setAcademicYear(new AcademicYear(result.getLong("academicYear")));
 		return a;
 	}

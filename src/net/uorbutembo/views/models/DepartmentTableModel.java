@@ -27,8 +27,15 @@ public class DepartmentTableModel extends TableModel<Department> {
 		super(departmentDao);
 		this.faculty = faculty;
 		this.departmentDao = departmentDao;
-		if(this.departmentDao.checkByFaculty(faculty.getId()))	
-			this.data = this.departmentDao.findByFaculty(this.faculty.getId());
+	}
+	
+	@Override
+	public synchronized void reload() {
+		data.clear();
+		if(faculty != null && departmentDao.checkByFaculty(faculty.getId()))	
+			data = departmentDao.findByFaculty(faculty.getId());
+		
+		fireTableDataChanged();
 	}
 	
 	@Override

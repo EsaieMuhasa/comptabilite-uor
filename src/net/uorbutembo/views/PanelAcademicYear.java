@@ -76,7 +76,7 @@ public class PanelAcademicYear extends Panel {
 		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
 		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
 		
-		academicYearDao.addListener(new DAOAdapter<AcademicYear>() {
+		final DAOAdapter<AcademicYear> yearListener = new DAOAdapter<AcademicYear>() {
 			@Override
 			public void onCreate(AcademicYear e, int requestId) {
 				if(dialogYear != null) 
@@ -103,7 +103,16 @@ public class PanelAcademicYear extends Panel {
 			public void onDelete(AcademicYear e, int requestId) {				
 				reload();
 			}
-		});
+			
+			@Override
+			public synchronized void onCurrentYear(AcademicYear year) {
+				reload();
+			}
+		};
+		
+		academicYearDao.addListener(yearListener);
+		academicYearDao.addYearListener(yearListener);
+
 		config = new PanelConfigAcademicYear(mainWindow);
 		
 		final Panel center = new Panel(new BorderLayout());
@@ -208,8 +217,6 @@ public class PanelAcademicYear extends Panel {
 			setSelectedYear(year);
 		});
 		
-		reload();
-		
 		title.setOpaque(true);
 		title.setBackground(FormUtil.BKG_START);
 		
@@ -253,10 +260,10 @@ public class PanelAcademicYear extends Panel {
 	/**
 	 * Actalisation des donnees du menu
 	 */
-	private void reload() {
+	private synchronized void reload() {
 		listModel.removeAllElements();
 		
-		List<AcademicYear> years = this.academicYearDao.countAll() != 0? this.academicYearDao.findAll() : new ArrayList<>();
+		List<AcademicYear> years = academicYearDao.countAll() != 0? this.academicYearDao.findAll() : new ArrayList<>();
 		for (AcademicYear year : years)
 			listModel.addElement(year);
 		

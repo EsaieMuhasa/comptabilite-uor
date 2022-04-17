@@ -55,10 +55,10 @@ public class PanelStudyClass extends Panel {
 	public PanelStudyClass(MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.mainWindow = mainWindow;
-		this.studyClassDao = mainWindow.factory.findDao(StudyClassDao.class);
-		this.promotionDao = mainWindow.factory.findDao(PromotionDao.class);
+		studyClassDao = mainWindow.factory.findDao(StudyClassDao.class);
+		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
 		
-		this.studyClassDao.addListener(new DAOAdapter<StudyClass>() {
+		studyClassDao.addListener(new DAOAdapter<StudyClass>() {
 			@Override
 			public void onCreate(StudyClass e, int requestId) {
 				formDialog.setVisible(false);
@@ -75,7 +75,8 @@ public class PanelStudyClass extends Panel {
 		top.add(FormUtil.createTitle("Classes d'étude"), BorderLayout.CENTER);
 		this.add(top, BorderLayout.NORTH);
 		
-		this.btnNew.addActionListener(event -> {
+		btnNew.setEnabled(false);
+		btnNew.addActionListener(event -> {
 			createDialog();
 			this.formDialog.setTitle("Enregistrement d'une nouvelle classe d'étude");
 			this.formDialog.setVisible(true);
@@ -93,6 +94,11 @@ public class PanelStudyClass extends Panel {
 		this.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		initPopup();
+	}
+	
+	public synchronized void load () {
+		tableModel.reload();
+		btnNew.setEnabled(true);
 	}
 	
 	private void createDialog() {

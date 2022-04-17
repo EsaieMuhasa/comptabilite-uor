@@ -6,7 +6,9 @@ package net.uorbutembo.views;
 import java.awt.BorderLayout;
 
 import javax.swing.Box;
+import javax.swing.ImageIcon;
 import javax.swing.JScrollPane;
+import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.UniversitySpendDao;
@@ -16,6 +18,7 @@ import net.uorbutembo.swing.Table;
 import net.uorbutembo.views.forms.FormUniversitySpend;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.UniversitySpendTableModel;
+import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
@@ -24,7 +27,10 @@ import net.uorbutembo.views.models.UniversitySpendTableModel;
 public class PanelUniversitySpend extends Panel{
 	private static final long serialVersionUID = -6678192465363319784L;
 	
-	private final Button btnNew = new Button("Ajouter");
+	private static final ImageIcon ICO_PLUS  = new ImageIcon(R.getIcon("plus"));
+	private static final ImageIcon ICO_CLOSE  = new ImageIcon(R.getIcon("close"));
+	
+	private final Button btnNew = new Button(ICO_PLUS, "Ajouter");
 	private final FormUniversitySpend form;
 	private final Table table;
 	private final UniversitySpendTableModel tableModel;
@@ -53,8 +59,10 @@ public class PanelUniversitySpend extends Panel{
 			if (btnNew.getText().equals("Ajouter")) {
 				form.setVisible(true);
 				btnNew.setText("Annuler");
+				btnNew.setIcon(ICO_CLOSE);
 			} else {
 				btnNew.setText("Ajouter");
+				btnNew.setIcon(ICO_PLUS);
 				form.setVisible(false);
 			}
 		});
@@ -66,6 +74,7 @@ public class PanelUniversitySpend extends Panel{
 		
 		box.add(Box.createHorizontalGlue());
 		box.add(btnNew);
+		box.setBorder(new EmptyBorder(0, 0, 10, 0));
 		top.add(box, BorderLayout.NORTH);
 		top.add(form, BorderLayout.CENTER);
 		top.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);

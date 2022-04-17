@@ -39,6 +39,14 @@ public class TablePanel extends Panel {
 	}
 	
 	/**
+	 * Modificationd du titre du panel
+	 * @param title
+	 */
+	public void setTitle (String title) {
+		this.title.setText(title);
+	}
+	
+	/**
 	 * @return the table
 	 */
 	public Table getTable() {

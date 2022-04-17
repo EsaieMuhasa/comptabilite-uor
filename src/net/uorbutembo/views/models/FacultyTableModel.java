@@ -22,8 +22,15 @@ public class FacultyTableModel extends TableModel<Faculty> {
 	public FacultyTableModel(FacultyDao facultyDao) {
 		super(facultyDao);
 		this.facultyDao = facultyDao;
+	}
+	
+	@Override
+	public synchronized void reload() {
+		data.clear();
 		if(facultyDao.countAll() != 0)
-			this.data = this.facultyDao.findAll();
+			data = facultyDao.findAll();
+		
+		fireTableDataChanged();
 	}
 
 	@Override

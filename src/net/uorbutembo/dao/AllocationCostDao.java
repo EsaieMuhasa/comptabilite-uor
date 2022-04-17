@@ -22,7 +22,7 @@ public interface AllocationCostDao extends DAOInterface<AllocationCost> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public boolean check (long annualSpendId, long academicFeeId) throws DAOException;
+	boolean check (long annualSpendId, long academicFeeId) throws DAOException;
 	
 	/**
 	 * Renvoie la portion allouer a la rubrique budgetaire d'une annee precise
@@ -31,7 +31,7 @@ public interface AllocationCostDao extends DAOInterface<AllocationCost> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public AllocationCost find (long annualSpendId, long academicFeeId) throws DAOException;
+	AllocationCost find (long annualSpendId, long academicFeeId) throws DAOException;
 	
 	/**
 	 * Renvoie la l'occurence qui represente la rubrique budgetarie
@@ -40,7 +40,7 @@ public interface AllocationCostDao extends DAOInterface<AllocationCost> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public AllocationCost find (AnnualSpend annualSpend, AcademicFee academicFee) throws DAOException;
+	AllocationCost find (AnnualSpend annualSpend, AcademicFee academicFee) throws DAOException;
 	
 	/**
 	 * verification de l'existance de 
@@ -48,9 +48,18 @@ public interface AllocationCostDao extends DAOInterface<AllocationCost> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public default boolean checkByAnnualSpned (long annualSpendId) throws DAOException{
+	default boolean checkByAnnualSpend (long annualSpendId) throws DAOException{
 		return this.check("annualSpend", annualSpendId);
 	}
+	
+	/**
+	 * Renvoie une collection des montants affecter une depense annuel
+	 * @param annualSpendId
+	 * @return
+	 * @throws DAOException
+	 */
+	List<AllocationCost> findByAnnualSpend (long annualSpendId) throws DAOException;
+	
 	/**
 	 * Verifie s'il y a au aumoin une occurence qui fait reference.
 	 * Facilte la verification, pour savoir si la repartition des frais a deja eux lieux
@@ -58,7 +67,7 @@ public interface AllocationCostDao extends DAOInterface<AllocationCost> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public default boolean checkByAcademicFee (long academicFeeId) throws DAOException {
+	default boolean checkByAcademicFee (long academicFeeId) throws DAOException {
 		return this.check("academicFee", academicFeeId);
 	}
 	
@@ -68,7 +77,7 @@ public interface AllocationCostDao extends DAOInterface<AllocationCost> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public List<AllocationCost> findByAcademicFee (long academicFeeId) throws DAOException;
+	List<AllocationCost> findByAcademicFee (long academicFeeId) throws DAOException;
 	
 	/**
 	 * Renvoie la collection de la repartition des frais academique d'une annee
@@ -76,7 +85,7 @@ public interface AllocationCostDao extends DAOInterface<AllocationCost> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public List<AllocationCost> findByAcademicFee (AcademicFee academicFee) throws DAOException;
+	List<AllocationCost> findByAcademicFee (AcademicFee academicFee) throws DAOException;
 	
 	/**
 	 * Compte le nombre d'occurence qui font referece aux frais universitaires.
@@ -85,6 +94,6 @@ public interface AllocationCostDao extends DAOInterface<AllocationCost> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public int countByAcademicFee (long academicFeeId) throws DAOException ;
+	int countByAcademicFee (long academicFeeId) throws DAOException ;
 
 }

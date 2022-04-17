@@ -117,26 +117,76 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	}
 
 	@Override
-	public synchronized void delete(long id) throws DAOException {
+	public synchronized void delete (long id) throws DAOException {		
+		T t = this.findById(id);
+		try (Connection connection =  this.factory.getConnection();) {
+			t= delete(connection, id);
+			emitOnDelete(t);			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+	
+	public synchronized T delete(Connection connection , long id) throws DAOException {
 		final String SQL_QUERY = String.format("DELETE FROM %s WHERE id = ?", this.getTableName());
 		System.out.println(SQL_QUERY);
 		
 		T t = this.findById(id);
-		try (
-				Connection connection =  this.factory.getConnection();
-				PreparedStatement statement = prepare(SQL_QUERY, connection, false, id);
-			) {
+		try (PreparedStatement statement = prepare(SQL_QUERY, connection, false, id);) {
 			int status = statement.executeUpdate();
 			
 			if(status == 0) {
 				throw new DAOException("Aucune occurence suprimer");
 			}
-			
-			emitOnDelete(t);
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return t;
+	}
+	
+	@Override
+	public synchronized void delete (long [] ids) throws DAOException {
+		try (Connection connection =  this.factory.getConnection();) {
+			List<T> data = delete(connection, ids);			
+			emitOnDelete(data, DEFAULT_REQUEST_ID);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
 	}
+	
+	/**
+	 * supression d'une collection d'occurence, dans une transactiond deja demarer d'avance
+	 * @param connection
+	 * @param ids
+	 * @return
+	 * @throws DAOException
+	 */
+	public synchronized List<T> delete (Connection connection, long [] ids) throws DAOException {
+		List<T> data = findAll(ids);
+		
+		String SQL_IN = "";
+		for (int i = 0; i < ids.length; i++) {
+			SQL_IN += ids[i]+",";
+		}
+		SQL_IN = SQL_IN.substring(0, SQL_IN.length()-1);
+		final String SQL_QUERY = String.format("DELETE FROM %s WHERE id IN(%s)", this.getTableName(), SQL_IN);
+		System.out.println(SQL_QUERY);
+		
+		try (Statement statement = connection.createStatement();) {
+			int status = statement.executeUpdate(SQL_QUERY);
+			
+			if(status == 0) {
+				throw new DAOException("Aucune occurence supprimer");
+			}
+
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return data;
+	}
+	
+	
 
 	@Override
 	public synchronized T find(String columnName, Object value) throws DAOException {
@@ -455,6 +505,38 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			throw new DAOException(e.getMessage(), e);
 		}
 		return t;
+	}
+	
+	@Override
+	public List<T> findAll (long... ids) throws DAOException {
+		List<T> data = new ArrayList<>();
+		
+		String SQL_IN = "";
+		for (int i = 0; i < ids.length; i++) {
+			SQL_IN += ids[i]+",";
+		}
+		SQL_IN = SQL_IN.substring(0, SQL_IN.length()-1);
+		
+		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE id IN(%s)", getViewName(), SQL_IN);
+		System.out.println(SQL_QUERY);
+		
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet  result  = statement.executeQuery(SQL_QUERY);
+			) {
+			
+			while (result.next()) 
+				data.add(mapping(result));
+
+			if(data.isEmpty()) 
+				throw new DAOException("Aucune occurence ne correspond aux ids en paramatre: "+SQL_IN);
+			
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return data;
 	}
 
 	@Override
@@ -834,6 +916,25 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 			for (DAOListener<T> ls : listeners) {
 				try {					
 					ls.onDelete(e, requestId);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
+		t.start();
+	}
+	
+	protected synchronized void emitOnDelete (List<T> e, int requestId) {
+		@SuppressWarnings("unchecked")
+		Thread t = new Thread(() -> {	
+			T[] data = (T[]) new Object[e.size()];
+			for (int i = 0; i < data.length; i++) {
+				data[i] = e.get(i);
+			}
+			
+			for (DAOListener<T> ls : listeners) {
+				try {					
+					ls.onDelete(data, requestId);
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}

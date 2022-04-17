@@ -145,7 +145,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	}
 
 	@Override
-	public void removePartAt(int index) {
+	public synchronized void removePartAt(int index) {
 		this.parts.get(index).removeListener(this);
 		this.parts.remove(index);
 		calculRealMax();
@@ -213,6 +213,34 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 		return data;
 	}
 	
+	@Override
+	public int indexOf (PiePart part) {
+		return parts.indexOf(part);
+	}
+	
+	@Override
+	public boolean removeByData(Object data) {
+		PiePart part = findByData(data);
+		if(part != null) {
+			int index = indexOf(part);
+			if(index != -1){
+				removePartAt(index);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean removePart(PiePart part) {
+		int index = indexOf(part);
+		if(index != -1) {
+			removePartAt(index);
+			return true;
+		}
+		return false;
+	}
+
 	protected synchronized void emitRefresh () {
 		for (PieModelListener listener : listeners) {
 			listener.refresh(this);

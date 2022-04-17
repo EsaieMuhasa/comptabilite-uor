@@ -22,8 +22,15 @@ public class StudyClassTableModel extends TableModel<StudyClass> {
 	public StudyClassTableModel(StudyClassDao studyClassDao) {
 		super(studyClassDao);
 		this.studyClassDao = studyClassDao;
+	}
+	
+	@Override
+	public synchronized void reload() {
+		data.clear();
 		if(studyClassDao.countAll() != 0)
-			this.data = this.studyClassDao.findAll();
+			data = this.studyClassDao.findAll();
+		
+		fireTableDataChanged();
 	}
 
 	@Override

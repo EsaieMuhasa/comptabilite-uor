@@ -22,6 +22,7 @@ import net.uorbutembo.beans.UniversitySpend;
 import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AllocationCostDao;
+import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.InscriptionDao;
@@ -57,6 +58,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	private final AllocationCostDao allocationCostDao;
 	private final InscriptionDao inscriptionDao;
 	private final UniversitySpendDao universitySpendDao;
+	private final AnnualSpendDao annualSpendDao;
 
 	//pour le montant deja payer
 	private DefaultCardModel<Double> cardModelPayment;
@@ -73,6 +75,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		universitySpendDao = factory.findDao(UniversitySpendDao.class);
 		paymentFeeDao = factory.findDao(PaymentFeeDao.class);
 		academicYearDao = factory.findDao(AcademicYearDao.class);
+		annualSpendDao = factory.findDao(AnnualSpendDao.class);
 		
 		inscriptionDao.addListener(new DAOAdapter<Inscription>() {
 			@Override
@@ -99,6 +102,40 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			public void onDelete(Inscription e, int requestId) {
 				if(academicYearDao.isCurrent(currentYear)) 
 					reload();
+			}
+		});
+		
+		annualSpendDao.addListener(new DAOAdapter<AnnualSpend>() {
+			@Override
+			public synchronized void onDelete(AnnualSpend e, int requestId) {
+				PiePart part = findByData(e);
+				if(part != null) {
+					removePart(part);
+					pieModelPayment.removeByData(part.getData());
+				}
+			}
+			
+			@Override
+			public synchronized void onDelete(AnnualSpend[] e, int requestId) {
+				for (AnnualSpend spend : e) {
+					onDelete(spend, requestId);
+				}
+			}
+			
+			@Override
+			public synchronized void onCreate(AnnualSpend e, int requestId) {
+				if(currentYear != null && e.getAcademicYear().getId() == currentYear.getId()) {
+					reload();
+					reloadPayment();
+				}
+			}
+			
+			@Override
+			public synchronized void onCreate(AnnualSpend[] e, int requestId) {
+				if(currentYear != null && e[0].getAcademicYear().getId() == currentYear.getId()) {
+					reload();
+					reloadPayment();
+				}
 			}
 		});
 		

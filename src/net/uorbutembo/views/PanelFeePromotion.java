@@ -101,6 +101,7 @@ public class PanelFeePromotion extends Panel {
 		
 		panelShowConfig.setBorder(new EmptyBorder(5, 5, 5, 0));
 		
+		btnNewFee.setEnabled(false);
 		btnNewFee.addActionListener(event -> {
 			if(dialogAcademicFee == null) {
 				dialogAcademicFee = new Dialog(mainWindow, new FormAcademicFee(mainWindow, this.academicFeeDao));
@@ -231,6 +232,7 @@ public class PanelFeePromotion extends Panel {
 		}
 		
 		formFeePromotion.setCurrentYear(currentYear);
+		btnNewFee.setEnabled(true);
 		btnNewFee.setVisible(academicYearDao.isCurrent(currentYear));
 	}
 	

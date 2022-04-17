@@ -84,6 +84,16 @@ public class SidebarStudents extends Panel{
 		DAOAdapter<AcademicYear> listener = new DAOAdapter<AcademicYear>() {
 			@Override
 			public void onCurrentYear(AcademicYear year) {
+				if(comboModel.getSize() == 0) {
+					if(academicYearDao.countAll() != 0) {
+						List<AcademicYear> years = academicYearDao.findAll();
+						for (AcademicYear y : years) {
+							comboModel.addElement(y);
+						}
+						comboBox.setEnabled(true);
+						checkFilter.setEnabled(true);
+					}
+				}
 				setCurrentYear(year);
 				checkFilter.setSelected(false);
 			}
@@ -195,6 +205,7 @@ public class SidebarStudents extends Panel{
 		tree.setEnabled(false);
 		
 		checkFilter.setForeground(Color.WHITE);
+		checkFilter.setEnabled(false);
 		checkFilter.addActionListener(event -> {
 			tree.setEnabled(checkFilter.isSelected());
 			emitOnFilter(false);
@@ -207,15 +218,10 @@ public class SidebarStudents extends Panel{
 		center.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		bottom.add(comboGroup, BorderLayout.CENTER);
+		comboBox.setEnabled(false);
 		comboBox.addItemListener(event -> {
 			setCurrentYear(comboModel.getElementAt(comboBox.getSelectedIndex()));
 		});
-		if(academicYearDao.countAll() != 0) {
-			List<AcademicYear> years = academicYearDao.findAll();
-			for (AcademicYear y : years) {
-				comboModel.addElement(y);
-			}
-		}
 		
 		this.add(top, BorderLayout.NORTH);
 		this.add(center, BorderLayout.CENTER);

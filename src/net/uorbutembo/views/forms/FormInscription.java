@@ -32,28 +32,16 @@ public class FormInscription extends AbstractInscriptionForm{
 
 	private ComboBox<Kind> comboKind = new ComboBox<>("Sexe");
 	// fields
-	private FormGroup<String> name;
-	private FormGroup<String> postName;
-	private FormGroup<String> lastName;
-	private FormGroup<String> telephone;
-	private FormGroup<String> email;
-	private FormGroup<String> school;
-	private FormGroup<String> birthPlace;
-	private FormGroup<String> birthDate;
-	private FormGroup<Kind> groupKind;
+	private FormGroup<String> name = FormGroup.createTextField("Nom");
+	private FormGroup<String> postName = FormGroup.createTextField("Post-nom");
+	private FormGroup<String> lastName = FormGroup.createTextField("Prénom");
+	private FormGroup<String> telephone = FormGroup.createTextField("Téléphone");
+	private FormGroup<String> email = FormGroup.createTextField("E-mail");
+	private FormGroup<String> school = FormGroup.createTextField("Ecole d'origine");
+	private FormGroup<String> birthPlace = FormGroup.createTextField("Leux de naissance");
+	private FormGroup<String> birthDate = FormGroup.createTextField("Date de naissance");
+	private FormGroup<Kind> groupKind = FormGroup.createComboBox(comboKind);
 	//-- fields
-	
-	{
-		name = FormGroup.createTextField("Nom");
-		postName = FormGroup.createTextField("Post-nom");
-		lastName = FormGroup.createTextField("Prénom");
-		telephone = FormGroup.createTextField("Téléphone");
-		email = FormGroup.createTextField("E-mail");
-		school = FormGroup.createTextField("Ecole d'origine");
-		birthPlace = FormGroup.createTextField("Leux de naissance");
-		birthDate = FormGroup.createTextField("Date de naissance");
-		groupKind = FormGroup.createComboBox(comboKind);
-	}
 
 	public FormInscription(MainWindow mainWindow, InscriptionDao inscriptionDao, StudentDao studentDao) {
 		super(mainWindow, inscriptionDao, studentDao);	
@@ -61,6 +49,7 @@ public class FormInscription extends AbstractInscriptionForm{
 		this.setTitle("Formulaire d'inscription");
 
 		init();
+		setEnabled(false);
 	}
 	
 	@Override
@@ -87,7 +76,6 @@ public class FormInscription extends AbstractInscriptionForm{
 	@Override
 	public void doLayout() {
 		super.doLayout();
-		
 	}
 	
 	@Override
@@ -105,6 +93,20 @@ public class FormInscription extends AbstractInscriptionForm{
 				fieldsLayout.setColumns(2);
 			}
 		}
+	}
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		name.setEnabled(enabled);
+		postName.setEnabled(enabled);
+		lastName.setEnabled(enabled);
+		telephone.setEnabled(enabled);
+		email.setEnabled(enabled);
+		school.setEnabled(enabled);
+		birthPlace.setEnabled(enabled);
+		birthDate.setEnabled(enabled);
+		groupKind.setEnabled(enabled);
 	}
 	
 	@Override

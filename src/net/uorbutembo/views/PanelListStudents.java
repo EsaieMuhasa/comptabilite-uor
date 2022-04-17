@@ -176,6 +176,8 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 		
 		progress.setBorderPainted(false);
 		progress.setStringPainted(true);
+		progress.setVisible(false);
+		statusButtonsExport(false);
 		//==
 		
 		//search

@@ -32,6 +32,13 @@ public class FormGroup <T> extends Panel{
 		this.init(field, help);
 	}
 	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		help.setEnabled(enabled);
+		field.getComponent().setEnabled(enabled);
+	}
+	
 	/**
 	 * utilitaire de creation d'un edit text
 	 * @param <T>

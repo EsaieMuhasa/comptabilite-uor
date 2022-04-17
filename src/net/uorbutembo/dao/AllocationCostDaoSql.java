@@ -73,6 +73,33 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 			throw new DAOException(e.getMessage(), e);
 		}
 	}
+	
+	@Override
+	public List<AllocationCost> findByAnnualSpend(long annualSpendId) throws DAOException {
+		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d", getTableName(), annualSpendId);
+		System.out.println(sql);
+		
+		List<AllocationCost> data = new ArrayList<>();
+		try(
+				final Connection connection = factory.getConnection();
+				final Statement statement = connection.createStatement();
+				final ResultSet result = statement.executeQuery(sql)) {
+			
+			AnnualSpend annualSpend = annualSpendDao.findById(annualSpendId);
+			while (result.next()) {
+				AllocationCost c = this.mapping(result, true, false);
+				c.setAnnualSpend(annualSpend);
+				data.add(c);
+			}
+			
+			if(data.isEmpty())
+				throw new DAOException("Aucunne reference pour la rubrique \""+annualSpend.getUniversitySpend().getTitle()+"\"");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+
+		return data;
+	}
 
 	@Override
 	public synchronized void update(AllocationCost a, long id) throws DAOException {

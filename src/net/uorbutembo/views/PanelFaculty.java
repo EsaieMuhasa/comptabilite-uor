@@ -68,7 +68,8 @@ public class PanelFaculty extends Panel {
 		top.add(FormUtil.createTitle("Facultés"), BorderLayout.CENTER);
 		this.add(top, BorderLayout.NORTH);
 		
-		this.btnNew.addActionListener(event -> {
+		btnNew.setEnabled(false);
+		btnNew.addActionListener(event -> {
 			createDialog();
 			this.dialogForm.setTitle("Enregistrememnt d'une faculté");
 			this.dialogForm.setVisible(true);
@@ -85,6 +86,11 @@ public class PanelFaculty extends Panel {
 		this.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		initPopup();
+	}
+	
+	public synchronized void load () {
+		tableModel.reload();
+		btnNew.setEnabled(true);
 	}
 	
 	/**

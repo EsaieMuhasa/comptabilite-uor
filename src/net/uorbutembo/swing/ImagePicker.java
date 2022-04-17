@@ -72,6 +72,19 @@ public class ImagePicker extends Panel {
 		this.mainFrame = frame;
 	}
 	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		btnChoose.setEnabled(enabled);
+		render.setEnabled(enabled);
+		
+		if(render.fileName != null)
+			slider.setEnabled(enabled);
+		else {
+			slider.setEnabled(false);
+		}
+	}
+	
 	/**
 	 * Demande d'affichage d'une image
 	 * @param imageFileName

@@ -70,6 +70,8 @@ public class FormReRegister extends AbstractInscriptionForm {
 				setVisible(false);
 			});
 		}
+		
+		setEnabled(false);
 	}
 
 	@Override
@@ -173,12 +175,12 @@ public class FormReRegister extends AbstractInscriptionForm {
 	}
 	
 	@Override
-	protected void onResize(int width) {
-		super.onResize(width);
-//		if(fieldsLayout.getRows()!=3) {
-//			fieldsLayout.setRows(3);
-//			fieldsLayout.setColumns(1);
-//		}
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		if(btnCancel != null)
+			btnCancel.setEnabled(enabled);
+		if(btnSaveUpdate != null)
+			btnSaveUpdate.setEnabled(enabled);
 	}
 
 }

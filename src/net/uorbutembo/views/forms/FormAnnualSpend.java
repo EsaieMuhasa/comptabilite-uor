@@ -16,6 +16,7 @@ import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.UniversitySpend;
 import net.uorbutembo.dao.AnnualSpendDao;
+import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.CheckBox;
@@ -43,17 +44,64 @@ public class FormAnnualSpend extends DefaultFormPanel {
 		super(mainWindow);
 		this.annualSpendDao = annualSpendDao;
 		this.setTitle("Rubriques budgetaire");
-		this.universitySpendDao = this.annualSpendDao.getFactory().findDao(UniversitySpendDao.class);
+		universitySpendDao = annualSpendDao.getFactory().findDao(UniversitySpendDao.class);
 		
 		this.getBody().add(box, BorderLayout.NORTH);
 		this.setVisible(false);
+		
+		annualSpendDao.addListener(new DAOAdapter<AnnualSpend>() {
+			@Override
+			public synchronized void onDelete(AnnualSpend e, int requestId) {
+				UniversitySpend spend = universitySpendDao.findById(e.getUniversitySpend().getId());
+				CheckBox<UniversitySpend> check = FormUtil.createCheckBox(spend.getTitle(), spend);
+				checkBoxs.add(check);
+				box.add(check);
+			}
+		});
+		
+		universitySpendDao.addListener(new DAOAdapter<UniversitySpend>() {
+			@Override
+			public synchronized void onCreate(UniversitySpend e, int requestId) {
+				CheckBox<UniversitySpend> check = FormUtil.createCheckBox(e.getTitle(), e);
+				checkBoxs.add(check);
+				box.add(check);
+			}
+			
+			@Override
+			public synchronized void onUpdate(UniversitySpend e, int requestId) {
+				for (CheckBox<UniversitySpend> c : checkBoxs) {
+					if(c.getData().getId() == e.getId()) {
+						c.setText(e.getTitle());
+						c.setData(e);
+						break;
+					}
+				}
+			}
+			
+			@Override
+			public synchronized void onDelete(UniversitySpend e, int requestId) {
+				for (CheckBox<UniversitySpend> c : checkBoxs) {
+					if(c.getData().getId() == e.getId()) {
+						box.remove(c);
+						break;
+					}
+				}
+			}
+			
+			@Override
+			public synchronized void onDelete(UniversitySpend[] e, int requestId) {
+				for (UniversitySpend u : e) {
+					onDelete(u, requestId);
+				}
+			}
+		});
 	}
 	
 	/**
 	 * rechargement des donnees
 	 * cette methode est automatiquement appeler lors de la modification de l'annee academique
 	 */
-	public void loadData() {
+	public void loadData () {
 		if(this.currentYear == null || (universitySpendDao.countAll() == 0)) {
 			this.setVisible(false);
 			return;
@@ -65,7 +113,7 @@ public class FormAnnualSpend extends DefaultFormPanel {
 		
 		for (UniversitySpend spend : spends) {
 			if(annualSpendDao.check(currentYear, spend))
-					continue;
+				continue;
 			
 			CheckBox<UniversitySpend> check = FormUtil.createCheckBox(spend.getTitle(), spend);
 			checkBoxs.add(check);
@@ -82,7 +130,7 @@ public class FormAnnualSpend extends DefaultFormPanel {
 	public void setCurrentYear(AcademicYear currentYear) {
 		if(this.currentYear == null || this.currentYear.getId() != currentYear.getId()) {
 			this.currentYear = currentYear;
-			this.loadData();//mis en jour des composent du paneau
+			loadData();//mis en jour des composent du paneau
 		}
 	}
 
@@ -115,6 +163,10 @@ public class FormAnnualSpend extends DefaultFormPanel {
 		}
 		try {
 			this.annualSpendDao.create(all);
+			for (CheckBox<UniversitySpend> check : this.checkBoxs) {
+				if(check.isSelected())				
+					box.remove(check);
+			}
 			this.showMessageDialog("Success d'enregistrement ","Rubique du buget pour l'annee "+this.currentYear.getLabel()+"\n"+message, JOptionPane.INFORMATION_MESSAGE);
 		} catch (DAOException e) {
 			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
