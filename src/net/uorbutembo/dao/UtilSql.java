@@ -8,6 +8,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,6 +25,8 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	
 	protected final DefaultSqlDAOFactory factory;
 	protected final List<DAOListener<T>> listeners;
+	protected static final DateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
+	protected static final DateFormat DATE_TIME_FORMAT = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
 	/**
 	 * @param factory
@@ -38,6 +43,41 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	@Override
 	public DefaultSqlDAOFactory getFactory () {
 		return factory;
+	}
+	
+	/**
+	 * Renvoie une instance de date corresponant au dernier timestemp de la journee du date en parametre
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	protected static Date toMaxTimestampOfDay (Date date) throws DAOException{
+		String date2str = DATE_FORMAT.format(date);
+		Date maxDate = null;
+		try {
+			maxDate = DATE_TIME_FORMAT.parse(date2str+" 23:59:59");
+		} catch (ParseException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return maxDate;
+	}
+	
+	/**
+	 * Renvoie une instance de date correspondant au premier timetemps de la journee dont la 
+	 * date en parametre 
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	protected static Date toMinTimestampOfDay (Date date) throws DAOException{
+		String date2str = DATE_FORMAT.format(date);
+		Date minDate = null;
+		try {
+			minDate = DATE_TIME_FORMAT.parse(date2str+" 00:00:00");
+		} catch (ParseException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return minDate;
 	}
 	
 	/**
@@ -259,7 +299,6 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
-		
 		return t;
 	}
 	
