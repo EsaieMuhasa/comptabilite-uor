@@ -249,18 +249,6 @@ public class FormFeePromotion extends DefaultFormPanel  {
 			
 		});
 		
-		this.academicFeeDao.addListener(new DAOAdapter<AcademicFee>() {
-			@Override
-			public void onCreate(AcademicFee fee, int requestId) {
-				if(currentYear.getId() != fee.getAcademicYear().getId()) 
-					return;
-				
-				PanelAcademicFeeConfig panel = new PanelAcademicFeeConfig(fee, configListener, promotionDao);
-				panelsConfig.add(panel);
-				container.add(panel);
-			}
-		});
-		
 	}
 
 	@Override

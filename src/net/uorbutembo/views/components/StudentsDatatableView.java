@@ -43,6 +43,7 @@ import net.uorbutembo.beans.Student;
 import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOAdapter;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.PromotionDao;
@@ -712,7 +713,18 @@ public class StudentsDatatableView extends Panel {
 				message += "\n\nN.B: Cette opération est ireversible";
 				int status = JOptionPane.showConfirmDialog(null, message, "Supression de l'inscription", JOptionPane.OK_CANCEL_OPTION);
 				if(status == JOptionPane.OK_OPTION) {
+					if(row.getPayments().size() != 0) {
+						JOptionPane.showMessageDialog(mainWindow, "Impossible d'effectuer cette operation, "
+								+ "\ncar la fiche individuel de cette etudiant contiens \naumoin une données",
+								"Alert", JOptionPane.ERROR_MESSAGE);
+						return;
+					}
 					
+					try {
+						inscriptionDao.delete(row.getInscription().getId());
+					} catch (DAOException e) {
+						JOptionPane.showMessageDialog(mainWindow, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+					}
 				}
 			});
 			

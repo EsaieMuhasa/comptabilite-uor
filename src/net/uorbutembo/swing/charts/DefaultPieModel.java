@@ -18,6 +18,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	protected double realMax;
 	protected String title;
 	protected String suffix = "";
+	protected int selectedIndex = -1;
 
 	public DefaultPieModel() {
 		parts = new ArrayList<>();
@@ -58,6 +59,26 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 		this.addParts(model.getParts());
 	}
 	
+	@Override
+	public synchronized void setSelectedIndex (int index)  throws IndexOutOfBoundsException{
+		if(index != -1 && (index >= getCountPart() || index < 0))
+			throw new IndexOutOfBoundsException("Index out of bound : "+index);
+		
+		if(selectedIndex == index)
+			return;
+		
+		int old = selectedIndex;
+		selectedIndex = index;
+		for (PieModelListener ls : listeners) {
+			ls.onSelectedIndex(this, old, selectedIndex);
+		}		
+	}
+
+	@Override
+	public int getSelectedIndex() {
+		return selectedIndex;
+	}
+
 	@Override
 	public PiePart getPartByName(String name) {
 		for (PiePart part : parts) {
@@ -148,6 +169,11 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	public synchronized void removePartAt(int index) {
 		this.parts.get(index).removeListener(this);
 		this.parts.remove(index);
+		if(index == selectedIndex)
+			setSelectedIndex(-1);
+		
+		if(index < selectedIndex)
+			selectedIndex -= 1;
 		calculRealMax();
 		this.emitRefresh();
 	}
@@ -158,6 +184,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 			part.removeListener(this);
 		}
 		this.parts.clear();
+		selectedIndex = -1;
 		calculRealMax();
 		this.emitRefresh();
 	}

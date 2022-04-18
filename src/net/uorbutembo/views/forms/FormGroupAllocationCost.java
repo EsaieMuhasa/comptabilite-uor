@@ -17,6 +17,7 @@ import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import javax.swing.JOptionPane;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.event.CaretListener;
 
 import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AllocationCost;
@@ -89,10 +91,10 @@ public class FormGroupAllocationCost extends Panel {
 		this.allocationCostDao = allocationCostDao;
 		this.annualSpendDao= allocationCostDao.getFactory().findDao(AnnualSpendDao.class);
 		this.academicYearDao = allocationCostDao.getFactory().findDao(AcademicYearDao.class);
-		
 		this.initViews();
 		this.setBorder(new EmptyBorder(0, 0, DEFAULT_V_GAP*2, 0));
 		
+		piePanel.getRender().setHovable(false);
 		annualSpendDao.addListener(new DAOAdapter<AnnualSpend>() {
 			@Override
 			public void onCreate(AnnualSpend e, int requestId) {
@@ -344,6 +346,9 @@ public class FormGroupAllocationCost extends Panel {
 	 * Liberation des resources utiliser par le groupe
 	 */
 	public void clear() {
+		for (AllocationCostField field : fields) {
+			field.dispose();
+		}
 		fields.clear();
 		btnSave.setEnabled(false);
 		title.setText(" ");
@@ -389,6 +394,75 @@ public class FormGroupAllocationCost extends Panel {
 		private AnnualSpend spend;
 		private AllocationCost cost;
 		private PiePart part;
+		
+		private FocusListener focusAmount = new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				if(amount.getValue()==null || amount.getValue().trim().isEmpty()) {
+					amount.setValue("0");
+				}
+				
+				pieModel.setSelectedIndex(-1);
+			}
+			
+			@Override
+			public void focusGained(FocusEvent e) {
+				pieModel.setSelectedIndex(pieModel.indexOf(part));
+			}
+		};
+		
+		private FocusListener focusPercent = new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				pieModel.setSelectedIndex(-1);
+			}
+			
+			@Override
+			public void focusGained(FocusEvent e) {
+				pieModel.setSelectedIndex(pieModel.indexOf(part));
+			}
+		};
+		
+		private CaretListener caretAmount = (event) -> {
+			if(cost == null)
+				return;
+			
+			try {
+				BigDecimal number = new BigDecimal(Float.parseFloat(amount.getValue())).setScale(2, RoundingMode.HALF_UP);
+				cost.setAmount(number.floatValue());
+				if(part!=null) {
+					part.setValue(cost.getAmount());
+				}
+			} catch (NumberFormatException e) {
+				return;
+			}
+			
+			if(!this.amount.hasFocus()) 
+				return;
+			
+			double amount =cost.getAmount();
+			BigDecimal number = new BigDecimal((100.0 / academicFee.getAmount()) * amount).setScale(2, RoundingMode.HALF_UP);
+			double percent = number.doubleValue();
+			this.percent.setValue(percent+"");
+		};
+		
+		private CaretListener caretPercent = (event) -> {
+			if(!this.percent.hasFocus()) 
+				return;
+			
+			double percent = 0;
+			try {
+				BigDecimal number = new BigDecimal(Float.parseFloat(this.percent.getValue())).setScale(2, RoundingMode.HALF_UP);
+				percent = number.doubleValue();
+			} catch (NumberFormatException e) {
+				this.amount.setValue(cost.getAmount()+"");
+				return;
+			}
+			
+			BigDecimal number = new BigDecimal((academicFee.getAmount() / 100.0) * percent).setScale(2, RoundingMode.HALF_UP);
+			double amount = number.doubleValue();
+			this.amount.setValue(amount+"");
+		};
 		
 		/**
 		 * constructeur d'initialisation
@@ -446,6 +520,13 @@ public class FormGroupAllocationCost extends Panel {
 					cost.setAcademicFee(academicFee);
 			}
 		}
+		
+		public void dispose() {
+			amount.removeFocusListener(focusAmount);
+			percent.removeFocusListener(focusAmount);
+			amount.removeCaretListener(caretAmount);
+			percent.removeCaretListener(caretPercent);
+		}
 
 		/**
 		 * Ajout des evenements au chemps de text
@@ -456,58 +537,14 @@ public class FormGroupAllocationCost extends Panel {
 			
 			//lors du changemet du montant, on recalcule les pourcentage 
 			//=> seuelement dans le cas où le champ amount est la source de l'evenement
-			this.amount.addCaretListener(event -> {
-				
-				if(cost == null)
-					return;
-				
-				try {
-					BigDecimal number = new BigDecimal(Float.parseFloat(amount.getValue())).setScale(2, RoundingMode.HALF_UP);
-					cost.setAmount(number.floatValue());
-					if(part!=null) {
-						part.setValue(cost.getAmount());
-					}
-				} catch (NumberFormatException e) {
-					return;
-				}
-				
-				if(!this.amount.hasFocus()) 
-					return;
-				
-				double amount =cost.getAmount();
-				BigDecimal number = new BigDecimal((100.0 / academicFee.getAmount()) * amount).setScale(2, RoundingMode.HALF_UP);
-				double percent = number.doubleValue();
-				this.percent.setValue(percent+"");
-			});
+			this.amount.addCaretListener(caretAmount);
 			
-			this.amount.addFocusListener(new FocusAdapter() {
-				@Override
-				public void focusLost(FocusEvent e) {
-					if(amount.getValue()==null || amount.getValue().trim().isEmpty()) {
-						amount.setValue("0");
-					}
-				}
-			});
+			this.amount.addFocusListener(focusAmount);
+			this.percent.addFocusListener(focusPercent);
 			
 			//dans le cas où le pourcentage change, on recalcule montant
 			//=> operation faite, uniquement dans le cas où, le field percenage est source du changement
-			this.percent.addCaretListener(event -> {
-				if(!this.percent.hasFocus()) 
-					return;
-				
-				double percent = 0;
-				try {
-					BigDecimal number = new BigDecimal(Float.parseFloat(this.percent.getValue())).setScale(2, RoundingMode.HALF_UP);
-					percent = number.doubleValue();
-				} catch (NumberFormatException e) {
-					this.amount.setValue(cost.getAmount()+"");
-					return;
-				}
-				
-				BigDecimal number = new BigDecimal((academicFee.getAmount() / 100.0) * percent).setScale(2, RoundingMode.HALF_UP);
-				double amount = number.doubleValue();
-				this.amount.setValue(amount+"");
-			});
+			this.percent.addCaretListener(caretPercent);
 		}
 
 		/**

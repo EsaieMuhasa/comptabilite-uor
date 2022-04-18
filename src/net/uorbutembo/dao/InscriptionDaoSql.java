@@ -528,6 +528,7 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		in.setStudent(this.studentDao.findById(result.getLong("student")));
 		in.setPromotion(this.promotionDao.findById(result.getLong("promotion")));
 		in.setRecordDate(new Date(result.getLong("recordDate")));
+		in.setPicture(result.getString("picture"));
 		if(result.getLong("lastUpdate") != 0) {
 			in.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}
@@ -539,6 +540,7 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		in.setStudent(student == null ? this.studentDao.findById(result.getLong("student")) : student);
 		in.setPromotion(promotion == null ? this.promotionDao.findById(result.getLong("promotion")) : promotion);
 		in.setRecordDate(new Date(result.getLong("recordDate")));
+		in.setPicture(result.getString("picture"));
 		if(result.getLong("lastUpdate") != 0) {
 			in.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}

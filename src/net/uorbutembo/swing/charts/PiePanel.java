@@ -45,6 +45,9 @@ public class PiePanel extends Panel {
 		}
 		
 		@Override
+		public void onSelectedIndex(PieModel model, int oldIndex, int newIndex) {}
+		
+		@Override
 		public void onTitleChange(PieModel  model, String title) {
 			PiePanel.this.title.setText(title);
 		}

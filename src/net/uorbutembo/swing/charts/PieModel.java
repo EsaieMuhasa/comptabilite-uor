@@ -43,6 +43,18 @@ public interface PieModel {
 	int indexOf (PiePart part);
 	
 	/**
+	 * modification de l'index selectionner
+	 * @param index
+	 */
+	void setSelectedIndex (int index) throws IndexOutOfBoundsException;
+	
+	/**
+	 * Renvoie l'index selectionnner ou -1 si aucune index n'est selectionner
+	 * @return
+	 */
+	int getSelectedIndex ();
+	
+	/**
 	 * Renvoei les pourcentages de l'indem a l'index
 	 * @param index
 	 * @return

@@ -89,7 +89,7 @@ public class IndividualSheetHeader extends JComponent {
 		int height = this.getHeight();
 		
 		//photo de profil
-		String picture = inscription.getStudent().getPicture() != null? R.getConfig().get("workspace")+""+inscription.getStudent().getPicture(): null;
+		String picture = inscription.getPicture() != null? R.getConfig().get("workspace")+""+inscription.getPicture(): null;
 		try {
 			Image image = ImageIO.read(new File(picture !=null? picture : R.getIcon("personne")));
 			g2.drawImage (image, 4, 4, height-10, height-10, null);

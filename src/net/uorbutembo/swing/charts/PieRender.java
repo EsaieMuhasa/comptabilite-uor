@@ -1,7 +1,6 @@
 package net.uorbutembo.swing.charts;
 
 import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -23,17 +22,19 @@ import javax.swing.JComponent;
 public class PieRender extends JComponent implements PieModelListener{
 	private static final long serialVersionUID = -1944742088465191107L;
 	
+	private static final BasicStroke LINE_STROKE = new BasicStroke(2f);
+	
 	private PieModel model;
 	private int radius;//le rayons d'un cercle
+	private int minRaduis;//le raduis du milieux
 	private final List<LineSegment> segments = new ArrayList<>();
 	private final List<PiePartInfo> parts = new ArrayList<>();
 	
-	private boolean circleHover = false;//losque la sourie ce trouve dans la surface du cercle
+	private boolean hovable = true;//esque ce diagramme est hovable?
 	private Point center;
+	private final MouseListener ls = new MouseListener();
 	
 	public PieRender() {
-		MouseListener ls = new MouseListener();
-		
 		this.addMouseListener(ls);
 		this.addMouseMotionListener(ls);
 	}
@@ -48,8 +49,6 @@ public class PieRender extends JComponent implements PieModelListener{
 			model.addListener(this);
 		}
 		
-		MouseListener ls = new MouseListener();
-		
 		this.addMouseListener(ls);
 		this.addMouseMotionListener(ls);
 	}
@@ -60,6 +59,20 @@ public class PieRender extends JComponent implements PieModelListener{
 		this.prepareRender();
 	}
 	
+	/**
+	 * @return the hovable
+	 */
+	public boolean isHovable() {
+		return hovable;
+	}
+
+	/**
+	 * @param hovable the hovable to set
+	 */
+	public void setHovable (boolean hovable) {
+		this.hovable = hovable;
+	}
+
 	@Override
 	protected synchronized void paintComponent(Graphics g) {
 		
@@ -69,21 +82,24 @@ public class PieRender extends JComponent implements PieModelListener{
 		
 		g2.translate(center.x, center.y);//translation des axes au centre de la vue
 
-		
+		int reelRadius = radius;
 		for (PiePartInfo info : parts) {
 			PiePart part  = info.getPart();
-			g2.setColor(info.isHover()? Color.BLACK : part.getBackgroundColor());
-			g2.fillArc(-radius, -radius, radius*2, radius*2, info.getStart(), info.getDegre());
+			reelRadius = radius + (model.getSelectedIndex() == model.indexOf(info.getPart())? 5 : 0);
+			
+			g2.setColor(part.getBackgroundColor());
+			g2.fillArc(-reelRadius, -reelRadius, reelRadius*2, reelRadius*2, info.getStart(), info.getDegre());				
+			
 		}
 		
 		g2.setColor(getBackground());
-		g2.setStroke(new BasicStroke(2f));
+		g2.setStroke(LINE_STROKE);
 		for (LineSegment segment : segments) {
 			g2.drawLine((int)segment.getStart().getX(), (int)segment.getStart().getY(), (int)segment.getEnd().getX(), (int)segment.getEnd().getY());
 		}
 		
 		g2.setColor(getBackground());
-		int xy = -radius/3, minRaduis = (radius * 2) /3;
+		int xy = -radius/3;
 		g2.fillOval(xy, xy, minRaduis, minRaduis);
 		
 	}
@@ -121,6 +137,7 @@ public class PieRender extends JComponent implements PieModelListener{
 		
 		//on prend la plus petie valeur entre la hauteur et la largeur de la vue
 		this.radius = ((this.getWidth() < this.getHeight())?  this.getWidth() : this.getHeight())/2 - 10;
+		this.minRaduis = (radius * 2) /3;
 		int start = 0;
 
 		Point O = new Point(radius, 0);
@@ -158,34 +175,15 @@ public class PieRender extends JComponent implements PieModelListener{
 		this.prepareRender();
 		this.repaint();
 	}
+	
+	@Override
+	public void onSelectedIndex(PieModel model, int oldIndex, int newIndex) {
+		repaint();
+	}
 
 	@Override
 	public void repaintPart(PieModel model, int partIndex) {
 		this.prepareRender();
-		this.repaint();
-	}
-	
-	private void findHoverPart (Point M) {
-		
-		//Point Mp = new Point((int)(M.getX()+center.getY()), (int)(M.getY()+center.getY()));
-		double Mx = center.getX() + M.getX(),
-				My = center.getY() + M.getY();
-		Point Mp = new Point((int)Mx, (int)My);;
-		
-		double pente = Math.atan((center.getY() - Mp.getY()) / (center.getX() - Mp.getX()));
-		
-		BigDecimal big = new BigDecimal(pente * 180 / Math.PI).setScale(0, RoundingMode.HALF_UP);
-		int penteToDeg = big.intValue();
-
-		//d => y = Ax + B
-		for (PiePartInfo info : parts) {
-			double start = info.getStart(), end = info.getEnd()+info.getStart();
-			if(start >= penteToDeg && end <= penteToDeg) {
-				info.setHover(true);
-				break;
-			}
-			info.setHover(false);
-		}
 		this.repaint();
 	}
 	
@@ -198,15 +196,16 @@ public class PieRender extends JComponent implements PieModelListener{
 
 		@Override
 		public void mouseExited(MouseEvent e) {
-			for (PiePartInfo info : parts) {
-				info.setHover(false);
-			}
-			
-			repaint();
+			if(!hovable)
+				return;
+			model.setSelectedIndex(-1);
 		}
 
 		@Override
 		public void mouseMoved(MouseEvent e) {
+			if(!hovable)
+				return;
+			
 			Point point = e.getPoint();
 			double X = point.getX()-center.getX(),
 					Y = point.getY()-center.getY();
@@ -214,11 +213,24 @@ public class PieRender extends JComponent implements PieModelListener{
 			double distance = Math.pow(X, 2) + Math.pow(Y, 2);
 			distance = Math.sqrt(distance);
 
-			circleHover = distance <= radius; //on entre dans la surface du cerlce
+			boolean circleHover = distance <= radius && distance >= minRaduis/2; //on entre dans la surface du cerlce
 			
 			if(circleHover) {
-				//System.out.printf("d (Co, P) = %f ||-> avec R = %d\n", distance, radius);
-				findHoverPart(point);
+				//recherche des cordonnee de la sourie pour le repere translater
+				double 
+					translatedX = point.getX() > center.getX() ? Math.abs(X) : -Math.abs(X), 
+					translatedY = point.getY() > center.getY() ? Math.abs(Y) : -Math.abs(Y);
+				
+				Point translatedPoint  = new Point((int)translatedX, (int)translatedY);
+				int index = -1;
+				for (PiePartInfo info : parts) {
+					if(info.match(translatedPoint)) {
+						index = model.indexOf(info.getPart());
+						break;
+					}
+				}
+				
+				model.setSelectedIndex(index);
 			} else {
 				mouseExited(e);
 			}
@@ -236,7 +248,6 @@ public class PieRender extends JComponent implements PieModelListener{
 		
 		private Point a;
 		private Point b;
-		private boolean hover;
 		
 		private PiePart part;
 		
@@ -261,6 +272,32 @@ public class PieRender extends JComponent implements PieModelListener{
 		public void initPoints (Point a, Point b) {
 			this.a = a;
 			this.b = b;
+		}
+		
+		public boolean match (Point M) {			
+			if(a == null || b == null)
+				return false;
+			
+			double a = Math.sqrt(Math.pow((radius - M.getX()), 2) + Math.pow(M.getY(), 2));
+			double b = radius;
+			double c = Math.sqrt(Math.pow(M.getX(), 2) + Math.pow(M.getY(), 2));
+			
+			double cosA = ((a * a) - ( (b * b) + (c * c))) / (-2 * a *c);//consinus de l'engle (theoreme Alkashi triangle quelconque)
+			double alpha = Math.acos(cosA);//
+			try {				
+				BigDecimal big = new BigDecimal(alpha * (180 / Math.PI)).setScale(0, RoundingMode.HALF_UP);
+				int alphaToDeg = big.intValue();
+				System.out.println("cos(A) = "+cosA+" => A = "+alpha+" rad = "+alphaToDeg+"°");
+				
+				int start = getStart(), end = getEnd()+getStart();
+				if (start <= alphaToDeg && end >= alphaToDeg) {
+					return true;
+				}
+			} catch (NumberFormatException e) {
+				System.out.println(">>> cos(A) = "+cosA+" => A = "+alpha+" rad");
+			}
+			
+			return false;
 		}
 		
 		/**
@@ -304,24 +341,12 @@ public class PieRender extends JComponent implements PieModelListener{
 		public Point getA() {
 			return a;
 		}
+		
 		/**
 		 * @return the b
 		 */
 		public Point getB() {
 			return b;
-		}
-		/**
-		 * @return the hover
-		 */
-		public boolean isHover() {
-			return hover;
-		}
-
-		/**
-		 * @param hover the hover to set
-		 */
-		public void setHover(boolean hover) {
-			this.hover = hover;
 		}
 
 		/**

@@ -134,7 +134,14 @@ public class FormReRegister extends AbstractInscriptionForm {
 				this.modelComboDepartment.getElementAt(this.comboDepartment.getSelectedIndex()), 
 				this.modelComboStudyClass.getElementAt(this.comboStudyClass.getSelectedIndex()));
 		
-		Student student = studentDao.findByMatricul(matricul.getField().getValue());
+		String matricul = this.matricul.getField().getValue();
+		
+		if(!studentDao.checkByMatricul(matricul)) {
+			this.showMessageDialog("Matricule invalide", "Ce numero matricule est inconnue dans la base de donnée", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		Student student = studentDao.findByMatricul(matricul);
 		
 		in.setPromotion(promotion);
 		in.setStudent(student);
@@ -162,12 +169,14 @@ public class FormReRegister extends AbstractInscriptionForm {
 			BufferedImage image = imagePicker.getImage();
 			ImageIO.write(image, imagePicker.getImageType(), file);
 			inscriptionDao.updatePicture(in.getId(), fileName);
-			studentDao.updatePicture(fileName, inscription.getStudent().getId());
+			
+			if(in.getStudent().getPicture() == null)
+				studentDao.updatePicture(fileName, in.getStudent().getId());
 		} catch (Exception e) {
 			this.showMessageDialog("Erreur d'ecriture du fichier", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}
 		
-		matricul.getField().setValue("");
+		this.matricul.getField().setValue("");
 		adresse.getField().setValue("");
 		imagePicker.show(null);
 		inscription = null;

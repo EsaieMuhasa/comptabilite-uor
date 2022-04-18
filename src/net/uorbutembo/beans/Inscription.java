@@ -29,6 +29,11 @@ public class Inscription extends DBEntity {
 	 * l'adresse de residence de l'inscrit
 	 */
 	private String adress;
+	
+	/**
+	 * La photo paceport de l'inscrit
+	 */
+	private String picture;
 
 	/**
 	 * 
@@ -98,6 +103,20 @@ public class Inscription extends DBEntity {
 	 */
 	public void setAdress(String adress) {
 		this.adress = adress;
+	}
+
+	/**
+	 * @return the picture
+	 */
+	public String getPicture() {
+		return picture;
+	}
+
+	/**
+	 * @param picture the picture to set
+	 */
+	public void setPicture(String picture) {
+		this.picture = picture;
 	}
 
 }

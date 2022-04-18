@@ -91,6 +91,11 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			g2.setColor(part.getBackgroundColor().darker().darker().darker().darker());
 			g2.fillRoundRect(0, h-step, widht-10, step, step, step);
 			
+			if(model.getSelectedIndex() == model.indexOf(part)) {
+				g2.setColor(part.getBackgroundColor().darker());
+				g2.drawRoundRect(0, h-step, widht-10, step, step, step);
+			}
+			
 			g2.setColor(part.getBackgroundColor());
 			g2.fillOval(widht-col-5, h-step-10, col, col);
 			
@@ -166,6 +171,11 @@ class PiePartCaption extends JComponent implements PieModelListener{
 	@Override
 	public void refresh(PieModel model) {
 		this.repaint();
+	}
+	
+	@Override
+	public void onSelectedIndex(PieModel model, int oldIndex, int newIndex) {
+		repaint();
 	}
 
 	@Override
