@@ -22,7 +22,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JList;
-import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.event.PopupMenuEvent;
@@ -48,6 +47,7 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
 	private static final long serialVersionUID = 1L;
 	
 	public static final Color DEFAULT_COLOR= Color.LIGHT_GRAY;
+	public static final EmptyBorder EMPTY_BORDER =new EmptyBorder(5, 5, 5, 5);
 	
     private String label;
     
@@ -86,7 +86,7 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
     		@Override
     		public Component getListCellRendererComponent(JList<?> jlist, Object o, int i, boolean bln, boolean bln1) {
     			Component com = super.getListCellRendererComponent(jlist, o, i, bln, bln1);
-    			setBorder(new EmptyBorder(5, 5, 5, 5));
+    			setBorder(EMPTY_BORDER);
     			if (bln) {
     				com.setBackground(FormUtil.BORDER_COLOR);
     			}
@@ -251,23 +251,10 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
 
         @Override
         protected ComboPopup createPopup() {
-            BasicComboPopup pop = new BasicComboPopup(comboBox) {
-				private static final long serialVersionUID = 1L;
-
-				@Override
-                protected JScrollPane createScroller() {
-                    list.setFixedCellHeight(30);
-                    JScrollPane scroll = new JScrollPane(list);
-                    scroll.setBackground(Color.WHITE);
-                    ScrollBar sb = new ScrollBar();
-                    sb.setUnitIncrement(30);
-                    sb.setForeground(new Color(180, 180, 180));
-                    scroll.setVerticalScrollBar(sb);
-                    return scroll;
-                }
-            };
-            pop.setBorder(new LineBorder(DEFAULT_COLOR, 1));
-            return pop;
+            BasicComboPopup popup = (BasicComboPopup) super.createPopup();
+            //popup.getList().setFixedCellHeight(30);
+            popup.setBorder(new LineBorder(DEFAULT_COLOR, 1));
+            return popup;
         }
         
 
@@ -354,7 +341,7 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
 
 			public ArrowButton() {
                 setContentAreaFilled(false);
-                setBorder(new EmptyBorder(5, 5, 5, 5));
+                setBorder(EMPTY_BORDER);
                 setBackground(new Color(150, 150, 150));
             }
 			

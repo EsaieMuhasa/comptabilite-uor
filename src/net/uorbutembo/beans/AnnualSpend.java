@@ -61,5 +61,10 @@ public class AnnualSpend extends DBEntity {
 	public void setUniversitySpend(UniversitySpend universitySpend) {
 		this.universitySpend = universitySpend;
 	}
+	
+	@Override
+	public String toString() {
+		return universitySpend.getTitle();
+	}
 
 }

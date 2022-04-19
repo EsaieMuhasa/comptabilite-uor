@@ -143,7 +143,7 @@ public class StudentsDatatableView extends Panel {
 	 * et de luis fornir la liste complet des filtres des facultes
 	 * @param filters
 	 */
-	public void firstLoad (FacultyFilter [] filters, AcademicYear currentYear) {
+	public synchronized void firstLoad (FacultyFilter [] filters, AcademicYear currentYear) {
 		this.currentYear = currentYear;
 		this.lastFilter = filters;
 		this.lastFilterData.clear();
@@ -207,7 +207,7 @@ public class StudentsDatatableView extends Panel {
 	 * Demande de filtrage
 	 * @param filters
 	 */
-	public void setFilter (FacultyFilter [] filters) {
+	public synchronized void setFilter (FacultyFilter [] filters) {
 		
 		this.lastFilter = filters;
 		this.lastFilterData.clear();

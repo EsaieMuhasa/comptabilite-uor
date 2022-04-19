@@ -18,6 +18,8 @@ public class Outlay extends DBEntity {
 	private String wording;//une petit label (description, justification de la sortie)
 	private String reference;//une photo en quise de reference
 	private AnnualSpend account;//rubrique toucher par la dite sortie
+	private AcademicYear academicYear;//annee qui doit suporter le depence 
+	private AcademicYear deliveryYear;//l'annee academique pour le quel le montant a ete payer (pour une bonne localisation dans le temps)
 
 	
 	public Outlay() {
@@ -109,6 +111,34 @@ public class Outlay extends DBEntity {
 	 */
 	public void setReference(String reference) {
 		this.reference = reference;
+	}
+
+	/**
+	 * @return the academicYear
+	 */
+	public AcademicYear getAcademicYear() {
+		return academicYear;
+	}
+
+	/**
+	 * @param academicYear the academicYear to set
+	 */
+	public void setAcademicYear(AcademicYear academicYear) {
+		this.academicYear = academicYear;
+	}
+
+	/**
+	 * @return the deliveryYear
+	 */
+	public AcademicYear getDeliveryYear() {
+		return deliveryYear;
+	}
+
+	/**
+	 * @param deliveryYear the deliveryYear to set
+	 */
+	public void setDeliveryYear(AcademicYear deliveryYear) {
+		this.deliveryYear = deliveryYear;
 	}
 
 }

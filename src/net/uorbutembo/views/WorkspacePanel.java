@@ -92,7 +92,7 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 		this
 		.add(dashbord, new PanelDashboard(mainWindow))
 		.add(students, new PanelStudents(mainWindow))
-		.add(journal, new PanelJournal(mainWindow))
+		.add(journal, new JournalWorkspace(mainWindow))
 		.add(config, new PanelConfigGlobal(mainWindow))
 		.add(help, new PanelHelp(mainWindow));
 		
