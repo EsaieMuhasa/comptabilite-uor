@@ -22,7 +22,7 @@ class StudentDaoSql extends UserDaoSql<Student> implements StudentDao {
 	}
 	
 	@Override
-	protected void create(Connection connection, Student t) throws DAOException {
+	protected void create(Connection connection, Student t) throws DAOException, SQLException {
 		try {
 			long id = this.insertInTable(
 					connection, 

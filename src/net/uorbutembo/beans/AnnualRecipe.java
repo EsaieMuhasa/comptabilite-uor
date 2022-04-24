@@ -46,7 +46,7 @@ public class AnnualRecipe extends DBEntity {
 		this.academicYear = academicYear;
 	}
 	
-	public void setAcadmicYear (final long id) {
+	public void setAcademicYear (final long id) {
 		if(academicYear == null)
 			academicYear = new AcademicYear();
 		

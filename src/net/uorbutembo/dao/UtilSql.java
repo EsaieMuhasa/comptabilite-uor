@@ -85,8 +85,9 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	 * @param connection
 	 * @param t
 	 * @throws DAOException
+	 * @throws SQLException TODO
 	 */
-	protected void create (Connection connection, T t) throws DAOException{
+	protected void create (Connection connection, T t) throws DAOException, SQLException{
 		throw new DAOException("Les enregistrement transactionnel ne sont pas pris en charche par le DAO de la table "+this.getTableName());
 	}
 	
@@ -95,8 +96,9 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	 * @param connection
 	 * @param t
 	 * @throws DAOException
+	 * @throws SQLException TODO
 	 */
-	protected void create (Connection connection, T [] t) throws DAOException{
+	protected void create (Connection connection, T [] t) throws DAOException, SQLException{
 		throw new DAOException("Les enregistrement transactionnel ne sont pas pris en charche par le DAO de la table "+this.getTableName());
 	}
 	
@@ -898,7 +900,24 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 		this.emitOnCreate(e, DAOInterface.DEFAULT_REQUEST_ID);
 	}
 	
+	protected synchronized void emitOnCreate (T [] e) {
+		this.emitOnCreate(e, DAOInterface.DEFAULT_REQUEST_ID);
+	}
+	
 	protected synchronized void emitOnCreate (T e, int requestId) {
+		Thread t = new Thread(() -> {			
+			for (DAOListener<T> ls : listeners) {
+				try {					
+					ls.onCreate(e, requestId);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
+		t.start();
+	}
+	
+	protected synchronized void emitOnCreate (T[] e, int requestId) {
 		Thread t = new Thread(() -> {			
 			for (DAOListener<T> ls : listeners) {
 				try {					
