@@ -20,8 +20,11 @@ import net.uorbutembo.beans.AnnualRecipe;
  */
 class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDao {
 
+	private UniversityRecipeDao universityRecipeDao;
+	
 	public AnnualRecipeDaoSql(DefaultSqlDAOFactory factory) {
 		super(factory);
+		universityRecipeDao = factory.findDao(UniversityRecipeDao.class);
 	}
 
 	@Override
@@ -155,7 +158,7 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 		AnnualRecipe recipe = new AnnualRecipe(result.getLong("id"));
 		recipe.setAcademicYear(year);
 		recipe.setRecordDate(new Date(result.getLong("recordDate")));
-		recipe.setUniversityRecipe(result.getLong("universityRecipe"));
+		recipe.setUniversityRecipe(universityRecipeDao.findById(result.getLong("universityRecipe")));
 		if(result.getLong("lastUpdate") != 0) 
 			recipe.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		return recipe;

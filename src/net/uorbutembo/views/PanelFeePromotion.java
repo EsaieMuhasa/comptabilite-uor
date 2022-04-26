@@ -114,6 +114,7 @@ public class PanelFeePromotion extends Panel {
 		
 		center.add(tabbedPane, BorderLayout.CENTER);
 		this.add(center, BorderLayout.CENTER);
+		this.setBorder(new EmptyBorder(0, 2, 2, 1));
 		
 		academicFeeDao.addListener(new DAOAdapter<AcademicFee>() {
 			@Override

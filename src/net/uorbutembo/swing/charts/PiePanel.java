@@ -27,9 +27,11 @@ public class PiePanel extends Panel {
 	private PieRender render;
 	private PiePartCaption caption;
 	private JLabel title = FormUtil.createSubTitle("");
+	private JScrollPane scroll;
 	private Color borderColor;
 	
 	private final GridLayout layout = new GridLayout(1, 2);
+	private final BorderLayout borderLayout = new BorderLayout();
 	private final Panel center = new Panel(layout);
 	private PieModel model;
 	
@@ -95,7 +97,33 @@ public class PiePanel extends Panel {
 		this.caption.setModel(model);
 		this.render.setModel(model);
 	}
+	
+	/**
+	 * Modification de la visibilite du caption
+	 * @param visible
+	 */
+	public void setCaptionVisibility (boolean visible) {
+		center.removeAll();
+		center.setLayout(visible? layout : borderLayout);
+		
+		
+		if (!visible) {
+			model.removeListener(caption);
+			center.add(render, BorderLayout.CENTER);
+		} else {
+			center.add(render);
+			center.add(scroll);
+			model.addListener(caption);
+		}
+		
+		scroll.setVisible(visible);
+		center.repaint();
+	}
 
+	/**
+	 * Modification du placement des contenue (le graphique et les labels)
+	 * @param horizontalPlacement ceux-ci doivent etre placer selon l'axe de x???
+	 */
 	public void setHorizontalPlacement (boolean horizontalPlacement) {
 		if(horizontalPlacement) {
 			this.layout.setColumns(2);
@@ -145,7 +173,7 @@ public class PiePanel extends Panel {
 	
 	private void init() {
 		this.setLayout(new BorderLayout());
-		final JScrollPane scroll = FormUtil.createVerticalScrollPane(caption);
+		scroll = FormUtil.createVerticalScrollPane(caption);
 		
 		this.add(center, BorderLayout.CENTER);
 		this.add(title, BorderLayout.SOUTH);

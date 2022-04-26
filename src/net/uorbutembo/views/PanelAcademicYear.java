@@ -6,27 +6,27 @@ package net.uorbutembo.views;
 import static net.uorbutembo.views.forms.FormUtil.DEFAULT_H_GAP;
 import static net.uorbutembo.views.forms.FormUtil.DEFAULT_V_GAP;
 import static net.uorbutembo.views.forms.FormUtil.createScrollPane;
-import static net.uorbutembo.views.forms.FormUtil.createSubTitle;
+import static net.uorbutembo.views.forms.FormUtil.createTitle;
 
 import java.awt.BorderLayout;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.DefaultListModel;
+import javax.swing.Box;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.ListSelectionModel;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.dao.AcademicFeeDao;
@@ -51,15 +51,15 @@ public class PanelAcademicYear extends Panel {
 	private AcademicFeeDao academicFeeDao;
 	private PromotionDao promotionDao;
 	private AnnualSpendDao annualSpendDao;
-	
-	private DefaultListModel<AcademicYear> listModel = new DefaultListModel<>();
+
 	private PanelConfigAcademicYear config;
-	private JList<AcademicYear> listMenu = new JList<>(listModel);
 	
 	private Navbar navbar = new Navbar();
-	private JLabel title = createSubTitle("");
+	private JLabel title = createTitle("");
 	
-	private JButton btnAdd = new JButton("Nouvelle année");
+	private JButton btnAdd = new JButton(new ImageIcon(R.getIcon("plus")));
+	private DefaultComboBoxModel<AcademicYear> comboYearModel = new DefaultComboBoxModel<>();
+	private JComboBox<AcademicYear> comboYear = new JComboBox<>(comboYearModel);
 	
 	private JMenuItem itemDelete = new JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
 	private JMenuItem itemUpdate = new JMenuItem("Modifier", new ImageIcon(R.getIcon("edit")));
@@ -88,12 +88,12 @@ public class PanelAcademicYear extends Panel {
 				if(dialogYear != null) 
 					dialogYear.setVisible(false);
 				
-				if(listMenu.getSelectedIndex() != -1 && listModel.get(listMenu.getSelectedIndex()).getId() == e.getId())
+				if(comboYear.getSelectedIndex() != -1 && comboYearModel.getElementAt(comboYear.getSelectedIndex()).getId() == e.getId())
 					title.setText(e.toString());
 				
-				for (int i = 0, count = listModel.getSize(); i < count; i++) {
-					if(listModel.get(i).getId() == e.getId()) {
-						listModel.set(i, e);
+				for (int i = 0, count = comboYearModel.getSize(); i < count; i++) {
+					if(comboYearModel.getElementAt(i).getId() == e.getId()) {
+						comboYearModel.getElementAt(i);
 						break;
 					}
 				}
@@ -118,25 +118,32 @@ public class PanelAcademicYear extends Panel {
 		final Panel center = new Panel(new BorderLayout());
 		final Panel container = new Panel(new BorderLayout());
 		final Panel menu = new Panel(new BorderLayout(DEFAULT_H_GAP, DEFAULT_V_GAP));
-		final JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, menu, container);
+		final Panel menuTop = new Panel(new BorderLayout());
 		
-		JScrollPane scroll = createScrollPane(listMenu);
+		JScrollPane scroll = createScrollPane(comboYear);
 		menu.add(scroll, BorderLayout.CENTER);
-		menu.add(btnAdd, BorderLayout.SOUTH);
 		menu.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		navbar.createGroup("default", config.getNavbarItems(), config);
 		navbar.showGroup("default");
 		
+		Box box = Box.createHorizontalBox();
+		comboYear.setPreferredSize(new Dimension(150, 25));
+		box.add(comboYear);
+		//box.add(btnAdd);
+		box.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		
 		center.add(navbar, BorderLayout.NORTH);
 		center.add(config, BorderLayout.CENTER);
 		
-		container.add(title, BorderLayout.NORTH);
+		menuTop.add(title, BorderLayout.CENTER);
+		menuTop.add(box, BorderLayout.EAST);
+		
+		container.add(menuTop, BorderLayout.NORTH);
 		container.add(center, BorderLayout.CENTER);
 		
-		this.add(split, BorderLayout.CENTER);
+		this.add(container, BorderLayout.CENTER);
 		this.init();
-		
 		btnAdd.addActionListener(event -> {
 			if(dialogYear == null) {
 				Thread t = new Thread(() -> {
@@ -156,7 +163,7 @@ public class PanelAcademicYear extends Panel {
 		});
 		
 		itemDelete.addActionListener(event -> {
-			AcademicYear year = listModel.get(listMenu.getSelectedIndex());
+			AcademicYear year = comboYearModel.getElementAt(comboYear.getSelectedIndex());
 			if(annualSpendDao.checkByAcademicYear(year.getId()) || promotionDao.checkByAcademicYear(year.getId())
 					|| academicFeeDao.checkByAcademicYear(year.getId() )) {
 				String message = "Impossible de supprimer l'année "+year.getLabel()+",\ncar autres données de la base de données \nsont liée à cette occurence.";
@@ -168,7 +175,7 @@ public class PanelAcademicYear extends Panel {
 		});
 		
 		itemUpdate.addActionListener(event -> {
-			AcademicYear year = listModel.get(listMenu.getSelectedIndex());
+			AcademicYear year = comboYearModel.getElementAt(comboYear.getSelectedIndex());
 			
 			if(dialogYear == null) {
 				Thread t = new Thread(() -> {
@@ -207,18 +214,14 @@ public class PanelAcademicYear extends Panel {
 	}
 	
 	private void init() {
-		listMenu.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		listMenu.setBackground(FormUtil.BKG_END);
-		listMenu.setForeground(FormUtil.BORDER_COLOR);
+		comboYear.setBackground(FormUtil.BKG_END);
+		comboYear.setForeground(FormUtil.BORDER_COLOR);
 		
-		this.listMenu.addListSelectionListener(event ->{
-			int index = listMenu.getSelectedIndex();
-			AcademicYear year = (index == -1)? null : listModel.get(index);
+		this.comboYear.addItemListener(event ->{
+			int index = comboYear.getSelectedIndex();
+			AcademicYear year = (index == -1)? null : comboYearModel.getElementAt(index);
 			setSelectedYear(year);
 		});
-		
-		title.setOpaque(true);
-		title.setBackground(FormUtil.BKG_START);
 		
 		//popupMenu
 		popupMenu.add(itemUpdate);
@@ -226,13 +229,13 @@ public class PanelAcademicYear extends Panel {
 		popupMenu.addSeparator();
 		popupMenu.add(itemCreate);
 		
-		listMenu.addMouseListener(new MouseAdapter() {
+		comboYear.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased (MouseEvent e) {
 				if(e.isPopupTrigger()) {
-					itemUpdate.setEnabled(listMenu.getSelectedIndex() != -1);
-					itemDelete.setEnabled(listMenu.getSelectedIndex() != -1);
-					popupMenu.show(listMenu, e.getX(), e.getY());
+					itemUpdate.setEnabled(comboYear.getSelectedIndex() != -1);
+					itemDelete.setEnabled(comboYear.getSelectedIndex() != -1);
+					popupMenu.show(comboYear, e.getX(), e.getY());
 				}
 			}
 		});
@@ -246,13 +249,13 @@ public class PanelAcademicYear extends Panel {
 	private void setSelectedYear (AcademicYear year) {
 		setCursor(FormUtil.WAIT_CURSOR);
 		config.setCursor(FormUtil.WAIT_CURSOR);
-		listMenu.setEnabled(false);
+		comboYear.setEnabled(false);
 		Thread t = new Thread(() -> {
 			title.setText(year != null? year.toString() : "");
 			config.setCurrentYear(year);
 			config.setCursor(Cursor.getDefaultCursor());
 			setCursor(Cursor.getDefaultCursor());
-			listMenu.setEnabled(true);
+			comboYear.setEnabled(true);
 		});
 		t.start();
 	}
@@ -261,14 +264,14 @@ public class PanelAcademicYear extends Panel {
 	 * Actalisation des donnees du menu
 	 */
 	private synchronized void reload() {
-		listModel.removeAllElements();
+		comboYearModel.removeAllElements();
 		
 		List<AcademicYear> years = academicYearDao.countAll() != 0? this.academicYearDao.findAll() : new ArrayList<>();
 		for (AcademicYear year : years)
-			listModel.addElement(year);
+			comboYearModel.addElement(year);
 		
 		if(!years.isEmpty())
-			this.listMenu.setSelectedIndex(0);
+			comboYear.setSelectedIndex(0);
 	}
 
 }

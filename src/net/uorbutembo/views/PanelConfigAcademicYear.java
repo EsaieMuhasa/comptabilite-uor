@@ -21,9 +21,10 @@ public class PanelConfigAcademicYear extends DefaultScenePanel {
 
 	private AcademicYear currentYear;
 	
-	private PanelPromotion panelPromotion;
-	private PanelFeePromotion panelFeePromotion;
-	private PanelAnnualSpend panelAnnualSpend;
+	private final PanelPromotion panelPromotion;
+	private final PanelFeePromotion panelFeePromotion;
+	private final PanelAnnualRecipe panelAnnualRecipe;//configuration de la repartition des recette annuels
+	private final PanelAnnualSpend panelAnnualSpend;
 	
 	/**
 	 * @param mainWindow
@@ -31,17 +32,19 @@ public class PanelConfigAcademicYear extends DefaultScenePanel {
 	public PanelConfigAcademicYear(MainWindow mainWindow) {
 		super("Année académique", new ImageIcon(R.getIcon("favorite")), mainWindow, false);
 		
-		this.panelPromotion = new PanelPromotion(mainWindow);
-		this.panelFeePromotion = new PanelFeePromotion(mainWindow);
-		this.panelAnnualSpend = new PanelAnnualSpend(mainWindow);
+		panelPromotion = new PanelPromotion(mainWindow);
+		panelFeePromotion = new PanelFeePromotion(mainWindow);
+		panelAnnualRecipe = new PanelAnnualRecipe(mainWindow);
+		panelAnnualSpend = new PanelAnnualSpend(mainWindow);
 		
 		JScrollPane scroll = FormUtil.createScrollPane(panelPromotion);
 		panelPromotion.setBorder(BODY_BORDER);
 		
 		this
 			.addItemMenu(new NavbarButtonModel("promotions", "Promotions"), scroll)
-			.addItemMenu(new NavbarButtonModel("feePromotion", "Frais par promotion"), this.panelFeePromotion)
-			.addItemMenu(new NavbarButtonModel("annualSpend", "Rubrique budgetaire"), this.panelAnnualSpend);
+			.addItemMenu(new NavbarButtonModel("feePromotion", "Frais acadmique"), panelFeePromotion)
+			.addItemMenu(new NavbarButtonModel("autherRecipe", "Autres recetes"), panelAnnualRecipe)
+			.addItemMenu(new NavbarButtonModel("annualSpend", "Rubrique budgetaire"), panelAnnualSpend);
 	}
 
 	@Override
@@ -58,9 +61,10 @@ public class PanelConfigAcademicYear extends DefaultScenePanel {
 	}
 	
 	protected void reload () {
-		this.panelPromotion.setCurrentYear(currentYear);
-		this.panelFeePromotion.setCurrentYear(currentYear);
-		this.panelAnnualSpend.setCurrentYear(currentYear);	
+		panelPromotion.setCurrentYear(currentYear);
+		panelFeePromotion.setCurrentYear(currentYear);
+		panelAnnualSpend.setCurrentYear(currentYear);	
+		panelAnnualRecipe.setCurrentYear(currentYear);
 	}
 
 }
