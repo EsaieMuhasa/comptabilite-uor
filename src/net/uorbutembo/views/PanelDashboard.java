@@ -100,8 +100,8 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 		ButtonGroup group = new ButtonGroup();
 		
 		JRadioButton  radio = new JRadioButton("Etudiants");
-		JRadioButton  payment = new JRadioButton("Payement");
-		JRadioButton  budget = new JRadioButton("Budget général");
+		JRadioButton  payment = new JRadioButton("Solde en caisse");
+		JRadioButton  budget = new JRadioButton("Budget globale");
 		ActionListener radionListener = (event -> {
 			if(event.getSource() == radio) {
 				piePanel.setModel(modelPieStudents);

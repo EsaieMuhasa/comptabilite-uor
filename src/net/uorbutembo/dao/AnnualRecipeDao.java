@@ -29,7 +29,7 @@ public interface AnnualRecipeDao extends DAOInterface<AnnualRecipe> {
 	 * @return
 	 * @throws DAOException
 	 */
-	boolean checkByAcademiYear (long yearId) throws DAOException;
+	boolean checkByAcademicYear (long yearId) throws DAOException;
 	
 	/**
 	 * Comptage du nombre d'occrence pour la configuration de l'annee academique dont l'id est en parmatre
@@ -37,7 +37,7 @@ public interface AnnualRecipeDao extends DAOInterface<AnnualRecipe> {
 	 * @return
 	 * @throws DAOException
 	 */
-	int countByAcademiYear (long yearId) throws DAOException;
+	int countByAcademicYear (long yearId) throws DAOException;
 	
 	/**
 	 * Verification de l'existance d'aumon une configuration pour l'annee academique ene parametre
@@ -45,8 +45,8 @@ public interface AnnualRecipeDao extends DAOInterface<AnnualRecipe> {
 	 * @return
 	 * @throws DAOException
 	 */
-	default boolean checkByAcademiYear (AcademicYear year) throws DAOException {
-		return checkByAcademiYear(year.getId());
+	default boolean checkByAcademicYear (AcademicYear year) throws DAOException {
+		return checkByAcademicYear(year.getId());
 	}
 	
 	/**
@@ -55,8 +55,8 @@ public interface AnnualRecipeDao extends DAOInterface<AnnualRecipe> {
 	 * @return
 	 * @throws DAOException
 	 */
-	default int countByAcademiYear (AcademicYear year) throws DAOException {
-		return countByAcademiYear(year.getId());
+	default int countByAcademicYear (AcademicYear year) throws DAOException {
+		return countByAcademicYear(year.getId());
 	}
 	
 	/**

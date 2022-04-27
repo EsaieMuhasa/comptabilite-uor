@@ -79,7 +79,7 @@ public class SidebarJournal extends Panel{
 			workspace.createOutlay();
 		});
 		btnNewRecipe.addActionListener(event -> {
-			JOptionPane.showMessageDialog(mainWindow, "Operation non pris en charge", "Alert", JOptionPane.INFORMATION_MESSAGE);
+			workspace.createRecipe();
 		});
 	}
 	

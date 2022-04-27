@@ -29,10 +29,11 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public void create(OtherRecipe o) throws DAOException {
 		try {
 			long id = insertInTable(
-					new String[] {"amount", "account", "collectionYear", "recordDate", "label"},
+					new String[] {"amount", "account", "collectionYear", "collectionDate", "recordDate", "label"},
 					new Object[] {
 							o.getAmount(), o.getAccount().getId(),
 							o.getCollectionYear().getId(),
+							o.getCollectionDate().getTime(),
 							o.getRecordDate().getTime(),
 							o.getLabel()
 					});
@@ -47,10 +48,11 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public void update(OtherRecipe o, long id) throws DAOException {
 		try {
 			updateInTable(
-					new String[] {"amount", "account", "collectionYear", "lastUpdate", "label"},
+					new String[] {"amount", "account", "collectionYear", "collectionDate", "lastUpdate", "label"},
 					new Object[] {
 							o.getAmount(), o.getAccount().getId(),
 							o.getCollectionYear().getId(),
+							o.getCollectionDate().getTime(),
 							o.getLastUpdate().getTime(),
 							o.getLabel()
 					}, id);
@@ -140,6 +142,7 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		recipe.setCollectionYear(new AcademicYear(result.getLong("collectionYear")));
 		recipe.setAccount(new AnnualRecipe(result.getLong("account")));
 		recipe.setLabel(result.getString("label"));
+		recipe.setCollectionDate(new Date(result.getLong("collectionDate")));
 		recipe.setRecordDate(new Date(result.getLong("recordDate")));
 		if(result.getLong("lastUpdate") != 0) 
 			recipe.setLastUpdate(new Date(result.getLong("lastUpdate")));
@@ -152,6 +155,7 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		recipe.setCollectionYear(new AcademicYear(result.getLong("collectionYear")));
 		recipe.setAccount(account);
 		recipe.setLabel(result.getString("label"));
+		recipe.setCollectionDate(new Date(result.getLong("collectionDate")));
 		recipe.setRecordDate(new Date(result.getLong("recordDate")));
 		if(result.getLong("lastUpdate") != 0) 
 			recipe.setLastUpdate(new Date(result.getLong("lastUpdate")));

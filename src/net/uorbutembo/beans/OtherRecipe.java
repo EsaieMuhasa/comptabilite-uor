@@ -3,6 +3,8 @@
  */
 package net.uorbutembo.beans;
 
+import java.util.Date;
+
 /**
  * @author Esaie MUHASA
  *
@@ -14,6 +16,7 @@ public class OtherRecipe extends DBEntity {
 	private double amount;
 	private String label;
 	private AnnualRecipe account;
+	private Date collectionDate;
 
 	/**
 	 * 
@@ -53,7 +56,7 @@ public class OtherRecipe extends DBEntity {
 	/**
 	 * @param amount the amount to set
 	 */
-	public void setAmount(double amount) {
+	public void setAmount (double amount) {
 		this.amount = amount;
 	}
 
@@ -67,7 +70,7 @@ public class OtherRecipe extends DBEntity {
 	/**
 	 * @param label the label to set
 	 */
-	public void setLabel(String label) {
+	public void setLabel (String label) {
 		this.label = label;
 	}
 
@@ -81,8 +84,22 @@ public class OtherRecipe extends DBEntity {
 	/**
 	 * @param account the account to set
 	 */
-	public void setAccount(AnnualRecipe account) {
+	public void setAccount (AnnualRecipe account) {
 		this.account = account;
+	}
+
+	/**
+	 * @return the collectionDate
+	 */
+	public Date getCollectionDate() {
+		return collectionDate;
+	}
+
+	/**
+	 * @param collectionDate the collectionDate to set
+	 */
+	public void setCollectionDate(Date collectionDate) {
+		this.collectionDate = collectionDate;
 	}
 
 }

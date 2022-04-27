@@ -77,7 +77,7 @@ public class PanelAnnualRecipe extends Panel {
 		this.currentYear = currentYear;
 		List<AnnualSpend> spends = annualSpendDao.checkByAcademicYear(currentYear.getId())?
 				annualSpendDao.findByAcademicYear(currentYear) : new ArrayList<>();
-		List<AnnualRecipe> recipes = annualRecipeDao.checkByAcademiYear(currentYear)?
+		List<AnnualRecipe> recipes = annualRecipeDao.checkByAcademicYear(currentYear)?
 				annualRecipeDao.findByAcademicYear(currentYear) : new ArrayList<>();
 		
 		modelRecipe.clear();
@@ -230,7 +230,7 @@ public class PanelAnnualRecipe extends Panel {
 			if(universityRecipeDao.countAll() != 0) {
 				List<UniversityRecipe> recipes = universityRecipeDao.findAll();
 				
-				if (annualRecipeDao.checkByAcademiYear(currentYear)) {
+				if (annualRecipeDao.checkByAcademicYear(currentYear)) {
 					List<UniversityRecipe> byYear = universityRecipeDao.findByAcademicYear(currentYear);
 					
 					for (UniversityRecipe recipe : byYear) {

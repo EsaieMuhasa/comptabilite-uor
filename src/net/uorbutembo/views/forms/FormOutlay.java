@@ -48,7 +48,7 @@ public class FormOutlay extends DefaultFormPanel {
 	private final ComboBox<AnnualSpend> comboAccount = new ComboBox<>("Compte à crediter", comboSpendModel);
 	private final ComboBox<AcademicYear> comboAccountYearFilter = new ComboBox<>("Année académique du compte", comboFilterYearModel);
 	
-	private final FormGroup<String> groupAmount = FormGroup.createTextField("Montant");
+	private final FormGroup<String> groupAmount = FormGroup.createTextField("Montant en "+FormUtil.UNIT_MONEY);
 	private final FormGroup<String> groupWording = FormGroup.createTextField("Libele de livraison");
 	private final FormGroup<String> groupDate = FormGroup.createTextField("Date de livraison");
 	private final FormGroup<AcademicYear> groupYear = FormGroup.createComboBox(comboYear);

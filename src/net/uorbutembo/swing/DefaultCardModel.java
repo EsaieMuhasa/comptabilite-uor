@@ -15,7 +15,7 @@ public class DefaultCardModel <T> implements CardModel <T> {
 	 * @author Esaie MUHASA
 	 * Type par defaut des cardes
 	 */
-	enum CardType {
+	public enum CardType {
 		PRIMARY,
 		SECONDARY,
 		DANGER,

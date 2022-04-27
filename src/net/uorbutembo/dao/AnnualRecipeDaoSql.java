@@ -26,6 +26,11 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 		super(factory);
 		universityRecipeDao = factory.findDao(UniversityRecipeDao.class);
 	}
+	
+	@Override
+	protected boolean hasView() {
+		return true;
+	}
 
 	@Override
 	public void create(AnnualRecipe a) throws DAOException {
@@ -75,18 +80,18 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 	}
 
 	@Override
-	public boolean checkByAcademiYear(long yearId) throws DAOException {
+	public boolean checkByAcademicYear(long yearId) throws DAOException {
 		return check("academicYear", yearId);
 	}
 
 	@Override
-	public int countByAcademiYear(long yearId) throws DAOException {
+	public int countByAcademicYear(long yearId) throws DAOException {
 		return count("academicYear", yearId);
 	}
 
 	@Override
 	public AnnualRecipe find(long yearId, long recipeId) throws DAOException {
-		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d AND universityRecipe = %d", getTableName(), yearId, recipeId);
+		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d AND universityRecipe = %d", getViewName(), yearId, recipeId);
 		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
@@ -103,7 +108,7 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 
 	@Override
 	public List<AnnualRecipe> findByAcademicYear(AcademicYear year) throws DAOException {
-		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d", getTableName(), year.getId());
+		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d", getViewName(), year.getId());
 		System.out.println(SQL);
 		List<AnnualRecipe> list = new ArrayList<>();
 		try (
@@ -124,7 +129,7 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 
 	@Override
 	public List<AnnualRecipe> findByAcademicYear(AcademicYear year, int limit, int offset) throws DAOException {
-		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d LIMIT d% OFFSET %d", getTableName(), year.getId(), limit, offset);
+		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d LIMIT d% OFFSET %d", getViewName(), year.getId(), limit, offset);
 		System.out.println(SQL);
 		List<AnnualRecipe> list = new ArrayList<>();
 		try (
@@ -149,6 +154,7 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 		recipe.setAcademicYear(result.getLong("academicYear"));
 		recipe.setRecordDate(new Date(result.getLong("recordDate")));
 		recipe.setUniversityRecipe(result.getLong("universityRecipe"));
+		recipe.setCollected(result.getDouble("collected"));
 		if(result.getLong("lastUpdate") != 0) 
 			recipe.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		return recipe;
@@ -159,6 +165,7 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 		recipe.setAcademicYear(year);
 		recipe.setRecordDate(new Date(result.getLong("recordDate")));
 		recipe.setUniversityRecipe(universityRecipeDao.findById(result.getLong("universityRecipe")));
+		recipe.setCollected(result.getDouble("collected"));
 		if(result.getLong("lastUpdate") != 0) 
 			recipe.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		return recipe;

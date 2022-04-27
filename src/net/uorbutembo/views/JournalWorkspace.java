@@ -17,6 +17,7 @@ import net.uorbutembo.views.components.Navbar;
 import net.uorbutembo.views.components.NavbarButtonListener;
 import net.uorbutembo.views.components.NavbarButtonModel;
 import net.uorbutembo.views.components.SidebarJournal;
+import net.uorbutembo.views.forms.FormOtherRecipe;
 import net.uorbutembo.views.forms.FormOutlay;
 import net.uorbutembo.views.forms.FormUtil;
 import resources.net.uorbutembo.R;
@@ -29,7 +30,9 @@ public class JournalWorkspace extends DefaultScenePanel {
 	private static final long serialVersionUID = 5081093701813722107L;
 	
 	private FormOutlay formOutlay;
-	private JDialog dialogForm;
+	private FormOtherRecipe formRecipe;
+	private JDialog dialogOutlay;
+	private JDialog dialogRecipe;
 	
 	private final Navbar navbar = new Navbar();
 	private final JPanel sidebar;
@@ -73,28 +76,54 @@ public class JournalWorkspace extends DefaultScenePanel {
 	public void createOutlay () {		
 		createOutlayDialog();
 		
-		dialogForm.setLocationRelativeTo(mainWindow);
-		dialogForm.setVisible(true);
+		dialogOutlay.setLocationRelativeTo(mainWindow);
+		dialogOutlay.setVisible(true);
 	}
 	
 	public void updateOutlay (Outlay outlay) {
 		
 	}
 	
+	/**
+	 * creation du boite de dialogue d'ajout d'une valeur
+	 */
+	public void createRecipe () {		
+		createRecipeDialog();
+		
+		dialogRecipe.setLocationRelativeTo(mainWindow);
+		dialogRecipe.setVisible(true);
+	}
+	
+	private void createRecipeDialog () {
+		if(dialogRecipe != null)
+			return;
+		
+		formRecipe = new FormOtherRecipe(mainWindow);
+		dialogRecipe = new JDialog(mainWindow, "Entrée", true);
+		dialogRecipe.setIconImage(mainWindow.getIconImage());
+		
+		dialogRecipe.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+		dialogRecipe.getContentPane().add(formRecipe, BorderLayout.CENTER);
+		dialogRecipe.getContentPane().setBackground(FormUtil.BKG_DARK);
+		dialogRecipe.pack();
+		dialogRecipe.setSize(800, dialogRecipe.getHeight());
+		dialogRecipe.setResizable(false);
+	}
+	
 	private void createOutlayDialog () {
-		if(dialogForm != null)
+		if(dialogOutlay != null)
 			return;
 		
 		formOutlay = new FormOutlay(mainWindow);
-		dialogForm = new JDialog(mainWindow, "Sortie", true);
-		mainWindow.setIconImage(mainWindow.getIconImage());
+		dialogOutlay = new JDialog(mainWindow, "Sortie", true);
+		dialogOutlay.setIconImage(mainWindow.getIconImage());
 		
-		dialogForm.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
-		dialogForm.getContentPane().add(formOutlay, BorderLayout.CENTER);
-		dialogForm.getContentPane().setBackground(FormUtil.BKG_DARK);
-		dialogForm.pack();
-		dialogForm.setSize(800, dialogForm.getHeight());
-		dialogForm.setResizable(false);
+		dialogOutlay.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+		dialogOutlay.getContentPane().add(formOutlay, BorderLayout.CENTER);
+		dialogOutlay.getContentPane().setBackground(FormUtil.BKG_DARK);
+		dialogOutlay.pack();
+		dialogOutlay.setSize(800, dialogOutlay.getHeight());
+		dialogOutlay.setResizable(false);
 	}
 	
 	@Override
