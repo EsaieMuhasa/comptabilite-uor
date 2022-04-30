@@ -9,6 +9,8 @@ import java.awt.BorderLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.Outlay;
 import net.uorbutembo.swing.Panel;
@@ -39,6 +41,8 @@ public class JournalWorkspace extends DefaultScenePanel {
 	private final Panel container = new Panel(new BorderLayout());
 	
 	private final JournalTabbedPanel tabbedPanel;
+	
+	private final JTabbedPane tabbedPaneListOperations = new JTabbedPane(JTabbedPane.BOTTOM);
 
 	/**
 	 * @param mainWindow
@@ -49,11 +53,16 @@ public class JournalWorkspace extends DefaultScenePanel {
 		tabbedPanel = new JournalTabbedPanel(mainWindow);
 		sidebar = new SidebarJournal(mainWindow, this);
 		
+		final Panel panelPadding = new Panel(new BorderLayout());
+		panelPadding.setBorder(new EmptyBorder(0, 2, 0, 1));
+		panelPadding.add(tabbedPaneListOperations, BorderLayout.CENTER);
 		NavbarButtonModel item = new NavbarButtonModel("index", "Ligne de temps");
 		NavbarButtonModel item2 = new NavbarButtonModel("bilan", "Liste des opérations");
 		tabbedPanel.addItemMenu(item, new Panel());
-		tabbedPanel.addItemMenu(item2, new Panel());
+		tabbedPanel.addItemMenu(item2, panelPadding);
 		
+		tabbedPaneListOperations.addTab("Tableau", new ImageIcon(R.getIcon("list")), new Panel());
+		tabbedPaneListOperations.addTab("Graphiques", new ImageIcon(R.getIcon("chart")), new Panel());
 		
 		navbar.createGroup("default", tabbedPanel.getNavbarItems(), tabbedPanel);
 		navbar.showGroup("default");
@@ -84,9 +93,6 @@ public class JournalWorkspace extends DefaultScenePanel {
 		
 	}
 	
-	/**
-	 * creation du boite de dialogue d'ajout d'une valeur
-	 */
 	public void createRecipe () {		
 		createRecipeDialog();
 		
@@ -94,6 +100,9 @@ public class JournalWorkspace extends DefaultScenePanel {
 		dialogRecipe.setVisible(true);
 	}
 	
+	/**
+	 * creation du boite de dialogue d'ajout d'une recete
+	 */
 	private void createRecipeDialog () {
 		if(dialogRecipe != null)
 			return;

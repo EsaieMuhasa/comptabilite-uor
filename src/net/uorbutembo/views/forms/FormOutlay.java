@@ -7,19 +7,24 @@ import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JOptionPane;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
+import net.uorbutembo.beans.Outlay;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AnnualSpendDao;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.OutlayDao;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
@@ -41,11 +46,11 @@ public class FormOutlay extends DefaultFormPanel {
 	private final DefaultComboBoxModel<AcademicYear> comboYearModel = new DefaultComboBoxModel<>();
 	private final DefaultComboBoxModel<AcademicYear> comboFilterYearModel = new DefaultComboBoxModel<>();
 	
-	private final DefaultComboBoxModel<AnnualSpend> comboSpendModel = new DefaultComboBoxModel<>();
+	private final DefaultComboBoxModel<AnnualSpend> comboAccountModel = new DefaultComboBoxModel<>();
 	private final Map<AcademicYear, List<AnnualSpend>> classementSpends = new HashMap<>();
 	
 	private final ComboBox<AcademicYear> comboYear = new ComboBox<>("Année académique", comboYearModel);
-	private final ComboBox<AnnualSpend> comboAccount = new ComboBox<>("Compte à crediter", comboSpendModel);
+	private final ComboBox<AnnualSpend> comboAccount = new ComboBox<>("Compte à crediter", comboAccountModel);
 	private final ComboBox<AcademicYear> comboAccountYearFilter = new ComboBox<>("Année académique du compte", comboFilterYearModel);
 	
 	private final FormGroup<String> groupAmount = FormGroup.createTextField("Montant en "+FormUtil.UNIT_MONEY);
@@ -56,6 +61,8 @@ public class FormOutlay extends DefaultFormPanel {
 	private final AnnualSpendDao annualSpendDao;
 	private final AcademicYearDao academicYearDao;
 	private final OutlayDao outlayDao;
+	
+	private Outlay outlay;
 	
 	private final PieModelAccount pieModel = new PieModelAccount();
 	private final PiePanel piePanel = new PiePanel(pieModel, FormUtil.BORDER_COLOR);
@@ -129,9 +136,9 @@ public class FormOutlay extends DefaultFormPanel {
 				pieModel.reload(year);
 				comboYear.setEnabled(true);
 				comboAccountYearFilter.setEnabled(true);
-				comboAccount.setEnabled(comboSpendModel.getSize() != 0);
+				comboAccount.setEnabled(comboAccountModel.getSize() != 0);
 				setCursor(Cursor.getDefaultCursor());
-				btnSave.setEnabled(true);
+				btnSave.setEnabled(comboAccountModel.getSize() != 0);
 			});
 			t.start();
 		});
@@ -140,21 +147,63 @@ public class FormOutlay extends DefaultFormPanel {
 		comboAccountYearFilter.addItemListener(event -> {
 			List<AnnualSpend> spends = classementSpends.get(comboYearModel.getElementAt(comboAccountYearFilter.getSelectedIndex()));
 			comboAccount.setEnabled(spends!= null && !spends.isEmpty());
-			comboSpendModel.removeAllElements();
+			comboAccountModel.removeAllElements();
 			if(spends == null)
 				return;
 			
 			for (AnnualSpend spend : spends) {
-				comboSpendModel.addElement(spend);
+				comboAccountModel.addElement(spend);
 			}
+			
+			btnSave.setEnabled(comboAccountModel.getSize() != 0);
 		});
 		//==
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-
+	public void actionPerformed(ActionEvent event) {
+		final float amount = Float.parseFloat(groupAmount.getField().getValue());
+		final String label = groupWording.getField().getValue();
+		final Date now = new Date();
+		
+		Outlay out  = new Outlay();
+		
+		try {
+			final Date deliveryDate = FormUtil.DEFAULT_FROMATER.parse(groupDate.getField().getValue());
+			if(outlay != null)
+				outlay.setDeliveryDate(deliveryDate);
+			else
+				out.setDeliveryDate(deliveryDate);
+		} catch (ParseException e) {
+			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		AnnualSpend account = comboAccountModel.getElementAt(comboAccount.getSelectedIndex());
+		AcademicYear academicYear = comboYearModel.getElementAt(comboYear.getSelectedIndex());
+		AcademicYear deliveryYear = academicYearDao.findCurrent();
+		
+		out.setWording(label);
+		out.setAccount(account);
+		out.setAmount(amount);
+		out.setAcademicYear(academicYear);
+		
+		if (outlay == null) {			
+			out.setRecordDate(now);
+			out.setDeliveryYear(deliveryYear);
+		} else {
+			out.setLastUpdate(now);
+			out.setRecordDate(outlay.getRecordDate());
+		}
+		
+		try {
+			if(outlay == null)
+				outlayDao.create(out);
+			else
+				outlayDao.update(out, outlay.getId());
+		} catch (DAOException e) {
+			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+		}
 	}
 	
 	private class PieModelAccount extends DefaultPieModel {

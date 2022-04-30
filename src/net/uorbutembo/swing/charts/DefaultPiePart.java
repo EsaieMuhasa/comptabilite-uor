@@ -11,29 +11,20 @@ import java.util.List;
  * @author Esaie MUHASA
  *
  */
-public class DefaultPiePart implements PiePart {
+public class DefaultPiePart extends AbstractChartData implements PiePart {
 	
 	protected final List<PiePartListener> listeners = new ArrayList<>();
 	
-	protected Color backgroundColor;
-	protected Color foregroundColor;
-	protected Color borderColor;
 	protected String label;
 	protected String name;
 	protected double value;
-	protected boolean visible;
-	protected Object data;
 	
-
 	/**
 	 * 
 	 */
 	public DefaultPiePart() {
-		this.backgroundColor = Color.BLACK;
-		this.foregroundColor = Color.WHITE;
-		this.borderColor = Color.DARK_GRAY;
+		super();
 		this.label = "";
-		this.visible = true;
 	}
 	
 	/**
@@ -44,7 +35,7 @@ public class DefaultPiePart implements PiePart {
 		this(part.getBackgroundColor(), part.getBorderColor(), part.getValue(), part.getLabel());
 		this.setData(part.getData());
 		this.name = part.getName();
-		this.foregroundColor = part.getForegrounColor();
+		this.foregroundColor = part.getForegroundColor();
 	}
 
 	/**
@@ -79,17 +70,7 @@ public class DefaultPiePart implements PiePart {
 		this.backgroundColor = backgroundColor;
 		this.name = name;
 	}
-	
 
-	@Override
-	public synchronized void setData(Object data) {
-		this.data = data;
-	}
-
-	@Override
-	public Object getData() {
-		return data;
-	}
 
 	@Override
 	public String getName() {
@@ -102,21 +83,6 @@ public class DefaultPiePart implements PiePart {
 	}
 
 	@Override
-	public Color getBackgroundColor() {
-		return backgroundColor;
-	}
-
-	@Override
-	public Color getForegrounColor() {
-		return foregroundColor;
-	}
-
-	@Override
-	public Color getBorderColor() {
-		return borderColor;
-	}
-
-	@Override
 	public double getValue() {
 		return value;
 	}
@@ -126,17 +92,13 @@ public class DefaultPiePart implements PiePart {
 		return label;
 	}
 
-	@Override
-	public boolean isVisible() {
-		return visible;
-	}
 
 	@Override
 	public void setBackgroundColor(Color backgroundColor) {
 		if(this.backgroundColor.equals(backgroundColor))
 			return;
 		
-		this.backgroundColor = backgroundColor;
+		super.setBackgroundColor(backgroundColor);
 		this.emitOnChange();
 	}
 
@@ -145,7 +107,7 @@ public class DefaultPiePart implements PiePart {
 		if(this.foregroundColor.equals(foregroundColor)) 
 			return;
 		
-		this.foregroundColor = foregroundColor;
+		super.setForegroundColor(foregroundColor);
 		this.emitOnChange();
 	}
 
@@ -154,7 +116,7 @@ public class DefaultPiePart implements PiePart {
 		if(this.borderColor.equals(borderColor))
 			return;
 		
-		this.borderColor = borderColor;
+		super.setBorderColor(borderColor);
 		this.emitOnChange();
 	}
 
@@ -181,7 +143,7 @@ public class DefaultPiePart implements PiePart {
 		if(this.visible == visible)
 			return;
 		
-		this.visible = visible;
+		super.setVisible(visible);
 		this.emitOnChange();
 	}
 

@@ -1,41 +1,11 @@
 package net.uorbutembo.swing.charts;
 
-import java.awt.Color;
-
 /**
  * 
  * @author Esaie MUHASA
  *
  */
-public interface PiePart {
-	
-	/**
-	 * Conservation d'une reference d'un object X au part
-	 * @param data
-	 */
-	void setData (Object data);
-	Object getData ();
-	
-	/**
-	 * renvoie la couleur d'arriere plans du Parts
-	 * @return
-	 */
-	Color getBackgroundColor ();
-	void setBackgroundColor (Color backgroundColor);
-	
-	/**
-	 * Modification de la couleur du premier plan
-	 * @return
-	 */
-	Color getForegrounColor ();
-	void setForegroundColor (Color foregroundColor);
-	
-	/**
-	 * Recuperation de la couleur de bordure
-	 * @return
-	 */
-	Color getBorderColor ();
-	void setBorderColor (Color borderColor);	
+public interface PiePart extends ChartData{
 	
 	/**
 	 * renvoie la valeur exacte du part
@@ -58,13 +28,6 @@ public interface PiePart {
 	 */
 	String getName ();
 	void setName (String name);
-	
-	/**
-	 * Es-ce que le part est visible???
-	 * @return
-	 */
-	boolean isVisible ();
-	void setVisible(boolean visible);
 	
 	void addListener (PiePartListener listener);
 	void removeListener (PiePartListener listener);

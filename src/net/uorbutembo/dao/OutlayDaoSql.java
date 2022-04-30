@@ -28,12 +28,14 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public void create(Outlay o) throws DAOException {
 		try {
 			long id = insertInTable(
-					new String[] {"account", "amount", "wording", "deliveryDate", "recordDate"},
+					new String[] {"account", "academicYear", "amount", "wording", "deliveryDate", "deliveryYear", "recordDate"},
 					new Object[] {
 							o.getAccount().getId(),
+							o.getAcademicYear().getId(),
 							o.getAmount(),
 							o.getWording(),
 							o.getDeliveryDate().getTime(),
+							o.getDeliveryYear().getId(),
 							o.getRecordDate().getTime()
 					});
 			o.setId(id);
@@ -47,9 +49,10 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public void update(Outlay o, long id) throws DAOException {
 		try {
 			updateInTable(
-					new String[] {"account", "amount", "wording", "deliveryDate", "lastUpdate"},
+					new String[] {"account", "academicYear", "amount", "wording", "deliveryDate", "lastUpdate"},
 					new Object[] {
 							o.getAccount().getId(),
+							o.getAcademicYear().getId(),
 							o.getAmount(),
 							o.getWording(),
 							o.getDeliveryDate().getTime(),
@@ -311,6 +314,7 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 		out.setDeliveryDate(new Date(result.getLong("deliveryDate")));
 		out.setWording(result.getString("wording"));
 		out.setReference(result.getString("reference"));
+		out.setAmount(result.getDouble("amount"));
 		if(result.getLong("lastUpdate") > 0) {
 			out.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}
@@ -324,6 +328,7 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 		out.setDeliveryDate(new Date(result.getLong("deliveryDate")));
 		out.setWording(result.getString("wording"));
 		out.setReference(result.getString("reference"));
+		out.setAmount(result.getDouble("amount"));
 		if(result.getLong("lastUpdate") > 0) {
 			out.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}

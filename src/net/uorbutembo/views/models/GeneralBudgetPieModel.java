@@ -18,6 +18,7 @@ import net.uorbutembo.beans.AllocationRecipe;
 import net.uorbutembo.beans.AnnualRecipe;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.Inscription;
+import net.uorbutembo.beans.Outlay;
 import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.UniversitySpend;
@@ -30,6 +31,7 @@ import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.InscriptionDao;
+import net.uorbutembo.dao.OutlayDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.UniversitySpendDao;
@@ -66,6 +68,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	private final AnnualSpendDao annualSpendDao;
 	private final AnnualRecipeDao annualRecipeDao;
 	private final AllocationRecipeDao allocationRecipeDao;
+	private final OutlayDao outlayDao;
 
 	//pour le montant deja payer
 	private DefaultCardModel<Double> cardModelPayment;
@@ -258,6 +261,38 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		
 	};
 	
+	private final DAOAdapter<Outlay> outlayListener = new DAOAdapter<Outlay>() {
+
+		@Override
+		public synchronized void onCreate(Outlay e, int requestId) {
+			int index = indexOf(findByData(e.getAccount()));
+			PiePart part = pieModelPayment.getPartAt(index);
+			part.setValue(part.getValue() - e.getAmount());
+		}
+
+		@Override
+		public synchronized void onUpdate(Outlay e, int requestId) {
+			reloadPayment();
+		}
+
+		@Override
+		public synchronized void onDelete(Outlay e, int requestId) {
+			int index = indexOf(findByData(e.getAccount()));
+			PiePart part = pieModelPayment.getPartAt(index);
+			part.setValue(part.getValue() + e.getAmount());
+		}
+
+		@Override
+		public synchronized void onDelete(Outlay[] e, int requestId) {
+			for (Outlay out : e) {
+				int index = indexOf(findByData(out.getAccount()));
+				PiePart part = pieModelPayment.getPartAt(index);
+				part.setValue(part.getValue() + out.getAmount());
+			}
+		}
+		
+	};
+	
 	public GeneralBudgetPieModel(DAOFactory factory) {
 		super();
 		academicFeeDao = factory.findDao(AcademicFeeDao.class);
@@ -270,12 +305,14 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		annualSpendDao = factory.findDao(AnnualSpendDao.class);
 		annualRecipeDao = factory.findDao(AnnualRecipeDao.class);
 		allocationRecipeDao = factory.findDao(AllocationRecipeDao.class);
+		outlayDao = factory.findDao(OutlayDao.class);
 		
 		inscriptionDao.addListener(inscriptionListener);
 		annualSpendDao.addListener(annualSpendListener);
 		allocationCostDao.addListener(allocationCostListener);
 		paymentFeeDao.addListener(paymentListener);
 		allocationRecipeDao.addListener(allocationRecipeListener);
+		outlayDao.addListener(outlayListener);
 		
 		promotionDao.addListener(new DAOAdapter<Promotion>() {
 			@Override
@@ -452,9 +489,23 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			max += recipe.getCollected();
 		}
 		
+		//depences
+		for (int i = 0, count = pieModelPayment.getCountPart(); i < count; i++) {
+			PiePart part = pieModelPayment.getPartAt(i);
+			AnnualSpend spend = (AnnualSpend) part.getData();
+			if(outlayDao.checkByAccount(spend)) {
+				List<Outlay> outs = outlayDao.findByAccount(spend);
+				double amount = 0;
+				for (Outlay out : outs)
+					amount += out.getAmount(); 
+				
+				max -= amount;
+				part.setValue(part.getValue() - amount);
+			}
+		}
+		
 		pieModelPayment.setMax(max);
 		cardModelPayment.setValue(max);
-		
 	}
 	
 	/**
