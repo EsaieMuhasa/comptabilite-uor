@@ -150,6 +150,9 @@ public class DefaultLineChartModel extends AbstractChartData implements LineChar
 	protected void checkXMax () {
 		Point point = clouds.get(0).getXMax();
 		for (PointCloud c : clouds) {
+			if(c.getXMax() == null)
+				continue;
+			
 			if (c.getXMax().getX() > point.getX())
 				point = c.getXMax();
 		}
@@ -164,6 +167,9 @@ public class DefaultLineChartModel extends AbstractChartData implements LineChar
 	protected void checkYMax () {
 		Point point = clouds.get(0).getYMax();
 		for (PointCloud c : clouds) {
+			if(c.getYMax() == null)
+				continue;
+			
 			if (c.getYMax().getY() > point.getY())
 				point = c.getYMax();
 		}
@@ -178,6 +184,9 @@ public class DefaultLineChartModel extends AbstractChartData implements LineChar
 	protected void checkXMin () {
 		Point point = clouds.get(0).getXMin();
 		for (PointCloud c : clouds) {
+			if(c.getXMin() == null)
+				continue;
+			
 			if (c.getXMin().getX() < point.getX())
 				point = c.getXMin();
 		}
@@ -192,6 +201,9 @@ public class DefaultLineChartModel extends AbstractChartData implements LineChar
 	protected void checkYMin () {
 		Point point = clouds.get(0).getYMin();
 		for (PointCloud c : clouds) {
+			if(c.getYMin() == null)
+				continue;
+			
 			if (c.getYMin().getY() < point.getY())
 				point = c.getYMin();
 		}

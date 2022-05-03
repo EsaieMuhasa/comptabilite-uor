@@ -39,7 +39,6 @@ import net.uorbutembo.swing.CardModel;
 import net.uorbutembo.swing.DefaultCardModel;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
-import net.uorbutembo.swing.charts.PieModel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.forms.FormUtil;
 import resources.net.uorbutembo.R;
@@ -71,8 +70,8 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	private final OutlayDao outlayDao;
 
 	//pour le montant deja payer
-	private DefaultCardModel<Double> cardModelPayment;
-	private DefaultPieModel pieModelPayment;
+	private DefaultCardModel<Double> cardModelCaisse;
+	private DefaultPieModel pieModelCaisse;
 	//==
 	
 	private final DAOAdapter<Inscription> inscriptionListener = new DAOAdapter<Inscription>() {
@@ -81,21 +80,19 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			if (!academicYearDao.isCurrent(currentYear))
 				return;
 			
-			AcademicFee fee = e.getPromotion().getAcademicFee();
-			
-			if (fee != null) {					
-				setMax(getMax() + fee.getAmount());
-				List<AllocationCost> costs = allocationCostDao.findByAcademicFee(fee);
-				updateParts(costs, 1);
-			}
+			calculAll();
 		}
+		
 		@Override
 		public void onUpdate(Inscription e, int requestId) {
 			if(academicYearDao.isCurrent(currentYear)) {
 				reload();
-				reloadPayment();
+				
+				if (paymentFeeDao.checkByInscription(e))
+					reloadPayment();
 			}
 		}
+		
 		@Override
 		public void onDelete(Inscription e, int requestId) {
 			if(academicYearDao.isCurrent(currentYear)) 
@@ -109,7 +106,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			PiePart part = findByData(e);
 			if(part != null) {
 				removePart(part);
-				pieModelPayment.removeByData(part.getData());
+				pieModelCaisse.removeByData(part.getData());
 			}
 		}
 		
@@ -178,7 +175,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	private final DAOAdapter<PaymentFee> paymentListener = new DAOAdapter<PaymentFee>() {
 		@Override
 		public void onCreate(PaymentFee e, int requestId) {
-			cardModelPayment.setValue(cardModelPayment.getValue()+e.getAmount());
+			cardModelCaisse.setValue(cardModelCaisse.getValue()+e.getAmount());
 		}
 		
 		@Override
@@ -187,7 +184,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			for (PaymentFee e : payments) {
 				amount += e.getAmount();
 			}
-			cardModelPayment.setValue(cardModelPayment.getValue()+amount);
+			cardModelCaisse.setValue(cardModelCaisse.getValue()+amount);
 		}
 		
 		@Override
@@ -197,7 +194,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		public void onUpdate(PaymentFee[] e, int requestId) {reload();}
 		
 		@Override
-		public void onDelete(PaymentFee e, int requestId) {cardModelPayment.setValue(cardModelPayment.getValue() - e.getAmount());}
+		public void onDelete(PaymentFee e, int requestId) {cardModelCaisse.setValue(cardModelCaisse.getValue() - e.getAmount());}
 		
 		@Override
 		public void onDelete(PaymentFee[] payments, int requestId) {
@@ -205,7 +202,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			for (PaymentFee e : payments) {
 				amount += e.getAmount();
 			}
-			cardModelPayment.setValue(cardModelPayment.getValue() - amount);
+			cardModelCaisse.setValue(cardModelCaisse.getValue() - amount);
 		}
 	};
 	
@@ -213,10 +210,11 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 
 		@Override
 		public synchronized void onCreate(AllocationRecipe e, int requestId) {
-			if (e.getRecipe().getCollected() != 0) {
-				reload();
-				reloadPayment();
-			}
+			if(indexOf(findByData(e.getSpend())) != -1)
+				return;
+			
+			reload();
+			reloadPayment();
 		}
 
 		@Override
@@ -266,8 +264,9 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		@Override
 		public synchronized void onCreate(Outlay e, int requestId) {
 			int index = indexOf(findByData(e.getAccount()));
-			PiePart part = pieModelPayment.getPartAt(index);
+			PiePart part = pieModelCaisse.getPartAt(index);
 			part.setValue(part.getValue() - e.getAmount());
+			cardModelCaisse.setValue(cardModelCaisse.getValue() - e.getAmount());
 		}
 
 		@Override
@@ -278,7 +277,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		@Override
 		public synchronized void onDelete(Outlay e, int requestId) {
 			int index = indexOf(findByData(e.getAccount()));
-			PiePart part = pieModelPayment.getPartAt(index);
+			PiePart part = pieModelCaisse.getPartAt(index);
 			part.setValue(part.getValue() + e.getAmount());
 		}
 
@@ -286,7 +285,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		public synchronized void onDelete(Outlay[] e, int requestId) {
 			for (Outlay out : e) {
 				int index = indexOf(findByData(out.getAccount()));
-				PiePart part = pieModelPayment.getPartAt(index);
+				PiePart part = pieModelCaisse.getPartAt(index);
 				part.setValue(part.getValue() + out.getAmount());
 			}
 		}
@@ -342,16 +341,16 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		//==
 		
 		//card de l'etat des payements
-		cardModelPayment = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
-		cardModelPayment.setValue(0d);
-		cardModelPayment.setTitle("Caisse");
-		cardModelPayment.setInfo("Montant liquide disponible en caisse");
-		cardModelPayment.setIcon(R.getIcon("caisse"));
-		cardModelPayment.setSuffix("$");
+		cardModelCaisse = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
+		cardModelCaisse.setValue(0d);
+		cardModelCaisse.setTitle("Caisse");
+		cardModelCaisse.setInfo("Montant liquide disponible en caisse");
+		cardModelCaisse.setIcon(R.getIcon("caisse"));
+		cardModelCaisse.setSuffix("$");
 		//==
 		
-		pieModelPayment = new DefaultPieModel();
-		pieModelPayment.setTitle("Solde pour chaque compte");
+		pieModelCaisse = new DefaultPieModel();
+		pieModelCaisse.setTitle("Solde pour chaque compte");
 		this.setTitle("Répartition général du budget");
 	}
 	
@@ -391,17 +390,17 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	}
 	
 	/**
-	 * @return the cardModelPayment
+	 * @return the cardModelCaisse
 	 */
 	public DefaultCardModel<Double> getCardModelPayment() {
-		return cardModelPayment;
+		return cardModelCaisse;
 	}
 
 	/**
-	 * @return the pieModelPayment
+	 * @return the pieModelCaisse
 	 */
 	public DefaultPieModel getPieModelPayment() {
-		return pieModelPayment;
+		return pieModelCaisse;
 	}
 
 	/**
@@ -450,34 +449,35 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	 */
 	private synchronized void reloadPayment () {
 		
-		pieModelPayment.removeAll();
-		pieModelPayment.setMax(0);
+		pieModelCaisse.removeAll();
+		pieModelCaisse.setMax(0);
 		for (int i = 0, count = getCountPart(); i < count; i++) {//creation des copies de part du model du budget generale
 			PiePart part = new DefaultPiePart(getPartAt(i));
 			part.setValue(0);
-			pieModelPayment.addPart(part);
+			pieModelCaisse.addPart(part);
 		}
-		
-		if (!inscriptionDao.checkByAcademicYear(currentYear))
-			return;
-		
-		List<Inscription> inscriptions = inscriptionDao.findByAcademicYear(currentYear);
+
 		double max = 0;
-		for (Inscription i : inscriptions) {
-			if (!paymentFeeDao.checkByInscription(i)) 
+		for (AcademicFee f: academicFees) {
+			if (!allocationCostDao.checkByAcademicFee(f.getId()))
 				continue;
 			
-			List<PaymentFee> payments = paymentFeeDao.findByInscription(i);
-			List<AllocationCost> costs = allocationCostDao.findByAcademicFee(i.getPromotion().getAcademicFee());
-			max += updateParts(pieModelPayment, costs, payments);
+			List<AllocationCost> costs = allocationCostDao.findByAcademicFee(f);
+			for (int i=0, size = costs.size(); i< size; i++) {
+				AllocationCost al = costs.get(i);
+				PiePart globalPart = findByData(al.getAnnualSpend());
+				PiePart part = pieModelCaisse.findByData(globalPart.getData());
+				part.setValue(part.getValue() + al.getCollecetd());
+				max += al.getCollecetd();
+			}
 		}
 		
 		for (AnnualRecipe recipe : annualRecipes) {
 			if(recipe.getCollected() == 0)
 				continue;
 			
-			for (int i = 0, count = pieModelPayment.getCountPart(); i < count; i++) {
-				PiePart part = pieModelPayment.getPartAt(i);
+			for (int i = 0, count = pieModelCaisse.getCountPart(); i < count; i++) {
+				PiePart part = pieModelCaisse.getPartAt(i);
 				AnnualSpend spend = (AnnualSpend) part.getData();
 				if (allocationRecipeDao.check(recipe.getId(), spend.getId())) {
 					AllocationRecipe allocation = allocationRecipeDao.find(recipe, spend);
@@ -490,8 +490,8 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		}
 		
 		//depences
-		for (int i = 0, count = pieModelPayment.getCountPart(); i < count; i++) {
-			PiePart part = pieModelPayment.getPartAt(i);
+		for (int i = 0, count = pieModelCaisse.getCountPart(); i < count; i++) {
+			PiePart part = pieModelCaisse.getPartAt(i);
 			AnnualSpend spend = (AnnualSpend) part.getData();
 			if(outlayDao.checkByAccount(spend)) {
 				List<Outlay> outs = outlayDao.findByAccount(spend);
@@ -499,36 +499,14 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 				for (Outlay out : outs)
 					amount += out.getAmount(); 
 				
-				max -= amount;
 				part.setValue(part.getValue() - amount);
 			}
 		}
 		
-		pieModelPayment.setMax(max);
-		cardModelPayment.setValue(max);
+		pieModelCaisse.setMax(max);
+		cardModelCaisse.setValue(pieModelCaisse.getRealMax());
 	}
-	
-	/**
-	 * mise en jours des parts du model des payements
-	 * @param model
-	 * @param costs
-	 * @param payments
-	 */
-	private double updateParts (PieModel model, List<AllocationCost> costs, List<PaymentFee> payments) {
-		double sold = 0, percent;
-		for (PaymentFee fee : payments) {
-			for (int i=0, max = costs.size(); i< max; i++) {
-				AllocationCost al = costs.get(i);
-				PiePart globalPart = findByData(al.getAnnualSpend());
-				PiePart part = model.findByData(globalPart.getData());
-				percent = (fee.getAmount() / 100.0) * getPercentOf(globalPart);
-				part.setValue(part.getValue() + percent);
-			}
-			sold += fee.getAmount();
-		}
-		return sold;
-	}
-	
+
 	/**
 	 * calcult de la repartition des frais universitaire
 	 * Cette methode ecrase tout les calculs deja fais bien avant et re-commence tout a zero
@@ -540,74 +518,56 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		
 		double max = 0;
 		for (AcademicFee fee : academicFees) {
-			List<AllocationCost> costs = allocationCostDao.checkByAcademicFee(fee.getId())? this.allocationCostDao.findByAcademicFee(fee) : new ArrayList<>();
-			List<Promotion> promotions = promotionDao.checkByAcademicFee(fee)? promotionDao.findByAcademicFee(fee) : new ArrayList<>();
 			
-			//comptage des inscriptions dans chaque promotion
-			int count = 0;
-			for (Promotion p : promotions) {
-				count += this.inscriptionDao.countByPromotion(p.getId());
+			if (!allocationCostDao.checkByAcademicFee(fee.getId()))
+				continue;
+			
+			List<AllocationCost> costs = this.allocationCostDao.findByAcademicFee(fee);
+			for (int i=0, count = costs.size(); i< count; i++) {
+				AllocationCost al = costs.get(i);
+				PiePart part = this.findByData(al.getAnnualSpend());
+				
+				if(part == null) {
+					Color color = COLORS[i%(COLORS.length-1)];
+					UniversitySpend sp = universitySpendDao.findById(al.getAnnualSpend().getUniversitySpend().getId());
+					part = new DefaultPiePart(color, 0, sp.getTitle());
+					part.setData(al.getAnnualSpend());
+					part.setValue(0);
+				}
+				
+				part.setValue(part.getValue()+al.getTotalExpected());
+				this.addPart(part);
 			}
-			
-			updateParts(costs, count);
-			max += count * fee.getAmount();
+			max += fee.getAmount();
 		}
 		
 		for (AnnualRecipe recipe : annualRecipes) {
-			if(recipe.getCollected() > 0 && allocationRecipeDao.checkByRecipe(recipe)) {
-				List<AllocationRecipe> allocations = allocationRecipeDao.findByRecipe(recipe);
-				updateParts(allocations);
-				max += recipe.getCollected();
+			max += recipe.getCollected();
+			
+			if (!allocationRecipeDao.checkByRecipe(recipe)) 
+				continue;
+			
+			List<AllocationRecipe> recipes = allocationRecipeDao.findByRecipe(recipe);
+			
+			for (int i=0, count = recipes.size(); i< count; i++) {
+				AllocationRecipe al = recipes.get(i);
+				PiePart part = this.findByData(al.getSpend());
+				
+				if(part == null) {
+					Color color = COLORS[i%(COLORS.length-1)];
+					UniversitySpend sp = universitySpendDao.findById(al.getSpend().getUniversitySpend().getId());
+					part = new DefaultPiePart(color, 0, sp.getTitle());
+					part.setData(al.getSpend());
+					part.setValue(0);
+				}
+				
+				double value = (al.getRecipe().getCollected() / 100.0) * al.getPercent();
+				part.setValue(part.getValue()+value);
+				this.addPart(part);
 			}
+			
 		}
 		this.setMax(max);
 	}
 	
-	/**
-	 * mis en jours des parts selon les repartitions des frais universitaires
-	 * @param costs
-	 * @param multiplicateur
-	 */
-	private void updateParts (List<AllocationCost> costs, double multiplicateur) {
-		
-		for (int i=0, max = costs.size(); i< max; i++) {
-			AllocationCost al = costs.get(i);
-			PiePart part = this.findByData(al.getAnnualSpend());
-			
-			if(part == null) {
-				Color color = COLORS[i%(COLORS.length-1)];
-				UniversitySpend sp = universitySpendDao.findById(al.getAnnualSpend().getUniversitySpend().getId());
-				part = new DefaultPiePart(color, 0, sp.getTitle());
-				part.setData(al.getAnnualSpend());
-				part.setValue(0);
-			}
-			
-			double value = multiplicateur * al.getAmount();
-			part.setValue(part.getValue()+value);
-			this.addPart(part);
-		}
-	}
-	
-	/**
-	 * mis en jours des parts du budget general, pour les recettes ors des frais universitaire
-	 * @param recipes
-	 */
-	private void updateParts (List<AllocationRecipe> recipes) {
-		for (int i=0, max = recipes.size(); i< max; i++) {
-			AllocationRecipe al = recipes.get(i);
-			PiePart part = this.findByData(al.getSpend());
-			
-			if(part == null) {
-				Color color = COLORS[i%(COLORS.length-1)];
-				UniversitySpend sp = universitySpendDao.findById(al.getSpend().getUniversitySpend().getId());
-				part = new DefaultPiePart(color, 0, sp.getTitle());
-				part.setData(al.getSpend());
-				part.setValue(0);
-			}
-			
-			double value = (al.getRecipe().getCollected() / 100.0) * al.getPercent();
-			part.setValue(part.getValue()+value);
-			this.addPart(part);
-		}
-	}
 }

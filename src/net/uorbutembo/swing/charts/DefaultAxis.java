@@ -82,7 +82,10 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	}
 	
 	@Override
-	public void setInterval(double min, double max) {
+	public void setInterval (double min, double max) {
+		if (this.min == min && this.max == max)
+			return;
+		
 		this.min = min;
 		this.max = max;
 		
@@ -371,6 +374,7 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 		for (AxisListener ls : listeners) {
 			ls.graduationInserted(this, index);
 		}
+		System.out.println(index+" > "+graduations.get(index));
 	}
 	
 	protected synchronized void emitOnChange () {

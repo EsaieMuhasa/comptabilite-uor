@@ -157,12 +157,11 @@ public class LineChartRender extends JComponent{
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 		
-//		if (model.getBorderColor() != null) {
-//			g2.setStroke(new BasicStroke(model.getBorderWidth()));
-//			g2.setColor(model.getBorderColor());
-//			g2.drawRect(model.getBorderWidth()/2, model.getBorderWidth()/2, getWidth()-(model.getBorderWidth()*2), getHeight()-(model.getBorderWidth()*2));
-//		}
-		
+		if (model.getBorderColor() != null) {
+			g2.setStroke(new BasicStroke(model.getBorderWidth()));
+			g2.setColor(model.getBorderColor());
+			g2.drawRect(model.getBorderWidth()/2, model.getBorderWidth()/2, getWidth()-(model.getBorderWidth()), getHeight()-(model.getBorderWidth()));
+		}
 	}
 	
 	@Override
@@ -195,6 +194,7 @@ public class LineChartRender extends JComponent{
 		double absXmin = Math.abs(xMin);
 		double absYmin = Math.abs(yMin);
 		
+		
 		if (responsive) {
 			xAxis.setInterval(xMin, xMax);
 			yAxis.setInterval(yMin, yMax);
@@ -202,11 +202,11 @@ public class LineChartRender extends JComponent{
 			double maxX = (xMin < 0 || xMax < 0) ? absXmin + absXmax : absXmax;
 			double maxY = (yMin < 0 || yMax < 0)? absYmin + absYmax : absYmax;
 			
-			double xRation = (widhtRender - padding * 3) / maxX;
-			double yRation = (heightRender - padding * 3) /maxY;
+			double xRation = (widhtRender - padding * 2) / maxX;
+			double yRation = (heightRender - padding * 2) /maxY;
 			
-			double xStep = 40;//maxX <= 10? 1 : (maxX > 10 && maxX < 100 ? 10 : (maxX <= 1000? 100 : 1000));
-			double yStep = 5;//maxY <= 10? 1 : (maxY > 10 && maxY < 50 ? 5 : (maxY <= 1000? 50 : 1000));
+			double xStep = 10;//maxX <= 10? 1 : (maxX > 10 && maxX < 100 ? 10 : (maxX <= 1000? 100 : 1000));
+			double yStep = 1;//maxY <= 10? 1 : (maxY > 10 && maxY < 50 ? 5 : (maxY <= 1000? 50 : 1000));
 			
 			xAxis.setRation(xRation);
 			xAxis.setStep(xStep);
@@ -215,7 +215,7 @@ public class LineChartRender extends JComponent{
 			yAxis.setStep(yStep);
 		}
 		
-		final double yAxToRation = padding + (yMin < 0 ? yAxis.toRation(Math.abs(yMin)+yAxis.getStep()+1) : 0);
+		final double yAxToRation = padding + (yMin < 0 ? yAxis.toRation(Math.abs(yMin)+yAxis.getStep()) : 0);
 		final double xAyToRation = padding + (xMin < 0 ? xAxis.toRation(Math.abs(xMin)+xAxis.getStep()): 0);
 		
 		int translateX = (int) xAyToRation;//translation des Y sur X
@@ -223,6 +223,9 @@ public class LineChartRender extends JComponent{
 		
 		if(yAxis.getMin()<= 0 && yAxis.getMax() >= 0) {			
 			g2.setColor(xAxis.getBorderColor());
+			if (yAxis.getMin() == -yAxis.getMax()) {
+				translateY -= yAxis.toRation(yAxis.getStep()/2);
+			}
 			g2.drawLine(0, heightRender-translateY, widhtRender, heightRender-translateY);//axe des X
 			int fXx [] = {widhtRender - stepsWidth, widhtRender, widhtRender - stepsWidth};
 			int fXy [] = {heightRender - translateY - stepsWidth/2, heightRender - translateY, heightRender - translateY + stepsWidth/2};
@@ -231,11 +234,11 @@ public class LineChartRender extends JComponent{
 			if(yAxis.getMin() > 0) {				
 				translateY += padding - (int) yAxis.getPixelPlacement(yAxis.getFirst());
 			} else {
-				translateY =  heightRender;//(int) -yAxis.getPixelPlacement(yAxis.getLast());
+				translateY = heightRender;//(int) -yAxis.getPixelPlacement(yAxis.getLast());
 			}
 		}
 		
-		if(xAxis.getMin() <= 0 && xAxis.getMax() >= 0) {			
+		if(xAxis.getMin() <= 0 && xAxis.getMax() >= 0) {
 			g2.setColor(yAxis.getBorderColor());
 			g2.drawLine( translateX, 0, translateX, heightRender);//axe des Y
 			int fYx [] = {translateX - stepsWidth/2, translateX, translateX + stepsWidth/2};
@@ -272,14 +275,16 @@ public class LineChartRender extends JComponent{
 		}
 		//==> end X
 		
+		
 		//y
 		
 		x = 0;
 		y = 0;
 		gr = yAxis.getFirst();
+		
 		while (yAxis.checkAfter(gr) && y >= -padding) {
 			Point p = normalize(new Point2d(x, yAxis.toRation(gr.getValue())));
-			y = (int)p.getY() - translateY;
+			y = (int)(p.getY() - translateY);
 			
 			g2.setColor(gr.getBorderColor());
 			g2.drawLine(padding - stepsWidth, y, padding-1,  y);
@@ -308,8 +313,8 @@ public class LineChartRender extends JComponent{
 				x = (int) ((normal.getX()) + translateX);
 				y = (int) ((normal.getY()) - translateY);
 				
-				String xy = "["+(points[j].getRoundX(3))+" , "+(points[j].getRoundY(3))+"]";
-				g2.drawString(xy, x, y);
+				//String xy = "["+(points[j].getRoundX(3))+" , "+(points[j].getRoundY(3))+"]";
+				//g2.drawString(xy, x, y);
 				
 				xs[j] = x;
 				ys[j] = y;

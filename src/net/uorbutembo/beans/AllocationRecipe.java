@@ -13,6 +13,7 @@ public class AllocationRecipe extends DBEntity {
 	private float percent;//pourventage 
 	private AnnualRecipe recipe;//source de finalcement
 	private AnnualSpend spend;//depense annuel associer au finalcement
+	private double collected;//montant deja collecter
 
 	/**
 	 * 
@@ -68,6 +69,20 @@ public class AllocationRecipe extends DBEntity {
 	 */
 	public void setSpend(AnnualSpend spend) {
 		this.spend = spend;
+	}
+
+	/**
+	 * @return the collected
+	 */
+	public double getCollected() {
+		return collected;
+	}
+
+	/**
+	 * @param collected the collected to set
+	 */
+	public void setCollected(double collected) {
+		this.collected = collected;
 	}
 
 }

@@ -25,6 +25,11 @@ class AcademicFeeDaoSql extends UtilSql<AcademicFee> implements AcademicFeeDao {
 	}
 	
 	@Override
+	protected boolean hasView() {
+		return true;
+	}
+	
+	@Override
 	public void create(AcademicFee a) throws DAOException {
 		try {
 			long id = this.insertInTable(
@@ -75,6 +80,8 @@ class AcademicFeeDaoSql extends UtilSql<AcademicFee> implements AcademicFeeDao {
 		fee.setDescription(result.getString("description"));
 		fee.setAmount(result.getFloat("amount"));
 		fee.setRecordDate(new Date(result.getLong("recordDate")));
+		fee.setCollected(result.getDouble("collected"));
+		fee.setTotalExpected(result.getDouble("totalExpected"));
 		if(result.getLong("lastUpdate") != 0) {
 			fee.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}

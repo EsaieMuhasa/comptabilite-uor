@@ -32,6 +32,11 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 		this.academicFeeDao = factory.findDao(AcademicFeeDao.class);
 		this.annualSpendDao = factory.findDao(AnnualSpendDao.class);
 	}
+	
+	@Override
+	protected boolean hasView() {
+		return true;
+	}
 
 	@Override
 	public synchronized void create(AllocationCost a) throws DAOException {
@@ -76,7 +81,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	
 	@Override
 	public List<AllocationCost> findByAnnualSpend(long annualSpendId) throws DAOException {
-		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d", getTableName(), annualSpendId);
+		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d", getViewName(), annualSpendId);
 		System.out.println(sql);
 		
 		List<AllocationCost> data = new ArrayList<>();
@@ -134,7 +139,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	
 	@Override
 	public AllocationCost find(AnnualSpend annualSpend, AcademicFee academicFee) throws DAOException {
-		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", this.getTableName(), annualSpend.getId(), academicFee.getId());
+		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", getViewName(), annualSpend.getId(), academicFee.getId());
 		System.out.println(sql);
 		try(
 				final Connection connection = factory.getConnection();
@@ -156,7 +161,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	
 	@Override
 	public AllocationCost find(long annualSpendId, long academicFeeId) throws DAOException {
-		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", this.getTableName(), annualSpendId, academicFeeId);
+		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", getViewName(), annualSpendId, academicFeeId);
 		System.out.println(sql);
 		try(
 				final Connection connection = factory.getConnection();
@@ -175,7 +180,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	
 	@Override
 	public boolean check(long annualSpendId, long academicFeeId) throws DAOException {
-		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", this.getTableName(), annualSpendId, academicFeeId);
+		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", getViewName(), annualSpendId, academicFeeId);
 		System.out.println(sql);
 		try(
 				final Connection connection = factory.getConnection();
@@ -196,7 +201,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	@Override
 	public List<AllocationCost> findByAcademicFee(AcademicFee academicFee) throws DAOException {
 		List<AllocationCost>  costs = new ArrayList<>();
-		final String sql = String.format("SELECT * FROM %s WHERE academicFee = %d", this.getTableName(), academicFee.getId());
+		final String sql = String.format("SELECT * FROM %s WHERE academicFee = %d", getViewName(), academicFee.getId());
 		System.out.println(sql);
 		try(
 				final Connection connection = factory.getConnection();
@@ -229,6 +234,9 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 		AllocationCost c = new AllocationCost(result.getLong("id"));
 		c.setRecordDate(new Date(result.getLong("recordDate")));
 		c.setAmount(result.getFloat("amount"));
+		c.setCollecetd(result.getDouble("collected"));
+		c.setPercent(result.getFloat("percent"));
+		c.setTotalExpected(result.getDouble("totalExpected"));
 		if (result.getLong("lastUpdate") != 0)
 			c.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		c.setAcademicFee(this.academicFeeDao.findById(result.getLong("academicFee")));
@@ -249,6 +257,9 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 		AllocationCost c = new AllocationCost(result.getLong("id"));
 		c.setRecordDate(new Date(result.getLong("recordDate")));
 		c.setAmount(result.getFloat("amount"));
+		c.setCollecetd(result.getDouble("collected"));
+		c.setPercent(result.getFloat("percent"));
+		c.setTotalExpected(result.getDouble("totalExpected"));
 		if(result.getLong("lastUpdate") != 0)
 			c.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		if(fee)

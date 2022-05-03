@@ -24,6 +24,11 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 	public AllocationRecipeDaoSql(DefaultSqlDAOFactory factory) {
 		super(factory);
 	}
+	
+	@Override
+	protected boolean hasView() {
+		return true;
+	}
 
 	@Override
 	public void create(AllocationRecipe a) throws DAOException {
@@ -109,7 +114,7 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 
 	@Override
 	public AllocationRecipe find (AnnualRecipe recipe, AnnualSpend spend) throws DAOException {
-		final String SQL = String.format("SELECT * FROM %s WHERE recipe = %d AND spend =%d", getTableName(), recipe.getId(), spend.getId());
+		final String SQL = String.format("SELECT * FROM %s WHERE recipe = %d AND spend =%d", getViewName(), recipe.getId(), spend.getId());
 		System.out.println(SQL);
 		
 		try (Connection connection = factory.getConnection();
@@ -137,7 +142,7 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 	public List<AllocationRecipe> findByRecipe(AnnualRecipe recipe) throws DAOException {
 		List<AllocationRecipe> list = new ArrayList<>();
 		
-		final String SQL = String.format("SELECT * FROM %s WHERE recipe = %d", getTableName(), recipe.getId());
+		final String SQL = String.format("SELECT * FROM %s WHERE recipe = %d", getViewName(), recipe.getId());
 		System.out.println(SQL);
 		
 		try (Connection connection = factory.getConnection();
@@ -168,7 +173,7 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 	public List<AllocationRecipe> findBySpend(AnnualSpend spend) throws DAOException {
 		List<AllocationRecipe> list = new ArrayList<>();
 		
-		final String SQL = String.format("SELECT * FROM %s WHERE spend = %d", getTableName(), spend.getId());
+		final String SQL = String.format("SELECT * FROM %s WHERE spend = %d", getViewName(), spend.getId());
 		System.out.println(SQL);
 		
 		try (Connection connection = factory.getConnection();
@@ -193,6 +198,7 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 		allocation.setPercent(result.getFloat("percent"));
 		allocation.setRecipe(new AnnualRecipe(result.getLong("recipe")));
 		allocation.setSpend(new AnnualSpend(result.getLong("spend")));
+		allocation.setCollected(result.getDouble("collected"));
 		if(result.getLong("lastUpdate") != 0)
 			allocation.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		return allocation;
@@ -202,6 +208,7 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 		AllocationRecipe allocation = new AllocationRecipe(result.getLong("id"));
 		allocation.setRecordDate(new Date(result.getLong("recordDate")));
 		allocation.setPercent(result.getFloat("percent"));
+		allocation.setCollected(result.getDouble("collected"));
 		if(recipe == null)
 			allocation.setRecipe(new AnnualRecipe(result.getLong("recipe")));
 		else 

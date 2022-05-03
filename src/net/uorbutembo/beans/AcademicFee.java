@@ -23,7 +23,20 @@ public class AcademicFee extends DBEntity {
 	
 	private String description;
 	
+	/**
+	 * L'annee academique concerner par les frais academique
+	 */
 	private AcademicYear academicYear;
+	
+	/**
+	 * montant total deja collecter (Confert la vue V_AcademicFee)
+	 */
+	private double collected;
+	
+	/**
+	 * Montant total attendue (Convfert la vue V_AcademicFee)
+	 */
+	private double totalExpected;
 
 	/**
 	 * 
@@ -88,6 +101,34 @@ public class AcademicFee extends DBEntity {
 	@Override
 	public String toString() {
 		return this.amount+" USD";
+	}
+
+	/**
+	 * @return the collected
+	 */
+	public double getCollected() {
+		return collected;
+	}
+
+	/**
+	 * @param collected the collected to set
+	 */
+	public void setCollected(double collected) {
+		this.collected = collected;
+	}
+
+	/**
+	 * @return the totalExpected
+	 */
+	public double getTotalExpected() {
+		return totalExpected;
+	}
+
+	/**
+	 * @param totalExpected the totalExpected to set
+	 */
+	public void setTotalExpected(double totalExpected) {
+		this.totalExpected = totalExpected;
 	}
 
 }

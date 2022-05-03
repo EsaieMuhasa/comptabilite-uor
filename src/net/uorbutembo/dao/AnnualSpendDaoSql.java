@@ -30,6 +30,11 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 		this.universitySpendDao = factory.findDao(UniversitySpendDao.class);
 		this.academicYearDao = factory.findDao(AcademicYearDao.class);
 	}
+	
+	@Override
+	protected boolean hasView() {
+		return true;
+	}
 
 	@Override
 	public void create(AnnualSpend a) throws DAOException {
@@ -73,7 +78,7 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 
 	@Override
 	public AnnualSpend find(AcademicYear year, UniversitySpend spend) throws DAOException {
-		String sql = String.format("SELEC * FROM %s WHERE academicYear = %d AND universitySpend = %d", getTableName(), getTableName(), year.getId(), spend.getId());
+		String sql = String.format("SELEC * FROM %s WHERE academicYear = %d AND universitySpend = %d", getViewName(), getTableName(), year.getId(), spend.getId());
 		System.out.println(sql);
 		try(Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -162,6 +167,9 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 	protected AnnualSpend mapping(ResultSet result) throws SQLException, DAOException {
 		AnnualSpend a = new AnnualSpend(result.getLong("id"));
 		a.setRecordDate(new Date(result.getLong("recordDate")));
+		a.setCollectedCost(result.getDouble("collectedCost"));
+		a.setCollectedRecipe(result.getDouble("collectedRecipe"));
+		a.setUsed(result.getDouble("used"));
 		if(result.getLong("lastUpdate") != 0) {
 			a.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}
@@ -173,6 +181,9 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 	protected AnnualSpend mapping(ResultSet result, boolean year, boolean spend) throws SQLException, DAOException {
 		AnnualSpend a = new AnnualSpend(result.getLong("id"));
 		a.setRecordDate(new Date(result.getLong("recordDate")));
+		a.setCollectedCost(result.getDouble("collectedCost"));
+		a.setCollectedRecipe(result.getDouble("collectedRecipe"));
+		a.setUsed(result.getDouble("used"));
 		if(result.getLong("lastUpdate") != 0) {
 			a.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}
@@ -187,14 +198,7 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 	
 	@Override
 	protected AnnualSpend fullMapping(ResultSet result) throws SQLException, DAOException {
-		AnnualSpend a = new AnnualSpend(result.getLong("id"));
-		a.setRecordDate(new Date(result.getLong("recordDate")));
-		if(result.getLong("lastUpdate") != 0) {
-			a.setLastUpdate(new Date(result.getLong("lastUpdate")));
-		}
-		a.setUniversitySpend(this.universitySpendDao.findById(result.getLong("universitySpend")));
-		a.setAcademicYear(this.academicYearDao.findById(result.getLong("academicYear")));		
-		return a;
+		return mapping(result, true, true);
 	}
 
 	@Override
