@@ -226,6 +226,7 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 		} catch (DAOException e) {
 			emitOnError(e);
 		} catch (Exception e) {
+			e.printStackTrace();
 			emitOnError(new DAOException(e.getMessage(), e));
 		}
 		

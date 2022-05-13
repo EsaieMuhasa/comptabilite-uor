@@ -49,15 +49,53 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	public DefaultPointCloud(Color backgroundColor, Color foregroundColor, Color borderColor) {
 		super(backgroundColor, foregroundColor, borderColor);
 	}
+	
+	/**
+	 * Transforme le nuage des point en un signale carret
+	 */
+	public void toSquareSignal () {
+		
+		if(countPoints() <= 1 )
+			return;
+
+		for (int i = 0, count = (points.size() * 2) - 3; i < count; i += 2) {
+			
+			if (i > points.size()-3)
+				break;
+			
+			Point p = getPointAt(i);
+			Point2d copie = new Point2d(getPointAt(i+1).getX(), p.getY());
+			
+			if (getPointAt(i+1).getY() == p.getY() && copie.getX() == getPointAt(i+2).getX()){
+				i -= 1;
+				continue;
+			}
+			
+			copie.setData(getPointAt(i+1).getData());
+			points.add(i+1, copie);
+		}
+		
+		Point last = getPointAt(points.size()-1);
+		Point beforLast = getPointAt(points.size()-2);
+		
+		if (last.getY() != beforLast.getY()) {
+			double y = last.getY(),
+					x = last.getX() + Math.abs(last.getX() - beforLast.getX());
+			Point2d copie = new Point2d(x, y);
+			points.add(copie);
+		}
+		
+		checkMinMax();
+		emitOnChange();
+		
+	}
 
 	@Override
 	public boolean isFill() {
 		return fill;
 	}
 
-	/**
-	 * @param fill the fill to set
-	 */
+	@Override
 	public synchronized void setFill (boolean fill) {
 		if(this.fill == fill)
 			return;
@@ -88,6 +126,8 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 
 	@Override
 	public int indexOf(Point point) {
+		if(point == null)
+			return -1;
 		return points.indexOf(point);
 	}
 
@@ -133,9 +173,19 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	public void removePoint(Point point) {
 		removePointAt(indexOf(point));
 	}
+	
+	@Override
+	public void removePoints() {
+		for (Point p : points)
+			p.removeListener(pointListener);
+		
+		points.clear();
+		checkMinMax();
+		emitOnChange();
+	}
 
 	@Override
-	public int countPoint() {
+	public int countPoints() {
 		return points.size();
 	}
 
@@ -192,6 +242,7 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 		listeners.remove(listener);
 	}
 	
+	@Override
 	protected synchronized void emitOnChange () {
 		for (PointCloudListener ls : listeners)
 			ls.onChange(this);
@@ -243,8 +294,15 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 		this.xMax = xMax;
 	}
 	
+	protected void checkMinMax () {
+		checkXMax();
+		checkXMin();
+		checkYMax();
+		checkYMin();
+	}
+	
 	protected void checkXMax () {
-		Point point = points.get(0);
+		Point point = points.size() != 0? points.get(0) : null;
 		for (Point p : points) {				
 			if (p.getX() > point.getX())
 				point = p;			
@@ -263,7 +321,7 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 	
 	protected void checkYMax () {
-		Point point = points.get(0);
+		Point point = points.size() != 0? points.get(0) : null;
 		for (Point p : points) {				
 			if (p.getY() > point.getY())
 				point = p;			
@@ -282,7 +340,7 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 	
 	protected void checkXMin () {
-		Point point = points.get(0);
+		Point point = points.size() != 0? points.get(0) : null;
 		for (Point p : points) {				
 			if (p.getX() < point.getX())
 				point = p;			
@@ -298,7 +356,7 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 	
 	protected void checkYMin () {
-		Point point = points.get(0);
+		Point point = points.size() != 0? points.get(0) : null;
 		for (Point p : points) {				
 			if (p.getY() < point.getY())
 				point = p;			

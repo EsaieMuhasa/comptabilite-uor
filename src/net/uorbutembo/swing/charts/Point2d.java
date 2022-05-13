@@ -20,6 +20,7 @@ public class Point2d extends AbstractChartData implements Point {
 	private double x;
 	private double y;
 	private int size;
+	private String label;
 	
 	/**
 	 * @param x
@@ -37,6 +38,8 @@ public class Point2d extends AbstractChartData implements Point {
 		x = point.getX();
 		y = point.getY();
 		size = point.getSize();
+		data = point.getData();
+		label = point.getLabel();
 	}
 
 	/**
@@ -148,6 +151,18 @@ public class Point2d extends AbstractChartData implements Point {
 	}
 
 	@Override
+	public String getLabel() {
+		return label;
+	}
+
+	/**
+	 * @param label the label to set
+	 */
+	public void setLabel(String label) {
+		this.label = label;
+	}
+
+	@Override
 	public void addListener(PointListener listener) {
 		if(!listeners.contains(listener) && listener != null)
 			listeners.add(listener);
@@ -166,6 +181,16 @@ public class Point2d extends AbstractChartData implements Point {
 	@Override
 	public String toString() {
 		return "Point2d [x=" + x + ", y=" + y + "]";
+	}
+
+	@Override
+	public boolean equals (Object obj) {
+		if(obj instanceof Point) {
+			Point point = (Point) obj;
+			return point.getX() == x && point.getY() == y;
+		}
+		
+		return super.equals(obj);
 	}
 
 }

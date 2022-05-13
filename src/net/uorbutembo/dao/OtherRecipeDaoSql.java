@@ -77,7 +77,7 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public int countByAccount(long accountId, Date min, Date max) throws DAOException {
 		int count = 0;
 		final String SQL = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE account = %d AND (recordDate BETWEEN %d AND %d)",
-				getTableName(), accountId, toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
+				getTableName(), accountId, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
 		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
@@ -117,7 +117,7 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public List<OtherRecipe> findByAccount(AnnualRecipe account, Date min, Date max) throws DAOException {
 		List<OtherRecipe> list = new ArrayList<>();
 		final String SQL = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE account = %d AND (recordDate BETWEEN %d AND %d) ORDER BY recordDate DESC",
-				getTableName(), account.getId(), toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
+				getTableName(), account.getId(), toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
 		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
@@ -133,6 +133,164 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 			throw new DAOException(e.getMessage(), e);
 		}
 		return list;
+	}
+
+	@Override
+	public List<OtherRecipe> findByAcademicYear(long academicYearId, int limit, int offset) throws DAOException {
+		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
+		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) LIMIT %d OFFSET %d", getTableName(), sqlAccount, limit, offset);
+		System.out.println(sql);
+		List<OtherRecipe> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next())
+				data.add(mapping(result));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if (data.isEmpty())
+			throw new DAOException("Aucune operations pour l'annee indexer par "+academicYearId);
+		
+		return data;
+	}
+
+	@Override
+	public List<OtherRecipe> findByAcademicYear(long academicYearId) throws DAOException {
+		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
+		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s)", getTableName(), sqlAccount);
+		System.out.println(sql);
+		List<OtherRecipe> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next())
+				data.add(mapping(result));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if (data.isEmpty())
+			throw new DAOException("Aucune operations pour l'annee indexer par "+academicYearId);
+		
+		return data;
+	}
+
+	@Override
+	public List<OtherRecipe> findByAcademicYear (long academicYearId, Date min, Date max) throws DAOException {
+		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
+		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) AND (collectionDate BETWEEN %d AND %d)",
+				getTableName(), sqlAccount, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
+		System.out.println(sql);
+		List<OtherRecipe> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next())
+				data.add(mapping(result));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if (data.isEmpty())
+			throw new DAOException("Aucune operations ["+min.toString()+" , "+max.toString()+"] pour l'annee indexer par "+academicYearId);
+		
+		return data;
+	}
+
+	@Override
+	public boolean checkByAcademicYear(long academicYearId) throws DAOException {
+		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
+		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s)", getTableName(), sqlAccount);
+		System.out.println(sql);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			return (result.next());
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public int countByAcademicYear(long academicYearId) throws DAOException {
+		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
+		final String sql =String.format("SELECT COUNT(*) AS nombre FROM %s WHERE account IN(%s)", getTableName(), sqlAccount);
+		System.out.println(sql);
+		int count = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next())
+				count = result.getInt("nombre");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return count;
+	}
+
+	@Override
+	public int countByAcademicYear(long academicYearId, Date min, Date max) throws DAOException {
+		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
+		final String sql =String.format("SELECT COUNT(*) AS nombre FROM %s WHERE account IN(%s) AND (collectionDate BETWEEN %d AND %d)",
+				getTableName(), sqlAccount, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
+		System.out.println(sql);
+		int count = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next())
+				count = result.getInt("nombre");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return count;
+	}
+
+	@Override
+	public boolean checkByAcademicYearBeforDate(long yearId, Date date) throws DAOException {
+		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), yearId);
+		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) AND collectionDate < %d", 
+				getTableName(), sqlAccount, toMinTimestampOfDay(date).getTime());
+		System.out.println(sql);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			return result.next();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public List<OtherRecipe> findByAcademicYearBeforDate(long yearId, Date date) throws DAOException {
+		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), yearId);
+		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) AND collectionDate < %d", 
+				getTableName(), sqlAccount, toMinTimestampOfDay(date).getTime());
+		System.out.println(sql);
+		List<OtherRecipe> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next())
+				data.add(mapping(result));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune operation en date du "+date.toString()+" pour l'annee indexer par "+yearId);
+		
+		return data;
 	}
 
 	@Override

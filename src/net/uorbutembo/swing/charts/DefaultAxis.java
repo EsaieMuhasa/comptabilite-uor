@@ -23,11 +23,13 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	};
 	
 	
-	protected double step;
+	protected double step = 1;
 	protected double ration = 1;
 	protected AxisType type;
 	protected String name;
 	protected String shortName;
+	protected boolean responsive = true;
+	protected String measureUnit = "";
 	
 	protected double min = Double.NEGATIVE_INFINITY;
 	protected double max = Double.POSITIVE_INFINITY;
@@ -35,12 +37,22 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	protected final List<AxisGraduation> graduations = new ArrayList<>();
 	protected final List<AxisListener> listeners = new ArrayList<>();
 	
-	protected final AxisGraduation zero = new DefaultAxisGraduation(0);
+	protected final DefaultAxisGraduation zero = new DefaultAxisGraduation(0);
 	protected AxisGraduation first = zero;
 	protected AxisGraduation last = zero;//derniere graduation a l'heure actuel
 	
+	protected ChartDataRenderedListener graduationListener = new ChartDataRenderedAdapter() {
+		@Override
+		public void onChange(ChartData source) {
+			emitOnChange();
+		};
+	};
+	
 	{
 		graduations.add(zero);
+		first = zero;
+		last = zero;
+		zero.addRenderedListener(graduationListener);
 	}
 
 	/**
@@ -48,7 +60,7 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	 */
 	public DefaultAxis() {
 		super();
-		step = 10;
+		step = 1;
 		type = AxisType.LINEAR;
 	}
 
@@ -70,6 +82,7 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	 */
 	public DefaultAxis(Color backgroundColor) {
 		super(backgroundColor);
+		step = 1;
 	}
 
 	/**
@@ -79,8 +92,28 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	 */
 	public DefaultAxis(Color backgroundColor, Color foregroundColor, Color borderColor) {
 		super(backgroundColor, foregroundColor, borderColor);
+		step = 1;
 	}
 	
+	/**
+	 * @return the measureUnit
+	 */
+	@Override
+	public String getMeasureUnit() {
+		return measureUnit;
+	}
+
+	/**
+	 * @param measureUnit the measureUnit to set
+	 */
+	public void setMeasureUnit(String measureUnit) {
+		if(measureUnit == this.measureUnit)
+			return;
+		
+		this.measureUnit = measureUnit;
+		emitOnChange();
+	}
+
 	@Override
 	public void setInterval (double min, double max) {
 		if (this.min == min && this.max == max)
@@ -89,13 +122,7 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 		this.min = min;
 		this.max = max;
 		
-		graduations.clear();
-		
-		DefaultAxisGraduation gr = new DefaultAxisGraduation(min != Double.NEGATIVE_INFINITY? min : 0, zero);
-		graduations.add(gr);
-		first = graduations.get(0);
-		last = graduations.get(0);
-		
+		clear();
 		emitOnChange();
 	}
 
@@ -118,6 +145,31 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	@Override
 	public double getMin() {
 		return min;
+	}
+	
+	@Override
+	public boolean isResponsive() {
+		return responsive;
+	}
+
+	/**
+	 * @param responsive the responsive to set
+	 */
+	public void setResponsive (boolean responsive) {
+		if(this.responsive == responsive)
+			return;
+			
+		this.responsive = responsive;
+		emitOnChange();
+	}
+	
+	/**
+	 * desactivation de la respostivite du step
+	 * @param step
+	 */
+	public void disableResponsive (double step ) {
+		this.step = step;
+		setResponsive(false);
 	}
 
 	@Override
@@ -149,7 +201,8 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 			DefaultAxisGraduation g = new DefaultAxisGraduation(next, graduation);
 			graduations.add(g);
 			last = g;
-			emitGraduationIserted(graduations.size()-1);
+			g.addRenderedListener(graduationListener);
+			emitGraduationInserted(graduations.size()-1);
 		}
 		return graduations.get(indexOf(graduation)+1);
 	}
@@ -164,7 +217,8 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 			DefaultAxisGraduation g = new DefaultAxisGraduation(prev, graduation);
 			graduations.add(0, g);
 			first = g;
-			emitGraduationIserted(0);
+			g.addRenderedListener(graduationListener);
+			emitGraduationInserted(0);
 		}
 		return graduations.get(indexOf(graduation)-1);
 	}
@@ -172,13 +226,13 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	@Override
 	public boolean checkBefor(AxisGraduation graduation) {
 		double prev = graduation.getValue() - getStep();
-		return (prev != Double.NEGATIVE_INFINITY);
+		return (prev != Double.NEGATIVE_INFINITY? (prev >= min - getStep()*2) : true);
 	}
 
 	@Override
 	public boolean checkAfter(AxisGraduation graduation) {
 		double next = graduation.getValue()+getStep();
-		return (next != Double.POSITIVE_INFINITY);
+		return (next != Double.POSITIVE_INFINITY? (next <= max + getStep()*2) : true);
 	}
 
 	@Override
@@ -192,7 +246,7 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	}
 
 	@Override
-	public AxisGraduation getByValue(double value) {
+	public AxisGraduation getByValue (double value) {
 		if (value < graduations.get(0).getValue())
 			goTo(value, false);
 		
@@ -210,7 +264,8 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 				DefaultAxisGraduation $new = new DefaultAxisGraduation(value, now);
 				$new.setVisible(false);
 				graduations.add(index, $new);
-				emitGraduationIserted(index);
+				$new.addRenderedListener(graduationListener);
+				emitGraduationInserted(index);
 				return $new;
 			}
 			
@@ -225,7 +280,7 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	 * @param value
 	 * @param adding les valeurs doit-elle etre ajouter positivement? 
 	 */
-	private synchronized void goTo (double value, boolean adding) {
+	protected synchronized void goTo (double value, boolean adding) {
 		boolean run = true;
 		if (adding)
 			do {
@@ -310,8 +365,7 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 		
 		this.step = step;
 		
-		graduations.clear();
-		graduations.add(zero);
+		clear();
 		
 		emitOnChange();
 	}
@@ -356,12 +410,17 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	
 	@Override
 	public void clear() {
+		
+		for (AxisGraduation ag : graduations)
+			ag.removeRenderedListener(graduationListener);
+		
 		graduations.clear();
 		if (min != Double.NEGATIVE_INFINITY)
 			graduations.add(new DefaultAxisGraduation(min, zero));
 		else
 			graduations.add(zero);
 		
+		graduations.get(0).addRenderedListener(graduationListener);
 		first = graduations.get(0);
 		last = graduations.get(0);
 	}
@@ -370,11 +429,10 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	 * emission de l'insersion d'une nouvelle gaduation
 	 * @param index
 	 */
-	protected synchronized void emitGraduationIserted (int index) {
+	protected synchronized void emitGraduationInserted (int index) {
 		for (AxisListener ls : listeners) {
 			ls.graduationInserted(this, index);
 		}
-		System.out.println(index+" > "+graduations.get(index));
 	}
 	
 	protected synchronized void emitOnChange () {

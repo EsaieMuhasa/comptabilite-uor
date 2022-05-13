@@ -163,7 +163,7 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 				toUpdate = new AllocationRecipe[fields.size() - toCreateCount];
 		
 		int iCreate = 0, iUpdate = 0;
-		long ids [] = new long[iUpdate];
+		long ids [] = new long[toUpdate.length];
 		Date now = new Date();
 		
 		for (AllocationRecipeField field : fields) {

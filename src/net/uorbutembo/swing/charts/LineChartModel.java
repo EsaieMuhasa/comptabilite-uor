@@ -59,10 +59,35 @@ public interface LineChartModel extends ChartData{
 	void addChart (PointCloud cloud, int index);
 	
 	/**
+	 * binding point cloud for models
+	 * @param model
+	 */
+	void bindFrom (LineChartModel model);
+	void bindFrom (LineChartModel model, int index);
+	
+	/**
+	 * pour detacher les nuages de points du model au model encours
+	 * @param model
+	 */
+	void unbindFrom (LineChartModel model);
+	
+	/**
 	 * compte le nombre de graphiques ce trouvant dans le modele
 	 * @return
 	 */
-	int countChars ();
+	int getSize ();
+	
+	/**
+	 * y-t-il un graphique visible
+	 * @return
+	 */
+	boolean hasVisibleChart ();
+	
+	/**
+	 * y-t-il un graphique cachee??
+	 * @return
+	 */
+	boolean hasHiddenChart ();
 	
 	/**
 	 * Renvoie le graphique a l'index en parametre

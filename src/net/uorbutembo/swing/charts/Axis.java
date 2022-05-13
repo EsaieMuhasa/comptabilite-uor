@@ -110,6 +110,12 @@ public interface Axis extends ChartData{
 	String getShortName ();
 	
 	/**
+	 * renvoie le symbole de l'unite de mesure
+	 * @return
+	 */
+	String getMeasureUnit();
+	
+	/**
 	 * Renvoie le pas d'increment sur l'ax
 	 * @return
 	 */
@@ -127,6 +133,13 @@ public interface Axis extends ChartData{
 	 * @param step
 	 */
 	void setStep (double step);
+	
+	/**
+	 * si l'axe est responsive??
+	 * date ce cas la vue peut modifier le step
+	 * @return
+	 */
+	boolean isResponsive ();
 	
 	/**
 	 * renvoie le ration sur l'axe

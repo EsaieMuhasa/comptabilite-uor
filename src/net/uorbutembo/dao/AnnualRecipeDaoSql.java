@@ -153,7 +153,7 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 		AnnualRecipe recipe = new AnnualRecipe(result.getLong("id"));
 		recipe.setAcademicYear(result.getLong("academicYear"));
 		recipe.setRecordDate(new Date(result.getLong("recordDate")));
-		recipe.setUniversityRecipe(result.getLong("universityRecipe"));
+		recipe.setUniversityRecipe(universityRecipeDao.findById(result.getLong("universityRecipe")));
 		recipe.setCollected(result.getDouble("collected"));
 		if(result.getLong("lastUpdate") != 0) 
 			recipe.setLastUpdate(new Date(result.getLong("lastUpdate")));

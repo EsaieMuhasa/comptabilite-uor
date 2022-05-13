@@ -134,6 +134,7 @@ public abstract class AbstractChartData implements ChartData {
 		if(this.visible == visible)
 			return;
 		this.visible = visible;
+		emitOnChange();
 	}
 
 	@Override
@@ -184,6 +185,14 @@ public abstract class AbstractChartData implements ChartData {
 	protected synchronized void emitBackgroundColorChange (Color oldColor) {
 		for (ChartDataRenderedListener ls : listListeners)
 			ls.onBackgroundColorChagne(this, oldColor);
+	}
+	
+	/**
+	 * Emission de changement d'etat
+	 */
+	protected synchronized void emitOnChange () {
+		for (ChartDataRenderedListener ls : listListeners)
+			ls.onChange(this);
 	}
 
 }

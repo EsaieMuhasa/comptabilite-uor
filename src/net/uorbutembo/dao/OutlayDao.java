@@ -14,7 +14,7 @@ import net.uorbutembo.beans.Outlay;
  * @author Esaie MUHASA
  *
  */
-public interface OutlayDao extends DAOInterface<Outlay> {
+public interface OutlayDao extends DAOInterface<Outlay>, BaseStatistic<Outlay> {
 	
 	
 	/**

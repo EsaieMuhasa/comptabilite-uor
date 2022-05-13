@@ -39,6 +39,12 @@ public interface PointCloud extends ChartData{
 	boolean isFill ();
 	
 	/**
+	 * Modification de l'etat de remplissage d'un nuage des points
+	 * @param fill
+	 */
+	void setFill(boolean fill);
+	
+	/**
 	 * ajout d'un point au nuage des points
 	 * @param point
 	 */
@@ -71,6 +77,11 @@ public interface PointCloud extends ChartData{
 	void removePointAt(int index);
 	
 	/**
+	 * Suppression de tout les point du model
+	 */
+	void removePoints ();
+	
+	/**
 	 * suppression d'un point dans le nuage
 	 * @param point
 	 */
@@ -80,7 +91,7 @@ public interface PointCloud extends ChartData{
 	 * comptage des points dans le nuage
 	 * @return
 	 */
-	int countPoint ();
+	int countPoints ();
 	
 	/**
 	 * Renvoie la collection des point dans le nuage

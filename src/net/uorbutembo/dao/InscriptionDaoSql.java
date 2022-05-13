@@ -548,6 +548,18 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	}
 
 	@Override
+	public boolean checkByAcademicYearBeforDate(long yearId, Date date) throws DAOException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public List<Inscription> findByAcademicYearBeforDate(long yearId, Date date) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
 	protected String getTableName () {
 		return Inscription.class.getSimpleName();
 	}

@@ -17,48 +17,7 @@ import net.uorbutembo.beans.StudyClass;
  * @author Esaie MUHASA
  * Specification pour faciliter le statistique de maniere globale
  */
-public interface OverallStatistic <T extends DBEntity> {
-	
-	//year
-	List <T> findByAcademicYear (long academicYearId, int limit, int offset) throws DAOException;
-	default List <T> findByAcademicYear (AcademicYear academicYear, int limit, int offset) throws DAOException{
-		return findByAcademicYear(academicYear.getId(), limit, offset);
-	}
-	List <T> findByAcademicYear (long academicYearId) throws DAOException;
-	default List <T> findByAcademicYear (AcademicYear academicYear) throws DAOException{
-		return findByAcademicYear(academicYear.getId());
-	}
-	
-	default List <T> findByAcademicYear (long academicYearId, Date date) throws DAOException{
-		return findByAcademicYear(academicYearId, date, date);
-	}
-	List <T> findByAcademicYear (long academicYearId, Date min, Date max) throws DAOException;
-	default List <T> findByAcademicYear (AcademicYear academicYear, Date min, Date max) throws DAOException{
-		return findByAcademicYear(academicYear.getId(), min, max);
-	}
-	
-	boolean checkByAcademicYear (long academicYearId) throws DAOException;
-	default boolean checkByAcademicYear (AcademicYear academicYear) throws DAOException{
-		return this.checkByAcademicYear(academicYear.getId());
-	}
-	
-	int countByAcademicYear (long academicYearId) throws DAOException;
-	default int countByAcademicYear (AcademicYear academicYear) throws DAOException{
-		return this.countByAcademicYear(academicYear.getId());
-	}
-	
-	int countByAcademicYear (long academicYearId, Date min, Date max) throws DAOException;
-	default int countByAcademicYear (long academicYearId, Date date) throws DAOException{
-		return this.countByAcademicYear(academicYearId, date, date);
-	}
-	default int countByAcademicYear (AcademicYear academicYear, Date date) throws DAOException{
-		return this.countByAcademicYear(academicYear.getId(), date, date);
-	}
-	default int countByAcademicYear (AcademicYear academicYear, Date min, Date max) throws DAOException{
-		return this.countByAcademicYear(academicYear.getId(), min, max);
-	}
-	//== year
-	
+public interface OverallStatistic <T extends DBEntity> extends BaseStatistic <T> {
 	
 	//faculty
 	List <T> findByFaculty (long  faculty, long year) throws DAOException;
@@ -98,7 +57,6 @@ public interface OverallStatistic <T extends DBEntity> {
 		return checkByFaculty(faculty.getId(), year.getId());
 	}
 	//== faculty
-	
 	
 	//department
 	List <T> findByDepartment (long departmentId, long academicYearId) throws DAOException;

@@ -69,6 +69,18 @@ public class DefaultAxisGraduation extends AbstractChartData implements AxisGrad
 	}
 	
 	/**
+	 * constructeur de compie de la configuration d'une graduation
+	 * @param label
+	 * @param value
+	 * @param graduation
+	 */
+	public DefaultAxisGraduation(String label, double value, AxisGraduation graduation) {
+		super(graduation.getBackgroundColor(), graduation.getForegroundColor(), graduation.getBorderColor());
+		init(label, value, graduation.getSize());
+		setBorderWidth(graduation.getBorderWidth());
+	}
+	
+	/**
 	 * @param value
 	 * @param size
 	 * @param backgroundColor
@@ -110,12 +122,34 @@ public class DefaultAxisGraduation extends AbstractChartData implements AxisGrad
 		this.size = size;
 		
 		int round = (int) getRoundValue();
-		this.label = ((round == value)? round+"" : getRoundValue(1)+"");
+		this.label = ((round == value)? round+"" : getRoundValue(2)+"");
+	}
+
+	/**
+	 * @param value the value to set
+	 */
+	public void setValue(double value) {
+		if(this.value == value)
+			return;
+		
+		this.value = value;
+		emitOnChange();
 	}
 
 	@Override
 	public String getLabel() {
 		return label;
+	}
+
+	/**
+	 * @param label the label to set
+	 */
+	public void setLabel (String label) {
+		if(label == this.label)
+			return;
+		
+		this.label = label;
+		emitOnChange();
 	}
 
 	@Override
@@ -130,7 +164,7 @@ public class DefaultAxisGraduation extends AbstractChartData implements AxisGrad
 
 	@Override
 	public String toString() {
-		return "DefaultAxisGraduation [label=" + label + ", value=" + value + ", size=" + size + "]";
+		return "DefaultAxisGraduation [label=" + label + ", value=" + value + ", size=" + size + ", data = " + data + "]";
 	}
 	
 

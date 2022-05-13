@@ -27,16 +27,16 @@ public class TestDAO {
 			out.println("AutoCommit: "+con.getAutoCommit());
 			DatabaseMetaData meta = con.getMetaData();
 			
-			ResultSet result = meta.getTables(null, null, null, new String [] {"TABLE"});
+			ResultSet result = meta.getTables(null, null, null, new String [] {"TABLE", "VIEW"});
 			
-			out.println("----------TABLES-----------");
+			out.println("----------TABLES & VIEWS-----------");
 			while (result.next()) {
 				out.printf("| -> %s\n", result.getString("TABLE_NAME"));
 			}
-			out.println("---------------------------\n");
+			out.println("------------------------------\n\n");
 			result.close();
 			
-			result = meta.getTables(null, null, null, new String [] {"TABLE"});
+			result = meta.getTables(null, null, null, new String [] {"TABLE", "VIEW"});
 			while (result.next()) {
 				
 				out.printf("----| %s |----\n", result.getString("TABLE_NAME"));

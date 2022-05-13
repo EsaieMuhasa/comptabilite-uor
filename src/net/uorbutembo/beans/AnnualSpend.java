@@ -3,6 +3,9 @@
  */
 package net.uorbutembo.beans;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 /**
  * @author Esaie MUHASA
  * une depense annuel
@@ -106,6 +109,17 @@ public class AnnualSpend extends DBEntity {
 	 */
 	public double getUsed() {
 		return used;
+	}
+	
+	public double getUsed (int floor) {
+		BigDecimal big = new BigDecimal(this.getUsed()).setScale(floor, RoundingMode.FLOOR);
+		return big.doubleValue();
+	}
+	
+	public double getAvaillable (int floor) {
+		BigDecimal big = new BigDecimal(getCollectedCost() + getCollectedRecipe() - getUsed())
+				.setScale(floor, RoundingMode.FLOOR);
+		return big.doubleValue();
 	}
 
 	/**

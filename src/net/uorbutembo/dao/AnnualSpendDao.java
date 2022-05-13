@@ -69,5 +69,19 @@ public interface AnnualSpendDao extends DAOInterface<AnnualSpend> {
 	 * @throws DAOException
 	 */
 	int countByAcademicYear (long academicYear) throws DAOException ;
+	
+	/**
+	 * Syncronisation des etats du spend
+	 * (used, collectedRecipe et collectedCost)
+	 * @param spend
+	 * @return
+	 */
+	default AnnualSpend reload (AnnualSpend spend) {
+		AnnualSpend sp = findById(spend.getId());
+		spend.setUsed(sp.getUsed());
+		spend.setCollectedCost(sp.getCollectedCost());
+		spend.setCollectedRecipe(sp.getCollectedRecipe());
+		return spend;
+	}
 
 }

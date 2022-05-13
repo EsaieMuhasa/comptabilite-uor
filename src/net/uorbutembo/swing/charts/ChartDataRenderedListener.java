@@ -12,6 +12,12 @@ import java.awt.Color;
 public interface ChartDataRenderedListener {
 	
 	/**
+	 * lors du changement d'etat
+	 * @param source
+	 */
+	void onChange (ChartData source);
+	
+	/**
 	 * lors du changement de la couleur de bordure
 	 * @param source
 	 * @param oldColor

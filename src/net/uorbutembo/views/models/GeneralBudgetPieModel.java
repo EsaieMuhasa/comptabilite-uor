@@ -89,7 +89,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 				reload();
 				
 				if (paymentFeeDao.checkByInscription(e))
-					reloadPayment();
+					reloadCaisse();
 			}
 		}
 		
@@ -121,7 +121,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		public synchronized void onCreate(AnnualSpend e, int requestId) {
 			if(currentYear != null && e.getAcademicYear().getId() == currentYear.getId()) {
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 		
@@ -129,7 +129,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		public synchronized void onCreate(AnnualSpend[] e, int requestId) {
 			if(currentYear != null && e[0].getAcademicYear().getId() == currentYear.getId()) {
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 	};
@@ -139,70 +139,68 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		public void onCreate(AllocationCost[] e, int requestId) {
 			if(academicYearDao.isCurrent(currentYear)){
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 		@Override
 		public void onCreate(AllocationCost e, int requestId) {
 			if(academicYearDao.isCurrent(currentYear)) {					
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 		@Override
 		public void onUpdate(AllocationCost e, int requestId) {
 			if(academicYearDao.isCurrent(currentYear)){
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 		@Override
 		public void onUpdate(AllocationCost[] e, int requestId) {
 			if(academicYearDao.isCurrent(currentYear)){
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 		@Override
 		public void onDelete(AllocationCost e, int requestId) {
 			if(academicYearDao.isCurrent(currentYear)){
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 	};
 	
 	private final DAOAdapter<PaymentFee> paymentListener = new DAOAdapter<PaymentFee>() {
 		@Override
-		public void onCreate(PaymentFee e, int requestId) {
-			cardModelCaisse.setValue(cardModelCaisse.getValue()+e.getAmount());
+		public synchronized void onCreate(PaymentFee e, int requestId) {
+			reloadCaisse();
 		}
 		
 		@Override
-		public void onCreate(PaymentFee[] payments, int requestId) {
-			double amount = 0d;
-			for (PaymentFee e : payments) {
-				amount += e.getAmount();
-			}
-			cardModelCaisse.setValue(cardModelCaisse.getValue()+amount);
+		public synchronized void onCreate(PaymentFee[] payments, int requestId) {
+			reloadCaisse();
 		}
 		
 		@Override
-		public void onUpdate(PaymentFee e, int requestId) {reload();}
+		public synchronized void onUpdate(PaymentFee e, int requestId) {
+			reloadCaisse();
+		}
 		
 		@Override
-		public void onUpdate(PaymentFee[] e, int requestId) {reload();}
+		public void onUpdate(PaymentFee[] e, int requestId) {
+			reloadCaisse();
+		}
 		
 		@Override
-		public void onDelete(PaymentFee e, int requestId) {cardModelCaisse.setValue(cardModelCaisse.getValue() - e.getAmount());}
+		public void onDelete(PaymentFee e, int requestId) {
+			reloadCaisse();
+		}
 		
 		@Override
 		public void onDelete(PaymentFee[] payments, int requestId) {
-			double amount = 0d;
-			for (PaymentFee e : payments) {
-				amount += e.getAmount();
-			}
-			cardModelCaisse.setValue(cardModelCaisse.getValue() - amount);
+			reloadCaisse();
 		}
 	};
 	
@@ -214,14 +212,14 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 				return;
 			
 			reload();
-			reloadPayment();
+			reloadCaisse();
 		}
 
 		@Override
 		public synchronized void onUpdate(AllocationRecipe e, int requestId) {
 			if (e.getRecipe().getCollected() != 0) {
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 
@@ -229,7 +227,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		public synchronized void onDelete(AllocationRecipe e, int requestId) {
 			if (e.getRecipe().getCollected() != 0) {
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 
@@ -237,7 +235,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		public synchronized void onCreate(AllocationRecipe[] e, int requestId) {
 			if (e[0].getRecipe().getCollected() != 0) {
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 
@@ -245,7 +243,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		public synchronized void onUpdate(AllocationRecipe[] e, int requestId) {
 			if (e[0].getRecipe().getCollected() != 0) {
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 
@@ -253,7 +251,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		public synchronized void onDelete(AllocationRecipe[] e, int requestId) {
 			if (e[0].getRecipe().getCollected() != 0) {
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		}
 		
@@ -271,7 +269,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 
 		@Override
 		public synchronized void onUpdate(Outlay e, int requestId) {
-			reloadPayment();
+			reloadCaisse();
 		}
 
 		@Override
@@ -317,7 +315,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			@Override
 			public void onUpdate(Promotion e, int requestId) {
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		});
 		
@@ -327,7 +325,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			@Override
 			public void onUpdate(AcademicFee e, int requestId) {
 				reload();
-				reloadPayment();
+				reloadCaisse();
 			}
 		});
 		
@@ -416,7 +414,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	public synchronized void setCurrentYear(AcademicYear currentYear) {
 		this.currentYear = currentYear;
 		reload();
-		reloadPayment();
+		reloadCaisse();
 	}
 	
 	/**
@@ -447,7 +445,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	 * Rechargement du model du pie des montants deja payer
 	 * En plus tout les calculs sont refaite
 	 */
-	private synchronized void reloadPayment () {
+	private synchronized void reloadCaisse () {
 		
 		pieModelCaisse.removeAll();
 		pieModelCaisse.setMax(0);

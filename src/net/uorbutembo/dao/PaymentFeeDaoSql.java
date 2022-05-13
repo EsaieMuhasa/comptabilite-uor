@@ -22,13 +22,11 @@ import net.uorbutembo.beans.Promotion;
  */
 class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 
-	private InscriptionDao inscriptionDao;
 	/**
 	 * @param factory
 	 */
 	public PaymentFeeDaoSql(DefaultSqlDAOFactory factory) {
 		super(factory);
-		inscriptionDao = factory.findDao(InscriptionDao.class);
 	}
 
 	@Override
@@ -128,9 +126,28 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	}
 
 	@Override
-	public List<PaymentFee> findByAcademicYear(long academicYearId, Date min, Date max) throws DAOException {
-		// TODO Auto-generated method stub
-		return null;
+	public List<PaymentFee> findByAcademicYear(long yearId, Date min, Date max) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d ", Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), yearId);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) AND (slipDate BETWEEN %d AND %d)", 
+				getTableName(), sqlInscrits, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
+		
+		System.out.println(sql);
+		List<PaymentFee> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next())
+				data.add(mapping(result));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune operation de payement des fais academique en date du "+min.toString()+" au "+max.toString());
+		
+		return data;
 	}
 
 	@Override
@@ -172,9 +189,25 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	}
 
 	@Override
-	public int countByAcademicYear(long academicYearId, Date min, Date max) throws DAOException {
-		// TODO Auto-generated method stub
-		return 0;
+	public int countByAcademicYear(long yearId, Date min, Date max) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d ", Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), yearId);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE inscription IN(%s) AND (slipDate BETWEEN %d AND %d)", 
+				getTableName(), sqlInscrits, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
+		
+		System.out.println(sql);
+		int count  = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next())
+				count = result.getInt("nombre");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return count;
 	}
 
 	@Override
@@ -390,8 +423,58 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	}
 
 	@Override
+	public boolean checkByAcademicYearBeforDate(long yearId, Date date) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d ", Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), yearId);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) AND slipDate < %d LIMIT 1 OFFSET 0", getTableName(), sqlInscrits, toMinTimestampOfDay(date).getTime());
+		
+		System.out.println(sql);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			return (result.next());
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public List<PaymentFee> findByAcademicYearBeforDate(long yearId, Date date) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d ", Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), yearId);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) AND slipDate < %d LIMIT 1 OFFSET 0", getTableName(), sqlInscrits, toMinTimestampOfDay(date).getTime());
+		
+		System.out.println(sql);
+		List<PaymentFee> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next())
+				data.add(mapping(result));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune operation de payement des fais academique en date du "+date.toString());
+		
+		return data;
+	}
+
+	@Override
 	protected PaymentFee mapping(ResultSet result) throws SQLException, DAOException {
-		return mapping(result, this.inscriptionDao.findById(result.getLong("inscription")));
+		PaymentFee fee = new PaymentFee(result.getLong("id"));
+		fee.setRecordDate(new Date(result.getLong("recordDate")));
+		fee.setInscription(new Inscription(result.getLong("inscription")));
+		fee.setAmount(result.getFloat("amount"));
+		fee.setReceivedDate(new Date(result.getLong("receivedDate")));
+		fee.setReceiptNumber(result.getString("receiptNumber"));
+		fee.setSlipDate(new Date(result.getLong("slipDate")));
+		fee.setSlipNumber(result.getString("slipNumber"));
+		fee.setWording(result.getString("wording"));
+		return fee;
 	}
 	
 	/**

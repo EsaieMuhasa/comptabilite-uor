@@ -210,11 +210,11 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 		allocation.setPercent(result.getFloat("percent"));
 		allocation.setCollected(result.getDouble("collected"));
 		if(recipe == null)
-			allocation.setRecipe(new AnnualRecipe(result.getLong("recipe")));
+			allocation.setRecipe(factory.findDao(AnnualRecipeDao.class).findById(result.getLong("recipe")));
 		else 
 			allocation.setRecipe(recipe);
 		if(spend == null)
-			allocation.setSpend(new AnnualSpend(result.getLong("spend")));
+			allocation.setSpend(factory.findDao(AnnualSpendDao.class).findById(result.getLong("spend")));
 		else 
 			allocation.setSpend(spend);
 		if(result.getLong("lastUpdate") != 0)

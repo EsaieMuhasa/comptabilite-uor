@@ -77,7 +77,7 @@ public class ChartTestFrame extends JFrame {
 		}
 		
 		double amplitude = 2, angle, sin, cos;
-		for (int i = -360; i <= 360; i+=1) {
+		for (int i = -1000; i <= -20; i+=1) {
 			for (int j = 0; j < nombreCourbes; j++) {
 				angle = (i+(j*-5)) * (Math.PI / 180);
 				sin = amplitude * Math.sin(angle);
@@ -146,7 +146,7 @@ public class ChartTestFrame extends JFrame {
 		f.setVisible(true);
 	}
 	
-	private Point randPoint (double min, double max, double x) {
+	public static Point randPoint (double min, double max, double x) {
 		double y = Math.random()*max;
 		
 		if(y < min)

@@ -3,6 +3,8 @@
  */
 package net.uorbutembo.swing;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +21,9 @@ import net.uorbutembo.dao.DAOListener;
  */
 public abstract class TableModel <T extends DBEntity> extends AbstractTableModel implements DAOListener<T> {
 	private static final long serialVersionUID = 6162491854899469995L;
+	
+	protected final DateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
+	protected final DateFormat DEFAULT_DATE_TIME_FORMAT = new SimpleDateFormat("dd/MM/yyyy 'à' hh:mm:ss");
 	
 	protected List<T> data = new ArrayList<>();
 

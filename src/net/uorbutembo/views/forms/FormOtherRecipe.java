@@ -30,8 +30,6 @@ import net.uorbutembo.dao.OtherRecipeDao;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.swing.charts.DefaultPieModel;
-import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
@@ -41,8 +39,6 @@ import net.uorbutembo.views.components.DefaultFormPanel;
  */
 public class FormOtherRecipe extends DefaultFormPanel {
 	private static final long serialVersionUID = -3723343048984497445L;
-	
-	private final GridLayout layout = new GridLayout(1, 1);
 	
 	private final DefaultComboBoxModel<AcademicYear> comboFilterYearModel = new DefaultComboBoxModel<>();
 	private final DefaultComboBoxModel<AnnualRecipe> comboAccountModel = new DefaultComboBoxModel<>();
@@ -60,10 +56,7 @@ public class FormOtherRecipe extends DefaultFormPanel {
 	private final OtherRecipeDao otherRecipeDao;
 	
 	private OtherRecipe otherRecipe;
-	
-	private final PieModelAccount pieModel = new PieModelAccount();
-	private final PiePanel piePanel = new PiePanel(pieModel, FormUtil.BORDER_COLOR);
-	
+
 	private final DAOListener<OtherRecipe> daoListener = new DAOAdapter<OtherRecipe>() {
 		@Override
 		public synchronized void onCreate(OtherRecipe e, int requestId) {
@@ -143,7 +136,7 @@ public class FormOtherRecipe extends DefaultFormPanel {
 	 * initialisation de l'inteface graphique
 	 */
 	private void init() {
-		final Panel container = new Panel(layout);
+		final Panel container = new Panel(new BorderLayout());
 		final Box box = Box.createVerticalBox();
 		
 		//account
@@ -153,14 +146,18 @@ public class FormOtherRecipe extends DefaultFormPanel {
 		boxAccount.setBorder(new EmptyBorder(5, 5, 0, 5));
 		//==
 		
+		//amount and date
+		final Panel boxAmount = new Panel(new GridLayout());
+		boxAmount.add(groupAmount);
+		boxAmount.add(groupDate);
+		//==
+		
 		box.setOpaque(false);
 		box.add(boxAccount);
-		box.add(groupAmount);
 		box.add(groupWording);
-		box.add(groupDate);
+		box.add(boxAmount);
 		
-		container.add(box);
-		container.add(piePanel);
+		container.add(box, BorderLayout.CENTER);
 		container.setBackground(FormUtil.BKG_END);
 		container.setOpaque(false);
 		
@@ -228,18 +225,7 @@ public class FormOtherRecipe extends DefaultFormPanel {
 		}
 
 	}
-	
-	private class PieModelAccount extends DefaultPieModel {
-		
-		private AcademicYear year;
-		
-		public synchronized void reload (AcademicYear year) {
-			if(year == this.year)
-				return;
-		}
-		
-	}
-	
+
 	
 
 }

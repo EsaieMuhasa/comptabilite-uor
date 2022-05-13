@@ -16,6 +16,7 @@ import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.border.EmptyBorder;
 
@@ -26,13 +27,13 @@ import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.OutlayDao;
+import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.swing.charts.DefaultPieModel;
-import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
+import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
@@ -40,8 +41,6 @@ import net.uorbutembo.views.components.DefaultFormPanel;
  */
 public class FormOutlay extends DefaultFormPanel {
 	private static final long serialVersionUID = -3723343048984497445L;
-	
-	private final GridLayout layout = new GridLayout(1, 1);
 	
 	private final DefaultComboBoxModel<AcademicYear> comboYearModel = new DefaultComboBoxModel<>();
 	private final DefaultComboBoxModel<AcademicYear> comboFilterYearModel = new DefaultComboBoxModel<>();
@@ -58,14 +57,13 @@ public class FormOutlay extends DefaultFormPanel {
 	private final FormGroup<String> groupDate = FormGroup.createTextField("Date de livraison");
 	private final FormGroup<AcademicYear> groupYear = FormGroup.createComboBox(comboYear);
 	
+	private final Button btnCancel = new Button(new ImageIcon(R.getIcon("close")), "Annuler la modification");
+	
 	private final AnnualSpendDao annualSpendDao;
 	private final AcademicYearDao academicYearDao;
 	private final OutlayDao outlayDao;
 	
 	private Outlay outlay;
-	
-	private final PieModelAccount pieModel = new PieModelAccount();
-	private final PiePanel piePanel = new PiePanel(pieModel, FormUtil.BORDER_COLOR);
 
 	/**
 	 * @param mainWindow
@@ -78,8 +76,48 @@ public class FormOutlay extends DefaultFormPanel {
 		init();
 		
 		load();
+		
+		getFooter().add(btnCancel);
+		btnCancel.setVisible(false);
+		btnCancel.addActionListener(event -> {
+			setOutlay(null);
+		});
 	}
 	
+	/**
+	 * @param outlay the outlay to set
+	 */
+	public void setOutlay(Outlay outlay) {
+		this.outlay = outlay;
+		
+		btnCancel.setVisible(outlay != null);
+		
+		if(outlay != null) {
+			setTitle(TITLE_2);	
+			
+			groupAmount.getField().setValue(outlay.getAmount()+"");
+			groupDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(outlay.getDeliveryDate()));
+			groupWording.getField().setValue(outlay.getWording());
+			for (int i = 0, count = comboFilterYearModel.getSize(); i < count; i++) {
+				if(comboFilterYearModel.getElementAt(i).getId() == outlay.getAcademicYear().getId()) {
+					comboAccountYearFilter.setSelectedIndex(i);
+					break;
+				}
+			}
+			
+			for (int i = 0, count = comboAccountModel.getSize(); i < count; i++) {
+				if(comboAccountModel.getElementAt(i).getId() == outlay.getAccount().getId()) {
+					comboAccount.setSelectedIndex(i);
+					break;
+				}
+			}
+		} else {
+			groupAmount.getField().setValue("");
+			groupWording.getField().setValue("");
+			groupDate.getField().setLabel(FormUtil.DEFAULT_FROMATER.format(new Date()));
+		}
+	}
+
 	/**
 	 * Chargement des donnees
 	 */
@@ -100,7 +138,7 @@ public class FormOutlay extends DefaultFormPanel {
 	 * initialisation de l'inteface graphique
 	 */
 	private void init() {
-		final Panel container = new Panel(layout);
+		final Panel container = new Panel(new BorderLayout());
 		final Box box = Box.createVerticalBox();
 		
 		//account
@@ -110,30 +148,33 @@ public class FormOutlay extends DefaultFormPanel {
 		boxAccount.setBorder(new EmptyBorder(0, 5, 0, 5));
 		//==
 		
+		//amount and date
+		final Panel boxAmount = new Panel(new GridLayout(1, 1));
+		boxAmount.add(groupAmount);
+		boxAmount.add(groupDate);
+		//==
+		
 		box.setOpaque(false);
 		box.add(groupYear);
 		box.add(boxAccount);
-		box.add(groupAmount);
 		box.add(groupWording);
-		box.add(groupDate);
+		box.add(boxAmount);
 		
-		container.add(box);
-		container.add(piePanel);
-		container.setBackground(FormUtil.BKG_END);
+		container.add(box, BorderLayout.CENTER);
+		container.setBackground(FormUtil.BKG_DARK);
 		container.setOpaque(false);
 
 		getBody().add(container, BorderLayout.NORTH);
 		
 		comboYear.addItemListener(event -> {
 			comboAccountYearFilter.setSelectedIndex(comboYear.getSelectedIndex());
-			AcademicYear year = comboFilterYearModel.getElementAt(comboAccountYearFilter.getSelectedIndex());
+			//AcademicYear year = comboFilterYearModel.getElementAt(comboAccountYearFilter.getSelectedIndex());
 			Thread t = new Thread(() -> {
 				setCursor(FormUtil.WAIT_CURSOR);
 				comboYear.setEnabled(false);
 				comboAccountYearFilter.setEnabled(false);
 				comboAccount.setEnabled(false);
 				btnSave.setEnabled(false);
-				pieModel.reload(year);
 				comboYear.setEnabled(true);
 				comboAccountYearFilter.setEnabled(true);
 				comboAccount.setEnabled(comboAccountModel.getSize() != 0);
@@ -145,7 +186,7 @@ public class FormOutlay extends DefaultFormPanel {
 		
 		//events
 		comboAccountYearFilter.addItemListener(event -> {
-			List<AnnualSpend> spends = classementSpends.get(comboYearModel.getElementAt(comboAccountYearFilter.getSelectedIndex()));
+			List<AnnualSpend> spends = classementSpends.get(comboFilterYearModel.getElementAt(comboAccountYearFilter.getSelectedIndex()));
 			comboAccount.setEnabled(spends!= null && !spends.isEmpty());
 			comboAccountModel.removeAllElements();
 			if(spends == null)
@@ -170,10 +211,7 @@ public class FormOutlay extends DefaultFormPanel {
 		
 		try {
 			final Date deliveryDate = FormUtil.DEFAULT_FROMATER.parse(groupDate.getField().getValue());
-			if(outlay != null)
-				outlay.setDeliveryDate(deliveryDate);
-			else
-				out.setDeliveryDate(deliveryDate);
+			out.setDeliveryDate(deliveryDate);
 		} catch (ParseException e) {
 			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 			return;
@@ -188,7 +226,7 @@ public class FormOutlay extends DefaultFormPanel {
 		out.setAmount(amount);
 		out.setAcademicYear(academicYear);
 		
-		if (outlay == null) {			
+		if (outlay == null) {
 			out.setRecordDate(now);
 			out.setDeliveryYear(deliveryYear);
 		} else {
@@ -201,22 +239,11 @@ public class FormOutlay extends DefaultFormPanel {
 				outlayDao.create(out);
 			else
 				outlayDao.update(out, outlay.getId());
+			
+			setOutlay(null);
 		} catch (DAOException e) {
 			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}
 	}
-	
-	private class PieModelAccount extends DefaultPieModel {
-		
-		private AcademicYear year;
-		
-		public synchronized void reload (AcademicYear year) {
-			if(year == this.year)
-				return;
-		}
-		
-	}
-	
-	
 
 }

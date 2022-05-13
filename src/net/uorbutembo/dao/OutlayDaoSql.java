@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.Outlay;
 
@@ -307,6 +308,42 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	}
 
 	@Override
+	public boolean checkByAcademicYearBeforDate(long yearId, Date date) throws DAOException {
+		final String SQL = String.format("SELECT id FROM %s WHERE academicYear = %d AND deliveryDate <= %d LIMIT 1",
+				getTableName(), yearId, toMaxTimestampOfDay(date).getTime());
+		System.out.println(SQL);
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			return result.next();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public List<Outlay> findByAcademicYearBeforDate(long yearId, Date date) throws DAOException {
+		final String SQL = String.format("SELECT id FROM %s WHERE academicYear = %d AND deliveryDate <= %d",
+				getTableName(), yearId, toMaxTimestampOfDay(date).getTime());
+		System.out.println(SQL);
+		List<Outlay> data = new ArrayList<>();
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			while(result.next())
+				data.add(mapping(result));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune operation pour l'annee acadmeique index par "+yearId+" avant la date "+date.toString());
+		return data;
+	}
+
+	@Override
 	protected Outlay mapping(ResultSet result) throws SQLException, DAOException {
 		Outlay out = new Outlay(result.getLong("id"));
 		out.setAccount(result.getLong("account"));
@@ -315,6 +352,7 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 		out.setWording(result.getString("wording"));
 		out.setReference(result.getString("reference"));
 		out.setAmount(result.getDouble("amount"));
+		out.setAcademicYear(new AcademicYear(result.getLong("academicYear")));
 		if(result.getLong("lastUpdate") > 0) {
 			out.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}
@@ -329,6 +367,7 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 		out.setWording(result.getString("wording"));
 		out.setReference(result.getString("reference"));
 		out.setAmount(result.getDouble("amount"));
+		out.setAcademicYear(new AcademicYear(result.getLong("academicYear")));
 		if(result.getLong("lastUpdate") > 0) {
 			out.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}

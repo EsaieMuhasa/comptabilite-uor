@@ -55,6 +55,12 @@ public interface Point extends ChartData{
 	int getSize();
 	
 	/**
+	 * Renvoie le label de point
+	 * @return
+	 */
+	String getLabel ();
+	
+	/**
 	 * Ajout d'un ecouteur
 	 * @param listener
 	 */

@@ -13,7 +13,7 @@ import net.uorbutembo.beans.OtherRecipe;
  * @author Esaie MUHASA
  *
  */
-public interface OtherRecipeDao extends DAOInterface<OtherRecipe> {
+public interface OtherRecipeDao extends DAOInterface<OtherRecipe>, BaseStatistic<OtherRecipe>{
 	
 	/**
 	 * Verifie l'existance les recettes concernat un compte
