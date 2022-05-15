@@ -45,7 +45,6 @@ class FacultyDaoSql extends OrientationDaoSql<Faculty> implements FacultyDao {
 				getTableName(), getTableName(), getTableName(), getTableName(), getTableName(), 
 				getTableName(), Department.class.getSimpleName(), getTableName(), Department.class.getSimpleName(), Department.class.getSimpleName(),
 				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), yearId);
-		System.out.println(sql);
 		return sql;
 	}
 
@@ -60,7 +59,6 @@ class FacultyDaoSql extends OrientationDaoSql<Faculty> implements FacultyDao {
 				+ "(SELECT %s.faculty FROM %s INNER JOIN %s ON %s.id = %s.department WHERE %s.academicYear = %d)", 
 				getTableName(), getTableName(), Department.class.getSimpleName(), getTableName(), Department.class.getSimpleName(),  getTableName(),
 				Department.class.getSimpleName(), Department.class.getSimpleName(), Promotion.class.getSimpleName(), Department.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), yearId);
-		System.out.println(sql);
 		return sql;
 	}
 

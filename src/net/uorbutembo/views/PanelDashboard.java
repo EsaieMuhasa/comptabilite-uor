@@ -24,7 +24,6 @@ import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.dao.DAOAdapter;
-import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.FacultyDao;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.swing.Card;
@@ -73,12 +72,6 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
 		
 		mainWindow.factory.findDao(AcademicYearDao.class).addYearListener(this);
-		mainWindow.factory.findDao(AcademicYearDao.class).addListener(new DAOAdapter<AcademicYear>() {
-			@Override
-			public void onError(DAOException e, int requestId) {
-				e.printStackTrace();
-			}
-		});
 
 		init();
 		

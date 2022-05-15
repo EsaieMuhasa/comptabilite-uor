@@ -75,11 +75,11 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 		try (Connection connection = factory.getConnection()) {
 			updateInTable(
 					connection,
-					new String[] {"percent", "recipe", "spend", "recordDate"},
+					new String[] {"percent", "recipe", "spend", "lastUpdate"},
 					new Object[] {t.getPercent(), t.getRecipe().getId(), 
-							t.getSpend().getId(), t.getRecordDate().getTime()}, id);
+							t.getSpend().getId(), t.getLastUpdate().getTime()}, id);
 			t.setId(id);
-			emitOnCreate(t);
+			emitOnUpdate(t);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
@@ -88,18 +88,18 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 	@Override
 	public void update(AllocationRecipe[] all, long[] id) throws DAOException {
 		try (Connection connection = factory.getConnection()) {
-			String fields [] = new String[] {"percent", "recipe", "spend", "recordDate"};
+			String fields [] = new String[] {"percent", "recipe", "spend", "lastUpdate"};
 			connection.setAutoCommit(false);
 			for (int i = 0; i < id.length; i++) {
 				updateInTable(
 						connection,
 						fields,
 						new Object[] {all[i].getPercent(), all[i].getRecipe().getId(), 
-								all[i].getSpend().getId(), all[i].getRecordDate().getTime()}, id[i]);
+								all[i].getSpend().getId(), all[i].getLastUpdate().getTime()}, id[i]);
 				all[i].setId(id[i]);
 			}
 			connection.commit();
-			emitOnCreate(all);
+			emitOnUpdate(all);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
@@ -115,7 +115,6 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 	@Override
 	public AllocationRecipe find (AnnualRecipe recipe, AnnualSpend spend) throws DAOException {
 		final String SQL = String.format("SELECT * FROM %s WHERE recipe = %d AND spend =%d", getViewName(), recipe.getId(), spend.getId());
-		System.out.println(SQL);
 		
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -143,7 +142,6 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 		List<AllocationRecipe> list = new ArrayList<>();
 		
 		final String SQL = String.format("SELECT * FROM %s WHERE recipe = %d", getViewName(), recipe.getId());
-		System.out.println(SQL);
 		
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -174,7 +172,6 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 		List<AllocationRecipe> list = new ArrayList<>();
 		
 		final String SQL = String.format("SELECT * FROM %s WHERE spend = %d", getViewName(), spend.getId());
-		System.out.println(SQL);
 		
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -225,6 +222,11 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 	@Override
 	protected String getTableName() {
 		return AllocationRecipe.class.getSimpleName();
+	}
+	
+	@Override
+	protected AllocationRecipe[] createTable(int size) throws RuntimeException {
+		return new AllocationRecipe[size];
 	}
 
 }

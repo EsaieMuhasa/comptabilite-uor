@@ -192,9 +192,6 @@ public class LineChartRender extends JComponent{
 				Interval interval = new Interval(min, max);
 				lastxInterval = interval;
 				
-				System.out.println(model.getXAxis().getMin());
-				System.out.println(interval);
-				
 				for (LineChartRenderListener ls : listeners)
 					ls.onRequireTranslation(LineChartRender.this, model.getXAxis(), interval);
 				
@@ -586,8 +583,6 @@ public class LineChartRender extends JComponent{
 		g2.setFont(fontGraduation);
 		FontMetrics metrics = g2.getFontMetrics();
 		
-		System.out.println(gr);
-		
 		y = (int) (heightRender - paddingY/2);
 		while (xAxis.checkAfter(gr) && x < widhtRender) {
 			
@@ -604,7 +599,6 @@ public class LineChartRender extends JComponent{
 			
 			gr = model.getXAxis().getAfter(gr);
 		}
-		System.out.println(gr);
 		//==> end X
 		
 		

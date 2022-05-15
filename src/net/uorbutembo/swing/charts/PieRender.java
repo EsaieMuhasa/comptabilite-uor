@@ -30,7 +30,7 @@ public class PieRender extends JComponent implements PieModelListener{
 	private final List<LineSegment> segments = new ArrayList<>();
 	private final List<PiePartInfo> parts = new ArrayList<>();
 	
-	private boolean hovable = true;//esque ce diagramme est hovable?
+	private boolean hovable = false;//esque ce diagramme est hovable?
 	private Point center;
 	private final MouseListener ls = new MouseListener();
 	
@@ -287,14 +287,14 @@ public class PieRender extends JComponent implements PieModelListener{
 			try {				
 				BigDecimal big = new BigDecimal(alpha * (180 / Math.PI)).setScale(0, RoundingMode.HALF_UP);
 				int alphaToDeg = big.intValue();
-				System.out.println("cos(A) = "+cosA+" => A = "+alpha+" rad = "+alphaToDeg+"°");
+				//System.out.println("cos(A) = "+cosA+" => A = "+alpha+" rad = "+alphaToDeg+"°");
 				
 				int start = getStart(), end = getEnd()+getStart();
 				if (start <= alphaToDeg && end >= alphaToDeg) {
 					return true;
 				}
 			} catch (NumberFormatException e) {
-				System.out.println(">>> cos(A) = "+cosA+" => A = "+alpha+" rad");
+				//System.out.println(">>> cos(A) = "+cosA+" => A = "+alpha+" rad");
 			}
 			
 			return false;

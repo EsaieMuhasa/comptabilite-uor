@@ -69,6 +69,8 @@ public class PanelAcademicYear extends Panel {
 	private JDialog dialogYear;
 	private FormAcademicYear formYear;
 	
+	private AcademicYear oldYear;//annee derierement selectionner
+	
 	public PanelAcademicYear(MainWindow mainWindow) {
 		super(new BorderLayout());
 		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
@@ -213,14 +215,14 @@ public class PanelAcademicYear extends Panel {
 		dialogYear.setLocationRelativeTo(parent);
 	}
 	
-	private void init() {
-		comboYear.setBackground(FormUtil.BKG_END);
-		comboYear.setForeground(FormUtil.BORDER_COLOR);
-		
-		this.comboYear.addItemListener(event ->{
+	private void init() {		
+		this.comboYear.addItemListener(event -> {			
 			int index = comboYear.getSelectedIndex();
 			AcademicYear year = (index == -1)? null : comboYearModel.getElementAt(index);
-			setSelectedYear(year);
+			if (oldYear != year){
+				oldYear = year;
+				setSelectedYear(year);
+			}
 		});
 		
 		//popupMenu

@@ -89,6 +89,11 @@ public class PanelStudents extends DefaultScenePanel{
 		this.initWorkspace();
 	}
 	
+	@Override
+	public boolean hasHeader() {
+		return false;
+	}
+	
 	/**
 	 * Personnalisaion de l'espce de travaille
 	 */

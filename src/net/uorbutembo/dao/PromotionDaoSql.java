@@ -101,7 +101,6 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 	public Promotion find(AcademicYear academicYear, Department department, StudyClass studyClass) throws DAOException {
 		String SQL_QUERY = String.format("SELECT * FROM %s WHERE academicYear = %d AND department = %d AND studyClass = %d", 
 				getViewName(), academicYear.getId(), department.getId(), studyClass.getId());
-		System.out.println(SQL_QUERY);
 		
 		try (
 				Connection connection =  this.factory.getConnection();
@@ -192,7 +191,6 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 		List<Promotion> data = new ArrayList<>();
 		
 		final String sql = String.format("SELECT * FROM %s WHERE academicFee = %d", getTableName(), fee.getId());
-		System.out.println(sql);
 		try (
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();

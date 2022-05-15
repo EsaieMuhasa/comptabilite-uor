@@ -92,7 +92,6 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 	@Override
 	public AnnualRecipe find(long yearId, long recipeId) throws DAOException {
 		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d AND universityRecipe = %d", getViewName(), yearId, recipeId);
-		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -109,7 +108,6 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 	@Override
 	public List<AnnualRecipe> findByAcademicYear(AcademicYear year) throws DAOException {
 		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d", getViewName(), year.getId());
-		System.out.println(SQL);
 		List<AnnualRecipe> list = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();
@@ -130,7 +128,6 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 	@Override
 	public List<AnnualRecipe> findByAcademicYear(AcademicYear year, int limit, int offset) throws DAOException {
 		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d LIMIT d% OFFSET %d", getViewName(), year.getId(), limit, offset);
-		System.out.println(SQL);
 		List<AnnualRecipe> list = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();

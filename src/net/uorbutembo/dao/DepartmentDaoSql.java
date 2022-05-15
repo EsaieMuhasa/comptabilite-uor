@@ -74,7 +74,6 @@ public class DepartmentDaoSql extends OrientationDaoSql<Department> implements D
 	public List<Department> findByFaculty(long facultyId) throws DAOException {
 		List<Department> departments = new ArrayList<>();
 		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE faculty=%d", this.getViewName(),  facultyId);
-		System.out.println(SQL_QUERY);
 		Faculty fac = this.facultyDao.findById(facultyId);
 		try (
 				Connection connection =  this.getFactory().getConnection();
@@ -103,7 +102,6 @@ public class DepartmentDaoSql extends OrientationDaoSql<Department> implements D
 	public List<Department> findByFaculty(Faculty faculty) throws DAOException {
 		List<Department> departments = new ArrayList<>();
 		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE faculty=%d", this.getViewName(),  faculty.getId());
-		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.getFactory().getConnection();
 				Statement statement = connection.createStatement();
@@ -130,7 +128,6 @@ public class DepartmentDaoSql extends OrientationDaoSql<Department> implements D
 	public List<Department> findByFaculty(Faculty faculty, AcademicYear year) throws DAOException {
 		List<Department> departments = new ArrayList<>();
 		final String SQL_QUERY = getSQLRequestFindByAcademicYear(year.getId())+String.format(" AND %s.faculty = %d", getTableName(), faculty.getId());
-		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.getFactory().getConnection();
 				Statement statement = connection.createStatement();
@@ -156,7 +153,6 @@ public class DepartmentDaoSql extends OrientationDaoSql<Department> implements D
 	@Override
 	public boolean checkByFaculty(Faculty faculty, AcademicYear year) throws DAOException {
 		final String SQL_QUERY = getSQLRequestCheckByAcademicYear(year.getId())+String.format(" AND %s.faculty=%d", this.getTableName(),  faculty.getId());
-		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  this.getFactory().getConnection();
 				Statement statement = connection.createStatement();
@@ -174,7 +170,6 @@ public class DepartmentDaoSql extends OrientationDaoSql<Department> implements D
 	@Override
 	public int countByFaculty(Faculty faculty, AcademicYear year) throws DAOException {
 		final String SQL_QUERY = getSQLRequestCountByAcademicYear(year.getId())+String.format(" AND %s.faculty=%d", getTableName(),  faculty.getId());
-		System.out.println(SQL_QUERY);
 		try (
 				Connection connection =  factory.getConnection();
 				Statement statement = connection.createStatement();

@@ -82,7 +82,6 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	@Override
 	public List<AllocationCost> findByAnnualSpend(long annualSpendId) throws DAOException {
 		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d", getViewName(), annualSpendId);
-		System.out.println(sql);
 		
 		List<AllocationCost> data = new ArrayList<>();
 		try(
@@ -140,7 +139,7 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	@Override
 	public AllocationCost find(AnnualSpend annualSpend, AcademicFee academicFee) throws DAOException {
 		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", getViewName(), annualSpend.getId(), academicFee.getId());
-		System.out.println(sql);
+
 		try(
 				final Connection connection = factory.getConnection();
 				final Statement statement = connection.createStatement();
@@ -162,7 +161,6 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	@Override
 	public AllocationCost find(long annualSpendId, long academicFeeId) throws DAOException {
 		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", getViewName(), annualSpendId, academicFeeId);
-		System.out.println(sql);
 		try(
 				final Connection connection = factory.getConnection();
 				final Statement statement = connection.createStatement();
@@ -181,7 +179,6 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	@Override
 	public boolean check(long annualSpendId, long academicFeeId) throws DAOException {
 		final String sql = String.format("SELECT * FROM %s WHERE annualSpend = %d AND academicFee = %d", getViewName(), annualSpendId, academicFeeId);
-		System.out.println(sql);
 		try(
 				final Connection connection = factory.getConnection();
 				final Statement statement = connection.createStatement();
@@ -202,7 +199,6 @@ public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements All
 	public List<AllocationCost> findByAcademicFee(AcademicFee academicFee) throws DAOException {
 		List<AllocationCost>  costs = new ArrayList<>();
 		final String sql = String.format("SELECT * FROM %s WHERE academicFee = %d", getViewName(), academicFee.getId());
-		System.out.println(sql);
 		try(
 				final Connection connection = factory.getConnection();
 				final Statement statement = connection.createStatement();

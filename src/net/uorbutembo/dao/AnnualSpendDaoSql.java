@@ -79,7 +79,6 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 	@Override
 	public AnnualSpend find(AcademicYear year, UniversitySpend spend) throws DAOException {
 		String sql = String.format("SELEC * FROM %s WHERE academicYear = %d AND universitySpend = %d", getViewName(), getTableName(), year.getId(), spend.getId());
-		System.out.println(sql);
 		try(Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(sql)){

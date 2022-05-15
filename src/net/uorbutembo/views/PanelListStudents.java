@@ -18,7 +18,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileFilter;
@@ -106,7 +105,6 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 	 */
 	private void init() {
 		right.add(navigation, BorderLayout.CENTER);
-		JTabbedPane tabbed = new JTabbedPane(JTabbedPane.BOTTOM);
 		final Panel panelData = new Panel(new BorderLayout());
 		final Panel panelSearch = new Panel(new BorderLayout());
 		final Panel listContainer = new Panel(new BorderLayout());
@@ -133,7 +131,7 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 			fileChooser.setFileFilter(filterExcel);
 			fileChooser.setSelectedFile(newFile);
 			
-			int status = fileChooser.showSaveDialog(null);
+			int status = fileChooser.showSaveDialog(mainWindow);
 			if(status != JFileChooser.APPROVE_OPTION)
 				return;
 			
@@ -191,12 +189,9 @@ public class PanelListStudents extends Panel implements DatatableViewListener{
 		listContainer.add(scroll, BorderLayout.CENTER);
 		listContainer.add(box, BorderLayout.SOUTH);
 		
-		tabbed.addTab("Liste", new ImageIcon(R.getIcon("list")), listContainer, "Liste des états des compte des étudiants");
-		tabbed.addTab("Graphique", new ImageIcon(R.getIcon("chart")), new Panel(), "Evolution des payements dans le temps");
-		
 		final Panel subCenter = new Panel(new BorderLayout());
 		
-		subCenter.add(tabbed, BorderLayout.CENTER);
+		subCenter.add(listContainer, BorderLayout.CENTER);
 		subCenter.setBorder(new EmptyBorder(0, 5, 0, 5));
 		
 		center.add(panelSearch, BorderLayout.NORTH);

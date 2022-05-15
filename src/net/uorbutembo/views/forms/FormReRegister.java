@@ -67,11 +67,17 @@ public class FormReRegister extends AbstractInscriptionForm {
 				adresse.getField().setValue("");
 				imagePicker.show(null);
 				inscription = null;
-				setVisible(false);
 			});
 		}
 		
 		setEnabled(false);
+	}
+
+	/**
+	 * @return the btnCancel
+	 */
+	public Button getBtnCancel() {
+		return btnCancel;
 	}
 
 	@Override

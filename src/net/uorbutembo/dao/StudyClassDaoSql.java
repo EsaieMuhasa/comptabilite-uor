@@ -41,7 +41,6 @@ class StudyClassDaoSql extends OrientationDaoSql<StudyClass> implements StudyCla
 	@Override
 	public boolean checkByAcademicYear(AcademicYear year, Department department) throws DAOException {
 		final String sql = getSQLRequestCheckByAcademicYear(year.getId())+String.format(" AND %s.department =  %d LIMIT 1 OFFSET 0", Promotion.class.getSimpleName(), department.getId());
-		System.out.println(" -> "+sql);
 		try(
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -62,7 +61,6 @@ class StudyClassDaoSql extends OrientationDaoSql<StudyClass> implements StudyCla
 	public List<StudyClass> findByAcademicYear(AcademicYear year, Department department) throws DAOException {
 		List<StudyClass> $return = new ArrayList<>();
 		final String sql = getSQLRequestCheckByAcademicYear(year.getId())+String.format(" AND %s.department =  %d", Promotion.class.getSimpleName(), department.getId());
-		System.out.println(" -> "+sql);
 		try(
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();

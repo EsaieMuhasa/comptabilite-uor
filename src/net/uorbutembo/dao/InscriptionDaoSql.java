@@ -184,7 +184,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		
 		final String sql = String.format("SELECT %s.id FROM %s WHERE promotion IN (%s) LIMIT 1 OFFSET 0", getTableName(), getTableName(),subSql);
 
-		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -208,7 +207,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 				getTableName(), getTableName(), getTableName(), getTableName(), getTableName(), getTableName(), subSql);
 		
 		final List<Inscription> data = new ArrayList<>();
-		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -231,7 +229,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		final String SQL_QUERY = String.format("SELECT COUNT(*) AS nombre FROM %s INNER JOIN %s ON %s.promotion = %s.id WHERE %s.academicYear = %d",
 				getTableName(), Promotion.class.getSimpleName(), getTableName(), Promotion.class.getSimpleName(),
 				Promotion.class.getSimpleName(), academicYearId);
-		System.out.println(SQL_QUERY);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -249,7 +246,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		final String SQL_QUERY = String.format("SELECT * FROM %s INNER JOIN %s ON %s.promotion = %s.id WHERE %s.academicYear = %d LIMIT 1",
 				getTableName(), Promotion.class.getSimpleName(), getTableName(), Promotion.class.getSimpleName(),
 				Promotion.class.getSimpleName(), academicYearId);
-		System.out.println(SQL_QUERY);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -265,7 +261,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d )",
 				getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
 				Promotion.class.getSimpleName(), academicYear);
-		System.out.println(SQL_QUERY);
 		List<Inscription> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
@@ -289,7 +284,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		final String SQL_QUERY = String.format("SELECT * FROM %s WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d ) LIMIT %d OFFSET %d",
 				getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
 				Promotion.class.getSimpleName(), academicYear, limit, offset);
-		System.out.println(SQL_QUERY);
 		List<Inscription> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
@@ -319,7 +313,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 				academicYearId, Promotion.class.getSimpleName(), departmentId);
 		
 		final List<Inscription> data = new ArrayList<>();
-		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -342,7 +335,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		final String sql = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department = %d) LIMIT 1 OFFSET 0", 
 				getTableName(), getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
 				academicYearId, Promotion.class.getSimpleName(), departmentId);
-		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -358,7 +350,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		final String sql = String.format("SELECT COUNT(%s.id) AS nombre FROM %s WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department = %d)", 
 				getTableName(), getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
 				academicYearId, Promotion.class.getSimpleName(), departmentId);
-		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -378,7 +369,6 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year, Promotion.class.getSimpleName(),
 				Department.class.getSimpleName(), Department.class.getSimpleName(), Department.class.getSimpleName(), faculty);
 		final String sql = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE promotion IN (%s)", getTableName(), subSql);
-		System.out.println(sql);	
 		int count = 0;
 		try (
 				Connection connection = this.factory.getConnection();

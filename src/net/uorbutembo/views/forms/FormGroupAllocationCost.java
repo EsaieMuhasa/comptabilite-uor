@@ -180,26 +180,32 @@ public class FormGroupAllocationCost extends Panel {
 			
 			/**
 			 * le processuce peut prendre +/- du temps, car le operations ci-dessous sont au rendez-vous
-			 * -ceparation des proportions a creer oua metre en jours
-			 * -demande d'enregistrement
-			 * -demande de mise en jours
-			 * 
+			 * - ceparation des proportions a creer oua metre en jours
+			 * - demande d'enregistrement
+			 * - demande de mise en jours
+			 * - suppression de operation qui n'ont pas un repartion != 0
 			 * => I execute all operations in a new thread
 			 */
 			Thread t = new Thread(() -> {	
 				Date now = new Date();
 				List<AllocationCost> toCreate = new ArrayList<>(),
-						toUpdate = new ArrayList<>();
+						toUpdate = new ArrayList<>(), 
+						toDelete = new ArrayList<>();
 				
 				try {
 					for (AllocationCostField field : fields) {
 						AllocationCost cost = field.getCost();
 						if(cost.getId() != 0) {
 							cost.setLastUpdate(now);
-							toUpdate.add(cost);
+							if(cost.getAmount() != 0.0)
+								toUpdate.add(cost);
+							else 
+								toDelete.add(cost);
 						} else {
-							cost.setRecordDate(now);
-							toCreate.add(cost);
+							if (cost.getAmount() != 0.0) {								
+								cost.setRecordDate(now);
+								toCreate.add(cost);
+							}
 						}
 					}
 					
@@ -219,6 +225,15 @@ public class FormGroupAllocationCost extends Panel {
 							tabId[i] = toUpdate.get(i).getId();
 						}
 						allocationCostDao.update(tabToUpdate, tabId);				
+					}
+					
+					if (toDelete.size() != 0) {
+						long [] tab = new long [toDelete.size()];
+						for (int i = 0; i < tab.length; i++)
+							tab[i] = toDelete.get(i).getId();
+						allocationCostDao.delete(tab);
+						for (int i = 0; i < tab.length; i++)
+							toDelete.get(i).setId(0);
 					}
 					
 					JOptionPane.showMessageDialog(null, "Succès d'enregistrement de \nla répartiton du "+academicFee.getAmount()+" USD", "Alert", JOptionPane.INFORMATION_MESSAGE);

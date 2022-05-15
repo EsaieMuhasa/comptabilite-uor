@@ -9,16 +9,25 @@ import static net.uorbutembo.views.forms.FormUtil.DEFAULT_V_GAP;
 import static net.uorbutembo.views.forms.FormUtil.createScrollPane;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionListener;
 
 import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AcademicYear;
@@ -30,6 +39,7 @@ import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AllocationCostDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Dialog;
 import net.uorbutembo.swing.Panel;
@@ -41,6 +51,7 @@ import net.uorbutembo.views.forms.FormFeePromotion;
 import net.uorbutembo.views.forms.FormGroupAllocationCost;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.PromotionTableModel;
+import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
@@ -49,7 +60,7 @@ import net.uorbutembo.views.models.PromotionTableModel;
 public class PanelFeePromotion extends Panel {
 	private static final long serialVersionUID = 5400969854848116850L;
 	
-	private JButton btnNewFee = new JButton("Ajout un montant");
+	private JButton btnNewFee = new JButton("Nouveau montant");
 	
 	private AllocationCostDao allocationCostDao;
 	private AcademicFeeDao academicFeeDao;
@@ -60,7 +71,7 @@ public class PanelFeePromotion extends Panel {
 	private Panel center = new Panel(new BorderLayout());
 	private FormFeePromotion formFeePromotion;
 	private Panel panelShowConfig = new Panel(new BorderLayout());
-	private final Cursor cursorWait = new Cursor(Cursor.WAIT_CURSOR);
+	private final Cursor WAIT_CURSOR = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR);
 	
 	
 	private DefaultListModel<AcademicFee> listModel = new DefaultListModel<>();//liste des frais universitaire
@@ -72,14 +83,39 @@ public class PanelFeePromotion extends Panel {
 	private FormGroupAllocationCost formCost;
 	
 	private AcademicYear currentYear;
-	
 	private Dialog dialogAcademicFee;
+	private FormAcademicFee formAcademicFee;
+	
+	private final JPopupMenu popupMenu = new JPopupMenu();
+	private final JMenuItem itemUpdate = new JMenuItem("Modifier", new ImageIcon(R.getIcon("edit")));
+	private final JMenuItem itemDelete = new JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
+	
+	private final MouseAdapter mouseAdapter = new MouseAdapter() {
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			if (!listModel.isEmpty() && e.isPopupTrigger())
+				popupMenu.show(feeList, e.getX(), e.getY());
+		}
+	};
+	
+	private boolean listListenerInited = false;
+	private final ListSelectionListener listListener = (event) -> {
+		tableModel.clear();
+		waiting(true);
+		Thread t = new Thread(()-> {				
+			updateConfig();
+			waiting(false);
+		});
+		
+		t.start();
+	};
 
-	/**
-	 * 
-	 */
+	private final MainWindow mainWindow;
+	
 	public PanelFeePromotion(MainWindow mainWindow) {
 		super(new BorderLayout());
+		this.mainWindow = mainWindow;
+		
 		academicFeeDao = mainWindow.factory.findDao(AcademicFeeDao.class);
 		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
 		allocationCostDao = mainWindow.factory.findDao(AllocationCostDao.class);
@@ -104,7 +140,8 @@ public class PanelFeePromotion extends Panel {
 		btnNewFee.setEnabled(false);
 		btnNewFee.addActionListener(event -> {
 			if(dialogAcademicFee == null) {
-				dialogAcademicFee = new Dialog(mainWindow, new FormAcademicFee(mainWindow, this.academicFeeDao));
+				formAcademicFee = new FormAcademicFee(mainWindow);
+				dialogAcademicFee = new Dialog(mainWindow, formAcademicFee);
 			}
 			
 			dialogAcademicFee.setVisible(true);
@@ -148,6 +185,50 @@ public class PanelFeePromotion extends Panel {
 				}
 			}
 		});
+		
+		initPopup();//click doit pour la modification et la suppression
+	}
+	
+	/**
+	 * popup qui contiens l'itemMenu de modification et de suppression
+	 */
+	private void initPopup() {
+		popupMenu.add(itemUpdate);
+		popupMenu.add(itemDelete);
+		
+		itemUpdate.addActionListener(event-> {
+			AcademicFee fee = listModel.get(feeList.getSelectedIndex());
+			if(dialogAcademicFee == null) {
+				formAcademicFee = new FormAcademicFee(mainWindow);
+				dialogAcademicFee = new Dialog(mainWindow, formAcademicFee);
+			}
+			
+			formAcademicFee.setAcademicFee(fee);
+			
+			dialogAcademicFee.setVisible(true);
+		});
+		itemDelete.addActionListener(event -> {
+			AcademicFee fee = listModel.get(feeList.getSelectedIndex());
+			
+			if (promotionDao.checkByAcademicFee(fee)) {
+				JOptionPane.showMessageDialog(mainWindow, 
+						"Impossible d'effectuer cette operation car \ncertains promotions ont une liaison avec \nles frais que vous voulez supprimer",
+						"Erreur", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			
+			int status  = JOptionPane.showConfirmDialog(mainWindow, ""
+					+ "Voulez-vous vraiment supprimer le "+fee.toString()+"\nN.B: Cette suppression est definitive",
+					"Suppression", JOptionPane.YES_NO_OPTION);
+			
+			if (status == JOptionPane.OK_OPTION) {
+				try {					
+					academicFeeDao.delete(fee.getId());
+				} catch (DAOException e) {
+					JOptionPane.showMessageDialog(mainWindow, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});
 	}
 	
 	/**
@@ -176,42 +257,38 @@ public class PanelFeePromotion extends Panel {
 		panelShowConfig.add(westBorder, BorderLayout.EAST);
 		
 		feeList.setBackground(FormUtil.BKG_END);
-		feeList.addListSelectionListener(event -> {
-			int index = feeList.getSelectedIndex();
-			if (index == -1)
-				return;
-			
-			AcademicFee fee = listModel.get(index);
-			
-			tableModel.clear();
-			waiting(true);
-			Thread t = new Thread(()-> {				
-				if(promotionDao.checkByAcademicFee(fee.getId())) {				
-					List<Promotion> promotions = promotionDao.findByAcademicFee(fee);
-					for (Promotion p : promotions) {
-						tableModel.addRow(p);
-					}
-				}
-				
-				pieModel.removeAll();
-				if(allocationCostDao.checkByAcademicFee(fee.getId())) {
-					List<AllocationCost> costs = this.allocationCostDao.findByAcademicFee(fee);
-					for (int i=0, max=costs.size(); i<max;i++) {
-						AllocationCost cost = costs.get(i);
-						int color = i%(FormUtil.COLORS.length-1);
-						DefaultPiePart part = new DefaultPiePart(FormUtil.COLORS[color], cost.getAmount(), cost.getAmount()+"");
-						pieModel.addPart(part);
-					}
-				}
-				
-				List<AnnualSpend> spends = annualSpendDao.checkByAcademicYear(currentYear.getId())? annualSpendDao.findByAcademicYear(currentYear) : new ArrayList<>();
-				
-				formCost.init(fee, spends);
-				waiting(false);
-			});
-			
-			t.start();
-		});
+		feeList.setForeground(Color.WHITE);
+		feeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+	}
+	
+	private void updateConfig() {
+		int index = feeList.getSelectedIndex();
+		
+		if(index == -1)
+			return;
+		
+		AcademicFee fee = listModel.get(index);
+		if(promotionDao.checkByAcademicFee(fee.getId())) {				
+			List<Promotion> promotions = promotionDao.findByAcademicFee(fee);
+			for (Promotion p : promotions) {
+				tableModel.addRow(p);
+			}
+		}
+		
+		pieModel.removeAll();
+		if(allocationCostDao.checkByAcademicFee(fee.getId())) {
+			List<AllocationCost> costs = this.allocationCostDao.findByAcademicFee(fee);
+			for (int i=0, max=costs.size(); i<max;i++) {
+				AllocationCost cost = costs.get(i);
+				int color = i%(FormUtil.COLORS.length-1);
+				DefaultPiePart part = new DefaultPiePart(FormUtil.COLORS[color], cost.getAmount(), cost.getAmount()+"");
+				pieModel.addPart(part);
+			}
+		}
+		
+		List<AnnualSpend> spends = annualSpendDao.checkByAcademicYear(currentYear.getId())? annualSpendDao.findByAcademicYear(currentYear) : new ArrayList<>();
+		
+		formCost.init(fee, spends);
 	}
 
 	/**
@@ -232,17 +309,29 @@ public class PanelFeePromotion extends Panel {
 			feeList.setSelectedIndex(0);
 		}
 		
+		boolean isCurrent = academicYearDao.isCurrent(currentYear);
 		formFeePromotion.setCurrentYear(currentYear);
 		btnNewFee.setEnabled(true);
-		btnNewFee.setVisible(academicYearDao.isCurrent(currentYear));
+		btnNewFee.setVisible(isCurrent);
+		
+		if (isCurrent)
+			feeList.addMouseListener(mouseAdapter);
+		else
+			feeList.removeMouseListener(mouseAdapter);
+		
+		if (!listListenerInited){
+			listListenerInited = true;
+			updateConfig();
+			feeList.addListSelectionListener(listListener);
+		}
 	}
 	
 	private void waiting (boolean wait) {
 		btnNewFee.setEnabled(!wait);
 		feeList.setEnabled(!wait);
 		if (wait) {
-			setCursor(cursorWait);
-			feeList.setCursor(cursorWait);
+			setCursor(WAIT_CURSOR);
+			feeList.setCursor(WAIT_CURSOR);
 		} else  {
 			setCursor(Cursor.getDefaultCursor());
 			feeList.setCursor(Cursor.getDefaultCursor());

@@ -83,7 +83,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) LIMIT %d OFFSET %d", getTableName(), sqlInscrits, limit, offset);
 		
-		System.out.println(sql);
 		List<PaymentFee> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
@@ -107,7 +106,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s)", getTableName(), sqlInscrits);
 		
-		System.out.println(sql);
 		List<PaymentFee> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
@@ -132,7 +130,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) AND (slipDate BETWEEN %d AND %d)", 
 				getTableName(), sqlInscrits, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
 		
-		System.out.println(sql);
 		List<PaymentFee> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
@@ -156,7 +153,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN (%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) LIMIT 1 OFFSET 0", getTableName(), sqlInscrits);
 		
-		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -173,7 +169,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN (%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		final String sql = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE inscription IN (%s)", getTableName(), sqlInscrits);
 		
-		System.out.println(sql);	
 		int count = 0;
 		try (
 				Connection connection = this.factory.getConnection();
@@ -195,7 +190,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sql = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE inscription IN(%s) AND (slipDate BETWEEN %d AND %d)", 
 				getTableName(), sqlInscrits, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
 		
-		System.out.println(sql);
 		int count  = 0;
 		try (
 				Connection connection = this.factory.getConnection();
@@ -219,7 +213,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN (%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		
 		final String sql = String.format("SELECT * AS nombre FROM %s WHERE inscription IN (%s) ", getTableName(), sqlInscrits);
-		System.out.println(sql);
 		List<PaymentFee> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
@@ -254,7 +247,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN (%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		
 		final String sql = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE inscription IN (%s)", getTableName(), sqlInscrits);
-		System.out.println(sql);	
 		int count = 0;
 		try (
 				Connection connection = this.factory.getConnection();
@@ -284,8 +276,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN (%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		
 		final String sql = String.format("SELECT * AS nombre FROM %s WHERE inscription IN (%s) LIMIT 1 OFFSET 0", getTableName(), sqlInscrits);
-		System.out.println(sql);
-		
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -405,7 +395,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	public List<PaymentFee> findByInscription(Inscription inscription) throws DAOException {
 		final String sql = String.format("SELECT * FROM %s WHERE inscription = %d ORDER BY recordDate DESC", this.getTableName(), inscription.getId());
 		List<PaymentFee> data = new ArrayList<>();
-		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -428,7 +417,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) AND slipDate < %d LIMIT 1 OFFSET 0", getTableName(), sqlInscrits, toMinTimestampOfDay(date).getTime());
 		
-		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -445,7 +433,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) AND slipDate < %d LIMIT 1 OFFSET 0", getTableName(), sqlInscrits, toMinTimestampOfDay(date).getTime());
 		
-		System.out.println(sql);
 		List<PaymentFee> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();

@@ -18,6 +18,7 @@ import net.uorbutembo.beans.AllocationRecipe;
 import net.uorbutembo.beans.AnnualRecipe;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.Inscription;
+import net.uorbutembo.beans.OtherRecipe;
 import net.uorbutembo.beans.Outlay;
 import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.beans.Promotion;
@@ -31,6 +32,7 @@ import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.InscriptionDao;
+import net.uorbutembo.dao.OtherRecipeDao;
 import net.uorbutembo.dao.OutlayDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.PromotionDao;
@@ -68,6 +70,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	private final AnnualRecipeDao annualRecipeDao;
 	private final AllocationRecipeDao allocationRecipeDao;
 	private final OutlayDao outlayDao;
+	private final OtherRecipeDao otherRecipeDao;
 
 	//pour le montant deja payer
 	private DefaultCardModel<Double> cardModelCaisse;
@@ -204,6 +207,38 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		}
 	};
 	
+	private final DAOAdapter<OtherRecipe> otherAdapter = new DAOAdapter<OtherRecipe>() {
+
+		@Override
+		public synchronized void onCreate(OtherRecipe e, int requestId) {
+			if (currentYear != null && e.getAccount().getAcademicYear() != null && 
+					e.getAccount().getAcademicYear().getId() == currentYear.getId()) {
+				
+				reload();
+				reloadCaisse();
+			}
+		}
+
+		@Override
+		public synchronized void onUpdate(OtherRecipe e, int requestId) {
+			if (currentYear != null && e.getAccount().getAcademicYear() != null && 
+					e.getAccount().getAcademicYear().getId() == currentYear.getId()) {				
+				reload();
+				reloadCaisse();
+			}
+		}
+
+		@Override
+		public synchronized void onDelete(OtherRecipe e, int requestId) {
+			if (currentYear != null && e.getAccount().getAcademicYear() != null && 
+					e.getAccount().getAcademicYear().getId() == currentYear.getId()) {				
+				reload();
+				reloadCaisse();
+			}
+		}
+		
+	};
+	
 	private final DAOAdapter<AllocationRecipe> allocationRecipeListener = new DAOAdapter<AllocationRecipe>() {
 
 		@Override
@@ -303,6 +338,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		annualRecipeDao = factory.findDao(AnnualRecipeDao.class);
 		allocationRecipeDao = factory.findDao(AllocationRecipeDao.class);
 		outlayDao = factory.findDao(OutlayDao.class);
+		otherRecipeDao = factory.findDao(OtherRecipeDao.class);
 		
 		inscriptionDao.addListener(inscriptionListener);
 		annualSpendDao.addListener(annualSpendListener);
@@ -310,6 +346,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		paymentFeeDao.addListener(paymentListener);
 		allocationRecipeDao.addListener(allocationRecipeListener);
 		outlayDao.addListener(outlayListener);
+		otherRecipeDao.addListener(otherAdapter);
 		
 		promotionDao.addListener(new DAOAdapter<Promotion>() {
 			@Override

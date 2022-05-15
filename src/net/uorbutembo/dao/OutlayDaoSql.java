@@ -70,7 +70,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public boolean checkByAcademicYear(long yearId) throws DAOException {
 		final String SQL = String.format("SELECT id FROM %s WHERE academicYear = %d LIMIT 1",
 				getTableName(), yearId);
-		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -85,7 +84,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public boolean checkByAcademicYear(long yearId, Date min, Date max) throws DAOException {
 		final String SQL = String.format("SELECT id FROM %s WHERE academicYear = %d AND (deliveryDate BETWEEN %d AND %d) LIMIT 1",
 				getTableName(), yearId, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
-		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -100,7 +98,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public int countByAcademicYear(long yearId) throws DAOException {
 		final String SQL = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE academicYear = %d",
 				getTableName(), yearId);
-		System.out.println(SQL);
 		int count = 0;
 		try (
 				Connection connection = factory.getConnection();
@@ -118,7 +115,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public int countByAcademicYear(long yearId, Date min, Date max) throws DAOException {
 		final String SQL = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE academicYear = %d AND (deliveryDate BETWEEN %d AND %d)",
 				getTableName(), yearId, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
-		System.out.println(SQL);
 		int count = 0;
 		try (
 				Connection connection = factory.getConnection();
@@ -136,7 +132,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public List<Outlay> findByAcademicYear(long yearId) throws DAOException {
 		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d",
 				getTableName(), yearId);
-		System.out.println(SQL);
 		List<Outlay> data = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();
@@ -157,7 +152,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public List<Outlay> findByAcademicYear (long yearId, int limit, int offset) throws DAOException {
 		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d LIMIT %d OFFSET %d",
 				getTableName(), yearId, limit, offset);
-		System.out.println(SQL);
 		List<Outlay> data = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();
@@ -178,7 +172,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public List<Outlay> findByAcademicYear(long yearId, Date min, Date max) throws DAOException {
 		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d AND (deliveryDate BETWEEN %d AND %d)",
 				getTableName(), yearId, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
-		System.out.println(SQL);
 		List<Outlay> data = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();
@@ -199,7 +192,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public List<Outlay> findByAcademicYear(long yearId, Date min, Date max, int limit, int offset) throws DAOException {
 		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d AND (deliveryDate BETWEEN %d AND %d) LIMIT %d OFFSET %d",
 				getTableName(), yearId, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime(), limit, offset);
-		System.out.println(SQL);
 		List<Outlay> data = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();
@@ -220,7 +212,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	@Override
 	public boolean checkByAccount(long accountId) throws DAOException {
 		final String SQL = String.format("SELECT id FROM %s WHERE account = %d LIMIT 1", getTableName(), accountId);
-		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -235,7 +226,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public boolean checkByAccount(long accountId, Date min, Date max) throws DAOException {
 		final String SQL = String.format("SELECT id FROM %s WHERE account = %d AND (deliveryDate BETWEEN %d AND %d) LIMIT 1",
 				getTableName(), accountId, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
-		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -249,7 +239,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	@Override
 	public List<Outlay> findByAccount(AnnualSpend account) throws DAOException {
 		final String SQL = String.format("SELECT * FROM %s WHERE account = %d", getTableName(), account.getId());
-		System.out.println(SQL);
 		List<Outlay> data = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();
@@ -269,7 +258,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	@Override
 	public List<Outlay> findByAccount(AnnualSpend account, int limit, int offset) throws DAOException {
 		final String SQL = String.format("SELECT * FROM %s WHERE account = %d LIMIT %d OFFSET %d", getTableName(), account.getId(), limit, offset);
-		System.out.println(SQL);
 		List<Outlay> data = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();
@@ -290,7 +278,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public List<Outlay> findByAccount(AnnualSpend account, Date min, Date max) throws DAOException {
 		final String SQL = String.format("SELECT * FROM %s WHERE account = %d AND (deliveryDate BETWEEN %d AND %d)", getTableName(), 
 				account.getId(), toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
-		System.out.println(SQL);
 		List<Outlay> data = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();
@@ -311,7 +298,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public boolean checkByAcademicYearBeforDate(long yearId, Date date) throws DAOException {
 		final String SQL = String.format("SELECT id FROM %s WHERE academicYear = %d AND deliveryDate <= %d LIMIT 1",
 				getTableName(), yearId, toMaxTimestampOfDay(date).getTime());
-		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -326,7 +312,6 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public List<Outlay> findByAcademicYearBeforDate(long yearId, Date date) throws DAOException {
 		final String SQL = String.format("SELECT id FROM %s WHERE academicYear = %d AND deliveryDate <= %d",
 				getTableName(), yearId, toMaxTimestampOfDay(date).getTime());
-		System.out.println(SQL);
 		List<Outlay> data = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();

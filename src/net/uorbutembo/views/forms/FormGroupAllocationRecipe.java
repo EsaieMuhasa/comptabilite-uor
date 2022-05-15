@@ -152,37 +152,59 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 
 	@Override
 	public void actionPerformed (ActionEvent event) {
-		int toCreateCount = 0;
 		
-		for (AllocationRecipeField field : fields)
-			if(field.getAllocation().getId() == 0 )
-				toCreateCount++;
-		
-		AllocationRecipe [] 
-				toCreate = new AllocationRecipe[toCreateCount],
-				toUpdate = new AllocationRecipe[fields.size() - toCreateCount];
-		
-		int iCreate = 0, iUpdate = 0;
-		long ids [] = new long[toUpdate.length];
-		Date now = new Date();
+		List<AllocationRecipe> 
+			toCreateList = new ArrayList<>(), 
+			toDeleteList = new ArrayList<>(),
+			toUpdateList = new ArrayList<>();
 		
 		for (AllocationRecipeField field : fields) {
-			if(field.getAllocation().getId() == 0 ){
-				field.getAllocation().setRecordDate(now);
-				toCreate[iCreate++] = field.getAllocation();
-			}
-			else {
-				field.getAllocation().setLastUpdate(now);
-				ids[iUpdate] = field.getAllocation().getId();
-				toUpdate[iUpdate++] = field.getAllocation();
+			if(field.getAllocation().getId() == 0 ) {
+				if(field.getAllocation().getPercent() != 0.0)
+					toCreateList.add(field.getAllocation());
+			} else {
+				if(field.getAllocation().getPercent() > 0.0){
+					toUpdateList.add(field.getAllocation());
+				} else{
+					toDeleteList.add(field.getAllocation());
+				}
 			}
 		}
 		
+		AllocationRecipe [] 
+				toCreate = new AllocationRecipe[toCreateList.size()],
+				toUpdate = new AllocationRecipe[toUpdateList.size()];
+		
+		long updatableIds [] = new long[toUpdate.length];
+		long deletableIds [] = new long[toDeleteList.size()];
+		Date now = new Date();
+		
+		for (int i = 0, count = toCreate.length; i < count; i++){
+			toCreateList.get(i).setRecordDate(now);
+			toCreate[i] = toCreateList.get(i);
+		}
+		
+		for (int i = 0, count = toUpdate.length; i < count; i++){
+			updatableIds[i] = toUpdateList.get(i).getId();
+			toUpdateList.get(i).setLastUpdate(now);
+			toUpdate[i] = toUpdateList.get(i);
+		}
+		
+		for (int i = 0, count = toDeleteList.size(); i < count; i++)
+			deletableIds[i] = toDeleteList.get(i).getId();
+		
 		try {
-			if(iCreate != 0)
+			if(toCreate.length != 0)
 				allocationRecipeDao.create(toCreate);
-			if(iUpdate != 0)
-				allocationRecipeDao.update(toUpdate, ids);
+			if(toUpdate.length != 0)
+				allocationRecipeDao.update(toUpdate, updatableIds);
+			if(deletableIds.length != 0)
+				allocationRecipeDao.delete(deletableIds);
+			
+			for (int i = 0, count = toDeleteList.size(); i < count; i++)
+				toDeleteList.get(i).setId(0);
+			
+			System.out.println("create: "+toCreate.length+" => update: "+toUpdate.length+" => delete: "+deletableIds.length);
 		} catch (DAOException e) {
 			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}

@@ -351,7 +351,7 @@ public class SidebarStudents extends Panel{
 	 */
 	private boolean check (List<FacultyFilter> filters, Faculty faculty) {
 		for (FacultyFilter filter : filters) {
-			if(filter.getFaculty() == faculty )
+			if(filter.getFaculty() == faculty || filter.getFaculty().getId() == faculty.getId())
 				return true;
 		}
 		return false;

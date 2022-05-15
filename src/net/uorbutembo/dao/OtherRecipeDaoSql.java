@@ -78,7 +78,6 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		int count = 0;
 		final String SQL = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE account = %d AND (recordDate BETWEEN %d AND %d)",
 				getTableName(), accountId, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
-		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -96,7 +95,6 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public List<OtherRecipe> findByAccount(AnnualRecipe account) throws DAOException {
 		List<OtherRecipe> list = new ArrayList<>();
 		final String SQL = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE account = %d ORDER BY recordDate DESC", getTableName(), account.getId());
-		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -118,7 +116,6 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		List<OtherRecipe> list = new ArrayList<>();
 		final String SQL = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE account = %d AND (recordDate BETWEEN %d AND %d) ORDER BY recordDate DESC",
 				getTableName(), account.getId(), toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
-		System.out.println(SQL);
 		try (
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -139,7 +136,6 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public List<OtherRecipe> findByAcademicYear(long academicYearId, int limit, int offset) throws DAOException {
 		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
 		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) LIMIT %d OFFSET %d", getTableName(), sqlAccount, limit, offset);
-		System.out.println(sql);
 		List<OtherRecipe> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
@@ -161,7 +157,6 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public List<OtherRecipe> findByAcademicYear(long academicYearId) throws DAOException {
 		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
 		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s)", getTableName(), sqlAccount);
-		System.out.println(sql);
 		List<OtherRecipe> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
@@ -184,7 +179,6 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
 		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) AND (collectionDate BETWEEN %d AND %d)",
 				getTableName(), sqlAccount, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
-		System.out.println(sql);
 		List<OtherRecipe> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
@@ -206,7 +200,6 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public boolean checkByAcademicYear(long academicYearId) throws DAOException {
 		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
 		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s)", getTableName(), sqlAccount);
-		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -221,7 +214,6 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public int countByAcademicYear(long academicYearId) throws DAOException {
 		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
 		final String sql =String.format("SELECT COUNT(*) AS nombre FROM %s WHERE account IN(%s)", getTableName(), sqlAccount);
-		System.out.println(sql);
 		int count = 0;
 		try (
 				Connection connection = this.factory.getConnection();
@@ -240,7 +232,6 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), academicYearId);
 		final String sql =String.format("SELECT COUNT(*) AS nombre FROM %s WHERE account IN(%s) AND (collectionDate BETWEEN %d AND %d)",
 				getTableName(), sqlAccount, toMinTimestampOfDay(min).getTime(), toMaxTimestampOfDay(max).getTime());
-		System.out.println(sql);
 		int count = 0;
 		try (
 				Connection connection = this.factory.getConnection();
@@ -259,7 +250,6 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), yearId);
 		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) AND collectionDate < %d", 
 				getTableName(), sqlAccount, toMinTimestampOfDay(date).getTime());
-		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -275,7 +265,6 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), yearId);
 		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) AND collectionDate < %d", 
 				getTableName(), sqlAccount, toMinTimestampOfDay(date).getTime());
-		System.out.println(sql);
 		List<OtherRecipe> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();

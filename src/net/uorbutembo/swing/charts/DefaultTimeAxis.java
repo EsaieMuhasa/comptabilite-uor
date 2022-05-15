@@ -14,7 +14,6 @@ public class DefaultTimeAxis extends DefaultAxis implements TimeAxis {
 		Date now = new Date(time);
 		zero.setData(now);
 		zero.setLabel(formater.format(now));
-		System.out.println(zero);
 	}
 
 	/**
@@ -146,7 +145,6 @@ public class DefaultTimeAxis extends DefaultAxis implements TimeAxis {
 		graduations.get(0).setData(date);
 		first = graduations.get(0);
 		last = graduations.get(0);
-		System.out.println(date);
 	}
 
 	@Override

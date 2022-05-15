@@ -87,7 +87,6 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 	@Override
 	public synchronized void delete(long id) throws DAOException {
 		final String SQL_QUERY = String.format("DELETE FROM %s WHERE id = ?", getTableName());
-		System.out.println(SQL_QUERY);
 		
 		AcademicYear t = this.findById(id);
 		try (
@@ -116,7 +115,6 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 		if(currentYear != null || countAll() == 1 )
 			return true;
 		final String SQL = String.format("SELECT id FROM %s WHERE previous IS NOT NULL AND id NOT IN(SELECT previous FROM %s WHERE previous IS NOT NULL)", getTableName(), getTableName());
-		System.out.println(SQL);
 		try(
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -137,7 +135,6 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 				currentYear = findAll().get(0);
 			} else {
 				final String SQL = String.format("SELECT * FROM %s WHERE previous IS NOT NULL AND id NOT IN(SELECT previous FROM %s WHERE previous IS NOT NULL)", getTableName(), getTableName());
-				System.out.println(SQL);
 				try(
 						Connection connection = factory.getConnection();
 						Statement statement = connection.createStatement();

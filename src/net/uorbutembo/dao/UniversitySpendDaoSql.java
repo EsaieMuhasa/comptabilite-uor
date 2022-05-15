@@ -54,7 +54,6 @@ class UniversitySpendDaoSql extends UtilSql<UniversitySpend> implements Universi
 	public List<UniversitySpend> findByAcademicYear(long academicYearId) throws DAOException {
 		List<UniversitySpend> data = new ArrayList<>();
 		String sql = String.format("SELECT * FROM %s WHERE id IN(SELECT universitySpend FROM %s WHERE academicYear = %d)", getTableName(), AnnualSpend.class.getSimpleName(), academicYearId);
-		System.out.println(sql);
 		try(Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(sql)) {

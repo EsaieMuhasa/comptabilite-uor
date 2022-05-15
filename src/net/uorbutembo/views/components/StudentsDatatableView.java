@@ -4,6 +4,7 @@
 package net.uorbutembo.views.components;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.FileOutputStream;
@@ -93,6 +94,14 @@ public class StudentsDatatableView extends Panel {
 	private AcademicYearDao academicYearDao;
 	
 	/**
+	 * Ecoute du button d'annulation d'annulation des mis en jours 
+	 * d'une inscription
+	 */
+	private final ActionListener cancelUpdateInscription = (event) -> {
+		dialogInscription.setVisible(false);
+	};
+	
+	/**
 	 * construction d'un datatable
 	 * @param daoFactory
 	 * @param progress
@@ -150,6 +159,12 @@ public class StudentsDatatableView extends Panel {
 		container.removeAll();
 		
 		this.doStartFilter(filters);
+		
+		for (FacultyData f : facultyDatas) {
+			f.dispose();
+		}
+		facultyDatas.clear();
+		
 		for (FacultyFilter filter : filters) {
 			FacultyData  dataManager = new FacultyData(filter.getFaculty(), filter.getDepartments());
 			container.add(dataManager);
@@ -241,6 +256,7 @@ public class StudentsDatatableView extends Panel {
 		}
 		
 		progress.setVisible(false);
+		container.repaint();
 	}
 	
 	/**
@@ -293,6 +309,7 @@ public class StudentsDatatableView extends Panel {
 			int current = 0;
 			
 			for (FacultyData fData : lastFilterData) {
+
 				//Pour chaque faculte, on cree un sheet excel
 				XSSFSheet sheet = book.createSheet(fData.getFaculty().getAcronym());
 				int rowCount = 0;
@@ -300,7 +317,7 @@ public class StudentsDatatableView extends Panel {
 				//faculty name
 				XSSFRow row = sheet.createRow(rowCount++);
 				XSSFCell cell = row.createCell(0);
-				cell.setCellValue(fData.getFaculty().getName());
+				cell.setCellValue(fData.getFaculty().getName()+" ("+currentYear.toString()+")");
 				sheet.addMergedRegion(new CellRangeAddress(rowCount-1, rowCount-1, 0, columnCount-1));
 				
 				XSSFCellStyle style = book.createCellStyle();
@@ -443,6 +460,8 @@ public class StudentsDatatableView extends Panel {
 			this.doAutohide();
 		}
 		
+		public abstract void dispose();
+		
 		/**
 		 * Cette methode doit envoyer true dans le cas où le groupe des donnees contiens aumoin une donnee
 		 * @return
@@ -485,6 +504,13 @@ public class StudentsDatatableView extends Panel {
 			
 			this.add(title, BorderLayout.NORTH);
 			this.add(container, BorderLayout.CENTER);
+		}
+		
+		@Override
+		public void dispose() {
+			for (DepartmentData data : datas) {
+				data.dispose();
+			}
 		}
 		
 
@@ -592,6 +618,13 @@ public class StudentsDatatableView extends Panel {
 			}
 			
 			this.add(container, BorderLayout.CENTER);
+		}
+		
+		@Override
+		public void dispose() {
+			for (PromotionData data : datas) {
+				data.dispose();
+			}
 		}
 		
 		/**
@@ -739,7 +772,7 @@ public class StudentsDatatableView extends Panel {
 					formRegister.setCurrentYear(currentYear);
 					dialogInscription.getContentPane().add(formRegister, BorderLayout.CENTER);
 					dialogInscription.getContentPane().setBackground(FormUtil.BKG_START);
-					
+					formRegister.getBtnCancel().addActionListener(cancelUpdateInscription);
 					dialogInscription.pack();
 				}
 				
@@ -770,6 +803,11 @@ public class StudentsDatatableView extends Panel {
 				dialogStudent.setVisible(true);
 			});
 			//==
+		}
+		
+		@Override
+		public void dispose() {
+			tableModel.dispose();
 		}
 		
 		@Override

@@ -217,6 +217,14 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		}
 		return null;
 	}
+	
+	/**
+	 * liberation des resources
+	 * deconnexion aux DAO
+	 */
+	public void dispose () {
+		
+	}
 
 	
 	/**

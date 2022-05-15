@@ -54,7 +54,6 @@ abstract class OrientationDaoSql <T extends Orientation> extends UtilSql <T> imp
 	@Override
 	public boolean checkByAcademicYear(AcademicYear year) throws DAOException {
 		final String sql = getSQLRequestCheckByAcademicYear(year.getId());
-		System.out.println(sql);
 		try(
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -69,7 +68,6 @@ abstract class OrientationDaoSql <T extends Orientation> extends UtilSql <T> imp
 	public int countByAcademicYear(AcademicYear year) throws DAOException {
 		int $return = 0;
 		final String sql = getSQLRequestCountByAcademicYear(year.getId());
-		System.out.println(sql);
 		try(
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -87,7 +85,6 @@ abstract class OrientationDaoSql <T extends Orientation> extends UtilSql <T> imp
 	public List<T> findByAcademicYear(AcademicYear year) throws DAOException {
 		List<T> $return = new ArrayList<>();
 		final String sql = getSQLRequestFindByAcademicYear(year.getId());
-		System.out.println(sql);
 		try(
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();

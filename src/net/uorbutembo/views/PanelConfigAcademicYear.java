@@ -42,9 +42,9 @@ public class PanelConfigAcademicYear extends DefaultScenePanel {
 		
 		this
 			.addItemMenu(new NavbarButtonModel("promotions", "Promotions"), scroll)
-			.addItemMenu(new NavbarButtonModel("feePromotion", "Frais acadmique"), panelFeePromotion)
-			.addItemMenu(new NavbarButtonModel("autherRecipe", "Autres recetes"), panelAnnualRecipe)
-			.addItemMenu(new NavbarButtonModel("annualSpend", "Rubrique budgetaire"), panelAnnualSpend);
+			.addItemMenu(new NavbarButtonModel("feePromotion", "Frais académique"), panelFeePromotion)
+			.addItemMenu(new NavbarButtonModel("autherRecipe", "Autres recettes"), panelAnnualRecipe)
+			.addItemMenu(new NavbarButtonModel("annualSpend", "Rubriques budgétaire"), panelAnnualSpend);
 	}
 
 	@Override
