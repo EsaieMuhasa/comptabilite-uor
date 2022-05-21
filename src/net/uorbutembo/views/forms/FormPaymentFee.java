@@ -36,9 +36,9 @@ public class FormPaymentFee extends DefaultFormPanel {
 	private Inscription inscription;
 	
 	private final FormGroup<String> slipNumber = FormGroup.createTextField("Numéro du bordereau");
-	private final FormGroup<String> slipDate = FormGroup.createTextField("Date de livraison du bordereau");
+	private final FormGroup<String> slipDate = FormGroup.createTextField("Date de livraison du bordereau (jj-mm-aaaa)");
 	private final FormGroup<String> receipNumber = FormGroup.createTextField("Numéro du reçu");
-	private final FormGroup<String> receipDate = FormGroup.createTextField("Date de reception du reçu");
+	private final FormGroup<String> receipDate = FormGroup.createTextField("Date de reception du reçu (jj-mm-aaaa)");
 	private final FormGroup<String> wording = FormGroup.createTextField("libelé");
 	private final FormGroup<String> amount = FormGroup.createTextField("Montant payer (en USD)");
 	

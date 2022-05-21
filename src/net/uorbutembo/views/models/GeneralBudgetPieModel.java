@@ -371,7 +371,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		cardModel.setTitle("Budget global");
 		cardModel.setInfo("Montant à ateindre pour l'année courante");
 		cardModel.setIcon(R.getIcon("acounting"));
-		cardModel.setSuffix("$");
+		cardModel.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
 		cardModel.setValue(0d);
 		//==
 		
@@ -381,11 +381,12 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		cardModelCaisse.setTitle("Caisse");
 		cardModelCaisse.setInfo("Montant liquide disponible en caisse");
 		cardModelCaisse.setIcon(R.getIcon("caisse"));
-		cardModelCaisse.setSuffix("$");
+		cardModelCaisse.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
 		//==
 		
 		pieModelCaisse = new DefaultPieModel();
 		pieModelCaisse.setTitle("Solde pour chaque compte");
+		pieModelCaisse.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
 		this.setTitle("Répartition général du budget");
 	}
 	

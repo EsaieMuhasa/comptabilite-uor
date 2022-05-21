@@ -72,7 +72,7 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
 		
 		mainWindow.factory.findDao(AcademicYearDao.class).addYearListener(this);
-
+		modelPieStudents.setSuffix(" : ");
 		init();
 		
 		Panel center = new Panel(new BorderLayout());

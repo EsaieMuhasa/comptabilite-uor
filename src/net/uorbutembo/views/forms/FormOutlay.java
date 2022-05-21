@@ -54,7 +54,7 @@ public class FormOutlay extends DefaultFormPanel {
 	
 	private final FormGroup<String> groupAmount = FormGroup.createTextField("Montant en "+FormUtil.UNIT_MONEY);
 	private final FormGroup<String> groupWording = FormGroup.createTextField("Libele de livraison");
-	private final FormGroup<String> groupDate = FormGroup.createTextField("Date de livraison");
+	private final FormGroup<String> groupDate = FormGroup.createTextField("Date de livraison  (jj-mm-aaaa)");
 	private final FormGroup<AcademicYear> groupYear = FormGroup.createComboBox(comboYear);
 	
 	private final Button btnCancel = new Button(new ImageIcon(R.getIcon("close")), "Annuler la modification");
@@ -199,6 +199,7 @@ public class FormOutlay extends DefaultFormPanel {
 			btnSave.setEnabled(comboAccountModel.getSize() != 0);
 		});
 		//==
+		groupDate.getField().setLabel(FormUtil.DEFAULT_FROMATER.format(new Date()));
 	}
 
 	@Override

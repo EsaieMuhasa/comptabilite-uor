@@ -49,7 +49,7 @@ public class FormOtherRecipe extends DefaultFormPanel {
 	
 	private final FormGroup<String> groupAmount = FormGroup.createTextField("Montant en "+FormUtil.UNIT_MONEY);
 	private final FormGroup<String> groupWording = FormGroup.createTextField("Libele de perception");
-	private final FormGroup<String> groupDate = FormGroup.createTextField("Date de perception");
+	private final FormGroup<String> groupDate = FormGroup.createTextField("Date de perception (jj-mm-aaaa)");
 	
 	private final AnnualRecipeDao annualRecipeDao;
 	private final AcademicYearDao academicYearDao;

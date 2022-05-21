@@ -30,8 +30,8 @@ public class FormAcademicYear extends DefaultFormPanel {
 	
 	private AcademicYearDao academicYearDao;
 	
-	private FormGroup<String> startDate = FormGroup.createTextField("Date d'ouverture");
-	private FormGroup<String> closeDate = FormGroup.createTextField("Date de fermeture");
+	private FormGroup<String> startDate = FormGroup.createTextField("Date d'ouverture  (jj-mm-aaaa)");
+	private FormGroup<String> closeDate = FormGroup.createTextField("Date de fermeture  (jj-mm-aaaa)");
 	private FormGroup<String> label = FormGroup.createTextField("Label de l'année");
 	
 	private AcademicYear academicYear;// != null lors de la modification
@@ -43,7 +43,7 @@ public class FormAcademicYear extends DefaultFormPanel {
 	public FormAcademicYear(MainWindow mainWindow, AcademicYearDao academicYearDao) {
 		super(mainWindow);
 		this.academicYearDao = academicYearDao;
-		this.setTitle("Formulaire de decalration d'une année academique");
+		this.setTitle("Formulaire de déclaration d'une année académique");
 		this.init();
 	}
 	

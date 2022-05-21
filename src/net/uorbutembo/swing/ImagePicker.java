@@ -50,7 +50,7 @@ public class ImagePicker extends Panel {
 	private ImagePickerRender render = new ImagePickerRender();
 	private Button btnChoose = new Button(new ImageIcon(R.getIcon("edit")), "Choisir");
 	
-	private JFileChooser fileChooser = new JFileChooser();
+	private final static JFileChooser FILE_CHOOSER = new JFileChooser();
 	private Frame mainFrame;
 	
 	private String file;//pour afficher une image x dans l'image picker
@@ -91,7 +91,7 @@ public class ImagePicker extends Panel {
 	 */
 	public void show (String imageFileName) {
 		this.file = imageFileName;
-		this.render.setFileName(this.file);
+		this.render.setFileName(this.file, slider.getValue());
 	}
 	
 	private void init() {
@@ -121,19 +121,19 @@ public class ImagePicker extends Panel {
 		
 		slider.setEnabled(false);
 		
-		fileChooser.setDialogTitle("Selectionner la photo de paceport");
-		fileChooser.setFileFilter(new ImagePickerFilter());
-		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		FILE_CHOOSER.setDialogTitle("Selectionner la photo de paceport");
+		FILE_CHOOSER.setFileFilter(new ImagePickerFilter());
+		FILE_CHOOSER.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 		this.btnChoose.addActionListener(event -> {
-			int result = fileChooser.showDialog(mainFrame, "Ouvrir");
+			int result = FILE_CHOOSER.showDialog(mainFrame, "Ouvrir");
 			
 			if(result == JFileChooser.APPROVE_OPTION) {
-				File file = fileChooser.getSelectedFile();
-				render.setFileName(file.getAbsolutePath());
+				File file = FILE_CHOOSER.getSelectedFile();
+				render.setFileName(file.getAbsolutePath(), slider.getValue());
 				slider.setEnabled(true);
 			} else {
-				render.setFileName(null);
+				render.setFileName(null, slider.getValue());
 				slider.setEnabled(false);
 			}
 		});
@@ -148,7 +148,11 @@ public class ImagePicker extends Panel {
 		});
 		
 		slider.addChangeListener(event -> {
-			render.setRation(slider.getValue());
+			if(!render.setRation(slider.getValue())) {
+				slider.setEnabled(false);
+				slider.setValue(render.getCurrentRation());
+				slider.setEnabled(true);
+			}
 		});
 	}
 	
@@ -220,7 +224,7 @@ public class ImagePicker extends Panel {
 	 */
 	private static class ImagePickerRender extends JComponent {
 		private static final long serialVersionUID = 7268721008490974405L;
-		private static int IMAGE_MAX_WIDTH = 150;
+		private static int IMAGE_RECT_CROP_WIDTH = 150;
 		private static final String DEFAULT_FILE_NAME = R.getIcon("personne");
 		private static BufferedImage defaultImage;
 		
@@ -236,6 +240,8 @@ public class ImagePicker extends Panel {
 		private int yImg = 0;
 		private int wImg;//largeur de l'image (apres alcul du ration)
 		private int hImg;//hauteur de l'image (apres calcul du ration)
+		
+		private int currentRation = 100;//la ration actuelement prise en compte
 		
 		private MouseAdapter listener = new MouseAdapter() {
 			
@@ -280,8 +286,9 @@ public class ImagePicker extends Panel {
 			 * @param y
 			 */
 			private void move (int x, int y) {
-				xImg = x;
-				yImg = y;
+				int xP = x + wImg, yP = y + hImg;//position attendue du coin doit de l'image
+				xImg = x >= xRect ? (xRect) : (xP <= (xRect + IMAGE_RECT_CROP_WIDTH)? xImg : x);
+				yImg = y >= yRect ? (yRect) : (yP <= (yRect + IMAGE_RECT_CROP_WIDTH)? yImg : y) ;
 				ImagePickerRender.this.repaint();
 			}
 			
@@ -329,7 +336,7 @@ public class ImagePicker extends Panel {
 				g2.drawImage(image, xImg, yImg, wImg, hImg, null);
 			} else {
 				initCropLook();
-				g2.drawImage(defaultImage, xRect, yRect, IMAGE_MAX_WIDTH, IMAGE_MAX_WIDTH, null);			
+				g2.drawImage(defaultImage, xRect, yRect, IMAGE_RECT_CROP_WIDTH, IMAGE_RECT_CROP_WIDTH, null);			
 			}
 			
 			
@@ -339,13 +346,13 @@ public class ImagePicker extends Panel {
 			g2.fillRect(0, getHeight()-yRect, getWidth(), yRect);
 			
 			g2.fillRect(0, yRect, xRect, getHeight()-yRect*2);
-			g2.fillRect((xRect+ IMAGE_MAX_WIDTH), yRect, xRect, getHeight() - yRect*2);
+			g2.fillRect((xRect+ IMAGE_RECT_CROP_WIDTH), yRect, xRect, getHeight() - yRect*2);
 			
 			g2.setStroke(new BasicStroke(2f));
 			g2.drawRect(1, 1, getWidth()-2, getHeight()-2);
 
 			g2.setColor(Color.ORANGE);
-			g2.drawRect(xRect, yRect, IMAGE_MAX_WIDTH, IMAGE_MAX_WIDTH);
+			g2.drawRect(xRect, yRect, IMAGE_RECT_CROP_WIDTH, IMAGE_RECT_CROP_WIDTH);
 		}
 
 		/**
@@ -358,45 +365,75 @@ public class ImagePicker extends Panel {
 		/**
 		 * @param fileName the fileName to set
 		 */
-		public void setFileName(String fileName) {
+		public void setFileName(String fileName, int ration) {
 			this.fileName = fileName;
 			if(fileName != null) {
 				try {
 					image = ImageIO.read(new File(fileName));
-					setRation(50);
+					if(image.getWidth() <= IMAGE_RECT_CROP_WIDTH || image.getHeight() <= IMAGE_RECT_CROP_WIDTH) {
+						xImg = xRect;
+						yImg = yRect;
+						setRation(100);
+					} else {
+						int w = (int)(image.getWidth() * (ration/100.0)),
+							h = (int)(image.getHeight() * (ration/100.0));
+						xImg = (w - getWidth()) / -2;
+						yImg = (h - getHeight()) / -2;
+						setRation(ration);
+					}
 				} catch (IOException e) {
 					
 				}
 			} else {
 				image = null;
 			}
-			
-			initCropLook();
 			this.repaint();
 		}
 		
 		private void initCropLook () {			
-			xRect = this.getWidth()/2 - IMAGE_MAX_WIDTH/2;
-			yRect = this.getHeight()/2 - IMAGE_MAX_WIDTH/2;
+			xRect = this.getWidth()/2 - IMAGE_RECT_CROP_WIDTH/2;
+			yRect = this.getHeight()/2 - IMAGE_RECT_CROP_WIDTH/2;
 		}
 		
 		/**
 		 * Pour manipuler la ration d'affichage de l'image
 		 * @param ration une valeur entre 1 et 100
+		 * @return {@link Boolean} true if ration succefuly applicated, otherways false
 		 */
-		public void setRation (int ration) {
-			if(ration<=0 || ration > 200)
-				throw new RuntimeException("ration doit etre une valeur compris entre 0 et 100: => "+ration);
+		public boolean setRation (int ration) {
+			boolean accept = ration >= 0 && ration <= 200;
+			if (accept)	{				
+				BigDecimal bigW = new BigDecimal(image.getWidth() * (ration/100.0)).setScale(0, RoundingMode.HALF_UP),
+						bigH = new BigDecimal(image.getHeight() * (ration/100.0)).setScale(0, RoundingMode.HALF_UP);
+				
+				int wPropozed = bigW.intValue(), hPropozed = bigH.intValue();
+				if (wPropozed >= IMAGE_RECT_CROP_WIDTH && hPropozed >= IMAGE_RECT_CROP_WIDTH) {				
+					
+					int xP = wPropozed + xImg, yP = hPropozed + yImg;
+					
+					xImg = xP < (xRect + IMAGE_RECT_CROP_WIDTH)? xRect : xImg;
+					yImg = yP < (yRect + IMAGE_RECT_CROP_WIDTH)? yRect : yImg;
+					
+					wImg = wPropozed;
+					hImg = hPropozed;
+					
+					this.repaint();
+					accept = true;
+					currentRation = ration;
+				} else 
+					accept = false;
+			}		
 			
-			BigDecimal bigW = new BigDecimal(image.getWidth() * (ration/100.0)).setScale(0, RoundingMode.HALF_UP),
-					bigH = new BigDecimal(image.getHeight() * (ration/100.0)).setScale(0, RoundingMode.HALF_UP);
-			
-			wImg = bigW.intValue();
-			hImg = bigH.intValue();
-			
-			this.repaint();
+			return accept;
 		}
 		
+		/**
+		 * @return the currentRation
+		 */
+		public int getCurrentRation() {
+			return currentRation;
+		}
+
 		/**
 		 * renvoie l'image cropper
 		 * @return
@@ -413,10 +450,9 @@ public class ImagePicker extends Panel {
 			buffer.createGraphics().drawImage(resize, 0, 0, null);
 			
 			BigDecimal bigX = new BigDecimal(diffX).setScale(0, RoundingMode.HALF_UP),
-					bigY = new BigDecimal(diffY).setScale(0, RoundingMode.HALF_UP), 
-					bigSize = new BigDecimal(IMAGE_MAX_WIDTH).setScale(0, RoundingMode.HALF_UP);
+					bigY = new BigDecimal(diffY).setScale(0, RoundingMode.HALF_UP);
 			
-			int x = bigX.intValue(), y = bigY.intValue(), size = bigSize.intValue();
+			int x = bigX.intValue(), y = bigY.intValue(), size = IMAGE_RECT_CROP_WIDTH;
 			BufferedImage crop = buffer.getSubimage(x, y, size, size);
 			return crop;
 		}

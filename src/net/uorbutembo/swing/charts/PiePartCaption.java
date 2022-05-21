@@ -31,8 +31,8 @@ class PiePartCaption extends JComponent implements PieModelListener{
 	private Color borderColor;
 	private boolean paddingLeft = false;
 	
-	private int prefferedWidth;
 	private int prefferedHeight;
+	private int step = 30;
 	
 	public PiePartCaption() {
 		this.borderColor = Color.WHITE;
@@ -55,7 +55,6 @@ class PiePartCaption extends JComponent implements PieModelListener{
 	
 	@Override
 	protected void paintComponent(Graphics g) {
-		super.paintComponent(g);
 		int widht = this.getWidth(), height = this.getHeight();
 		
 		if(this.model == null) {
@@ -64,19 +63,16 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			return;
 		}
 		
-		int prefferedWidth = 0;
-		int prefferedHeight = 0;
-		
+		int prefferedWidth = 0;		
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 		
-		int count  = this.model.getCountPart(),
-				step = 30;
-		int mH = (step + 18) * count;//hauteur max des items
-		int padding = ((height - mH) / 2) - step/3;
+		final int count  = this.model.getCountPart();
+		final int mH = (step + 18) * count;//hauteur max des items
+		final int padding = ((height - mH) / 2) - step/3;
 		
-		int col = 50 + (paddingLeft? step/2 : 0); //largeur max pour la colone des pourcentages
+		final int col = 50 + (paddingLeft? step/2 : 0); //largeur max pour la colone des pourcentages
 		int xLabel = col + 5 + step/3;
 		
 		FontMetrics metricsPercent = g2.getFontMetrics(FONT_PERCENT);
@@ -102,7 +98,13 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			BigDecimal big = new BigDecimal(model.getPercentOf(i)).setScale(2, RoundingMode.HALF_UP);
 			BigDecimal bigValue = new BigDecimal(part.getValue()).setScale(2, RoundingMode.HALF_UP);
 			String percentVal = big.doubleValue()+"%", label = part.getLabel();
-			String valueVal = bigValue.doubleValue()+""+model.getSuffix();
+			
+			int intVal = (int) bigValue.doubleValue();
+			String valueVal = "";
+			if (intVal == bigValue.doubleValue())
+				valueVal = intVal +""+model.getSuffix();
+			else 
+				valueVal = bigValue.doubleValue()+""+model.getSuffix();
 			
 			//calcult largeur des textes
 			int wPercent = metricsPercent.stringWidth(percentVal),
@@ -131,8 +133,16 @@ class PiePartCaption extends JComponent implements PieModelListener{
 		}
 		prefferedHeight = mH + col;
 		
-		if (this.prefferedWidth != prefferedWidth || this.prefferedHeight != prefferedHeight) {
+		super.paintComponent(g);
+	}
+	
+	@Override
+	public void doLayout() {
+		super.doLayout();
+		int prefferedHeight = (step + 18) * model.getCountPart() + 65;
+		if (this.prefferedHeight != prefferedHeight) {
 			this.setPreferredSize(new Dimension(100, prefferedHeight));
+			this.prefferedHeight = prefferedHeight;
 		}
 	}
 
