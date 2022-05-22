@@ -18,7 +18,7 @@ public class SearchField extends TextField<String> {
 
 	public SearchField(String hint) {
 		super(hint);
-		this.setBorder(new EmptyBorder(12, 25, 5, 25));
+		this.setBorder(new EmptyBorder(10, 25, 5, 25));
 	}
 	
 	@Override
@@ -33,7 +33,7 @@ public class SearchField extends TextField<String> {
 		} else {
 			g2.setColor(FormUtil.BORDER_COLOR);
 		}
-		g2.drawRoundRect(0, 0, this.getWidth()-1, this.getHeight()-1, this.getHeight(), this.getHeight());
+		g2.drawRoundRect(0, 0, this.getWidth()-1, this.getHeight()-1, this.getHeight(), this.getHeight()-1);
 	}
 
 }

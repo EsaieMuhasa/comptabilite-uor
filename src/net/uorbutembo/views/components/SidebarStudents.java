@@ -6,14 +6,19 @@ package net.uorbutembo.views.components;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.DefaultTreeSelectionModel;
@@ -32,8 +37,6 @@ import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.FacultyDao;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.StudyClassDao;
-import net.uorbutembo.swing.ComboBox;
-import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.TreeCellRender;
 import net.uorbutembo.views.forms.FormUtil;
@@ -50,7 +53,10 @@ public class SidebarStudents extends Panel{
 	private final DefaultTreeModel treeModel = new DefaultTreeModel(root);
 	private final JTree tree = new JTree(treeModel);
 	private final DefaultTreeSelectionModel treeSelection = new DefaultTreeSelectionModel();
-	private final JCheckBox checkFilter = new JCheckBox("Filtrage");
+	private final JCheckBox checkFilter = new JCheckBox("Filtrage", false);
+	
+	private final JButton btnInscription = new JButton("Inscription");
+	private final JButton btnReinscription = new JButton("Ré-inscription");
 	
 	private final List<NavigationListener> listeners = new ArrayList<>();
 	private final List<FacultyFilter> lastPathFilter = new ArrayList<>();//la derniere collection des chemains filtrer
@@ -67,9 +73,45 @@ public class SidebarStudents extends Panel{
 	
 	//selection d'une annee academique
 	private DefaultComboBoxModel<AcademicYear> comboModel = new DefaultComboBoxModel<>();
-	private ComboBox<AcademicYear> comboBox = new ComboBox<>("Année Académique", comboModel);
-	private FormGroup<AcademicYear> comboGroup = FormGroup.createComboBox(comboBox);
+	private JComboBox<AcademicYear> comboBox = new JComboBox<>(comboModel);
 	//==
+	
+	private final TreeSelectionListener treeListener = (event) -> {
+		TreePath [] paths = tree.getSelectionPaths();
+		if(paths == null)
+			return;
+		
+		lastPathFilter.clear();
+		
+		for (TreePath p : paths) {					
+			Object [] pathDatas = p.getPath();//decomposition du path
+			for (int i = 1; i< pathDatas.length ; i++) {//on laisse la racine
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode) pathDatas[i];
+				switch (i) {
+					case 1:{//niveau faculte
+						Faculty fac = (Faculty) node.getUserObject();
+						if(!check(lastPathFilter, fac))
+							lastPathFilter.add(new FacultyFilter(fac, new ArrayList<>(), node));
+					} break;
+					case 2:{//niveau departement d'un faculte
+						Department dep = (Department) node.getUserObject();
+						FacultyFilter fac = find(lastPathFilter, dep);
+						if(!fac.hasDepartment(dep))
+							fac.getDepartments().add(new DepartmentFilter(dep, new ArrayList<>(), node));
+					} break;
+					case 3:{//niveau classe d'etude
+						Department dep = (Department) ( (DefaultMutableTreeNode) node.getParent()).getUserObject();
+						FacultyFilter fac = find(lastPathFilter, dep);
+						StudyClass cl = (StudyClass) node.getUserObject();
+						fac.get(dep).getClasses().add(cl);
+					} break;
+				}
+			}
+		}
+		
+		if(checkFilter.isSelected() && !lastPathFilter.isEmpty())
+			prepareFilter();
+	};
 	
 	public SidebarStudents(DAOFactory factory) {
 		super(new BorderLayout());	
@@ -185,8 +227,8 @@ public class SidebarStudents extends Panel{
 	 */
 	private void init() {
 		final JScrollPane scroll = new JScrollPane(tree);
-		final Panel top = new Panel(new FlowLayout(FlowLayout.LEFT));
-		final Panel bottom = new Panel(new BorderLayout());
+		final Panel top = new Panel(new BorderLayout());
+		final Panel bottom = new Panel(new GridLayout(1,2, 5, 5));
 		final Panel center = new Panel(new BorderLayout());
 		
 		scroll.setBorder(null);
@@ -205,22 +247,42 @@ public class SidebarStudents extends Panel{
 		tree.setEnabled(false);
 		
 		checkFilter.setForeground(Color.WHITE);
-		checkFilter.setEnabled(false);
 		checkFilter.addActionListener(event -> {
 			tree.setEnabled(checkFilter.isSelected());
-			emitOnFilter(false);
+			if (!lastPathFilter.isEmpty())
+				emitOnFilter(false);
 		});
 		
-		top.add(checkFilter);
+		top.add(checkFilter, BorderLayout.EAST);
+		top.add(comboBox, BorderLayout.CENTER);
 		top.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		center.add(scroll, BorderLayout.CENTER);
 		center.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
-		bottom.add(comboGroup, BorderLayout.CENTER);
+		bottom.add(btnInscription);
+		bottom.add(btnReinscription);
+		bottom.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		comboBox.setEnabled(false);
 		comboBox.addItemListener(event -> {
+			if (event.getStateChange() == ItemEvent.DESELECTED)
+				return;
+			
 			setCurrentYear(comboModel.getElementAt(comboBox.getSelectedIndex()));
+			boolean  current = academicYearDao.isCurrent(comboModel.getElementAt(comboBox.getSelectedIndex()));
+			btnInscription.setEnabled(current);
+			btnReinscription.setEnabled(current);
+		});
+		
+		btnInscription.setEnabled(false);
+		btnInscription.addActionListener(event -> {
+			for (NavigationListener ls : listeners)
+				ls.onInscription(event);
+		});
+		btnReinscription.setEnabled(false);
+		btnReinscription.addActionListener(event -> {
+			for (NavigationListener ls : listeners)
+				ls.onReinscription(event);
 		});
 		
 		this.add(top, BorderLayout.NORTH);
@@ -228,41 +290,7 @@ public class SidebarStudents extends Panel{
 		this.add(bottom, BorderLayout.SOUTH);
 		
 		//evenements sur l'arbre (filtrage)
-		tree.addTreeSelectionListener(event -> {
-			TreePath [] paths = tree.getSelectionPaths();
-			if(paths == null)
-				return;
-			
-			lastPathFilter.clear();
-			
-			for (TreePath p : paths) {					
-				Object [] pathDatas = p.getPath();//decomposition du path
-				for (int i = 1; i< pathDatas.length ; i++) {//on laisse la racine
-					DefaultMutableTreeNode node = (DefaultMutableTreeNode) pathDatas[i];
-					switch (i) {
-						case 1:{//niveau faculte
-							Faculty fac = (Faculty) node.getUserObject();
-							if(!check(lastPathFilter, fac))
-								lastPathFilter.add(new FacultyFilter(fac, new ArrayList<>(), node));
-						} break;
-						case 2:{//niveau departement d'un faculte
-							Department dep = (Department) node.getUserObject();
-							FacultyFilter fac = find(lastPathFilter, dep);
-							if(!fac.hasDepartment(dep))
-								fac.getDepartments().add(new DepartmentFilter(dep, new ArrayList<>(), node));
-						} break;
-						case 3:{//niveau classe d'etude
-							Department dep = (Department) ( (DefaultMutableTreeNode) node.getParent()).getUserObject();
-							FacultyFilter fac = find(lastPathFilter, dep);
-							StudyClass cl = (StudyClass) node.getUserObject();
-							fac.get(dep).getClasses().add(cl);
-						} break;
-					}
-				}
-			}
-			if(checkFilter.isSelected() && !lastPathFilter.isEmpty())
-				prepareFilter();
-		});
+		tree.addTreeSelectionListener(treeListener);
 		
 	}
 	
@@ -270,6 +298,7 @@ public class SidebarStudents extends Panel{
 	 * preparation du filtre
 	 */
 	private void prepareFilter () {
+		tree.removeTreeSelectionListener(treeListener);
 		for (FacultyFilter filter : lastPathFilter) {
 			if(filter.getDepartments().isEmpty()) {
 				//tree.expandPath(new TreePath(filter.getNode().getPath()));//expension du contenue de la faculte
@@ -292,7 +321,8 @@ public class SidebarStudents extends Panel{
 				}
 			}
 		}
-
+		
+		tree.addTreeSelectionListener(treeListener);
 		emitOnFilter(false);
 	}
 	
@@ -461,6 +491,18 @@ public class SidebarStudents extends Panel{
 		 * @param filters
 		 */
 		void onFilter(AcademicYear year, FacultyFilter [] filters);
+		
+		/**
+		 * Lors de la demande d'inscription d'un nouveau etudiant
+		 * @param event
+		 */
+		void onInscription (ActionEvent event);
+		
+		/**
+		 * Lors de la demande renouvellement de l'inscription
+		 * @param event
+		 */
+		void onReinscription (ActionEvent event);
 	}
 	
 	/**

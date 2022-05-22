@@ -85,5 +85,16 @@ public abstract class DBEntity implements Serializable {
 	public void setLastUpdate(Date lastUpdate) {
 		this.lastUpdate = lastUpdate;
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj != null) {
+			try {
+				DBEntity d = (DBEntity) obj;
+				return (d.getClass().getName().equals(obj.getClass().getName())) && d.id == id;
+			} catch (Exception e) {}
+		}
+		return super.equals(obj);
+	}
 
 }

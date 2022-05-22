@@ -43,7 +43,11 @@ public class PiePanel extends Panel {
 			if(model.getTitle() != null) {				
 				title.setText(model.getTitle());
 			}
+			
 			setBorderColor(borderColor);
+			scroll.invalidate();
+			scroll.revalidate();
+			scroll.repaint();
 		}
 		
 		@Override
@@ -93,9 +97,9 @@ public class PiePanel extends Panel {
 		if(this.model != null)
 			this.model.removeListener(modelListener);
 		this.model = model;
-		model.addListener(modelListener);
 		this.caption.setModel(model);
 		this.render.setModel(model);
+		model.addListener(modelListener);
 	}
 	
 	/**

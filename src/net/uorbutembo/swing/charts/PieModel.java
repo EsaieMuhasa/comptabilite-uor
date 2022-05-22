@@ -25,6 +25,12 @@ public interface PieModel {
 	double getMax ();
 	void setMax (double max);
 	
+	/**
+	 * La priorite du du real max est plus eleve que celui du max fixer par l'utilisateur
+	 * @return
+	 */
+	boolean isRealMaxPriority();
+	
 	double getRealMax();
 	String getSuffix ();
 	

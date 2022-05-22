@@ -16,6 +16,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 	protected final List<PieModelListener> listeners = new ArrayList<>();
 	protected double max;
 	protected double realMax;
+	protected boolean realMaxPriority = false;//le max doit elle ce 
 	protected String title;
 	protected String suffix = "";
 	protected int selectedIndex = -1;
@@ -51,12 +52,38 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 		this.emitRefresh();
 	}
 	
+	@Override
+	public boolean isRealMaxPriority() {
+		return realMaxPriority;
+	}
+
+	/**
+	 * @param realMaxPriority the realMaxPriority to set
+	 */
+	public void setRealMaxPriority(boolean realMaxPriority) {
+		if(this.realMaxPriority == realMaxPriority)
+			return;
+		
+		this.realMaxPriority = realMaxPriority;
+		emitRefresh();
+	}
+
 	/**
 	 * Ajoute les items du model en parametre a son model des parts
 	 * @param model
 	 */
 	public void bind (DefaultPieModel model) {
 		this.addParts(model.getParts());
+	}
+	
+	/**
+	 * retire tout les items du model en parametre au model coutant
+	 * @param model
+	 */
+	public void unbind (DefaultPieModel model) {
+		for (int i = 0, count = model.getCountPart(); i < count; i++) {
+			removePart(model.getPartAt(i));
+		}
 	}
 	
 	@Override
@@ -200,7 +227,7 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 			return null;
 		
 		for (PiePart part : parts) {
-			if(part == data || part.getData() == data)
+			if(part == data || part.getData() == data || data.equals(part.getData()))
 				return part;
 		}
 		return null;
@@ -213,19 +240,22 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 
 	@Override
 	public synchronized double getPercentOf(int index) {
-		double m = (this.realMax <= this.max )? this.max : this.realMax;
-		if(m == 0 )
-			return 0;
-		return ((this.getPartAt(index).getValue() * 100.0)/m);
+		return getPercentOf(getPartAt(index));
 	}
 
 	@Override
-	public synchronized double getPercentOf(PiePart part) {
-		if (max == 0)
+	public synchronized double getPercentOf (PiePart part) {
+		if(part.getValue() == 0.0)
 			return 0;
+		
+		if (max == 0 && !realMaxPriority)
+			return 0;
+		
 		if(this.parts.contains(part)) {
-			double m = (this.realMax <= this.max )? this.max : this.realMax;
-			return ((part.getValue() * 100.0)/m);
+			double m = realMaxPriority? realMax : max;
+			if (m == 0)
+				return 0;
+			return ((part.getValue() * 100.0) / m);
 		}
 		return 0;
 	}

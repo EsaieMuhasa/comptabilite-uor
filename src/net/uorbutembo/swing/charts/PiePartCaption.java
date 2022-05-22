@@ -43,9 +43,8 @@ class PiePartCaption extends JComponent implements PieModelListener{
 	 */
 	public PiePartCaption(final PieModel model) {
 		super();
-		this.model = model;
-		this.model.addListener(this);
 		this.borderColor = Color.WHITE;
+		setModel(model);
 	}
 	
 	public void setPaddingLeft (boolean left) {
@@ -78,7 +77,6 @@ class PiePartCaption extends JComponent implements PieModelListener{
 		FontMetrics metricsPercent = g2.getFontMetrics(FONT_PERCENT);
 		FontMetrics metricsValue = g2.getFontMetrics(FONT_VALUE);
 		FontMetrics metricsLabel = g2.getFontMetrics(FONT_LABEL);
-		
 		
 		int h = padding + step;
 		for (int i = 0 ; i < count; i++) {
@@ -131,19 +129,8 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			
 			h += step + 25;
 		}
-		prefferedHeight = mH + col;
-		
+		//prefferedHeight = mH + col;
 		super.paintComponent(g);
-	}
-	
-	@Override
-	public void doLayout() {
-		super.doLayout();
-		int prefferedHeight = (step + 18) * model.getCountPart() + 65;
-		if (this.prefferedHeight != prefferedHeight) {
-			this.setPreferredSize(new Dimension(100, prefferedHeight));
-			this.prefferedHeight = prefferedHeight;
-		}
 	}
 
 	/**
@@ -170,17 +157,32 @@ class PiePartCaption extends JComponent implements PieModelListener{
 	/**
 	 * @param model the model to set
 	 */
-	public void setModel(PieModel model) {
+	public void setModel (PieModel model) {
 		if(this.model != null) {
 			this.model.removeListener(this);
 		}
 		this.model = model;
+		if (model == null)
+			return;
+
+		int prefferedHeight = (step + 18) * model.getCountPart() + 65;
+		if (this.prefferedHeight != prefferedHeight) {
+			this.setPreferredSize(new Dimension(100, prefferedHeight));
+			this.prefferedHeight = prefferedHeight;
+		}
+		
 		model.addListener(this);
 	}
 
 	@Override
 	public void refresh(PieModel model) {
-		this.repaint();
+		int prefferedHeight = (step + 18) * model.getCountPart() + 65;
+		if (this.prefferedHeight != prefferedHeight) {
+			this.setPreferredSize(new Dimension(100, prefferedHeight));
+			this.prefferedHeight = prefferedHeight;
+		}
+		
+		repaint();
 	}
 	
 	@Override

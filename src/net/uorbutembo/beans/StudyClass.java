@@ -26,4 +26,13 @@ public class StudyClass extends Orientation {
 		super(id);
 	}
 
+	@Override
+	public boolean equals (Object obj) {
+		if (obj instanceof StudyClass) {
+			StudyClass s = (StudyClass) obj;
+			return s.id == id;
+		}
+		return super.equals(obj);
+	}
+
 }

@@ -33,9 +33,7 @@ public class NavbarGroup {
 	 */
 	public void setCurrent (NavbarButton item) {
 		for (NavbarButton i : items) {
-			if(i != item) {
-				i.setCurrent(false);
-			}
+			i.setCurrent(false);
 		}
 		item.setCurrent(true);
 	}
