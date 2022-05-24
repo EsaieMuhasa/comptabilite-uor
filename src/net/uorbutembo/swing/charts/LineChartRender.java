@@ -517,7 +517,7 @@ public class LineChartRender extends JComponent{
 			
 			BigDecimal big = new BigDecimal(maxY).setScale(2, RoundingMode.HALF_UP);
 			int measureX = metrics.stringWidth(big.doubleValue()+""+yAxis.getMeasureUnit());
-			int measureY = metrics.stringWidth(big.doubleValue()+""+yAxis.getMeasureUnit());
+//			int measureY = metrics.stringWidth(big.doubleValue()+""+yAxis.getMeasureUnit());
 			
 			paddingX = measureX > padding? measureX + stepsWidth * 2 : padding;
 			

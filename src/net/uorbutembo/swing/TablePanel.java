@@ -4,10 +4,14 @@
 package net.uorbutembo.swing;
 
 import java.awt.BorderLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
-import javax.swing.border.LineBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.JTableHeader;
 
 import net.uorbutembo.views.forms.FormUtil;
 
@@ -52,12 +56,23 @@ public class TablePanel extends Panel {
 	public Table getTable() {
 		return table;
 	}
+	
+	@Override
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+        
+        g2.setColor(FormUtil.BORDER_COLOR);
+        g2.drawRect(0, 0, getWidth()-1, getHeight()-1);
+	}
 
 	private void init(boolean scrollable) {
 		Panel header = new Panel(new BorderLayout());
 		Panel body = new Panel(new BorderLayout());
 		header.setOpaque(true);
-		header.setBackground(FormUtil.BKG_START);
+		header.setBackground(FormUtil.BORDER_COLOR);
 		header.add(this.title, BorderLayout.CENTER);
 		
 		if (scrollable) {			
@@ -69,12 +84,15 @@ public class TablePanel extends Panel {
 			scroll.setViewportBorder(null);
 			body.add(scroll, BorderLayout.CENTER);
 		} else {
-			body.add(table, BorderLayout.NORTH);
+			JTableHeader tHeader = table.getTableHeader();
+			tHeader.setBackground(FormUtil.BORDER_COLOR);
+			body.add(tHeader, BorderLayout.NORTH);
+			body.add(table, BorderLayout.CENTER);
 		}
 		
 		this.add(header, BorderLayout.NORTH);
 		this.add(body, BorderLayout.CENTER);
-		this.setBorder(new LineBorder(FormUtil.BORDER_COLOR, 1));
+		setBorder(new EmptyBorder(1, 1, 0, 0));
 	}
 
 }

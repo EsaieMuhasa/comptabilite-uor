@@ -6,9 +6,11 @@ package net.uorbutembo.views.components;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -113,6 +115,23 @@ public class SidebarStudents extends Panel{
 			prepareFilter();
 	};
 	
+	private final ItemListener comboListener = (event) -> {
+		if (event.getStateChange() == ItemEvent.DESELECTED)
+			return;
+		
+		comboBox.setEnabled(false);
+		EventQueue.invokeLater(() -> {			
+			Thread t = new Thread(() -> {
+				boolean  current = academicYearDao.isCurrent(comboModel.getElementAt(comboBox.getSelectedIndex()));
+				btnInscription.setEnabled(current);
+				btnReinscription.setEnabled(current);
+				setCurrentYear(comboModel.getElementAt(comboBox.getSelectedIndex()));
+				comboBox.setEnabled(true);
+			});
+			t.start();
+		});
+	};
+	
 	public SidebarStudents(DAOFactory factory) {
 		super(new BorderLayout());	
 		facultyDao = factory.findDao(FacultyDao.class);
@@ -127,6 +146,7 @@ public class SidebarStudents extends Panel{
 			@Override
 			public void onCurrentYear(AcademicYear year) {
 				if(comboModel.getSize() == 0) {
+					comboBox.removeItemListener(comboListener);
 					if(academicYearDao.countAll() != 0) {
 						List<AcademicYear> years = academicYearDao.findAll();
 						for (AcademicYear y : years) {
@@ -135,6 +155,9 @@ public class SidebarStudents extends Panel{
 						comboBox.setEnabled(true);
 						checkFilter.setEnabled(true);
 					}
+					comboBox.addItemListener(comboListener);
+					btnInscription.setEnabled(true);
+					btnReinscription.setEnabled(true);
 				}
 				setCurrentYear(year);
 				checkFilter.setSelected(false);
@@ -264,15 +287,7 @@ public class SidebarStudents extends Panel{
 		bottom.add(btnReinscription);
 		bottom.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		comboBox.setEnabled(false);
-		comboBox.addItemListener(event -> {
-			if (event.getStateChange() == ItemEvent.DESELECTED)
-				return;
-			
-			setCurrentYear(comboModel.getElementAt(comboBox.getSelectedIndex()));
-			boolean  current = academicYearDao.isCurrent(comboModel.getElementAt(comboBox.getSelectedIndex()));
-			btnInscription.setEnabled(current);
-			btnReinscription.setEnabled(current);
-		});
+		comboBox.addItemListener(comboListener);
 		
 		btnInscription.setEnabled(false);
 		btnInscription.addActionListener(event -> {
@@ -323,7 +338,10 @@ public class SidebarStudents extends Panel{
 		}
 		
 		tree.addTreeSelectionListener(treeListener);
-		emitOnFilter(false);
+		Thread t = new Thread(() -> {
+			emitOnFilter(false);
+		});
+		t.start();
 	}
 	
 	/**
@@ -443,34 +461,32 @@ public class SidebarStudents extends Panel{
 	 * Emission de l'evenement de filtrage
 	 * @param first s'il s'ajit du changement de l'annee academique
 	 */
-	protected void emitOnFilter (boolean first) {
-		Thread t = new Thread(() -> {
-			wait(true);
-			if(checkFilter.isSelected() && !lastPathFilter.isEmpty()) {			
-				FacultyFilter [] filters = new FacultyFilter[this.lastPathFilter.size()];
-				for (int i=0; i < lastPathFilter.size(); i++) {
-					filters[i] = lastPathFilter.get(i);
-				}
-				
-				if (first) {
-					for (NavigationListener ls : listeners)
-						ls.onFilter(currentYear, filters);
-				} else
-					for (NavigationListener ls : listeners)
-						ls.onFilter(filters);	
-			} else {
-				if (first) {
-					for (NavigationListener ls : listeners)
-						ls.onFilter(currentYear, faculties);
-				} else
-					for (NavigationListener ls : listeners)
-						ls.onFilter(faculties);		
+	protected synchronized void emitOnFilter (boolean first) {
+		wait(true);
+		if(checkFilter.isSelected() && !lastPathFilter.isEmpty()) {			
+			FacultyFilter [] filters = new FacultyFilter[this.lastPathFilter.size()];
+			for (int i=0; i < lastPathFilter.size(); i++) {
+				filters[i] = lastPathFilter.get(i);
 			}
 			
-			wait(false);
-			checkFilter.setEnabled(root.getChildCount() != 0);
-		});
-		t.start();
+			if (first) {
+				for (NavigationListener ls : listeners)
+					ls.onFilter(currentYear, filters);
+			} else
+				for (NavigationListener ls : listeners)
+					ls.onFilter(filters);	
+		} else {
+			if (first) {
+				for (NavigationListener ls : listeners)
+					ls.onFilter(currentYear, faculties);
+			} else
+				for (NavigationListener ls : listeners)
+					ls.onFilter(faculties);		
+		}
+		
+		wait(false);
+		checkFilter.setEnabled(root.getChildCount() != 0);
+		
 	}
 	
 	/**

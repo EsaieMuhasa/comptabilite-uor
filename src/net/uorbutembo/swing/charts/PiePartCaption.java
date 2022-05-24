@@ -68,8 +68,8 @@ class PiePartCaption extends JComponent implements PieModelListener{
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 		
 		final int count  = this.model.getCountPart();
-		final int mH = (step + 18) * count;//hauteur max des items
-		final int padding = ((height - mH) / 2) - step/3;
+		final int mH = (step + 25) * count;//hauteur max des items
+		final int padding = height > mH? (((height - mH) / 2)) : step/2;
 		
 		final int col = 50 + (paddingLeft? step/2 : 0); //largeur max pour la colone des pourcentages
 		int xLabel = col + 5 + step/3;
@@ -153,6 +153,19 @@ class PiePartCaption extends JComponent implements PieModelListener{
 	public PieModel getModel() {
 		return model;
 	}
+	
+	/**
+	 * Determination de la taille requise pour mieux visualiser les elements de la vue
+	 */
+	private void checkPrefferedSize () {
+		if (model == null)
+			return;
+		int prefferedHeight = (step + 25) * (model.getCountPart());
+		if (this.prefferedHeight != prefferedHeight) {
+			this.setPreferredSize(new Dimension(100, prefferedHeight));
+			this.prefferedHeight = prefferedHeight;
+		}
+	}
 
 	/**
 	 * @param model the model to set
@@ -162,26 +175,16 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			this.model.removeListener(this);
 		}
 		this.model = model;
+		
 		if (model == null)
 			return;
-
-		int prefferedHeight = (step + 18) * model.getCountPart() + 65;
-		if (this.prefferedHeight != prefferedHeight) {
-			this.setPreferredSize(new Dimension(100, prefferedHeight));
-			this.prefferedHeight = prefferedHeight;
-		}
-		
+		checkPrefferedSize();
 		model.addListener(this);
 	}
 
 	@Override
 	public void refresh(PieModel model) {
-		int prefferedHeight = (step + 18) * model.getCountPart() + 65;
-		if (this.prefferedHeight != prefferedHeight) {
-			this.setPreferredSize(new Dimension(100, prefferedHeight));
-			this.prefferedHeight = prefferedHeight;
-		}
-		
+		checkPrefferedSize();
 		repaint();
 	}
 	

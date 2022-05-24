@@ -111,7 +111,7 @@ public class PaymentFeeTableModel extends TableModel<PaymentFee> {
 			case 4:
 				return "Libele";
 			case 5:
-				return "Début";
+				return "Débit";
 			case 6:
 				return "Crédit";
 			case 7:

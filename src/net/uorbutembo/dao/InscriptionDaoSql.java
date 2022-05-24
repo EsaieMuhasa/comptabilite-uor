@@ -45,13 +45,14 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 			long id = this.insertInTable(
 					connection,
 					new String[] {
-							"promotion", "student", "adress", "recordDate"
+							"promotion", "student", "adress", "recordDate", "picture"
 					},
 					new Object[] {
 							i.getPromotion().getId(),
 							i.getStudent().getId(),
 							i.getAdress(),
-							i.getRecordDate().getTime()
+							i.getRecordDate().getTime(),
+							i.getPicture()
 					});
 			connection.commit();
 			i.setId(id);
@@ -404,22 +405,118 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	}
 
 	@Override
-	public int countByStudyClass(long studyClassId, long yearId) throws DAOException {
-		final String sql = String.format("SELECT COUNT(%s.id) AS nombre FROM %s WHERE %s.promotion IN (SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.studyClass = %d)", 
+	public int countByStudyClass (long studyClassId, long yearId) throws DAOException {
+		final String sql = String.format("SELECT COUNT(%s.id) AS nombre FROM %s WHERE %s.promotion IN(SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.studyClass = %d)", 
 				getTableName(), getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
 				yearId, Promotion.class.getSimpleName(), studyClassId);
-		System.out.println(sql);
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(sql)) {
-			if(result.next())
+			if (result.next())
 				return result.getInt("nombre");
-			
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
 		return 0;
+	}
+
+	@Override
+	public List<Inscription> findByPromotions(long studyClass, long[] department, long year, int limit, int offset) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Inscription> findByPromotions(long[] prmotions, int limit, int offset) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countByPromotions(long... promotions) {
+		String proms [] = new  String [promotions.length];
+		for (int i = 0; i < promotions.length; i++)
+			proms[i] = promotions[i]+"";
+		
+		final String sql = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE promotion IN(%s)", getTableName(), String.join(", ", proms));
+		int count  = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next())
+				count = result.getInt("nombre");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return count;
+	}
+
+	@Override
+	public boolean checkByPromotions(long... promotions) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public int countByPromotions(long studyClass, long[] departments, long year) {
+		String [] deps = new String [departments.length];
+		for (int i = 0; i < deps.length; i++)
+			deps [i] = departments[i]+"";
+		
+		final String sql = String.format("SELECT COUNT(%s.id) AS nombre FROM %s WHERE %s.promotion IN(SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.studyClass = %d AND %s.department IN(%s))", 
+				getTableName(), getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
+				year, Promotion.class.getSimpleName(), studyClass, Promotion.class.getSimpleName(), String.join(", ", deps));
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next())
+				return result.getInt("nombre");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return 0;
+	}
+	
+	@Override
+	public int countByPromotions(long[] studyClasses, long department, long year) {
+		String [] classes = new String [studyClasses.length];
+		for (int i = 0; i < classes.length; i++)
+			classes [i] = studyClasses[i]+"";
+		
+		final String sql = String.format("SELECT COUNT(%s.id) AS nombre FROM %s WHERE %s.promotion IN(SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department = %d AND %s.studyClass IN(%s))", 
+				getTableName(), getTableName(), getTableName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(),
+				year, Promotion.class.getSimpleName(), department, Promotion.class.getSimpleName(), String.join(", ", classes));
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next())
+				return result.getInt("nombre");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return 0;
+	}
+
+	@Override
+	public List<Inscription> findByPromotions(long[] studyClasses, long department, long year, int limit, int offset) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean checkByPromotions(long[] studyClasses, long department, long year) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean checkByPromotions(long studyClass, long[] departments, long year) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	@Override

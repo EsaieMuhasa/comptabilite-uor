@@ -117,20 +117,55 @@ public class FormInscription extends AbstractInscriptionForm{
 				this.modelComboStudyClass.getElementAt(this.comboStudyClass.getSelectedIndex()));
 		String adress = this.adresse.getField().getValue();
 		
-		String name = this.name.getField().getValue(),
-				postName = this.postName.getField().getValue(),
-				firstName = this.lastName.getField().getValue(),
+		String name = this.name.getField().getValue().trim(),
+				postName = this.postName.getField().getValue().trim(),
+				firstName = this.lastName.getField().getValue().trim(),
 				telephone = this.telephone.getField().getValue(),
-				email = this.email.getField().getValue(),
-				school = this.school.getField().getValue(),
-				bPlace = this.birthPlace.getField().getValue(),
-				bDate = this.birthDate.getField().getValue(),
-				matricul = this.matricul.getField().getValue();
+				email = this.email.getField().getValue().trim(),
+				school = this.school.getField().getValue().trim(),
+				bPlace = this.birthPlace.getField().getValue().trim(),
+				bDate = this.birthDate.getField().getValue().trim(),
+				matricul = this.matricul.getField().getValue().trim();
 		Date birthDate = null;
 		try {
 			birthDate = FormUtil.DEFAULT_FROMATER.parse(bDate);
 		} catch (ParseException e) {
 			this.showMessageDialog("Erreur", "Entrez la date au format dd/MM/yyyy ou jj/MM/aaaa", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		String message = "";
+		
+		if(name.length() < 3)
+			message += "Le nom doit avoir entre 3 et 20 carracteres\n";
+		
+		if(postName.length() < 3)
+			message += "Le post-nom doit avoir entre 3 et 20 carracteres\n";
+		
+		if(firstName.length() < 3)
+			message += "Le prenom doit avoir entre 3 et 20 carracteres\n";
+		
+		if(telephone.length() == 0)
+			message += "Entrez un numéro de téléphone de l'étudiant\n";
+		else if(!telephone.matches("(^\\+243[98]([0-9]{9})$)|(^0[98]([0-9]{8})$)"))
+			message += "Entrez un numéro de téléphone valide\n";
+		else if (studentDao.checkByTelephone(telephone))
+			message += "Ce numéro de téléphone est déjà utiliser par un autre étudiant\n";
+		
+		if(email.length() != 0) {
+			if(!email.matches("^([a-zA-Z]+)([a-zA-Z0-9_\\.]*)@([a-zA-Z0-9]{2,20})\\.([a-z]{2,6})$"))
+				message += "Entrez l'e-mail au format valide\n";
+			else if (studentDao.checkByEmail(email))
+				message += "E-mail déjà utiliser par un autre étudiant\n";			
+		}
+		
+		if(matricul.length() == 0)
+			message += "Entrez le numero matricule de l'étidiant";
+		else if (studentDao.checkByMatricul(matricul))
+			message += "Ce matricule est déjà attribuer à un autre étudiant";
+		
+		if (message.trim().isEmpty()){
+			showMessageDialog("Erreur", message, JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		
@@ -154,26 +189,25 @@ public class FormInscription extends AbstractInscriptionForm{
 		inscription.setPromotion(promotion);
 		inscription.setRecordDate(now);
 		inscription.setAdress(adress);
-		
-		try {
-			this.inscriptionDao.create(inscription);
-			this.showMessageDialog("Information", "Success d'enregistrement de l'inscription de\n l'etudiant "+student.toString()+", \ndans la promtion "+promotion.toString(), JOptionPane.INFORMATION_MESSAGE);
-		} catch (DAOException e) {
-			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		
 		//ecriture de la photo sur le disque dur
 		String fileName = inscription.getId()+"-"+System.currentTimeMillis()+"."+imagePicker.getImageType();
 		try  {
 			File file = new File(R.getConfig().get("workspace")+fileName);
 			BufferedImage image = imagePicker.getImage();
 			ImageIO.write(image, imagePicker.getImageType(), file);
-			inscriptionDao.updatePicture(inscription.getId(), fileName);
-			studentDao.updatePicture(fileName, inscription.getStudent().getId());
+			inscription.setPicture(fileName);
+			student.setPicture(fileName);
 		} catch (Exception e) {
-			this.showMessageDialog("Erreur d'ecriture du fichier", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			this.showMessageDialog("Erreur d'écriture de la photo", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}
+		
+		try {
+			this.inscriptionDao.create(inscription);
+			this.showMessageDialog("Information", "Success d'enregistrement de l'inscription de\n l'etudiant "+student.toString()+", \ndans la promtion "+promotion.toString(), JOptionPane.INFORMATION_MESSAGE);
+		} catch (DAOException e) {
+			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+		}
+		
 	}
 
 }

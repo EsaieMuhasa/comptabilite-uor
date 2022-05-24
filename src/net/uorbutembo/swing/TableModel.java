@@ -22,8 +22,8 @@ import net.uorbutembo.dao.DAOListener;
 public abstract class TableModel <T extends DBEntity> extends AbstractTableModel implements DAOListener<T> {
 	private static final long serialVersionUID = 6162491854899469995L;
 	
-	protected final DateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
-	protected final DateFormat DEFAULT_DATE_TIME_FORMAT = new SimpleDateFormat("dd/MM/yyyy 'à' hh:mm:ss");
+	public static final DateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
+	public static final DateFormat DEFAULT_DATE_TIME_FORMAT = new SimpleDateFormat("dd/MM/yyyy 'à' hh:mm:ss");
 	
 	protected List<T> data = new ArrayList<>();
 

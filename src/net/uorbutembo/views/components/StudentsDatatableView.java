@@ -22,6 +22,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.JTableHeader;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -53,6 +54,7 @@ import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.views.MainWindow;
+import net.uorbutembo.views.components.DialogStudentExportConfig.ExportConfig;
 import net.uorbutembo.views.components.SidebarStudents.DepartmentFilter;
 import net.uorbutembo.views.components.SidebarStudents.FacultyFilter;
 import net.uorbutembo.views.forms.FormReRegister;
@@ -60,6 +62,7 @@ import net.uorbutembo.views.forms.FormStudent;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.PromotionPaymentTableModel;
 import net.uorbutembo.views.models.PromotionPaymentTableModel.InscriptionDataRow;
+import net.uorbutembo.views.models.PromotionPaymentTableModel.InscriptionDataRowListener;
 import resources.net.uorbutembo.R;
 
 /**
@@ -101,6 +104,22 @@ public class StudentsDatatableView extends Panel {
 		dialogInscription.setVisible(false);
 	};
 	
+	private final InscriptionDataRowListener dataRowListener = new InscriptionDataRowListener() {
+		
+		@Override
+		public void onReload(InscriptionDataRow row) {}
+		
+		@Override
+		public void onLoad(InscriptionDataRow row) {
+			progress.setValue(progress.getValue()+1);
+			progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") "+row.getInscription().getStudent().toString());
+		}
+		
+		@Override
+		public void onDispose(InscriptionDataRow row) {}
+	};
+	
+	
 	/**
 	 * construction d'un datatable
 	 * @param daoFactory
@@ -117,7 +136,7 @@ public class StudentsDatatableView extends Panel {
 		this.progress = progress;
 		this.listener = listener;
 		
-		this.add(scroll, BorderLayout.CENTER);
+		add(scroll, BorderLayout.CENTER);
 		
 		this.inscriptionDao.addListener(new DAOAdapter<Inscription>() {
 			@Override
@@ -148,6 +167,20 @@ public class StudentsDatatableView extends Panel {
 	}
 	
 	/**
+	 * @return
+	 */
+	public JTableHeader getTableHeader () {
+		for (FacultyData data : facultyDatas) {
+			for (DepartmentData dep : data.datas) {
+				if(!dep.datas.isEmpty())
+					return dep.datas.get(0).table.getTableHeader();
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
 	 * il est obligatoire d'appeler cette methode pour le premier chargement du datatable
 	 * et de luis fornir la liste complet des filtres des facultes
 	 * @param filters
@@ -158,12 +191,17 @@ public class StudentsDatatableView extends Panel {
 		this.lastFilterData.clear();
 		container.removeAll();
 		
-		this.doStartFilter(filters);
-		
 		for (FacultyData f : facultyDatas) {
 			f.dispose();
 		}
 		facultyDatas.clear();
+		
+		progress.setVisible(true);
+		progress.setString("Chargement des comptes pour "+currentYear.toString());
+		progress.setValue(0);
+		int max = inscriptionDao.countByAcademicYear(currentYear);
+		progress.setIndeterminate(false);
+		progress.setMaximum(max);
 		
 		for (FacultyFilter filter : filters) {
 			FacultyData  dataManager = new FacultyData(filter.getFaculty(), filter.getDepartments());
@@ -190,6 +228,7 @@ public class StudentsDatatableView extends Panel {
 		progress.setValue(0);
 		progress.setIndeterminate(true);
 		progress.setVisible(true);
+		progress.setString("Filtrage des données");
 		int max = 0;
 		if(filters != null) {//filtrage		
 			for (FacultyFilter f : filters) {
@@ -200,7 +239,7 @@ public class StudentsDatatableView extends Panel {
 		} else {//anulation du filtre
 			for (FacultyData fd : this.facultyDatas) {
 				for (DepartmentData d : fd.datas) {
-					max += d.classes.size();
+					max += d.classes.size();						
 				}
 			}
 		}
@@ -279,7 +318,7 @@ public class StudentsDatatableView extends Panel {
 	 * @param fileName chemain du fichier de serialisation
 	 * @param fullRow faut-il exporter la ligne compte??
 	 */
-	public synchronized void exportToExcel (String fileName, boolean fullRow) {
+	public synchronized void exportToExcel (String fileName, ExportConfig config) {
 		progress.setIndeterminate(true);
 		progress.setVisible(true);
 		progress.setValue(0);
@@ -303,8 +342,15 @@ public class StudentsDatatableView extends Panel {
 				FileOutputStream out = new FileOutputStream(fileName);
 			){
 			
+			//EXPORTATION GLOBALE
+			if(config.isSelected(1)) {
+				createGlobalSheet(book, config);
+			}
+			//===
+			
+			//EXPORTATION SPECIFIQUE
 			String names [] = PromotionPaymentTableModel.COLUMN_NAMES;
-			int columnCount = fullRow? names.length : names.length - 2;
+			int columnCount = config.countChecked(0);
 			short rowHeight = 400;
 			int current = 0;
 			
@@ -406,6 +452,19 @@ public class StudentsDatatableView extends Panel {
 		progress.setVisible(false);
 	}
 	//	=== || ====	export
+	
+	/**
+	 * exportation de la vue globale du rapport au format excel
+	 * @param book
+	 * @param config
+	 * @return
+	 * @throws Exception
+	 */
+	private XSSFSheet createGlobalSheet (XSSFWorkbook book, ExportConfig config) throws Exception{
+		XSSFSheet sheet = book.createSheet("globale");
+		
+		return sheet;
+	}
 	
 	/**
 	 * @author Esaie MUHASA
@@ -702,9 +761,24 @@ public class StudentsDatatableView extends Panel {
 		public PromotionData(Promotion promotion) {
 			super();
 			this.promotion = promotion;
-			tableModel = new PromotionPaymentTableModel(daoFactory);
+			tableModel = new PromotionPaymentTableModel(daoFactory, dataRowListener);
 			tableModel.setPromotion(promotion);
 			table = new Table(tableModel);
+			table.setShowVerticalLines(true);
+			
+			table.getColumnModel().getColumn(0).setMaxWidth(130);
+			table.getColumnModel().getColumn(0).setWidth(130);
+			table.getColumnModel().getColumn(0).setResizable(false);
+			
+			table.getColumnModel().getColumn(3).setMaxWidth(130);
+			table.getColumnModel().getColumn(3).setMinWidth(130);
+			table.getColumnModel().getColumn(3).setWidth(130);
+			table.getColumnModel().getColumn(3).setResizable(false);
+			
+			table.getColumnModel().getColumn(4).setMaxWidth(140);
+			table.getColumnModel().getColumn(4).setMinWidth(140);
+			table.getColumnModel().getColumn(4).setWidth(140);
+			table.getColumnModel().getColumn(4).setResizable(false);
 			
 			this.add(new TablePanel(table, promotion.getStudyClass().getAcronym()+" "+promotion.getDepartment().getName(), false), BorderLayout.CENTER);
 			this.setBorder(EMPTY_BOTTOM_BORDER);

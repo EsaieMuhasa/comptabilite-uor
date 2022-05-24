@@ -126,6 +126,7 @@ public interface OverallStatistic <T extends DBEntity> extends BaseStatistic <T>
 	default boolean checkByStudyClass (StudyClass studyClass, AcademicYear year) throws DAOException {
 		return checkByStudyClass(studyClass.getId(), year.getId());
 	}
+
 	//==studyclass
 	
 	//promotion
@@ -165,6 +166,78 @@ public interface OverallStatistic <T extends DBEntity> extends BaseStatistic <T>
 	boolean checkByPromotion (long promotion) throws DAOException;
 	default boolean checkByPromotion (Promotion promotion) throws DAOException {
 		return checkByPromotion(promotion.getId());
+	}
+
+	List<T> findByPromotions (long studyClass, long [] departments, long year, int limit, int offset);
+	default List<T> findByPromotions (StudyClass studyClass, Department [] departments, AcademicYear year, int limit, int offset) {
+		long [] deps = new long[departments.length]; 
+		for (int i = 0; i < deps.length; i++) 
+			deps[i] = departments[i].getId();
+		return findByPromotions(studyClass.getId(), deps, year.getId(), limit, offset);
+	}
+	
+	List<T> findByPromotions (long [] studyClasses, long department, long year, int limit, int offset);
+	default List<T> findByPromotions (StudyClass [] studyClasses, Department department, AcademicYear year, int limit, int offset) {
+		long [] scs = new long[studyClasses.length]; 
+		for (int i = 0; i < scs.length; i++) 
+			scs[i] = studyClasses[i].getId();
+		return findByPromotions(scs, department.getId(), year.getId(), limit, offset);
+	}
+	
+	List<T> findByPromotions (long [] prmotions, int limit, int offset);
+	default List<T> findByPromotions (Promotion [] promotions, int limit, int offset) {
+		long [] proms = new long[promotions.length]; 
+		for (int i = 0; i < proms.length; i++) 
+			proms[i] = promotions[i].getId();
+		return findByPromotions(proms, limit, offset);
+	}
+	
+	int countByPromotions (long studyClass, long [] departments, long year);
+	default int countByPromotions (StudyClass studyClass, Department [] departments, AcademicYear year) {
+		long [] deps = new long[departments.length]; 
+		for (int i = 0; i < deps.length; i++) 
+			deps[i] = departments[i].getId();
+		return countByPromotions(studyClass.getId(), deps, year.getId());
+	}
+	
+	int countByPromotions (long [] studyClasses, long department, long year);
+	default int countByPromotions (StudyClass [] studyClasses, Department department, AcademicYear year) {
+		long [] scs = new long[studyClasses.length]; 
+		for (int i = 0; i < scs.length; i++) 
+			scs[i] = studyClasses[i].getId();
+		return countByPromotions(scs, department.getId(), year.getId());
+	}
+	
+	int countByPromotions (long... promotions);
+	default int countByPromotions (Promotion... promotions) {
+		long [] proms = new long[promotions.length]; 
+		for (int i = 0; i < proms.length; i++) 
+			proms[i] = promotions[i].getId();
+		return countByPromotions(proms);
+	}
+	
+	boolean checkByPromotions (long studyClass, long [] departments, long year);
+	default boolean checkByStudyClass (StudyClass studyClass, Department [] departments, AcademicYear year) {
+		long [] deps = new long[departments.length]; 
+		for (int i = 0; i < deps.length; i++) 
+			deps[i] = departments[i].getId();
+		return checkByPromotions(studyClass.getId(), deps, year.getId());
+	}
+	
+	boolean checkByPromotions (long [] studyClasses, long department, long year);
+	default boolean checkByPromotions (StudyClass [] studyClasses, Department department, AcademicYear year) {
+		long [] scs = new long[studyClasses.length]; 
+		for (int i = 0; i < scs.length; i++) 
+			scs[i] = studyClasses[i].getId();
+		return checkByPromotions(scs, department.getId(), year.getId());
+	}
+	
+	boolean checkByPromotions (long... promotions);
+	default boolean checkByPromotions (Promotion... promotions) {
+		long [] proms = new long[promotions.length]; 
+		for (int i = 0; i < proms.length; i++) 
+			proms[i] = promotions[i].getId();
+		return checkByPromotions(proms);
 	}
 	//==promotion
 }

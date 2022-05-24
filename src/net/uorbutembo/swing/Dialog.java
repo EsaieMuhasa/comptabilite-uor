@@ -27,6 +27,16 @@ public class Dialog extends JDialog {
 	}
 	
 	/**
+	 * @param owner
+	 * @param title
+	 * @param modal
+	 */
+	public Dialog(Frame owner, String title, boolean modal) {
+		super(owner, title, modal);
+		init(owner);
+	}
+
+	/**
 	 * initialisation de la boite de dialogue et son contentPane
 	 * @param owner
 	 * @param contentPane

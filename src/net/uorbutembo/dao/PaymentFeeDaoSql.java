@@ -356,6 +356,24 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	}
 
 	@Override
+	public List<PaymentFee> findByPromotions(long studyClass, long[] department, long year, int limit, int offset) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countByPromotions(long studyClass, long[] departments, long year) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean checkByPromotions(long studyClass, long[] departments, long year) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
 	public List<PaymentFee> findByPromotion(long promotionId, int limit, int offset) throws DAOException {
 		// TODO Auto-generated method stub
 		return null;
@@ -387,6 +405,24 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 
 	@Override
 	public boolean checkByPromotion(long promotion) throws DAOException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public List<PaymentFee> findByPromotions(long[] prmotions, int limit, int offset) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countByPromotions(long... promotions) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean checkByPromotions(long... promotions) {
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -451,6 +487,24 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	}
 
 	@Override
+	public List<PaymentFee> findByPromotions(long[] studyClasses, long department, long year, int limit, int offset) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int countByPromotions(long[] studyClasses, long department, long year) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean checkByPromotions(long[] studyClasses, long department, long year) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
 	protected PaymentFee mapping(ResultSet result) throws SQLException, DAOException {
 		PaymentFee fee = new PaymentFee(result.getLong("id"));
 		fee.setRecordDate(new Date(result.getLong("recordDate")));
@@ -465,7 +519,6 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	}
 	
 	/**
-	 * 
 	 * @param result
 	 * @param inscription
 	 * @return
@@ -489,5 +542,222 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	protected String getTableName() {
 		return PaymentFee.class.getSimpleName();
 	}
+
+	@Override
+	public double getSoldByStudent(long student) throws DAOException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getSoldByInscription(long inscription) throws DAOException {
+		final String sql = String.format("SELECT SUM(amount) AS sold FROM %s WHERE inscription = %d", getTableName(), inscription);
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return sold;
+	}
+
+	@Override
+	public double getSoldByPromotion (long promotion) throws DAOException {
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion = %d", Inscription.class.getSimpleName(), 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), promotion);
+		final String sql = String.format("SELECT SUM(%s.amount) AS sold FROM %s WHERE inscription IN(%s)", getTableName(), getTableName(), sqlInscrits);
+		
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return sold;
+	}
+	
+	@Override
+	public double getSoldByPromotions(long... promotions) throws DAOException {
+		String [] proms = new String[promotions.length];
+		for (int i = 0; i < proms.length; i++) 
+			proms[i] = promotions[i]+"";
+		
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", Inscription.class.getSimpleName(), 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), String.join(", ", proms));
+		final String sql = String.format("SELECT SUM(%s.amount) AS sold FROM %s WHERE %s.inscription IN(%s)", getTableName(), getTableName(), getTableName(), sqlInscrits);
+		
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return sold;
+	}
+
+	@Override
+	public double getSoldByPromotions(long studyClass, long[] departments, long year) throws DAOException {
+		String [] deps = new String[departments.length];
+		for (int i = 0; i < deps.length; i++) 
+			deps[i] = departments[i]+"";
+		
+		String ids = String.join(", ", deps);
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.studyClass = %d AND %s.department IN(%s)",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year, Promotion.class.getSimpleName(), studyClass,
+				Promotion.class.getSimpleName(), ids);
+		
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT SUM(%s.amount) AS sold FROM %s WHERE inscription IN(%s)", getTableName(), getTableName(), sqlInscrits);
+		
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return sold;
+	}
+
+	@Override
+	public double getSoldByPromotions (long[] studyClasses, long department, long year) throws DAOException {
+		String [] classes = new String[studyClasses.length];
+		for (int i = 0; i < classes.length; i++) 
+			classes[i] = studyClasses[i]+"";
+		
+		String ids = String.join(", ", classes);
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department = %d AND %s.studyClass IN(%s)",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year, Promotion.class.getSimpleName(), department,
+				Promotion.class.getSimpleName(), ids);
+		
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT SUM(%s.amount) AS sold FROM %s WHERE inscription IN(%s)", getTableName(), getTableName(), sqlInscrits);
+		
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return sold;
+	}
+
+	@Override
+	public double getSoldByFaculty(long faculty, long year) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department IN(SELECT %s.id FROM %s WHERE %s.faculty = %d)",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year, Promotion.class.getSimpleName(),
+				Department.class.getSimpleName(), Department.class.getSimpleName(), Department.class.getSimpleName(), faculty);
+		
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN (%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT SUM(%s.amount) AS sold FROM %s WHERE inscription IN (%s)", getTableName(), getTableName(), sqlInscrits);
+		
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return sold;
+	}
+
+	@Override
+	public double getSoldByStudyClass(long studyClass, long year) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.studyClass = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year, Promotion.class.getSimpleName(), studyClass);
+		
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT SUM(%s.amount) AS sold FROM %s WHERE inscription IN(%s)", getTableName(), sqlInscrits);
+		
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return sold;
+	}
+
+	@Override
+	public double getSoldByDepartment(long department, long year) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d AND %s.department = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year, Promotion.class.getSimpleName(), department);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT SUM(amount) AS sold FROM %s WHERE inscription IN(%s)", getTableName(), sqlInscrits);
+		
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return sold;
+	}
+
+	@Override
+	public double getSoldByAcademicYear(long year) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT SUM(%s.amount) AS sold FROM %s WHERE inscription IN(%s)", getTableName(), sqlInscrits);
+		
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return sold;
+	}
+	
 
 }

@@ -22,7 +22,7 @@ public interface StudyClassDao extends OrientationDao<StudyClass> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public boolean checkByAcademicYear (AcademicYear year, Department department) throws DAOException;
+	boolean checkByAcademicYear (AcademicYear year, Department department) throws DAOException;
 	
 	/**
 	 * Comptage des orientations qui ont fonctionner pour l'annee en parametre
@@ -31,7 +31,7 @@ public interface StudyClassDao extends OrientationDao<StudyClass> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public int countByAcademicYear (AcademicYear year, Department department) throws DAOException;
+	int countByAcademicYear (AcademicYear year, Department department) throws DAOException;
 	
 	/**
 	 * renvoie la collection des orientations qui ont fonctionner pour l'annee en paramere
@@ -40,5 +40,5 @@ public interface StudyClassDao extends OrientationDao<StudyClass> {
 	 * @return
 	 * @throws DAOException
 	 */
-	public List<StudyClass> findByAcademicYear (AcademicYear year, Department department) throws DAOException;
+	List<StudyClass> findByAcademicYear (AcademicYear year, Department department) throws DAOException;
 }

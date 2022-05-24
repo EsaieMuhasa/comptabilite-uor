@@ -145,7 +145,7 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 	private void load () {
 		modelCardStudents.setValue(inscriptionDao.countByAcademicYear(currentYear));
 		List<Faculty> faculties = facultyDao.checkByAcademicYear(currentYear)? facultyDao.findByAcademicYear(currentYear) : new ArrayList<>();
-		modelPieStudents.setMax(modelCardStudents.getValue());
+		modelPieStudents.setRealMaxPriority(true);
 		modelPieStudents.removeAll();
 		for (int i=0, max=faculties.size(); i<max; i++) {
 			Faculty faculty = faculties.get(i);

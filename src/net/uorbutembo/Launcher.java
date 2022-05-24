@@ -3,8 +3,6 @@
  */
 package net.uorbutembo;
 
-import java.awt.EventQueue;
-
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
@@ -55,11 +53,12 @@ public class Launcher {
 			st.setVisible(true);
 			
 			MainWindow frame = new MainWindow(factory);
-			EventQueue.invokeLater(() -> {
+			Thread t = new Thread(() -> {
 				factory.reload();
 				st.setVisible(false);
 				frame.setVisible(true);
 			});
+			t.start();
 		} catch (DAOConfigException e) {
 			//Logger.getLogger(Launcher.class.getName()).log( Level.SEVERE, null, e);
 			JOptionPane.showMessageDialog(null, "Une erreur est survenue lors de la connexion à la base de données\n"+e.getMessage(), "Erreur connexion a la BDD", JOptionPane.ERROR_MESSAGE);

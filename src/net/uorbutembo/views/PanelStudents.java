@@ -9,6 +9,8 @@ import static net.uorbutembo.views.forms.FormUtil.createTitle;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.EventQueue;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -16,7 +18,9 @@ import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
@@ -36,10 +40,12 @@ import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
 import net.uorbutembo.beans.AcademicYear;
+import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.InscriptionDao;
+import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.StudentDao;
 import net.uorbutembo.swing.Panel;
@@ -49,6 +55,9 @@ import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.components.DefaultScenePanel;
+import net.uorbutembo.views.components.DialogStudentExportConfig;
+import net.uorbutembo.views.components.DialogStudentExportConfig.ExportConfig;
+import net.uorbutembo.views.components.DialogStudentExportConfig.ExportConfigListener;
 import net.uorbutembo.views.components.IndividualSheet;
 import net.uorbutembo.views.components.Navbar;
 import net.uorbutembo.views.components.NavbarButtonModel;
@@ -76,8 +85,8 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	private final JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, center, right);
 
 	//dao
-	private InscriptionDao inscriptionDao;
-	private StudentDao studentDao;
+	private final InscriptionDao inscriptionDao;
+	private final StudentDao studentDao;
 	//==dao
 
 	//espace de traival
@@ -85,6 +94,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	private final TabbedPanelContainer container;
 	private SidebarStudents navigation;
 	
+	private final DialogStudentExportConfig exportConfig;
 	//btn d'exportation
 	private final JButton btnToExcel = new JButton("Excel", new ImageIcon(R.getIcon("export")));
 	private final JButton btnToPdf = new JButton("PDF", new ImageIcon(R.getIcon("pdf")));
@@ -106,12 +116,65 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	
 	private JDialog dialogInscription;
 	private JDialog dialogRegister;
+	
+	private ExportConfigListener exportExcelListener = new ExportConfigListener() {
+		
+		@Override
+		public void onValiate(ExportConfig config) {
+			
+			Date now = new Date();
+			File old = fileChooser.getCurrentDirectory();
+			File newFile = new File(old.getAbsolutePath()+"/uor-data-manager-export-"+FormUtil.DEFAULT_FROMATER.format(now)+".xlsx");
+			
+			fileChooser.setFileFilter(filterExcel);
+			fileChooser.setSelectedFile(newFile);
+			
+			int status = fileChooser.showSaveDialog(mainWindow);
+			if(status != JFileChooser.APPROVE_OPTION)
+				return;
+			
+			File file = fileChooser.getSelectedFile();
+			if(file == null )
+				return;
+			
+			String filename = file.getAbsolutePath()+ (file.getName().endsWith(".xlsx")?  "" : ".xlsx");
+			navigation.wait(true);
+			statusButtonsExport(false);
+			setCursor(FormUtil.WAIT_CURSOR);
+			
+			Thread t = new Thread(()-> {
+				datatablePanel.getDatatableView().exportToExcel(filename, config);
+				statusButtonsExport(true);
+				navigation.wait(false);
+				setCursor(Cursor.getDefaultCursor());
+				
+				int response = JOptionPane.showConfirmDialog(mainWindow, "Succès d'exportation des données\nau format excel dans le fichier \n"+filename+
+						"\nVoulez-vous l'ouvrir?", "Ouvrir le fichier exporter", JOptionPane.YES_NO_OPTION);
+				if(response == JOptionPane.OK_OPTION) {
+					Runtime run = Runtime.getRuntime();
+					try {
+						run.exec("excel \""+filename+"\"");
+					} catch (IOException e) {
+						JOptionPane.showMessageDialog(mainWindow, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			});
+			
+			t.start();
+		}
+		
+		@Override
+		public void onCancel() {
+			
+		}
+	};
 
 	public PanelStudents(MainWindow mainWindow) {
 		super("Etudiants", new ImageIcon(R.getIcon("student")), mainWindow, false);//la scene gere les scrollbars	
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		studentDao = mainWindow.factory.findDao(StudentDao.class);
 		
+		exportConfig = new DialogStudentExportConfig(mainWindow);
 		navigation = new SidebarStudents(mainWindow.factory);
 		
 		container = new TabbedPanelContainer(mainWindow);
@@ -223,45 +286,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		//==
 				
 		btnToExcel.addActionListener(event -> {
-			Date now = new Date();
-			File old = fileChooser.getCurrentDirectory();
-			File newFile = new File(old.getAbsolutePath()+"/uor-data-manager-export-"+FormUtil.DEFAULT_FROMATER.format(now)+".xlsx");
-			
-			fileChooser.setFileFilter(filterExcel);
-			fileChooser.setSelectedFile(newFile);
-			
-			int status = fileChooser.showSaveDialog(mainWindow);
-			if(status != JFileChooser.APPROVE_OPTION)
-				return;
-			
-			File file = fileChooser.getSelectedFile();
-			if(file == null )
-				return;
-			
-			String filename = file.getAbsolutePath()+ (file.getName().endsWith(".xlsx")?  "" : ".xlsx");
-			navigation.wait(true);
-			statusButtonsExport(false);
-			setCursor(FormUtil.WAIT_CURSOR);
-			
-			Thread t = new Thread(()-> {
-				datatablePanel.getDatatableView().exportToExcel(filename, true);
-				statusButtonsExport(true);
-				navigation.wait(false);
-				setCursor(Cursor.getDefaultCursor());
-				
-				int response = JOptionPane.showConfirmDialog(mainWindow, "Succès d'exportation des données\nau format excel dans le fichier \n"+filename+
-						"\nVoulez-vous l'ouvrir?", "Ouvrir le fichier exporter", JOptionPane.YES_NO_OPTION);
-				if(response == JOptionPane.OK_OPTION) {
-					Runtime run = Runtime.getRuntime();
-					try {
-						run.exec("excel \""+filename+"\"");
-					} catch (IOException e) {
-						JOptionPane.showMessageDialog(mainWindow, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
-					}
-				}
-			});
-			
-			t.start();
+			exportConfig.show(exportExcelListener);
 		});
 		
 		btnToPdf.addActionListener(event -> {
@@ -311,6 +336,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		} else {
 			datatablePanel.getDatatableView().firstLoad(filters, year);
 		}
+		
 		datachartPanel.reload(year, filters);
 		statusButtonsExport(datatablePanel.getDatatableView().hasData());//enable exports buttons if datatable has data match filter
 	}
@@ -458,12 +484,13 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		
 	}
 	
-	private static final class TabDatachartPanel extends Panel {
+	private final class TabDatachartPanel extends Panel {
 		private static final long serialVersionUID = -1438881851640344547L;
 		
 		private final DefaultPieModel pieModel = new DefaultPieModel();
 		private final PiePanel piePanel = new PiePanel(pieModel);
 		private final Panel panelRadios = new Panel();
+		private final Panel panelRadiosType = new Panel(new FlowLayout(FlowLayout.RIGHT));
 		
 		private int filterIndex = 3;
 		private final JRadioButton [] radios = {
@@ -471,6 +498,13 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 				new JRadioButton("Département"),
 				new JRadioButton("Classe d'étude"),
 				new JRadioButton("Promotion", true)
+		};
+		
+		private int filterTypeIndex = 2;
+		private final JRadioButton [] radiosType = {
+				new JRadioButton("Soldes"),
+				new JRadioButton("Dettes"),
+				new JRadioButton("Effectifs des étudiants", true),
 		};
 		
 		/**
@@ -486,7 +520,24 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 				return;
 			
 			filterIndex = index;
-			new Thread( () -> { reload(filterIndex); } ).start();
+			EventQueue.invokeLater(() -> {		
+				new Thread( () -> { reload(filterIndex, filterTypeIndex); } ).start();
+			});
+		};
+		
+		private final ChangeListener radioTypeListener = (event) -> {
+			JRadioButton radio = (JRadioButton) event.getSource();
+			if(!radio.isSelected())
+				return;
+			
+			int index = Integer.parseInt(radio.getName());
+			if(index == filterTypeIndex)
+				return;
+			
+			filterTypeIndex = index;
+			EventQueue.invokeLater(() -> {		
+				new Thread( () -> { reload(filterIndex, filterTypeIndex); } ).start();
+			});
 		};
 		
 		
@@ -506,8 +557,22 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 			pieModel.setRealMaxPriority(true);
 		}
 		
+		{//radion permetant de choisir le type de graphique a afficher (solde, dete, ...)
+			final ButtonGroup group = new  ButtonGroup();
+			for (int i = 0; i < radiosType.length; i++) {
+				JRadioButton radio = radiosType[i];
+				panelRadiosType.add(radio);
+				radio.setName(i+"");
+				group.add(radio);
+				radio.setEnabled(false);
+				radio.setForeground(Color.WHITE);
+				radio.addChangeListener(radioTypeListener);
+			}
+			panelRadiosType.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		}
+		
 		private final PromotionDao promotionDao;
-		private final InscriptionDao inscriptionDao;
+		private final PaymentFeeDao paymentFeeDao;
 		
 		private AcademicYear currentYear;//annee selectionner
 		private FacultyFilter [] rootFilters;//filtre racine
@@ -520,8 +585,12 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		public TabDatachartPanel (DAOFactory factory) {
 			super(new BorderLayout());
 			promotionDao = factory.findDao(PromotionDao.class);
-			inscriptionDao = factory.findDao(InscriptionDao.class);
+			paymentFeeDao = factory.findDao(PaymentFeeDao.class);
+			
+			pieModel.setTitle("Graphique");
+			piePanel.setBorderColor(FormUtil.BORDER_COLOR);
 
+			add(panelRadiosType, BorderLayout.NORTH);
 			add(panelRadios, BorderLayout.SOUTH);
 			add(piePanel, BorderLayout.CENTER);
 		}
@@ -544,7 +613,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		public void reload(FacultyFilter [] filters) {
 			lastFilters = filters;
 			try {				
-				reload(filterIndex);
+				reload(filterIndex, filterTypeIndex);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -552,111 +621,393 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		
 		/**
 		 * chargement des parts (mis en jours du model)
-		 * @param group
+		 * Cette methode soit etre appeler dans un thread different du thread UI car on y fait des traitements lordes.
+		 * lors du chargement des donnees, la sequances est la suivante:
+		 * - netoyage du model du graphique
+		 * - desactivation des radios de l'UI
+		 * - verification de valeur du @param group dans un switch... case
+		 * - organisation des indexs des donnees dans la base de donnees (preparation des metadonnees)
+		 * - verification dela valeur du @param type dans un autre switch... case
+		 * - chargement final du graphique
+		 * - activation des radios de l'UI
+		 * Pendant toute ces operations on touches l'etat du progressbar dans la mesure du possible
+		 * 
+		 * @param group : groupement des parts du graphique. sa valeur doit etre compris entre 0 et 3
+		 * <ul>
+		 * <li>0: groupement par faculte</li>
+		 * <li>1: groupement par departement </li>
+		 * <li>2: groupement par classe d'etude</li>
+		 * <li>3: groupement par promotion</li>
+		 * </ul>
+		 * @param type : type de graphique (0, 1, 2)
+		 * <ul>
+		 * <li>0: grapique des payements</li>
+		 * <li>1: graphique des dettes</li>
+		 * <li>2: graphique des effectifs des etudiants</li>
+		 * </ul>
 		 */
-		private synchronized void reload (int group) {
-			
+		private synchronized void reload (int group, int type) {
+			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			for (int i = 0; i < radios.length; i++){
 				radios[i].removeChangeListener(radioListener);
 				radios[i].setEnabled(false);
 			}
 			
+			for (int i = 0; i < radiosType.length; i++){
+				radiosType[i].removeChangeListener(radioTypeListener);
+				radiosType[i].setEnabled(false);
+			}
+			
 			pieModel.removeAll();
+			if(type == 2) 
+				pieModel.setSuffix(":");
+			else 
+				pieModel.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
 			
 			FacultyFilter [] filters = lastFilters == null? rootFilters : lastFilters;
+			progress.setValue(0);
+			progress.setString("Chargement du graphique");
+			progress.setVisible(true);
+			progress.setIndeterminate(false);
 			
 			switch (group) {
 				case 0:{//par faculte
+					progress.setMaximum(filters.length);
+					PiePart [] parts = new PiePart[filters.length];
+					List<List<Promotion>> proms = new ArrayList<>();
+					
+					//prepare metadata
 					for (int i = 0; i < filters.length; i++) {
 						FacultyFilter filter = filters[i];
-						int count = 0;
-						
-						for(int j = 0, countDepartment = filter.getDepartments().size(); j < countDepartment; j++) {
+						List <Promotion> tmp = new ArrayList<>();
+						for (int j = 0, count = filter.getDepartments().size(); j < count; j++) {
 							DepartmentFilter d = filter.getDepartments().get(j);
-							
-							for (int k = 0, countClasses = d.getClasses().size(); k < countClasses; k++) {
-								Promotion p = promotionDao.find(currentYear, d.getDepartment(), d.getClasses().get(k));
-								count += inscriptionDao.countByPromotion(p);
+							for (int k = 0, countClasses = d.getClasses().size(); k < countClasses; k++){
+								tmp.add(promotionDao.find(currentYear, d.getDepartment(), d.getClasses().get(k)));
+								progress.setValue(progress.getValue() + 1);
+								progress.setMaximum(progress.getMaximum()+1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Préparation des données...");
 							}
 						}
-						
-						Color color = COLORS[i % COLORS.length];
-						DefaultPiePart part = new DefaultPiePart(color, count, filter.getFaculty().toString());
-						part.setData(filter.getFaculty());
-						pieModel.addPart(part);
+						proms.add(tmp);
 					}
+					
+					Promotion [][] promotions = new Promotion[parts.length][0];
+					for (int i = 0; i < promotions.length; i++) {
+						promotions[i] = new Promotion[proms.get(i).size()];
+						for (int j = 0; j < proms.get(i).size(); j++)
+							promotions[i][j] = proms.get(i).get(j);
+					}
+					//== end metadata
+					
+					switch (type) {
+						case 0: {//soldes
+							for (int i = 0; i < filters.length; i++) {
+								FacultyFilter filter = filters[i];
+								double sold = paymentFeeDao.getSoldByPromotions(promotions[i]);
+								Color color = COLORS[i % COLORS.length];
+								DefaultPiePart part = new DefaultPiePart(color, sold, filter.getFaculty().toString());
+								part.setData(filter.getFaculty());
+								parts[i] = part;
+								progress.setValue(progress.getValue() + 1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+							}
+							pieModel.setTitle("Solde des étudiants groupé par faculté");
+						}break;
+						case 1: {//dettes
+							for (int i = 0; i < filters.length; i++) {
+								FacultyFilter filter = filters[i];
+								double sold = paymentFeeDao.getSoldByPromotions(promotions[i]), total = 0;
+								for(Promotion p : promotions[i]) {
+									double count = inscriptionDao.countByPromotion(p);
+									total += (p.getAcademicFee().getAmount() * count);
+									progress.setValue(progress.getValue() + 1);
+									progress.setMaximum(progress.getMaximum() + 1);
+									progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+								}
+								Color color = COLORS[i % COLORS.length];
+								DefaultPiePart part = new DefaultPiePart(color, total - sold, filter.getFaculty().toString());
+								part.setData(filter.getFaculty());
+								parts[i] = part;
+								progress.setValue(progress.getValue() + 1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+							}
+							pieModel.setTitle("Dettes des étudiants groupé par faculté");
+						}break;
+						case 2: {//effectifs
+							for (int i = 0; i < filters.length; i++) {
+								FacultyFilter filter = filters[i];
+								int count = inscriptionDao.countByPromotions(promotions[i]);
+								Color color = COLORS[i % COLORS.length];
+								DefaultPiePart part = new DefaultPiePart(color, count, filter.getFaculty().toString());
+								part.setData(filter.getFaculty());
+								parts[i] = part;
+								progress.setValue(progress.getValue() + 1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+							}
+							pieModel.setTitle("Effectifs des étudiants groupé par faculté");
+						}break;
+						default :
+							throw new IndexOutOfBoundsException("Index out of range: "+filterTypeIndex);
+					}
+					pieModel.addParts(parts);
 				}break;
 				
 				case 1:{//par departement
-					for (int i = 0; i < filters.length; i++) {
-						FacultyFilter filter = filters[i];
-						
-						for(int j = 0, countDepartment = filter.getDepartments().size(); j < countDepartment; j++) {
-							DepartmentFilter d = filter.getDepartments().get(j);
-							int count = 0;
-							
-							for (int k = 0, countClasses = d.getClasses().size(); k < countClasses; k++) {
-								Promotion p = promotionDao.find(currentYear, d.getDepartment(), d.getClasses().get(k));
-								count += inscriptionDao.countByPromotion(p);
-							}
-							
-							Color color = COLORS[ (i+j) % (COLORS.length - 1)];
-							DefaultPiePart part = new DefaultPiePart(color, count, d.getDepartment().toString());
-							part.setData(d.getDepartment());
-							pieModel.addPart(part);
+					List<Department> deps = new ArrayList<>();
+					List<List<StudyClass>> tmpClasses = new ArrayList<>();
+					//prepare metadata
+					for (int i = 0; i < filters.length; i++)
+						for(int j = 0, countDepartment = filters[i].getDepartments().size(); j < countDepartment; j++){
+							tmpClasses.add(filters[i].getDepartments().get(j).getClasses());
+							deps.add(filters[i].getDepartments().get(j).getDepartment());
 						}
+					
+					StudyClass [][] classes = new StudyClass [deps.size()] [0];
+					for (int i = 0; i < classes.length; i++) {
+						classes[i] = new StudyClass[tmpClasses.get(i).size()];
+						for (int j =0, count = tmpClasses.get(i).size(); j < count; j++)
+							classes[i][j] = tmpClasses.get(i).get(j);
 					}
+					// end metadata
+					
+					int max = deps.size();
+					progress.setMaximum(max);
+					PiePart [] parts = new PiePart[max];
+					switch (type) {
+						case 0: {//soldes
+							for (int i = 0; i < max; i++) {
+								Color color = COLORS[ i % (COLORS.length - 1)];
+								double sold = paymentFeeDao.getSoldByPromotions(classes[i], deps.get(i), currentYear);
+								DefaultPiePart part = new DefaultPiePart(color, sold, deps.get(i).toString());
+								part.setData(deps.get(i));
+								parts[i] = part;
+								progress.setValue(progress.getValue()+1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+							}
+							pieModel.setTitle("Solde des étudiants groupé par département");
+						}break;
+						case 1: {//dettes
+							for (int i = 0; i < max; i++) {
+								Color color = COLORS[ i % (COLORS.length - 1)];
+								double sold = paymentFeeDao.getSoldByPromotions(classes[i], deps.get(i), currentYear);
+								double total = 0;
+								for(StudyClass s : classes[i]) {
+									Promotion p = promotionDao.find(currentYear, deps.get(i), s);
+									double count  = inscriptionDao.countByPromotion(p);
+									total += count * p.getAcademicFee().getAmount();
+									progress.setValue(progress.getValue() + 1);
+									progress.setMaximum(progress.getMaximum() + 1);
+									progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+								}
+								DefaultPiePart part = new DefaultPiePart(color, total - sold, deps.get(i).toString());
+								part.setData(deps.get(i));
+								parts[i] = part;
+								progress.setValue(progress.getValue()+1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+							}
+							pieModel.setTitle("Dette des étudiants groupé par département");
+						}break;
+						case 2: {//effectifs
+							for (int i = 0; i < max; i++) {
+								Color color = COLORS[ i % (COLORS.length - 1)];
+								int count = inscriptionDao.countByPromotions(classes[i], deps.get(i), currentYear);
+								DefaultPiePart part = new DefaultPiePart(color, count, deps.get(i).toString());
+								part.setData(deps.get(i));
+								parts[i] = part;
+								progress.setValue(progress.getValue()+1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+							}
+							pieModel.setTitle("Effectif des étudiants groupé par département");
+						}break;
+						default :
+							throw new IndexOutOfBoundsException("Index out of range: "+filterTypeIndex);
+					}
+					pieModel.addParts(parts);
 				}break;
 				
-				case 2:{//par classe d'etude
+				case 2:{//par classe d'etude					
+					final List<StudyClass> classes = new ArrayList<>();
+					final List<Department> deps = new ArrayList<>();
+					
+					//prepare metadata
 					for (int i = 0; i < filters.length; i++) {
-						FacultyFilter filter = filters[i];
-						
-						for(int j = 0, countDepartment = filter.getDepartments().size(); j < countDepartment; j++) {
-							DepartmentFilter d = filter.getDepartments().get(j);
-							
-							for (int k = 0, countClasses = d.getClasses().size(); k < countClasses; k++) {
-								StudyClass c = d.getClasses().get(k);
-								PiePart part = pieModel.findByData(c);
+						for (int j = 0, count = filters[i].getDepartments().size(); j < count; j++){
+							deps.add(filters[i].getDepartments().get(j).getDepartment());
+							for (int k = 0, ccount = filters[i].getDepartments().get(j).getClasses().size(); k < ccount; k++) {
+								StudyClass sc = filters[i].getDepartments().get(j).getClasses().get(k);
+								boolean addable = true;
 								
-								if (part == null) {
-									Color color = COLORS[ (i+j+k) % (COLORS.length-1)];
-									int count = inscriptionDao.countByStudyClass(c, currentYear);
-									part = new DefaultPiePart(color, count, c.toString());
-									part.setData(c);
-									pieModel.addPart(part);
-									//System.out.println(c);
-								} 
-								//else System.out.println("\t> "+c);
+								for (StudyClass s : classes) {
+									if(s.getId() == sc.getId()) {
+										addable = false;
+										break;
+									}
+								}
+								
+								if (addable)
+									classes.add(sc);
 							}
 						}
 					}
+					progress.setMaximum(classes.size());
+					final PiePart [] parts = new PiePart[classes.size()];
+					final String [] labels = new String[classes.size()];
+					final Department[][] classement = new Department[classes.size()][0];;
+					
+					for (int j = 0; j < classes.size(); j++) {					
+						String label = "";
+						List<Department>  tmpDeps = new ArrayList<>();
+						for (int i = 0; i < deps.size(); i++){
+							if(promotionDao.check(currentYear, deps.get(i), classes.get(j))) {								
+								tmpDeps.add(deps.get(i));
+								label += " "+deps.get(i).getAcronym()+",";
+							}
+							progress.setValue(progress.getValue() + 1);
+							progress.setMaximum(progress.getMaximum() + 1);
+							progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Préparation des données...");
+						}
+						final Department[] departments = new Department[tmpDeps.size()];
+						if (!tmpDeps.isEmpty()) {
+							for (int i = 0; i < departments.length; i++) 
+								departments[i] = tmpDeps.get(i);
+							label = label.substring(0, label.length()-1);
+							label = "("+label+")";
+						} 
+						labels[j] = label;
+						classement[j] = departments;
+					}
+					//== end metadata
+					
+					switch (type) {
+						case 0: {//soldes
+							for (int index = 0; index < classes.size(); index++) {								
+								StudyClass s = classes.get(index);
+								Color color = COLORS[ (index) % (COLORS.length-1)];
+								double sold = paymentFeeDao.getSoldByPromotions(s, classement[index], currentYear);
+								PiePart part = new DefaultPiePart(color, sold, s.getAcronym()+" "+labels[index]);
+								part.setData(s);
+								parts[index] = part;
+								progress.setValue(progress.getValue()+1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+							}
+							pieModel.setTitle("Solde des étudiants groupé par classe d'étude");
+						}break;
+						case 1: {//dettes
+							for (int index = 0; index < classes.size(); index++) {								
+								StudyClass s = classes.get(index);
+								Color color = COLORS[ (index) % (COLORS.length-1)];
+								double total = 0;
+								for(Department d : classement[index]) {
+									Promotion p = promotionDao.find(currentYear, d, s);
+									double count  = inscriptionDao.countByPromotion(p);
+									total += count * p.getAcademicFee().getAmount();
+									progress.setValue(progress.getValue() + 1);
+									progress.setMaximum(progress.getMaximum() + 1);
+									progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+								}
+								double sold = paymentFeeDao.getSoldByPromotions(s, classement[index], currentYear);
+								PiePart part = new DefaultPiePart(color, total - sold, s.getAcronym()+" "+labels[index]);
+								part.setData(s);
+								parts[index] = part;
+								progress.setValue(progress.getValue()+1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+							}
+							pieModel.setTitle("Dettes des étudiants groupé par classe d'étude");
+						}break;
+						case 2: {//effectifs
+							for (int index = 0; index < classes.size(); index++) {								
+								StudyClass s = classes.get(index);
+								Color color = COLORS[ (index) % (COLORS.length-1)];
+								int count = inscriptionDao.countByPromotions(s, classement[index], currentYear);
+								PiePart part = new DefaultPiePart(color, count, s.getAcronym()+" "+labels[index]);
+								part.setData(s);
+								parts[index] = part;
+								progress.setValue(progress.getValue()+1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+							}
+							pieModel.setTitle("Effectifs des étudiants groupé par classe d'étude");
+						}break;
+						default :
+							throw new IndexOutOfBoundsException("Index out of range: "+filterTypeIndex);
+					}
+					pieModel.addParts(parts);
+					
 				}break;
 				
 				case 3:{//par promotion
+					List<Promotion> proms = new ArrayList<>();
+					
+					//prepare metadata
 					for (int i = 0; i < filters.length; i++) {
 						FacultyFilter filter = filters[i];
-						
-						for(int j = 0, countDepartment = filter.getDepartments().size(); j < countDepartment; j++) {
+						for (int j = 0, count = filter.getDepartments().size(); j < count; j++) {
 							DepartmentFilter d = filter.getDepartments().get(j);
-							
-							PiePart [] parts = new PiePart[d.getClasses().size()];
 							for (int k = 0, countClasses = d.getClasses().size(); k < countClasses; k++) {
-								
-								Promotion p = promotionDao.find(currentYear, d.getDepartment(), d.getClasses().get(k));
-								Color color = COLORS[ (i+j+k) % (COLORS.length-1)];
+								proms.add(promotionDao.find(currentYear, d.getDepartment(), d.getClasses().get(k)));
+								progress.setValue(progress.getValue() + 1);
+								progress.setMaximum(progress.getMaximum() + 1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") préparation des données...");
+							}
+						}
+					}
+					//== end metadata
+					
+					int max = proms.size();
+					progress.setMaximum(max);
+					PiePart [] parts = new PiePart[max];
+					
+					switch (type) {
+						case 0: {//soldes
+							for (int i = 0; i < max; i++) {
+								Promotion p = proms.get(i);
+								Color color = COLORS[ i % (COLORS.length-1)];
+								double sold = paymentFeeDao.getSoldByPromotion(p);
+								DefaultPiePart part = new DefaultPiePart(color, sold, p.toString());
+								part.setData(p);
+								parts[i] = part;
+								progress.setValue(progress.getValue()+1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+							}
+							pieModel.setTitle("Solde des étudiants groupé par promotion");
+						}break;
+						case 1: {//dettes
+							for (int i = 0; i < max; i++) {
+								Promotion p = proms.get(i);
+								Color color = COLORS[ i % (COLORS.length-1)];
+								double count = inscriptionDao.countByPromotion(p);
+								double total = p.getAcademicFee().getAmount() * count;
+								double sold = paymentFeeDao.getSoldByPromotion(p);
+								DefaultPiePart part = new DefaultPiePart(color, total-sold, p.toString());
+								part.setData(p);
+								parts[i] = part;
+								progress.setValue(progress.getValue()+1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
+							}
+							pieModel.setTitle("Dettes des étudiants groupé par promotion");
+						}break;
+						case 2: {//effectifs
+							for (int i = 0; i < max; i++) {
+								Promotion p = proms.get(i);
+								Color color = COLORS[ i % (COLORS.length-1)];
 								int count = inscriptionDao.countByPromotion(p);
 								DefaultPiePart part = new DefaultPiePart(color, count, p.toString());
 								part.setData(p);
-								parts[k] = part;
+								parts[i] = part;
+								progress.setValue(progress.getValue()+1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
 							}
-							pieModel.addParts(parts);
-						}
+							pieModel.setTitle("Effectifs des étudiants groupé par promotion");
+						}break;
+						default :
+							throw new IndexOutOfBoundsException("Index out of range: "+filterTypeIndex);
 					}
+					pieModel.addParts(parts);
 				}break;
 				
-				default:
+				default: {
 					throw new IllegalArgumentException("Operation non pris en charge, group = "+group);
+				}
 			}
 			
 			for (int i = 0; i < radios.length; i++){
@@ -664,7 +1015,13 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 				radios[i].addChangeListener(radioListener);
 			}
 			
-			//System.out.println("================["+group+"]=================");
+			for (int i = 0; i < radiosType.length; i++){
+				radiosType[i].setEnabled(true);
+				radiosType[i].addChangeListener(radioTypeListener);
+			}
+			
+			progress.setVisible(false);
+			setCursor(Cursor.getDefaultCursor());
 		}
 		
 	}

@@ -139,18 +139,20 @@ public abstract class FormUtil {
 	//couleurs
 	public static final Color [] COLORS = new Color[] {
 			new Color(0xFFCE30), new Color(0xE83845), new Color(0xE9889F),
-			new Color(0x746AB0), new Color(0x288BA8), new Color(0x7F222F), 
-			new Color(0xFF7F50), new Color(0x90C86F), new Color(0x0756FF),
+			new Color(0x746AB0), new Color(0x288BA8), new Color(0xFF88FF), 
+			new Color(0x5F7FF0), new Color(0x90C86F), new Color(0x0756FF),
 			new Color(0xA2D5C6), new Color(0x077B8A), new Color(0x5C3C92),
 			new Color(0xE2D810), new Color(0xD9138A), new Color(0x12A4D9),
 			new Color(0x22780F), new Color(0x381A3C), new Color(0x004C56),
-			new Color(0x9B571D), new Color(0xB03468), new Color(0x4E5352)
+			new Color(0x9B571D), new Color(0xB03468), new Color(0x4E5352),
+			
+			new Color(0x0081F8), new Color(0x00AFAF), new Color(0xF0F3FF)
 	};
 	
 	public static final Color [] COLORS_ALPHA = new Color[] {
 			new Color(0x55FFCE30, true), new Color(0x55E83845, true), new Color(0x55E9889F, true),
-			new Color(0x55746AB0, true), new Color(0x55288BA8, true), new Color(0x557F222F, true), 
-			new Color(0x55FF7F50, true), new Color(0x5590C86F, true), new Color(0x550756FF, true),
+			new Color(0x55746AB0, true), new Color(0x55288BA8, true), new Color(0x55FF88FF, true), 
+			new Color(0x555F7FF0, true), new Color(0x5590C86F, true), new Color(0x550756FF, true),
 			new Color(0x55A2D5C6, true), new Color(0x55077B8A, true), new Color(0x555C3C92, true),
 			new Color(0x55E2D810, true), new Color(0x55D9138A, true), new Color(0x5512A4D9, true),
 			new Color(0x5522780F, true), new Color(0x55381A3C, true), new Color(0x55004C56, true),
