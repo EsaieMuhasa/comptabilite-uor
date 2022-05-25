@@ -45,17 +45,24 @@ public class DialogStudentExportConfig extends Dialog {
 				new JCheckBox("Dette", true)				
 			},
 			{
+				new JCheckBox("Effectifs", true),
 				new JCheckBox("Soldes", true),
 				new JCheckBox("Dettes", true),
 				new JCheckBox("Graphique des soldes", true),
 				new JCheckBox("Graphique des dettes", true),
-				new JCheckBox("Graphique des effectifs des étudiants")
+				new JCheckBox("Graphique des effectifs des étudiants", true)
+			},
+			{
+				new JCheckBox("Par faculté", true),
+				new JCheckBox("Par Départements", true),
+				new JCheckBox("Par classe d'étude", true),
 			}
 	};
 	
 	private final JCheckBox labels [] = {
 			new JCheckBox("Vue détailler", true), 
-			new JCheckBox("Vue globale", true)
+			new JCheckBox("Vue globale", true),
+			new JCheckBox("Groupement des résultats", true)
 	};
 	
 	private final JButton btnValidate = new JButton("Valider", new ImageIcon(R.getIcon("success")));
@@ -74,6 +81,7 @@ public class DialogStudentExportConfig extends Dialog {
 			groupsConfig[i] = fields;
 			groups[i] = labels[i].isSelected();
 		}
+		
 		config = new ExportConfig(groups, groupsConfig);
 	}
 	
@@ -212,6 +220,7 @@ public class DialogStudentExportConfig extends Dialog {
 	public static final class ExportConfig {
 		private final boolean [] groups;
 		private final boolean [][] groupsConfig;
+		private static final String [] COLUMN_NAMES = {"Effectifs", "Soldes", "Dêttes"};
 		
 		/**
 		 * @param groups
@@ -247,6 +256,35 @@ public class DialogStudentExportConfig extends Dialog {
 		
 		public boolean [] getGroupConfig (int index) {
 			return groupsConfig[index];
+		}
+		
+		/**
+		 * Comptage des elements d'un groupe
+		 * @param index
+		 * @return
+		 */
+		public int countAt (int index) {
+			return groupsConfig[index].length;
+		}
+		
+		/**
+		 * Renvoie le statut d'une case a chaucher
+		 * @param index
+		 * @param box
+		 * @return
+		 */
+		public boolean getStatusAt (int index, int box) {
+			return groupsConfig[index][box];
+		}
+		
+		/**
+		 * renvoie le titre d'une colonne
+		 * @param index
+		 * @param col
+		 * @return
+		 */
+		public String getTitleCofingGroup (int index, int col) {
+			return COLUMN_NAMES[col];
 		}
 		
 		/**

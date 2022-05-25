@@ -53,12 +53,17 @@ public class Launcher {
 			st.setVisible(true);
 			
 			MainWindow frame = new MainWindow(factory);
-			Thread t = new Thread(() -> {
-				factory.reload();
-				st.setVisible(false);
-				frame.setVisible(true);
-			});
-			t.start();
+			factory.reload();
+			st.setVisible(false);
+			frame.setVisible(true);
+//			Thread t = new Thread(() -> {
+//				try {
+//				} catch (Exception e) {
+//					JOptionPane.showMessageDialog(null, "Une erreur est survenue lors du chargement des données\n"+e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+//					System.exit(0);
+//				}
+//			});
+//			t.start();
 		} catch (DAOConfigException e) {
 			//Logger.getLogger(Launcher.class.getName()).log( Level.SEVERE, null, e);
 			JOptionPane.showMessageDialog(null, "Une erreur est survenue lors de la connexion à la base de données\n"+e.getMessage(), "Erreur connexion a la BDD", JOptionPane.ERROR_MESSAGE);

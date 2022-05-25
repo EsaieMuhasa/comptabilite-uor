@@ -48,6 +48,7 @@ import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.InscriptionDao;
+import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.StudentDao;
 import net.uorbutembo.swing.Panel;
@@ -92,9 +93,11 @@ public class StudentsDatatableView extends Panel {
 	private FormStudent formStudent;
 	private FormReRegister formRegister;
 	
-	private InscriptionDao inscriptionDao;
-	private StudentDao studentDao;
-	private AcademicYearDao academicYearDao;
+	private final InscriptionDao inscriptionDao;
+	private final StudentDao studentDao;
+	private final AcademicYearDao academicYearDao;
+	private final PromotionDao promotionDao;
+	private final PaymentFeeDao paymentFeeDao;
 	
 	/**
 	 * Ecoute du button d'annulation d'annulation des mis en jours 
@@ -133,6 +136,8 @@ public class StudentsDatatableView extends Panel {
 		this.inscriptionDao = daoFactory.findDao(InscriptionDao.class);
 		this.studentDao = daoFactory.findDao(StudentDao.class);
 		this.academicYearDao = daoFactory.findDao(AcademicYearDao.class);
+		this.promotionDao = daoFactory.findDao(PromotionDao.class);
+		this.paymentFeeDao = daoFactory.findDao(PaymentFeeDao.class);
 		this.progress = progress;
 		this.listener = listener;
 		
@@ -348,100 +353,85 @@ public class StudentsDatatableView extends Panel {
 			}
 			//===
 			
-			//EXPORTATION SPECIFIQUE
-			String names [] = PromotionPaymentTableModel.COLUMN_NAMES;
-			int columnCount = config.countChecked(0);
-			short rowHeight = 400;
-			int current = 0;
-			
-			for (FacultyData fData : lastFilterData) {
-
-				//Pour chaque faculte, on cree un sheet excel
-				XSSFSheet sheet = book.createSheet(fData.getFaculty().getAcronym());
-				int rowCount = 0;
+			if (config.isSelected(0)) {//si on doit exporter les details
+				int 
+					colCount = config.countChecked(0) + (config.getStatusAt(0, 1)? 2 : 0),
+					step = config.getStatusAt(0, 1)? 2 : 0,
+					lastIndex = config.getStatusAt(0, 1)? 3 : 0;
 				
-				//faculty name
-				XSSFRow row = sheet.createRow(rowCount++);
-				XSSFCell cell = row.createCell(0);
-				cell.setCellValue(fData.getFaculty().getName()+" ("+currentYear.toString()+")");
-				sheet.addMergedRegion(new CellRangeAddress(rowCount-1, rowCount-1, 0, columnCount-1));
+				int columnIndex [] = new int [colCount];//index des colonnes qui doivent etre afficher
+				if (lastIndex != 0) {
+					for(int i = 0; i <= step; i ++)
+						columnIndex[i] = i;
+				}
+				for (int i = lastIndex != 0 ? 1 : 0; i < config.countAt(0); i++) {
+					if (config.getStatusAt(0, i))
+						columnIndex[lastIndex++] = i + step;
+				}
 				
-				XSSFCellStyle style = book.createCellStyle();
-				XSSFFont font = book.createFont();
-				font.setFontName("Arial");
-				font.setFontHeight(18);
-				font.setBold(true);
-				font.setColor(IndexedColors.WHITE.index);
-				
-				style.setFillForegroundColor(IndexedColors.DARK_BLUE.index);
-				style.setFont(font);
-				style.setAlignment(HorizontalAlignment.CENTER);
-				style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-				
-				cell.setCellStyle(style);
-				//==
-
-				for (DepartmentData dData : fData.getLastFilterData()) {
-					
-					for (PromotionData pData : dData.getLastFilterData()) {
-						PromotionPaymentTableModel data = pData.tableModel;
-						
-						if(data.getRowCount() == 0)
-							continue;
-						
-						//class name
-						style = book.createCellStyle();
-						font = book.createFont();
-						
-						font.setFontName("Arial");
-						font.setFontHeight(14);
-						font.setItalic(true);
-						font.setColor(IndexedColors.WHITE.index);
-						
-						style.setFont(font);
-						style.setFillForegroundColor(IndexedColors.BLACK.index);
-						style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-						
-						row = sheet.createRow(rowCount++);
-						cell = row.createCell(0);
-						cell.setCellValue(pData.getPromotion().getStudyClass().getAcronym()+" "+pData.getPromotion().getDepartment().getName());
-						sheet.addMergedRegion(new CellRangeAddress(rowCount-1, rowCount-1, 0, columnCount-1));
-						cell.setCellStyle(style);
-						//==
-						
-						//titre des colones
-						row = sheet.createRow(rowCount++);
-						style = book.createCellStyle();
-						style.setBorderBottom(BorderStyle.DOUBLE);
-						for (int i = 0; i < columnCount; i++) {					
-							cell = row.createCell(i);
-							cell.setCellValue(names[i]);
-							cell.setCellStyle(style);
+				if(config.isSelected(2) && config.hasChecked(2)) {//groupement des donnees					
+					if (config.getStatusAt(2, 0)) {//groupement par faculte prioritaire
+						for (FacultyData data : lastFilterData)//creation d'une feuille par faculte
+							createFacultySheet(data, columnIndex, book, config);
+					} else if (config.getStatusAt(2, 1)) {//groupement par departement prioritaire
+						for (FacultyData filter : lastFilterData) {							
+							for (DepartmentData data : filter.datas)//creation d'une feuille par departement
+								createDepartmentSheet(data, book, config);
 						}
-						//==
+					} else {//groupement par classe d'etude prioritiare
+						final List<StudyClass> classes = new ArrayList<>();
+						final List<Department> deps = new ArrayList<>();
 						
-						for (int i = 0, count = data.getRowCount(); i < count; i++) {
-							row = sheet.createRow(rowCount++);
-							row.setHeight(rowHeight);
-							
-							current++;
-							progress.setValue(current);
-							progress.setString("("+current+"/"+max + ") "+data.getValueAt(i, 1));
-							
-							for (int j = 0; j < columnCount; j++) {
-								cell = row.createCell(j);
-								cell.setCellValue(data.getValueAt(i, j).toString());
+						//prepare metadata
+						for (int i = 0; i < lastFilter.length; i++) {
+							for (int j = 0, count = lastFilter[i].getDepartments().size(); j < count; j++){
+								deps.add(lastFilter[i].getDepartments().get(j).getDepartment());
+								for (int k = 0, ccount = lastFilter[i].getDepartments().get(j).getClasses().size(); k < ccount; k++) {
+									StudyClass sc = lastFilter[i].getDepartments().get(j).getClasses().get(k);
+									boolean addable = true;
+									
+									for (StudyClass s : classes) {
+										if(s.getId() == sc.getId()) {
+											addable = false;
+											break;
+										}
+									}
+									
+									if (addable) classes.add(sc);
+								}
 							}
 						}
 						
-						rowCount++;
+						final Department[][] classement = new Department[classes.size()][0];;
+						
+						for (int j = 0; j < classes.size(); j++) {
+							List<Department>  tmpDeps = new ArrayList<>();
+							for (int i = 0; i < deps.size(); i++){
+								if(promotionDao.check(currentYear, deps.get(i), classes.get(j))) {								
+									tmpDeps.add(deps.get(i));
+								}
+								progress.setValue(progress.getValue() + 1);
+								progress.setMaximum(progress.getMaximum() + 1);
+								progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Préparation des données...");
+							}
+							final Department[] departments = new Department[tmpDeps.size()];
+							if (!tmpDeps.isEmpty()) {
+								for (int i = 0; i < departments.length; i++) 
+									departments[i] = tmpDeps.get(i);
+							} 
+							classement[j] = departments;
+						}
+						//== metadata
+						
+						for (int index = 0; index < classes.size(); index++) {
+							StudyClass s = classes.get(index);
+							createStudyClassSheet(s, classement[index], book, config);//creation d'une feille par classe d'etude
+						}
 					}
+				} else {//pas de groupement des donnees
+					
 				}
-				
-				for (int i = 0; i < columnCount; i++) {
-					sheet.autoSizeColumn(i);
-				}
-			}
+			} 
 			
 			book.write(out);
 			
@@ -451,6 +441,7 @@ public class StudentsDatatableView extends Panel {
 		
 		progress.setVisible(false);
 	}
+	
 	//	=== || ====	export
 	
 	/**
@@ -462,8 +453,452 @@ public class StudentsDatatableView extends Panel {
 	 */
 	private XSSFSheet createGlobalSheet (XSSFWorkbook book, ExportConfig config) throws Exception{
 		XSSFSheet sheet = book.createSheet("globale");
+		int columnCount = 0;
+		int rowCount = -1;
+		
+		for(int i = 0; i < 3; i++) {//comptage des colonnes
+			if (config.getStatusAt(1, i))
+				columnCount++;
+		}
+		
+		int columns [] = new int [columnCount], lastIndex = 0;
+		for(int i = 0; i < 3; i++) {//recuperation des indexs de colone en afficher (solde, dette et effectifs)
+			if (config.getStatusAt(1, i))
+				columns[lastIndex++] = i;
+		}
+		columnCount += 1 + +config.countChecked(2);
+		
+		XSSFRow row = sheet.createRow(++rowCount);
+		XSSFCell cell = null;
+		//title of columns
+		for (int i = 0; i < columns.length; i++) {
+			cell = row.createCell(i+config.countChecked(2));
+			cell.setCellValue(config.getTitleCofingGroup(1, i));
+		}
+		//==
+		
+		List<CellRangeAddress> merges = new ArrayList<>();
+		
+		//exporation des donnees
+		if (config.isSelected(2) && config.hasChecked(2)) {//si on dois grouper les resultat
+			//identification du groupement du premier niveau
+			if (config.getStatusAt(2, 0)) {
+				for (FacultyFilter filter : lastFilter) {
+					int facultyRowStart = ++rowCount;
+					row = sheet.createRow(rowCount);//titre de la faculte
+					cell = row.createCell(0);
+					cell.setCellValue(filter.getFaculty().getName());
+					
+					
+					if (config.getStatusAt(2, 1)) {//si groument par departement
+						
+						for (int i = 0; i < filter.getDepartments().size(); i++) {
+							DepartmentFilter subFilter = filter.getDepartments().get(i);
+							Department dep = subFilter.getDepartment();
+							
+							if (config.getStatusAt(2, 2)) {// sous-sous groupement par classe d'etude
+								row = (i != 0)? sheet.createRow(++rowCount) : row;//titre du department
+								int departmentRowStart = rowCount;
+								cell = row.createCell(1);
+								cell.setCellValue(dep.getName());
+								for (int j = 0; j < subFilter.getClasses().size(); j++) {
+									StudyClass s = subFilter.getClasses().get(j);
+									Promotion prom = promotionDao.find(currentYear, dep, s);
+									row = (j != 0) ? sheet.createRow(++rowCount) : row;//titre de la classe d'etude
+									createGlobalPromotionCells(prom, row, 1, columns);
+								}
+								if (departmentRowStart < rowCount) {
+									CellRangeAddress addr = new CellRangeAddress(departmentRowStart, rowCount, 1, 1);
+									merges.add(addr);
+								}
+								row = sheet.createRow(++rowCount);//sous total
+							} else {
+								createGlobalDepartmentCells(dep, subFilter.getClasses(), row, 0, columns);
+							}
+						}
+						
+						row = sheet.createRow(++rowCount);//sous total
+					} else if (config.getStatusAt(2, 2)) {//si groupement par classe d'etude
+						
+						final List<StudyClass> classes = new ArrayList<>();
+						final List<Department> deps = new ArrayList<>();
+						
+						//preparation des metadonnees
+						for (int i = 0; i < lastFilter.length; i++) {//filtrage des classes d'etude
+							for (int j = 0, count = lastFilter[i].getDepartments().size(); j < count; j++){
+								deps.add(lastFilter[i].getDepartments().get(j).getDepartment());
+								for (int k = 0, ccount = lastFilter[i].getDepartments().get(j).getClasses().size(); k < ccount; k++) {
+									StudyClass sc = lastFilter[i].getDepartments().get(j).getClasses().get(k);
+									boolean addable = true;
+									
+									for (StudyClass s : classes) {
+										if(s.getId() == sc.getId()) {
+											addable = false;
+											break;
+										}
+									}
+									
+									if (addable) classes.add(sc);
+								}
+							}
+						}
+						//== metadata
+						
+						progress.setMaximum(classes.size());
+
+						for (int index = 0; index < classes.size(); index++) {
+							StudyClass s = classes.get(index);
+							row = sheet.createRow(++rowCount);//titre de la classe d'etude
+							createGlobalStudyClassCells(s, deps, row, 0, columns);
+						}
+						row = sheet.createRow(++rowCount);//sous total
+					} else {//pas de sous-groument
+						createGlobalFacultyCells(filter.getFaculty(), row, 0, columns);
+					}
+					
+					CellRangeAddress addr = new CellRangeAddress(facultyRowStart, rowCount-1, 0, 0);//merging row by faculty data
+					merges.add(addr);
+				}
+			} else if (config.getStatusAt(2, 1)) {//groupement de niveau-1 = department
+				List<DepartmentFilter> departments = new ArrayList<>();
+				for (FacultyFilter filter : lastFilter) {
+					for (DepartmentFilter subFilter : filter.getDepartments())
+						departments.add(subFilter);
+				}
+				
+				if(config.getStatusAt(2, 2)) {//groupement de niveau classe d'etude
+					for (DepartmentFilter filter : departments){
+						int departmentRowStart = rowCount;
+						Department dep = filter.getDepartment();
+						row = sheet.createRow(++rowCount);//titre du department
+						cell = row.createCell(1);
+						cell.setCellValue(dep.getName());
+						for (StudyClass s : filter.getClasses()) {
+							Promotion prom = promotionDao.find(currentYear, dep, s);
+							row = sheet.createRow(++rowCount);//titre de la classe d'etude
+							createGlobalPromotionCells(prom, row, 2, columns);
+						}
+						CellRangeAddress addr = new CellRangeAddress(departmentRowStart, rowCount, 1, 1);
+						merges.add(addr);
+						row = sheet.createRow(++rowCount);//sous total
+					}
+				} else {//groupement de niveau classe d'etude
+					for (DepartmentFilter filter : departments){						
+						createGlobalDepartmentCells(filter.getDepartment(), filter.getClasses(), row, 1, columns);
+					}
+				}
+			} else if (config.getStatusAt(2, 2)) {
+				for (FacultyFilter filter : lastFilter) {
+					for (DepartmentFilter subFilter : filter.getDepartments()) {
+						for (StudyClass s : subFilter.getClasses()) {
+							Promotion prom = promotionDao.find(currentYear, subFilter.getDepartment(), s);
+							row = sheet.createRow(++rowCount);//titre de la classe d'etude
+							createGlobalPromotionCells(prom, row, 0, columns);
+						}
+					}
+				}
+			}
+		} else {//aucun groupement des donnees (resultat monolitique)
+			
+		}
+		//export data
+
+		for (int i = 0; i < columnCount; i++)
+			sheet.autoSizeColumn(i);
+		
+		for (CellRangeAddress address : merges)
+			sheet.addMergedRegion(address);
 		
 		return sheet;
+	}
+	
+	/**
+	 * generation d'un feille pour une le detais de payement pour une faculte
+	 * @param data
+	 * @param book
+	 * @param config
+	 * @return
+	 * @throws Exception
+	 */
+	private XSSFSheet createFacultySheet (FacultyData data, int [] columnIndex, XSSFWorkbook book, ExportConfig config) throws Exception{
+		
+		FacultyFilter filter = data.lastFilter;
+		
+		int columnCount = columnIndex.length;
+		short rowHeight = 400;
+		int current = 0;
+		
+		XSSFSheet sheet = book.createSheet(filter.getFaculty().getAcronym());
+		int rowCount = -1;
+		
+		//faculty name
+		XSSFRow row = sheet.createRow(++rowCount);
+		XSSFCell cell = row.createCell(0);
+		cell.setCellValue(data.getFaculty().getName()+" ("+currentYear.toString()+")");
+		sheet.addMergedRegion(new CellRangeAddress(rowCount, rowCount, 0, columnCount-1));
+		
+		XSSFCellStyle style = book.createCellStyle();
+		XSSFFont font = book.createFont();
+		font.setFontName("Arial");
+		font.setFontHeight(18);
+		font.setBold(true);
+		font.setColor(IndexedColors.WHITE.index);
+		
+		style.setFillForegroundColor(IndexedColors.DARK_BLUE.index);
+		style.setFont(font);
+		style.setAlignment(HorizontalAlignment.CENTER);
+		style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		
+		cell.setCellStyle(style);
+		//==
+		
+		List<CellRangeAddress> merges = new ArrayList<>();
+
+		for (DepartmentData dData : data.getLastFilterData()) {
+			Department department = dData.getDepartment();
+			
+			if (config.getStatusAt(2, 1)) {
+				style = book.createCellStyle();
+				font = book.createFont();
+				
+				font.setFontName("Arial");
+				font.setFontHeight(14);
+				font.setItalic(false);
+				font.setColor(IndexedColors.WHITE.index);
+				
+				style.setFont(font);
+				style.setFillForegroundColor(IndexedColors.DARK_RED.index);
+				style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+				
+				row = sheet.createRow(++rowCount);
+				cell = row.createCell(0);
+				cell.setCellValue(department.getName());
+				cell.setCellStyle(style);
+				merges.add(new CellRangeAddress(rowCount, rowCount, 0, columnCount-1));
+			}
+			
+			for (PromotionData pData : dData.getLastFilterData()) {
+				PromotionPaymentTableModel dataModel = pData.tableModel;
+				
+				if(dataModel.getRowCount() == 0)
+					continue;
+				
+				if (config.getStatusAt(2, 2)) {					
+					//class name
+					style = book.createCellStyle();
+					font = book.createFont();
+					
+					font.setFontName("Arial");
+					font.setFontHeight(12);
+					font.setItalic(false);
+					font.setColor(IndexedColors.WHITE.index);
+					
+					style.setFont(font);
+					style.setFillForegroundColor(IndexedColors.BLACK.index);
+					style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+					
+					row = sheet.createRow(++rowCount);
+					cell = row.createCell(0);
+					cell.setCellValue(pData.getPromotion().getStudyClass().getName());
+					merges.add(new CellRangeAddress(rowCount, rowCount, 0, columnCount-1));
+					cell.setCellStyle(style);
+					//==
+				}
+				
+				//titre des colones
+				row = sheet.createRow(++rowCount);
+				style = book.createCellStyle();
+				style.setBorderBottom(BorderStyle.DOUBLE);
+				for (int i = 0; i < columnIndex.length; i++) {					
+					cell = row.createCell(i);
+					cell.setCellValue(dataModel.getRow(0).getTitleAt(columnIndex[i]));
+					cell.setCellStyle(style);
+				}
+				//==
+				
+				for (int i = 0, count = dataModel.getRowCount(); i < count; i++) {
+					row = sheet.createRow(++rowCount);
+					row.setHeight(rowHeight);
+					
+					current++;
+					progress.setValue(current);
+					progress.setString("("+current+"/"+progress.getMaximum() + ") "+dataModel.getValueAt(i, 1));
+					
+					for (int j = 0; j < columnCount; j++) {
+						cell = row.createCell(j);
+						cell.setCellValue(dataModel.getRow(i).getStringValueAt(columnIndex[j]));
+					}
+				}
+				
+				++rowCount;
+			}
+		}
+		
+		for (CellRangeAddress addr : merges)
+			sheet.addMergedRegion(addr);
+		
+		for (int i = 0; i < columnCount; i++)
+			sheet.autoSizeColumn(i);
+		return sheet;
+	}
+	
+	/**
+	 * creation d'une feille pour un departement
+	 * @param data
+	 * @param book
+	 * @param config
+	 * @return
+	 * @throws Exception
+	 */
+	private XSSFSheet createDepartmentSheet (DepartmentData data, XSSFWorkbook book, ExportConfig config) throws Exception {
+		XSSFSheet sheet = book.createSheet(data.getDepartment().getAcronym());
+		
+		return sheet;
+	}
+	
+	/**
+	 * creation d'une feuille pour une classe d'etude
+	 * @param sc
+	 * @param departements
+	 * @param book
+	 * @param config
+	 * @return
+	 * @throws Exception
+	 */
+	private XSSFSheet createStudyClassSheet (StudyClass sc, Department [] departements, XSSFWorkbook book, ExportConfig config) throws Exception{
+		XSSFSheet sheet = book.createSheet(sc.getAcronym());
+		
+		return sheet;
+	}
+	
+	/**
+	 * creation des cellules d'une ligne contenant les donnees globale d'une classe d'etude
+	 * @param sc
+	 * @param departments
+	 * @param row
+	 * @param lastCelIndex : la derniere case deja utiliser pour la ligne
+	 * @param columns
+	 */
+	private void createGlobalStudyClassCells (StudyClass sc, List<Department> departments, XSSFRow row, int lastCelIndex, int [] columns) {
+		
+		String label = "";
+		List<Department>  tmpDeps = new ArrayList<>();
+		
+		for (int i = 0; i < departments.size(); i++){
+			if(promotionDao.check(currentYear, departments.get(i), sc)) {								
+				tmpDeps.add(departments.get(i));
+				label += " "+departments.get(i).getAcronym()+",";
+			}
+			progress.setValue(progress.getValue() + 1);
+			progress.setMaximum(progress.getMaximum() + 1);
+			progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Préparation des données...");
+		}
+		
+		final Department[] classement = new Department[tmpDeps.size()];
+		if (!tmpDeps.isEmpty()) {
+			for (int i = 0; i < classement.length; i++) 
+				classement[i] = tmpDeps.get(i);
+			label = label.substring(0, label.length()-1);
+			label = "("+label+")";
+		} 
+		
+		XSSFCell cell = row.createCell(++lastCelIndex);
+		cell.setCellValue(sc.getName());
+		
+		lastCelIndex++;
+		for (int i = 0; i < columns.length; i++) {
+			cell = row.createCell(lastCelIndex+i);
+			if (i == 0 || i == 1) {
+				double amount = paymentFeeDao.getSoldByPromotions(sc, classement, currentYear);
+				if (i == 1) {//pour le calcul de dettes
+					double total = 0;
+					for(Department d : classement) {
+						Promotion p = promotionDao.find(currentYear, d, sc);
+						double count  = inscriptionDao.countByPromotion(p);
+						total += count * p.getAcademicFee().getAmount();
+					}
+					amount = total - amount;
+				}
+				cell.setCellValue(amount);
+			} else {
+				int count = inscriptionDao.countByPromotions(sc, classement, currentYear);
+				cell.setCellValue(count);
+			}
+		}
+	}
+	
+	/**
+	 * creation des cellules d'une ligne contenant les donnees globale d'un departement
+	 * @param department
+	 * @param row
+	 * @param lastCelIndex : la derniere case deja utiliser pour la ligne
+	 * @param columns
+	 */
+	private void createGlobalDepartmentCells (Department department, List<StudyClass> classes, XSSFRow row, int lastCelIndex, int [] columns) {
+		XSSFCell cell = row.createCell(++lastCelIndex);
+		cell = row.createCell(1);
+		cell.setCellValue(department.getName());
+
+		cell.setCellValue(department.getName());
+		StudyClass classement [] = new StudyClass [classes.size()];
+		for (int i = 0; i < classement.length; i++)
+			classement[i] = classes.get(i);
+		
+		lastCelIndex++;
+		for (int i = 0; i < columns.length; i++) {
+			cell = row.createCell(lastCelIndex+i);
+			if (i == 0 || i == 1) {
+				double amount = paymentFeeDao.getSoldByPromotions(classement, department, currentYear);
+				if (i == 1) {//pour le calcul de dettes
+					double total = 0;
+					for (StudyClass s : classement) {
+						Promotion p = promotionDao.find(currentYear, department, s);
+						double count  = inscriptionDao.countByPromotion(p);
+						total += count * p.getAcademicFee().getAmount();
+					}
+					amount = total - amount;
+				}
+				cell.setCellValue(amount);
+			} else {
+				int count = inscriptionDao.countByPromotions(classement, department, currentYear);
+				cell.setCellValue(count);
+			}
+		}
+	}
+	
+	private void createGlobalFacultyCells (Faculty faculty, XSSFRow row, int lastCelIndex, int [] columns) {
+		
+	}
+	
+	/**
+	 * chargement des donnees des cellules  d'une promotions
+	 * @param promotion
+	 * @param row
+	 * @param lastCelIndex
+	 * @param columns
+	 * @return
+	 */
+	private XSSFCell createGlobalPromotionCells (Promotion promotion, XSSFRow row, int lastCelIndex, int [] columns) {
+		XSSFCell cell = row.createCell(++lastCelIndex);
+		cell.setCellValue(promotion.getStudyClass().getName());
+		lastCelIndex++;
+		for (int i = 0; i < columns.length; i++) {
+			cell = row.createCell(lastCelIndex+i);
+			if (i == 0 || i == 1) {
+				double amount = paymentFeeDao.getSoldByPromotion(promotion);
+				if (i == 1) {//pour le calcul de dettes
+					double total = 0;
+					double count  = inscriptionDao.countByPromotion(promotion);
+					total += count * promotion.getAcademicFee().getAmount();
+					amount = total - amount;
+				}
+				cell.setCellValue(amount);
+			} else {
+				int count = inscriptionDao.countByPromotion(promotion);
+				cell.setCellValue(count);
+			}
+		}
+		return cell;
 	}
 	
 	/**

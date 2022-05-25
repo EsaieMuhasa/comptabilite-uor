@@ -32,7 +32,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	private StudentDao studentDao;
 
 	public static final String [] COLUMN_NAMES = new String[] {"Matricule", "Nom, post-nom et prénom", "Téléphone", "Solde", "Dêtte"};
-	public static final String [] ALL_COLUMN_NAMES = new String[] {"Matricule", "Nom", "Post-nom", "prénom", "Téléphone", "E-mail", "Date de naissance", "Liex de naissance", "Photo", "Solde", "Dêtte"};
+	public static final String [] ALL_COLUMN_NAMES = new String[] {"Nom", "Post-nom", "prénom", "Matricule", "Téléphone", "E-mail", "Date de naissance", "Liex de naissance", "Photo", "Solde", "Dêtte"};
 	
 	private final DAOAdapter<Inscription> inscriptionListener = new DAOAdapter<Inscription>() {
 		@Override
@@ -232,7 +232,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 			case 3:
 				return data.get(rowIndex).getSold()+" USD";
 			case 4:
-				return (promotion.getAcademicFee().getAmount() - data.get(rowIndex).getSold()) + " USD";
+				return data.get(rowIndex).getDebs()+ " USD";
 		}
 		return null;
 	}
@@ -449,10 +449,11 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		
 		protected void calcul (boolean fireTable) {
 			sold = 0;
+			debs = promotion.getAcademicFee().getAmount();
 			for (PaymentFee p : payments) {
 				sold += p.getAmount();
 			}
-			debs = promotion.getAcademicFee().getAmount() - sold;
+			debs -= sold;
 			if (fireTable)
 				fireTableCellUpdated(index, 3);
 		}
@@ -462,6 +463,8 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		}
 		
 		public double getDebs () {
+			if (sold == 0)
+				return promotion.getAcademicFee().getAmount();
 			return debs;
 		}
 
