@@ -3,7 +3,6 @@
  */
 package net.uorbutembo.views.forms;
 
-import static net.uorbutembo.views.forms.FormUtil.BKG_END;
 import static net.uorbutembo.views.forms.FormUtil.COLORS;
 import static net.uorbutembo.views.forms.FormUtil.DEFAULT_H_GAP;
 import static net.uorbutembo.views.forms.FormUtil.DEFAULT_V_GAP;
@@ -46,6 +45,8 @@ import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.TextField;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
+import net.uorbutembo.swing.charts.PieModel;
+import net.uorbutembo.swing.charts.PieModelListener;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import resources.net.uorbutembo.R;
@@ -73,6 +74,7 @@ public class FormGroupAllocationCost extends Panel {
 	//paneau principeau
 	private final Panel container = new Panel(layout);
 	private final Panel left = new Panel(new BorderLayout());
+	private final Panel right = new  Panel(new BorderLayout());
 	private final Box center = Box.createVerticalBox();
 	private final Panel bottom = new Panel();
 	
@@ -81,6 +83,55 @@ public class FormGroupAllocationCost extends Panel {
 	//pour le grahique
 	private final DefaultPieModel pieModel = new DefaultPieModel();
 	private final PiePanel piePanel = new PiePanel(pieModel);
+	private final JLabel 
+		labelPercentUsed = FormUtil.createSubTitle(""),
+		labelAmountUsed = FormUtil.createSubTitle("");
+	
+	private PieModelListener pieListener = new PieModelListener() {
+		
+		@Override
+		public void repaintPart(PieModel model, int partIndex) {
+			refresh(model);
+		}
+		
+		@Override
+		public void refresh (PieModel model) {
+			double percent = model.getSumPercent();
+			labelPercentUsed.setText(percent+" %");
+			labelAmountUsed.setText(model.getRealMax()+" "+FormUtil.UNIT_MONEY+"");
+			btnSave.setEnabled(percent == 100.0);
+		}
+		
+		@Override
+		public void onSelectedIndex(PieModel model, int oldIndex, int newIndex) {}
+	};
+	
+	private final DAOAdapter<AnnualSpend> annualAdapter = new DAOAdapter<AnnualSpend>() {
+		@Override
+		public void onCreate(AnnualSpend e, int requestId) {
+			if(academicFee != null && academicFee.getAcademicYear().getId() == e.getAcademicYear().getId()) 
+				createFieldGroup(e);
+		}
+		
+		@Override
+		public void onCreate(AnnualSpend[] e, int requestId) {
+			for (AnnualSpend spend : e) {
+				if(academicFee != null && academicFee.getAcademicYear().getId() == spend.getAcademicYear().getId()) 
+					createFieldGroup(spend);
+			}
+		}
+		
+		@Override
+		public void onDelete(AnnualSpend e, int requestId) {
+			for (int i = 0; i < annualSpends.size(); i++) {
+				if(annualSpends.get(i).getId() ==e.getId()) {
+					annualSpends.remove(i);
+					init(academicFee, annualSpends);
+					return;
+				}
+			}
+		}
+	};
 
 	/**
 	 * Constructeur d'initialisation
@@ -94,33 +145,10 @@ public class FormGroupAllocationCost extends Panel {
 		this.initViews();
 		this.setBorder(new EmptyBorder(0, 0, DEFAULT_V_GAP*2, 0));
 		
+		piePanel.getModel().addListener(pieListener);
 		piePanel.getRender().setHovable(false);
-		annualSpendDao.addListener(new DAOAdapter<AnnualSpend>() {
-			@Override
-			public void onCreate(AnnualSpend e, int requestId) {
-				if(academicFee != null && academicFee.getAcademicYear().getId() == e.getAcademicYear().getId()) 
-					createFieldGroup(e);
-			}
-			
-			@Override
-			public void onCreate(AnnualSpend[] e, int requestId) {
-				for (AnnualSpend spend : e) {
-					if(academicFee != null && academicFee.getAcademicYear().getId() == spend.getAcademicYear().getId()) 
-						createFieldGroup(spend);
-				}
-			}
-			
-			@Override
-			public void onDelete(AnnualSpend e, int requestId) {
-				for (int i = 0; i < annualSpends.size(); i++) {
-					if(annualSpends.get(i).getId() ==e.getId()) {
-						annualSpends.remove(i);
-						init(academicFee, annualSpends);
-						return;
-					}
-				}
-			}
-		});
+		annualSpendDao.addListener(annualAdapter);
+		btnSave.setEnabled(false);
 	}
 	
 	/**
@@ -249,19 +277,29 @@ public class FormGroupAllocationCost extends Panel {
 		center.setBorder(new EmptyBorder(0, 0, 0, DEFAULT_V_GAP));
 		
 		container.add(left);
-		container.add(piePanel);
+		container.add(right);
 		container.setBorder(new LineBorder(FormUtil.BORDER_COLOR));
-		piePanel.setBackground(BKG_END);
-
-		left.add(FormUtil.createScrollPane(center), BorderLayout.CENTER);
-		left.setBorder(new EmptyBorder(0, DEFAULT_H_GAP, 0, 0));
 		
-		this.add(bottom, BorderLayout.SOUTH);
+		final Panel labels = new  Panel(new GridLayout(1, 2, DEFAULT_H_GAP, DEFAULT_H_GAP));
+		final Panel padding = new  Panel(new BorderLayout());
+
+		padding.add(FormUtil.createScrollPane(center), BorderLayout.CENTER);
+		padding.setBorder(new EmptyBorder(0, DEFAULT_H_GAP, 0, 0));
+		
+		labels.add(labelAmountUsed);
+		labels.add(labelPercentUsed);
+		labels.setBackground(FormUtil.BORDER_COLOR);
+		labels.setOpaque(true);
+		
+		right.add(piePanel, BorderLayout.CENTER);
+		left.add(labels, BorderLayout.SOUTH);
+		left.add(padding, BorderLayout.CENTER);
 		
 		piePanel.setBackground(FormUtil.BKG_DARK);
 		
-		this.add(this.title, BorderLayout.NORTH);
-		this.add(container, BorderLayout.CENTER);
+		add(title, BorderLayout.NORTH);
+		add(bottom, BorderLayout.SOUTH);
+		add(container, BorderLayout.CENTER);
 	}
 	
 	/**
@@ -298,7 +336,7 @@ public class FormGroupAllocationCost extends Panel {
 		}
 
 		center.repaint();
-		btnSave.setEnabled(academicFee != null && pieModel.getCountPart() != 0 && academicYearDao.isCurrent(academicFee.getAcademicYear()));
+		//btnSave.setEnabled(academicFee != null && pieModel.getCountPart() != 0 && academicYearDao.isCurrent(academicFee.getAcademicYear()));
 	}
 	
 	/**

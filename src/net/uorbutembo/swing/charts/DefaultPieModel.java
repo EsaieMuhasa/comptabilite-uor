@@ -259,6 +259,14 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 		}
 		return 0;
 	}
+	
+	@Override
+	public double getSumPercent() {
+		double sum = 0;
+		for (PiePart part : parts)
+			sum += getPercentOf(part);
+		return sum;
+	}
 
 	@Override
 	public PiePart [] getParts() {

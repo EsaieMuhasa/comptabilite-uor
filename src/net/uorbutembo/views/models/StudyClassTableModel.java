@@ -61,7 +61,7 @@ public class StudyClassTableModel extends TableModel<StudyClass> {
 			case 2: return "Date enregistrement";
 			case 3: return "Dernière modification";
 		}
-		return null;
+		return super.getColumnName(column);
 	}
 
 }

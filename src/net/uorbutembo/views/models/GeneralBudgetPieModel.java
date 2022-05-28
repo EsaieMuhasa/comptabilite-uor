@@ -502,6 +502,8 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			for (int i=0, size = costs.size(); i< size; i++) {
 				AllocationCost al = costs.get(i);
 				PiePart globalPart = findByData(al.getAnnualSpend());
+				if (globalPart == null) 
+					continue;
 				PiePart part = pieModelCaisse.findByData(globalPart.getData());
 				part.setValue(part.getValue() + al.getCollecetd());
 				max += al.getCollecetd();
@@ -556,6 +558,20 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		for (AcademicFee fee : academicFees) {
 			
 			if (!allocationCostDao.checkByAcademicFee(fee.getId()))
+				continue;
+			List<Promotion> proms = promotionDao.checkByAcademicFee(fee)? promotionDao.findByAcademicFee(fee) : null;
+			if (proms == null)
+				continue;
+			
+			boolean hasStudent = false;
+			for (Promotion promotion : proms) {
+				if (inscriptionDao.checkByPromotion(promotion)){
+					hasStudent = true;
+					break;
+				}
+			}
+			
+			if(!hasStudent)
 				continue;
 			
 			List<AllocationCost> costs = this.allocationCostDao.findByAcademicFee(fee);

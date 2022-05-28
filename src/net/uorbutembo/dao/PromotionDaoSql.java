@@ -39,6 +39,9 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 	@Override
 	public void create(Promotion p) throws DAOException {
 		try {
+			if (check(p.getAcademicYear(), p.getDepartment(), p.getStudyClass()))
+				return;
+			
 			long id = insertInTable(
 					new String[] {"academicYear", "studyClass", "department", "recordDate"},
 					new Object[] {p.getAcademicYear().getId(), p.getStudyClass().getId(), p.getDepartment().getId(), p.getRecordDate().getTime()});
@@ -52,19 +55,30 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 	@Override
 	public void create( Promotion [] t ) throws DAOException {
 		try (Connection connection= this.factory.getConnection();) {
+			List<Promotion> inserted = new ArrayList<>();
 			connection.setAutoCommit(false);
 			for (int i=0; i<t.length; i++) {
 				Promotion p = t[i];
+				if (check(p.getAcademicYear(), p.getDepartment(), p.getStudyClass()))
+					continue;
 				long id = insertInTable(
 						connection,
 						new String[] {"academicYear", "studyClass", "department", "recordDate"},
 						new Object[] {p.getAcademicYear().getId(), p.getStudyClass().getId(), p.getDepartment().getId(), p.getRecordDate().getTime()});
 				p.setId(id);
+				inserted.add(p);
 			}
 			connection.commit();
 			
-			for (Promotion p : t) {
-				this.emitOnCreate(p);
+			if (inserted.isEmpty())
+				return;
+			if(inserted.size() == 1) {
+				emitOnCreate(inserted.get(0));
+			} else {				
+				Promotion [] fire = new Promotion[inserted.size()];
+				for (int i = 0; i < fire.length; i++)
+					fire[i] = inserted.get(i);
+				emitOnCreate(fire);
 			}
 		} catch (SQLException e) {
 			throw new DAOException("Une erreur est survenue en plaine transaction\n"+e.getMessage(), e);
@@ -215,7 +229,7 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 			promotion.setLastUpdate(now);
 			updateInTable(
 					new String[] { "academicFee", "lastUpdate" },
-					new Object[] { academicFee == null || academicFee.getId() <= 0? null : academicFee, now.getTime() },
+					new Object[] { academicFee == null || academicFee.getId() <= 0? null : academicFee.getId(), now.getTime() },
 					promotion.getId()
 				);
 			emitOnUpdate(promotion);

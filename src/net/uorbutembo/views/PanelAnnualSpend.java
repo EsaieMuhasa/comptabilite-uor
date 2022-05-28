@@ -12,6 +12,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
 import net.uorbutembo.beans.AcademicYear;
@@ -24,6 +25,7 @@ import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
+import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.views.forms.FormAnnualSpend;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.AnnualSpendTableModel;
@@ -40,7 +42,8 @@ public class PanelAnnualSpend extends Panel {
 	
 	private Panel center = new Panel(new BorderLayout());
 	private FormAnnualSpend form;
-	private Panel panelTable = new Panel(new BorderLayout());
+	private TablePanel tablePanel;
+	private JScrollPane scroll;
 	private Table table;
 	private AnnualSpendTableModel tableModel;
 	
@@ -83,12 +86,20 @@ public class PanelAnnualSpend extends Panel {
 			public void onDelete(AnnualSpend[] e, int requestId) { reload(); }
 		});
 		
+		final Panel padding = new Panel(new BorderLayout());
 		tableModel = new AnnualSpendTableModel(annualSpendDao);
 		table = new Table(tableModel);
-		Panel panel = new Panel(new BorderLayout());
-		panel.add(table, BorderLayout.CENTER);
-		panel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-		panelTable.add(FormUtil.createVerticalScrollPane(panel), BorderLayout.CENTER);
+		tablePanel = new TablePanel(table, "", false);
+		padding.add(tablePanel, BorderLayout.CENTER);
+		scroll = FormUtil.createVerticalScrollPane(padding);
+		table.setShowVerticalLines(true);
+		final int w = 140;
+		for (int i = 1; i <= 4; i++) {			
+			table.getColumnModel().getColumn(i).setWidth(w);
+			table.getColumnModel().getColumn(i).setMinWidth(w);
+			table.getColumnModel().getColumn(i).setMaxWidth(w);
+			table.getColumnModel().getColumn(i).setResizable(false);
+		}
 		
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table.addMouseListener(new MouseAdapter() {
@@ -141,18 +152,17 @@ public class PanelAnnualSpend extends Panel {
 		btnList.setVisible(false);
 		btnList.addActionListener(event -> {
 			center.removeAll();
-			center.add(panelTable, BorderLayout.CENTER);
+			center.add(scroll, BorderLayout.CENTER);
 			center.revalidate();
 			center.repaint();
 			
 			btnList.setVisible(false);
 			btnNew.setVisible(true);
 		});
-		
-		
-		center.add(panelTable, BorderLayout.CENTER);
-		this.add(top, BorderLayout.NORTH);
-		this.add(center, BorderLayout.CENTER);
+		padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		center.add(scroll, BorderLayout.CENTER);
+		add(top, BorderLayout.NORTH);
+		add(center, BorderLayout.CENTER);
 	}
 	
 	/**
@@ -179,6 +189,11 @@ public class PanelAnnualSpend extends Panel {
 		
 		if(form!= null) 
 			form.setCurrentYear(currentYear);
+		
+		if(currentYear != null)
+			tablePanel.setTitle("Dépenses prévue pour l'année "+currentYear.getLabel());
+		else 
+			tablePanel.setTitle("");
 		
 		btnList.doClick();
 		btnNew.setVisible(currentYear != null && academicYearDao.isCurrent(currentYear));//0975612604

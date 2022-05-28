@@ -112,6 +112,41 @@ public class PanelFeePromotion extends Panel {
 
 	private final MainWindow mainWindow;
 	
+	private final DAOAdapter<AcademicFee> feeAdapter = new DAOAdapter<AcademicFee>() {
+		@Override
+		public void onCreate(AcademicFee e, int requestId) {
+			if(academicYearDao.isCurrent(currentYear))
+				listModel.addElement(e);
+			dialogAcademicFee.setVisible(false);
+		}
+		
+		@Override
+		public void onUpdate (AcademicFee e, int requestId) {
+			if(academicYearDao.isCurrent(currentYear)) {					
+				for (int i = 0, count = listModel.getSize(); i < count; i++) {						
+					if(listModel.get(i).getId() == e.getId()){
+						listModel.set(i, e);
+						break;
+					}
+				}
+			}
+			dialogAcademicFee.setVisible(false);
+		}
+		
+		@Override
+		public void onDelete(AcademicFee e, int requestId) {
+			if(academicYearDao.isCurrent(currentYear)) {					
+				for (int i = 0, count = listModel.getSize(); i < count; i++) {						
+					if(listModel.get(i).getId() == e.getId()){
+						listModel.remove(i);
+						setCurrentYear(currentYear);
+						break;
+					}
+				}
+			}
+		}
+	};
+	
 	public PanelFeePromotion(MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.mainWindow = mainWindow;
@@ -139,54 +174,51 @@ public class PanelFeePromotion extends Panel {
 		
 		btnNewFee.setEnabled(false);
 		btnNewFee.addActionListener(event -> {
-			if(dialogAcademicFee == null) {
-				formAcademicFee = new FormAcademicFee(mainWindow);
-				dialogAcademicFee = new Dialog(mainWindow, formAcademicFee);
-			}
-			
-			dialogAcademicFee.setVisible(true);
+			createAcademicFee();
 		});
 
-		this.initPanelShowConfig();
+		initPanelShowConfig();
 		
 		center.add(tabbedPane, BorderLayout.CENTER);
-		this.add(center, BorderLayout.CENTER);
-		this.setBorder(new EmptyBorder(0, 2, 2, 1));
+		add(center, BorderLayout.CENTER);
+		setBorder(new EmptyBorder(0, 2, 2, 1));
 		
-		academicFeeDao.addListener(new DAOAdapter<AcademicFee>() {
-			@Override
-			public void onCreate(AcademicFee e, int requestId) {
-				if(academicYearDao.isCurrent(currentYear))
-					listModel.addElement(e);
-			}
-			
-			@Override
-			public void onUpdate (AcademicFee e, int requestId) {
-				if(academicYearDao.isCurrent(currentYear)) {					
-					for (int i = 0, count = listModel.getSize(); i < count; i++) {						
-						if(listModel.get(i).getId() == e.getId()){
-							listModel.set(i, e);
-							break;
-						}
-					}
-				}
-			}
-			
-			@Override
-			public void onDelete(AcademicFee e, int requestId) {
-				if(academicYearDao.isCurrent(currentYear)) {					
-					for (int i = 0, count = listModel.getSize(); i < count; i++) {						
-						if(listModel.get(i).getId() == e.getId()){
-							listModel.remove(i);
-							setCurrentYear(currentYear);
-							break;
-						}
-					}
-				}
-			}
-		});
+		academicFeeDao.addListener(feeAdapter);
 		
 		initPopup();//click doit pour la modification et la suppression
+	}
+	
+	/**
+	 * construction de la boite de dialogue qui gere la creation et la modification
+	 * des frais academique
+	 */
+	private void buildAcademicFeeDialog () {		
+		if(dialogAcademicFee == null) {
+			formAcademicFee = new FormAcademicFee(mainWindow);
+			dialogAcademicFee = new Dialog(mainWindow, formAcademicFee);
+		}
+		dialogAcademicFee.setLocationRelativeTo(mainWindow);
+	}
+	
+	/**
+	 * demande d'ouverture de la boite de dialogue de creation
+	 * d'une nouvelle occurence pour les frais academiques
+	 */
+	private void createAcademicFee () {
+		buildAcademicFeeDialog();
+		dialogAcademicFee.setTitle("Enregistrement des frais univesitaire");
+		dialogAcademicFee.setVisible(true);
+	}
+	
+	/**
+	 * demande de modification des frais universitaire
+	 * @param fee
+	 */
+	private void updateAcademicFee (AcademicFee fee) {
+		buildAcademicFeeDialog();
+		dialogAcademicFee.setTitle("Edition des frais univesitaire");
+		formAcademicFee.setAcademicFee(fee);
+		dialogAcademicFee.setVisible(true);
 	}
 	
 	/**
@@ -198,14 +230,7 @@ public class PanelFeePromotion extends Panel {
 		
 		itemUpdate.addActionListener(event-> {
 			AcademicFee fee = listModel.get(feeList.getSelectedIndex());
-			if(dialogAcademicFee == null) {
-				formAcademicFee = new FormAcademicFee(mainWindow);
-				dialogAcademicFee = new Dialog(mainWindow, formAcademicFee);
-			}
-			
-			formAcademicFee.setAcademicFee(fee);
-			
-			dialogAcademicFee.setVisible(true);
+			updateAcademicFee(fee);
 		});
 		itemDelete.addActionListener(event -> {
 			AcademicFee fee = listModel.get(feeList.getSelectedIndex());

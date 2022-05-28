@@ -4,6 +4,7 @@
 package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.util.ArrayList;
 import java.util.Date;
@@ -48,7 +49,7 @@ public class PanelAnnualRecipe extends Panel {
 	
 	private DefaultListModel<AnnualRecipe> modelRecipe = new DefaultListModel<>();
 	private JList<AnnualRecipe> listRecipe = new JList<>(modelRecipe);
-	private JButton btnAdd = new JButton("Nouvelle rubrique");
+	private JButton btnAdd = new JButton("Nouvelle source");
 	private DialogChooseRecipe dialog;
 	
 	private final Panel panelRight = new  Panel(new BorderLayout());
@@ -250,10 +251,13 @@ public class PanelAnnualRecipe extends Panel {
 		}
 
 		private void init() {
-			final Panel panelCenter = new Panel(new BorderLayout());
+			final Panel panelCenter = new Panel(new BorderLayout()), padding = new Panel(new BorderLayout());
 			final Panel panelBottom = new Panel();
 			
-			panelCenter.add(FormUtil.createScrollPane(listRecipes), BorderLayout.CENTER);
+			padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			padding.add(listRecipes, BorderLayout.CENTER);
+			
+			panelCenter.add(FormUtil.createScrollPane(padding), BorderLayout.CENTER);
 						
 			panelBottom.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			panelBottom.add(btnValidate);
@@ -265,6 +269,7 @@ public class PanelAnnualRecipe extends Panel {
 			
 			listRecipes.setFixedCellHeight(30);
 			listRecipes.setBackground(FormUtil.BKG_END);
+			listRecipes.setForeground(Color.WHITE);
 			listRecipes.addListSelectionListener(event -> {
 				btnValidate.setEnabled(listRecipes.getSelectedIndex() != -1);
 			});

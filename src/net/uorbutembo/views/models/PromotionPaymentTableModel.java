@@ -210,7 +210,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 
 	@Override
 	public int getColumnCount() {
-		return promotion.getAcademicFee() == null? 4 : 5;
+		return 5;
 	}
 
 	@Override

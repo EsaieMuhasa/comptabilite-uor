@@ -12,6 +12,7 @@ import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.TableModel;
+import net.uorbutembo.views.forms.FormUtil;
 
 /**
  * @author Esaie MUHASA
@@ -24,23 +25,25 @@ public class AnnualSpendTableModel extends TableModel <AnnualSpend> {
 	private UniversitySpendDao universitySpendDao;
 	private AcademicYear currentYear;
 	
+	private DAOAdapter<UniversitySpend> univAdapter = new DAOAdapter<UniversitySpend>() {
+		@Override
+		public synchronized void onUpdate(UniversitySpend e, int requestId) {
+			for (int i = 0, count = getRowCount(); i < count; i++) {
+				if(getRow(i).getUniversitySpend().getId() == e.getId()) {
+					getRow(i).setUniversitySpend(e);
+					updateRow(getRow(i), i);
+					return;
+				}
+			}
+		}
+	};
+	
 	public AnnualSpendTableModel(AnnualSpendDao daoInterface) {
 		super(daoInterface);
 		annualSpendDao = daoInterface;
 		universitySpendDao = daoInterface.getFactory().findDao(UniversitySpendDao.class);
 		
-		universitySpendDao.addListener(new DAOAdapter<UniversitySpend>() {
-			@Override
-			public synchronized void onUpdate(UniversitySpend e, int requestId) {
-				for (int i = 0, count = getRowCount(); i < count; i++) {
-					if(getRow(i).getUniversitySpend().getId() == e.getId()) {
-						getRow(i).setUniversitySpend(e);
-						updateRow(getRow(i), i);
-						return;
-					}
-				}
-			}
-		});
+		universitySpendDao.addListener(univAdapter);
 	}
 	
 	/**
@@ -80,15 +83,34 @@ public class AnnualSpendTableModel extends TableModel <AnnualSpend> {
 		
 		fireTableDataChanged();
 	}
+	
+	@Override
+	public String getColumnName(int column) {
+		switch (column) {
+			case 0: return "Libelé du dépense";
+			case 1: return "Date enregistrement";
+			case 2: return "Frais académique";
+			case 3: return "Autres recettes";
+			case 4: return "Déjà dépenser";
+		}
+		return super.getColumnName(column);
+	}
 
 	@Override
 	public int getColumnCount() {
-		return 1;
+		return 5;
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		return getData().get(rowIndex).getUniversitySpend().getTitle();
+		switch (columnIndex) {
+			case 0: return getData().get(rowIndex).getUniversitySpend().getTitle();
+			case 1 : return DEFAULT_DATE_FORMAT.format(data.get(rowIndex).getRecordDate());
+			case 2: return data.get(rowIndex).getCollectedCost()+" "+FormUtil.UNIT_MONEY;
+			case 3: return data.get(rowIndex).getCollectedRecipe()+" "+FormUtil.UNIT_MONEY;
+			case 4: return data.get(rowIndex).getUsed()+" "+FormUtil.UNIT_MONEY;
+		}
+		return null;
 	}
 
 }

@@ -75,6 +75,12 @@ public interface PieModel {
 	double getPercentOf (PiePart part);
 	
 	/**
+	 * Renvoie la somme des pourcents de parts
+	 * @return
+	 */
+	double getSumPercent ();
+	
+	/**
 	 * renvoie l'object le part qui a une reference vers l'object en parametre
 	 * @param data
 	 * @return
