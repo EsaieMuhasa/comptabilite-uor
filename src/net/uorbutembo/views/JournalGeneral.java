@@ -214,20 +214,21 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 	@Override
 	public void onCurrentYear(AcademicYear year) {
 		wait(true);
-		
-		if(comboModel.getSize() == 0) {
-			comboBox.removeItemListener(this);
-			List<AcademicYear> years = academicYearDao.findAll();
-			for (AcademicYear y : years) {
-				comboModel.addElement(y);
-				if(y.getId() == year.getId())
-					comboBox.setSelectedItem(y);
+		if (year != null) {			
+			if(comboModel.getSize() == 0) {
+				comboBox.removeItemListener(this);
+				List<AcademicYear> years = academicYearDao.findAll();
+				for (AcademicYear y : years) {
+					comboModel.addElement(y);
+					if(y.getId() == year.getId())
+						comboBox.setSelectedItem(y);
+				}
+				comboBox.addItemListener(this);
 			}
-			comboBox.addItemListener(this);
+			
+			cards.updateCards(year);
+			reloadChart(year);
 		}
-		
-		cards.updateCards(year);
-		reloadChart(year);
 		wait(false);
 	}
 	

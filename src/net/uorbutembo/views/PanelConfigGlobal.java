@@ -28,9 +28,10 @@ public class PanelConfigGlobal extends DefaultScenePanel {
 		panelAcademicYear =  new PanelAcademicYear(mainWindow);
 		this
 			.addItemMenu(new NavbarButtonModel("academicYear", "Année Academique"), panelAcademicYear)		
-			.addItemMenu(new NavbarButtonModel("orientations", "Orientations"), new PanelOrientation(this.mainWindow))
-			.addItemMenu(new NavbarButtonModel("univeritySpend", "Rubriques budgétaire"), new PanelUniversitySpend(mainWindow))
-			.addItemMenu(new NavbarButtonModel("univerityRecipe", "Autres recette"), new PanelUniversityRecipe(mainWindow));
+			.addItemMenu(new NavbarButtonModel("orientations", "Filières"), new PanelOrientation(this.mainWindow))
+			.addItemMenu(new NavbarButtonModel("univeritySpend", "Dépenses"), new PanelUniversitySpend(mainWindow))
+			.addItemMenu(new NavbarButtonModel("univerityRecipe", "Autres recettes"), new PanelUniversityRecipe(mainWindow))
+			.addItemMenu(new NavbarButtonModel("location", "Lieux de payement"), new PanelPaymentLocation(mainWindow));
 	}
 	
 	@Override

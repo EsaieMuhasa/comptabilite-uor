@@ -56,8 +56,8 @@ public class FormStudent extends DefaultFormPanel {
 	public FormStudent(MainWindow mainWindow) {
 		super(mainWindow);
 		
-		this.studentDao = mainWindow.factory.findDao(StudentDao.class);
-		this.setTitle(TITLE_2);
+		studentDao = mainWindow.factory.findDao(StudentDao.class);
+		setTitle(TITLE_2);
 		
 		responsiveFileds.add(name);
 		responsiveFileds.add(postName);

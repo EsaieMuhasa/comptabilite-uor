@@ -134,6 +134,9 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 	@Override
 	public void onCurrentYear(AcademicYear year) {
 		currentYear = year;
+		if(year == null)
+			return;
+		
 		if(year != null) 
 			labelTitle.setText(year.getLabel());
 		load();

@@ -64,163 +64,134 @@ public class FormPromotion extends DefaultFormPanel {
 	private Button btnRemoveStudyClass = new Button(new ImageIcon(R.getIcon("asc")));
 	
 	private JSplitPane splitGeneral;
-	private PromotionDao promotionDao;
-	private DepartmentDao departmentDao;
-	private StudyClassDao studyClassDao;
-	private AcademicYearDao academicYearDao;
+	private final PromotionDao promotionDao;
+	private final DepartmentDao departmentDao;
+	private final StudyClassDao studyClassDao;
+	private final AcademicYearDao academicYearDao;
 	private AcademicYear currentYear;
-	
-	/**
-	 * 
-	 */
-	public FormPromotion(MainWindow mainWindow, PromotionDao promotionDao) {
-		super(mainWindow);
-		this.promotionDao = promotionDao;
-		this.academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
-		this.departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
-		this.studyClassDao = mainWindow.factory.findDao(StudyClassDao.class);
-		this.init();
-		
-		departmentDao.addListener(new DAOAdapter<Department>() {
-			@Override
-			public void onCreate(Department e, int requestId) {
-				departmentsModel.addElement(e);
-			}
-			
-			@Override
-			public void onCreate(Department[] e, int requestId) {
-				for (Department department : e) {
-					onCreate(department, requestId);
-				}
-			}
-			
-			@Override
-			public void onUpdate(Department e, int requestId) {
-				boolean updated = false;
-				for (int i = 0; i < departmentsModel.getSize(); i++) {
-					if(e.getId() == departmentsModel.get(i).getId())  {
-						departmentsModel.setElementAt(e, i);
-						updated = true;
-						break;
-					}
-				}
-				
-				if(!updated) {
-					for (int i = 0, count = selectedDepartmentsModel.getSize(); i < count; i++) {
-						if(e.getId() == selectedDepartmentsModel.get(i).getId()){
-							selectedDepartmentsModel.remove(i);
-							break;
-						}
-					}	
-				}
-			}
-			
-			@Override
-			public void onUpdate(Department[] e, int requestId) {
-				for (Department department : e) {
-					onUpdate(department, requestId);
-				}
-			}
-			
-			@Override
-			public void onDelete(Department e, int requestId) {
-				boolean deleted = false;
-				for (int i = 0, count = departmentsModel.getSize(); i < count; i++) {
-					if(e.getId() == departmentsModel.get(i).getId()){
-						departmentsModel.remove(i);
-						deleted = true;
-						break;
-					}
-				}
-				
-				if(!deleted) {
-					for (int i = 0, count = selectedDepartmentsModel.getSize(); i < count; i++) {
-						if(e.getId() == selectedDepartmentsModel.get(i).getId()){
-							selectedDepartmentsModel.remove(i);
-							break;
-						}
-					}	
-				}
-			}
-			
-			@Override
-			public void onDelete(Department[] e, int requestId) {
-				for (Department department : e) {
-					onDelete(department, requestId);
-				}
-			}
-		});
-		
-		studyClassDao.addListener(new DAOAdapter<StudyClass>() {
-			@Override
-			public void onCreate(StudyClass e, int requestId) {
-				studyClassModel.addElement(e);
-			}
-			
-			@Override
-			public void onCreate(StudyClass[] e, int requestId) {
-				for (StudyClass studyClass : e) {
-					onCreate(studyClass, requestId);
-				}
-			}
-			
-			@Override
-			public void onUpdate(StudyClass e, int requestId) {
-				boolean updated = false;
-				for (int i = 0, count = studyClassModel.getSize(); i < count; i++){
-					if (studyClassModel.get(i).getId() == e.getId() ) {
-						studyClassModel.set(i, e);
-						updated = true;
-						break;
-					}
-				}
-				
-				if(!updated) {
-					for (int i = 0, count = selectedStudyClassModel.getSize(); i < count; i++){
-						if (selectedStudyClassModel.get(i).getId() == e.getId() ) {
-							selectedStudyClassModel.set(i, e);
-							break;
-						}
-					}
-				}
-			}
-			
-			@Override
-			public void onUpdate(StudyClass[] e, int requestId) {
-				for (StudyClass studyClass : e) {
-					onUpdate(studyClass, requestId);
-				}
-			}
-			
-			@Override
-			public void onDelete(StudyClass e, int requestId) {
-				boolean deleted = false;
-				for (int i = 0, count = studyClassModel.getSize(); i < count; i++) {
-					if (studyClassModel.get(i).getId() == e.getId() ) {
-						studyClassModel.remove(i);
-						deleted = true;
-						break;
-					}
-				}
-				
-				if(!deleted) {
-					for (int i = 0, count = selectedStudyClassModel.getSize(); i < count; i++){
-						if (selectedStudyClassModel.get(i).getId() == e.getId() ) {
-							selectedStudyClassModel.remove(i);
-							break;
-						}
-					}
-				}
-			}
-			
-			@Override
-			public void onDelete(StudyClass[] e, int requestId) {
-				for (StudyClass studyClass : e) {
-					onDelete(studyClass, requestId);
-				}
-			}
-		});
 
+	private final DAOAdapter<Department> departmentAdapter = new DAOAdapter<Department>() {
+		@Override
+		public void onCreate(Department e, int requestId) {
+			departmentsModel.addElement(e);
+		}
+		
+		@Override
+		public void onUpdate(Department e, int requestId) {
+			boolean updated = false;
+			for (int i = 0; i < departmentsModel.getSize(); i++) {
+				if(e.getId() == departmentsModel.get(i).getId())  {
+					departmentsModel.setElementAt(e, i);
+					updated = true;
+					break;
+				}
+			}
+			
+			if(!updated) {
+				for (int i = 0, count = selectedDepartmentsModel.getSize(); i < count; i++) {
+					if(e.getId() == selectedDepartmentsModel.get(i).getId()){
+						selectedDepartmentsModel.remove(i);
+						break;
+					}
+				}	
+			}
+		}
+		
+		@Override
+		public void onDelete(Department e, int requestId) {
+			boolean deleted = false;
+			for (int i = 0, count = departmentsModel.getSize(); i < count; i++) {
+				if(e.getId() == departmentsModel.get(i).getId()){
+					departmentsModel.remove(i);
+					deleted = true;
+					break;
+				}
+			}
+			
+			if(!deleted) {
+				for (int i = 0, count = selectedDepartmentsModel.getSize(); i < count; i++) {
+					if(e.getId() == selectedDepartmentsModel.get(i).getId()){
+						selectedDepartmentsModel.remove(i);
+						break;
+					}
+				}	
+			}
+		}
+		
+		@Override
+		public void onDelete(Department[] e, int requestId) {
+			for (Department department : e) {
+				onDelete(department, requestId);
+			}
+		}
+	};
+	
+	private final DAOAdapter<StudyClass> classAdapter = new DAOAdapter<StudyClass>() {
+		@Override
+		public void onCreate(StudyClass e, int requestId) {
+			studyClassModel.addElement(e);
+		}
+		
+		@Override
+		public void onUpdate(StudyClass e, int requestId) {
+			boolean updated = false;
+			for (int i = 0, count = studyClassModel.getSize(); i < count; i++){
+				if (studyClassModel.get(i).getId() == e.getId() ) {
+					studyClassModel.set(i, e);
+					updated = true;
+					break;
+				}
+			}
+			
+			if(!updated) {
+				for (int i = 0, count = selectedStudyClassModel.getSize(); i < count; i++){
+					if (selectedStudyClassModel.get(i).getId() == e.getId() ) {
+						selectedStudyClassModel.set(i, e);
+						break;
+					}
+				}
+			}
+		}
+		
+		@Override
+		public void onDelete(StudyClass e, int requestId) {
+			boolean deleted = false;
+			for (int i = 0, count = studyClassModel.getSize(); i < count; i++) {
+				if (studyClassModel.get(i).getId() == e.getId() ) {
+					studyClassModel.remove(i);
+					deleted = true;
+					break;
+				}
+			}
+			
+			if(!deleted) {
+				for (int i = 0, count = selectedStudyClassModel.getSize(); i < count; i++){
+					if (selectedStudyClassModel.get(i).getId() == e.getId() ) {
+						selectedStudyClassModel.remove(i);
+						break;
+					}
+				}
+			}
+		}
+		
+		@Override
+		public void onDelete(StudyClass[] e, int requestId) {
+			for (StudyClass studyClass : e) {
+				onDelete(studyClass, requestId);
+			}
+		}
+	};
+
+	public FormPromotion(MainWindow mainWindow) {
+		super(mainWindow);
+		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
+		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
+		departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
+		studyClassDao = mainWindow.factory.findDao(StudyClassDao.class);
+		init();
+		
+		departmentDao.addListener(departmentAdapter);
+		studyClassDao.addListener(classAdapter);
 	}
 	
 	/**
@@ -411,5 +382,4 @@ public class FormPromotion extends DefaultFormPanel {
 		}
 	}
 	
-
 }

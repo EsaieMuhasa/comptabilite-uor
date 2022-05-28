@@ -3,6 +3,7 @@
  */
 package net.uorbutembo.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import net.uorbutembo.beans.AcademicYear;
@@ -10,6 +11,7 @@ import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
+import net.uorbutembo.beans.PaymentLocation;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.Student;
 import net.uorbutembo.beans.StudyClass;
@@ -42,6 +44,141 @@ public interface PaymentFeeDao extends DAOInterface <PaymentFee>, OverallStatist
 	List<PaymentFee> findByInscription (Inscription inscription)  throws DAOException;
 	default List<PaymentFee> findByInscription (long inscriptionId)  throws DAOException {
 		return findByInscription(getFactory().findDao(InscriptionDao.class).findById(inscriptionId));
+	}
+	
+	/**
+	 * Comptage des operations de payement faite dans un lieux
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	int countByLocation (long location) throws DAOException;
+	default int countByLocation (PaymentLocation location) throws DAOException {
+		return countByLocation(location.getId());
+	}
+	
+	/**
+	 * comptage des operations de payement faite dans un lieux
+	 * @param location
+	 * @param year
+	 * @return
+	 * @throws DAOException
+	 */
+	int countByLocation (long location, long year) throws DAOException;
+	default int countByLocation (PaymentLocation location, AcademicYear year) throws DAOException {
+		return countByLocation(location.getId(), year.getId());
+	}
+	
+	/**
+	 * verification de l'existance des operations dans un lieux
+	 * @param location
+	 * @param year
+	 * @return
+	 * @throws DAOException
+	 */
+	boolean checkByLocation (long location, long year) throws DAOException;
+	default boolean checkByLocation (PaymentLocation location, AcademicYear year) throws DAOException {
+		return checkByLocation(location.getId(), year.getId());
+	}
+	
+	/**
+	 * verification des operations faite dans un lieux, en faisant un saut dans les resultat.
+	 * @param location
+	 * @param year
+	 * @param offset (le OFFSET dela clause LIMIT dans une requette SQL)
+	 * @return
+	 * @throws DAOException
+	 */
+	boolean checkByLocation (long location, long year, int offset) throws DAOException;
+	default boolean checkByLocation (PaymentLocation location, AcademicYear year, int offset) throws DAOException {
+		return checkByLocation(location.getId(), year.getId(), offset);
+	}
+	
+	List<PaymentFee> findByLocation (PaymentLocation location, AcademicYear year) throws DAOException;
+	default List<PaymentFee> findByLocation (long location, long year) throws DAOException{
+		return findByLocation(
+				getFactory().findDao(PaymentLocationDao.class).findById(location), 
+				getFactory().findDao(AcademicYearDao.class).findById(year)
+			);
+	}
+	
+	/**
+	 * selection d'une partie (intervale de selection) des operations fites dans une localisation (lieux de payement)
+	 * @param location
+	 * @param year
+	 * @param limit
+	 * @param offset
+	 * @return
+	 * @throws DAOException
+	 */
+	List<PaymentFee> findByLocation (PaymentLocation location, AcademicYear year, int limit, int offset) throws DAOException;
+	
+	/**
+	 * selelction des operations faite pour une intervale de temps dans un lieux de payement
+	 * @param location leux de perception de l'argent
+	 * @param year annee academique concerner
+	 * @param min la date minimum
+	 * @param max la date maximum
+	 * @param limit nombre d'element a selectionner
+	 * @param offset nombre d'element a sauter dans la requette de selection
+	 * @return
+	 * @throws DAOException
+	 */
+	List<PaymentFee> findByLocation (PaymentLocation location, AcademicYear year, Date min, Date max, int limit, int offset) throws DAOException;
+	List<PaymentFee> findByLocation (PaymentLocation location, AcademicYear year, Date min, Date max) throws DAOException;
+	default List<PaymentFee> findByLocation (PaymentLocation location, AcademicYear year, Date min, Date max, int limit) throws DAOException {
+		return findByLocation(location, year, min, max, limit, 0);
+	}
+	default List<PaymentFee> findByLocation (PaymentLocation location, AcademicYear year, Date date) throws DAOException {
+		return findByLocation(location, year, date, date);
+	}
+	
+	default List<PaymentFee> findByLocation (PaymentLocation location, AcademicYear year, Date date, int limit, int offset) throws DAOException {
+		return findByLocation(location,  year, date, date , limit, offset);
+	}
+	
+	/**
+	 * selection des operations faite dans un lieux.
+	 * @param location
+	 * @param year
+	 * @param limit
+	 * @return
+	 * @throws DAOException
+	 */
+	default List<PaymentFee> findByLocation (PaymentLocation location, AcademicYear year, int limit) throws DAOException {
+		return findByLocation(location, year, limit, 0);
+	}
+	
+	/**
+	 * selection des operations effectuer dans un lieux de payement
+	 * @param location
+	 * @param year
+	 * @param limit
+	 * @return
+	 * @throws DAOException
+	 */
+	default List<PaymentFee> findByLocation (long location, long year, int limit) throws DAOException {
+		return findByLocation(
+				getFactory().findDao(PaymentLocationDao.class).findById(location),
+				getFactory().findDao(AcademicYearDao.class).findById(year), limit, 0
+			);
+	}
+	
+	/**
+	 * aliace de la methode 
+	 * <strong>{@link findByLocation(PaymentLocation location, AcadmicYear year, int limit, int offset)}</strong>
+	 * @param location
+	 * @param year
+	 * @param limit
+	 * @param offset
+	 * @return
+	 * @throws DAOException
+	 */
+	default List<PaymentFee> findByLocation (long location, long year, int limit, int offset) throws DAOException{
+		return findByLocation(
+				getFactory().findDao(PaymentLocationDao.class).findById(location),
+				getFactory().findDao(AcademicYearDao.class).findById(year), limit, offset
+			);
 	}
 	
 	/**
@@ -161,7 +298,7 @@ public interface PaymentFeeDao extends DAOInterface <PaymentFee>, OverallStatist
 	}
 	
 	/**
-	 * Renvoie le solde de tout les etudiant pour une annees academique
+	 * Renvoie le solde de tout les etudiants pour une annees academique
 	 * @param year
 	 * @return
 	 * @throws DAOException
@@ -169,6 +306,19 @@ public interface PaymentFeeDao extends DAOInterface <PaymentFee>, OverallStatist
 	double getSoldByAcademicYear (long year) throws DAOException;
 	default double getSoldByAcademicYear (AcademicYear year) throws DAOException {
 		return getSoldByAcademicYear(year.getId());
+	}
+	
+	/**
+	 * renvoie le solde deja payer en un lieux (prevue pour la preception des frais universitaire)
+	 * pour une annee academique
+	 * @param location
+	 * @param year
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByLocation (long location, long year) throws DAOException;
+	default double getSoldByLocation (PaymentLocation location, AcademicYear year) throws DAOException {
+		return getSoldByLocation(location.getId(), year.getId());
 	}
 	
 }

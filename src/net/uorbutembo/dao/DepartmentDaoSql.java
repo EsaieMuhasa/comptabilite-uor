@@ -56,7 +56,7 @@ public class DepartmentDaoSql extends OrientationDaoSql<Department> implements D
 	public void update(Department d, long id) throws DAOException {
 		try {
 			updateInTable(
-					new String [] {"acronym", "name", "recordDate", "faculty"},
+					new String [] {"acronym", "name", "lastUpdate", "faculty"},
 					new Object[] {d.getAcronym(), d.getName(), d.getLastUpdate().getTime(), d.getFaculty().getId()}, id);
 			d.setId(id);
 			this.emitOnUpdate(d);

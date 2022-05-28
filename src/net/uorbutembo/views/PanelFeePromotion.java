@@ -124,7 +124,7 @@ public class PanelFeePromotion extends Panel {
 		
 		tableModel = new PromotionTableModel(promotionDao);
 		table =  new Table(tableModel);
-		formFeePromotion = new FormFeePromotion(mainWindow, promotionDao);
+		formFeePromotion = new FormFeePromotion(mainWindow);
 		
 		formCost = new FormGroupAllocationCost(allocationCostDao);
 		
@@ -300,6 +300,9 @@ public class PanelFeePromotion extends Panel {
 		listModel.clear();
 		tableModel.clear();
 		formCost.clear();
+		
+		if(currentYear == null)
+			return;
 		
 		if(currentYear != null && this.academicFeeDao.checkByAcademicYear(currentYear.getId())) {
 			List<AcademicFee> data = this.academicFeeDao.findByAcademicYear(currentYear);

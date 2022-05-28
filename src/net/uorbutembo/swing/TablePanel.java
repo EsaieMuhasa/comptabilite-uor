@@ -24,6 +24,7 @@ public class TablePanel extends Panel {
 	
 	private Table table;
 	private JLabel title;
+	private final Panel header = new Panel(new BorderLayout());
 	
 	public TablePanel(Table table, String title, boolean scrollable) {
 		super(new BorderLayout());
@@ -51,6 +52,13 @@ public class TablePanel extends Panel {
 	}
 	
 	/**
+	 * @return the header
+	 */
+	public Panel getHeader() {
+		return header;
+	}
+
+	/**
 	 * @return the table
 	 */
 	public Table getTable() {
@@ -69,7 +77,6 @@ public class TablePanel extends Panel {
 	}
 
 	private void init(boolean scrollable) {
-		Panel header = new Panel(new BorderLayout());
 		Panel body = new Panel(new BorderLayout());
 		header.setOpaque(true);
 		header.setBackground(FormUtil.BORDER_COLOR);

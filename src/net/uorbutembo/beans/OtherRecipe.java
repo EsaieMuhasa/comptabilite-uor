@@ -17,6 +17,7 @@ public class OtherRecipe extends DBEntity {
 	private String label;
 	private AnnualRecipe account;
 	private Date collectionDate;
+	private PaymentLocation location;
 
 	/**
 	 * 
@@ -100,6 +101,20 @@ public class OtherRecipe extends DBEntity {
 	 */
 	public void setCollectionDate(Date collectionDate) {
 		this.collectionDate = collectionDate;
+	}
+
+	/**
+	 * @return the location
+	 */
+	public PaymentLocation getLocation() {
+		return location;
+	}
+
+	/**
+	 * @param location the location to set
+	 */
+	public void setLocation (PaymentLocation location) {
+		this.location = location;
 	}
 
 }

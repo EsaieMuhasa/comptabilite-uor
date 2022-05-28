@@ -4,27 +4,38 @@
 package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.swing.Box;
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import javax.swing.border.EmptyBorder;
 
+import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.FacultyDao;
+import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Dialog;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
+import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.views.forms.FormDepartment;
 import net.uorbutembo.views.forms.FormFaculty;
 import net.uorbutembo.views.forms.FormUtil;
-import net.uorbutembo.views.models.FacultyTableModel;
+import net.uorbutembo.views.models.DepartmentTableModel;
 import resources.net.uorbutembo.R;
 
 /**
@@ -34,19 +45,66 @@ import resources.net.uorbutembo.R;
 public class PanelFaculty extends Panel {
 	private static final long serialVersionUID = 6683302991865603147L;
 	
-	private FormFaculty form;
-	private final Table table;
-	private final FacultyTableModel tableModel;
-	private Button btnNew = new Button(new ImageIcon(R.getIcon("plus")), "Ajouter une faculté");
-	private Dialog dialogForm;
-	private FacultyDao facultyDao;
-	private DepartmentDao departmentDao;
+	private Button btnNewFaculty = new Button(new ImageIcon(R.getIcon("plus")), "Nouvelle faculté");
+	private FormFaculty formFaculty;
+	private Dialog dialogFaculty;
 	
-	private final JMenuItem itemUpdate = new  JMenuItem("Modifier", new ImageIcon(R.getIcon("edit")));
-	private final JMenuItem itemDelete = new  JMenuItem("Suprimer", new ImageIcon(R.getIcon("close")));
-	private final JPopupMenu popupMenu = new JPopupMenu();
+	private Button btnNewDepartment = new Button(new ImageIcon(R.getIcon("plus")), "Nouveau département");
+	private FormDepartment formDepartment;
+	private Dialog dialogDepartment;
 	
-	private MainWindow mainWindow;
+	private final FacultyDao facultyDao;
+	private final DepartmentDao departmentDao;
+	private final PromotionDao promotionDao;
+	
+	private final MainWindow mainWindow;
+	private final List<FacultyGroup> facultyGroups = new ArrayList<>();
+	private final Box center = Box.createVerticalBox();
+	
+	private final DAOAdapter<Faculty> facultyAdapter = new DAOAdapter<Faculty>() {
+		@Override
+		public synchronized void onCreate(Faculty e, int requestId) {
+			dialogFaculty.setVisible(false);
+			FacultyGroup g = new FacultyGroup(e);
+			center.add(g);
+			center.add(Box.createVerticalStrut(10));
+			facultyGroups.add(g);
+		}
+		
+		@Override
+		public synchronized void onUpdate(Faculty e, int requestId) {
+			dialogFaculty.setVisible(false);
+			formFaculty.setFaculty(null);
+		}
+		
+		@Override
+		public synchronized void onDelete(Faculty e, int requestId) {
+			for (FacultyGroup group : facultyGroups) {
+				if(group.faculty.getId() == e.getId()) {
+					center.remove(group);
+					center.revalidate();
+					center.repaint();
+					group.dispose();
+					return;
+				}
+			}
+		};
+	};
+	
+	private final DAOAdapter<Department> departmentAdapter = new DAOAdapter<Department>() {
+
+		@Override
+		public synchronized void onCreate(Department e, int requestId) {
+			dialogDepartment.setVisible(false);
+		}
+
+		@Override
+		public synchronized void onUpdate(Department e, int requestId) {
+			dialogDepartment.setVisible(false);
+			formDepartment.setDepartment(null);
+		}
+		
+	};
 
 	/**
 	 * @param mainWindow
@@ -54,103 +112,301 @@ public class PanelFaculty extends Panel {
 	public PanelFaculty(MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.mainWindow = mainWindow;
-		this.facultyDao = mainWindow.factory.findDao(FacultyDao.class);
-		this.departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
 		
-		this.facultyDao.addListener(new DAOAdapter<Faculty>() {
-			@Override
-			public void onCreate(Faculty e, int requestId) {
-				dialogForm.setVisible(false);
-			}
+		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
+		departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
+		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
+		
+		facultyDao.addListener(facultyAdapter);
+		departmentDao.addListener(departmentAdapter);
+		btnNewFaculty.setEnabled(false);
+		btnNewFaculty.addActionListener(event -> {
+			createFaculty();
+			dialogFaculty.setTitle("Enregistrement d'une faculté");
+			dialogFaculty.setVisible(true);
 		});
+		
+		btnNewDepartment.setEnabled(false);
+		btnNewDepartment.addActionListener(event -> {
+			createDepartment();
+			dialogDepartment.setTitle("Enregistrement d'un département");
+			dialogDepartment.setVisible(true);
+		});
+		
 		Panel top = new Panel(new BorderLayout());
-		top.add(btnNew, BorderLayout.EAST);
+		Box box = Box.createHorizontalBox();
+		box.add(btnNewFaculty);
+		box.add(btnNewDepartment);
+		top.add(box, BorderLayout.EAST);
 		top.add(FormUtil.createTitle("Facultés"), BorderLayout.CENTER);
-		this.add(top, BorderLayout.NORTH);
 		
-		btnNew.setEnabled(false);
-		btnNew.addActionListener(event -> {
-			createDialog();
-			this.dialogForm.setTitle("Enregistrememnt d'une faculté");
-			this.dialogForm.setVisible(true);
-		});
 		
-		Panel center = new Panel(new BorderLayout());
-		
-		tableModel = new FacultyTableModel(mainWindow.factory.findDao(FacultyDao.class));
-		table = new Table(tableModel);
-		
-		center.add(FormUtil.createVerticalScrollPane(table), BorderLayout.CENTER);
-		center.setBorder(new EmptyBorder(10, 0, 10, 0));
-		this.add(center, BorderLayout.CENTER);
-		this.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-		
-		initPopup();
-	}
-	
-	public synchronized void load () {
-		tableModel.reload();
-		btnNew.setEnabled(true);
+		center.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		top.setBorder(center.getBorder());
+		add(FormUtil.createVerticalScrollPane(center), BorderLayout.CENTER);
+		add(top, BorderLayout.NORTH);
 	}
 	
 	/**
-	 * Creation d ela boite de dialogue d'enregistrement et de modification des facultes
+	 * Chargement panel qui affiche chaque faculté et ces départements
+	 */
+	public synchronized void load () {
+		for (FacultyGroup group : facultyGroups)
+			group.dispose();
+		
+		center.removeAll();
+		if(facultyDao.countAll() != 0) {			
+			List<Faculty> facs = facultyDao.findAll();
+			for (Faculty faculty : facs) {
+				FacultyGroup g = new FacultyGroup(faculty);
+				center.add(g);
+				center.add(Box.createVerticalStrut(10));
+				facultyGroups.add(g);
+			}
+			center.add(Box.createVerticalGlue());
+			btnNewDepartment.setEnabled(true);
+		} else {
+			btnNewDepartment.setEnabled(false);
+		}
+		btnNewFaculty.setEnabled(true);
+	}
+	
+	/**
+	 * Construction de la boite de dialogue 
+	 * qui permet d'enregistrer et de modifier l'identite d'une faculte
+	 */
+	private void buildFacultyDialog () {
+		if(dialogFaculty == null) {
+			dialogFaculty = new Dialog(mainWindow);
+			formFaculty = new FormFaculty(mainWindow);
+			dialogFaculty.getContentPane().add(formFaculty, BorderLayout.CENTER);
+			dialogFaculty.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+			dialogFaculty.pack();
+			dialogFaculty.setSize(600, dialogFaculty.getHeight());
+			dialogFaculty.setResizable(false);
+			dialogFaculty.addWindowFocusListener(new WindowAdapter() {
+				@Override
+				public void windowClosing(WindowEvent e) {
+					formFaculty.setFaculty(null);
+				}
+			});
+		}		
+	}
+	
+	/**
+	 * Construction dela poite de dialogue de creation et modification d'un departement
+	 */
+	private void buildDepartment () {
+		if(dialogDepartment == null) {
+			formDepartment = new FormDepartment(mainWindow);
+			dialogDepartment = new Dialog(mainWindow);
+			dialogDepartment.getContentPane().add(formDepartment, BorderLayout.CENTER);
+			dialogDepartment.pack();
+			dialogDepartment.setSize(600, dialogDepartment.getHeight());
+			dialogDepartment.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+			dialogDepartment.addWindowListener(new WindowAdapter() {
+				@Override
+				public void windowClosing(WindowEvent e) {
+					formDepartment.setDepartment(null);
+				}
+			});
+		}
+	}
+	
+	/**
+	 * demande d'ouverture de la boite de dialogue de creation d'une faculte
 	 * @return void
 	 */
-	private void createDialog() {
-		if(dialogForm == null) {
-			dialogForm = new Dialog(mainWindow);
-			form = new FormFaculty(mainWindow, facultyDao);
-			form.setDialog(dialogForm);
-			dialogForm.getContentPane().add(form, BorderLayout.CENTER);
-			dialogForm.setSize(600, 250);
-		}
-		
-		this.dialogForm.setLocationRelativeTo(mainWindow);
+	private void createFaculty () {
+		buildFacultyDialog();
+		dialogFaculty.setLocationRelativeTo(mainWindow);
+		dialogFaculty.setVisible(true);
 	}
 	
 	/**
-	 * Initialisation des composants graphique du popup menu
+	 * Demande d'ouverture de la boite de dialogue de modification 
+	 * de l'identite d'une faculte
+	 * @param faculty
 	 */
-	private void initPopup() {
-		popupMenu.add(itemUpdate);
-		popupMenu.add(itemDelete);
+	private void updateFaculty (Faculty faculty) {
+		buildFacultyDialog();
+		formFaculty.setFaculty(faculty);
+		dialogFaculty.setTitle("Modification d'une faculté");
+		dialogFaculty.setLocationRelativeTo(mainWindow);
+		dialogFaculty.setVisible(true);
+	}
+	
+	/**
+	 * Demande d'ouverture de la poite de dialogue de modification de 
+	 * l'identite d'un departement
+	 * @param department
+	 */
+	private void updateDepartment (Department department) {
+		buildDepartment();
+		formDepartment.setDepartment(department);
+		dialogDepartment.setTitle("Modification d'un département");
+		dialogDepartment.setLocationRelativeTo(mainWindow);
+		dialogDepartment.setVisible(true);
+	}
+	
+	/**
+	 * Demande de chargement de la boite de dialogue qui permet
+	 * d'enregistrer un nouveau departement
+	 */
+	private void createDepartment() {
+		buildDepartment();
 		
-		table.addMouseListener(new MouseAdapter() {
+		dialogDepartment.setLocationRelativeTo(mainWindow);
+		dialogDepartment.setVisible(true);
+	}
+	
+	protected class FacultyGroup extends Panel{
+		private static final long serialVersionUID = 6347417595220397581L;
+		
+		private Faculty faculty;
+		private DepartmentTableModel tableModel;
+		private Table table;
+		private TablePanel tablePanel;
+		private JLabel labelAbb = FormUtil.createSubTitle("");
+		
+		private final JMenuItem itemUpdateFaculty = new  JMenuItem("Modifier la faculté", new ImageIcon(R.getIcon("edit")));
+		private final JMenuItem itemDeleteFaculty = new  JMenuItem("Suprimer la faculté", new ImageIcon(R.getIcon("close")));
+		private final JMenuItem itemUpdateDepartment = new  JMenuItem("Modifier le département", new ImageIcon(R.getIcon("edit")));
+		private final JMenuItem itemDeleteDepartment = new  JMenuItem("Suprimer département", new ImageIcon(R.getIcon("close")));
+		
+		private final JPopupMenu popupDepartment = new JPopupMenu();
+		private final JPopupMenu popupFaculty = new JPopupMenu();
+		private final MouseAdapter listener = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if(e.isPopupTrigger() ) {
-					if(table.getSelectedRow() != -1) {						
-						popupMenu.show(table, e.getX(), e.getY());
+				if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
+					popupDepartment.show(table, e.getX(), e.getY());
+				}
+			}
+		};
+		
+		private final DAOAdapter<Faculty> daoAdapter = new DAOAdapter<Faculty>() {
+			@Override
+			public synchronized void onUpdate(Faculty e, int requestId) {
+				if(faculty.getId() == e.getId()) {
+					faculty = e;
+					tablePanel.setTitle(e.getName());
+					labelAbb.setText(e.getAcronym()+":");
+				}
+			}
+		};
+
+		/**
+		 * @param faculty
+		 */
+		public FacultyGroup(Faculty faculty) {
+			super(new BorderLayout());
+			this.faculty = faculty;
+			tableModel = new DepartmentTableModel(departmentDao, faculty);
+			table = new Table(tableModel);
+			tablePanel = new TablePanel(table, faculty.getName(), false);
+			tablePanel.getHeader().add(labelAbb, BorderLayout.WEST);
+			
+			table.setShowVerticalLines(true);
+			table.addMouseListener(listener);
+			table.setShowVerticalLines(true);
+			final int w = 140;
+			for (int i = 2; i <= 3; i++) {			
+				table.getColumnModel().getColumn(i).setWidth(w);
+				table.getColumnModel().getColumn(i).setMinWidth(w);
+				table.getColumnModel().getColumn(i).setMaxWidth(w);
+				table.getColumnModel().getColumn(i).setResizable(false);
+			}
+			facultyDao.addListener(daoAdapter);
+			
+			add(tablePanel, BorderLayout.CENTER);
+			tableModel.reload();
+			initPopup();
+			labelAbb.setText(faculty.getAcronym()+":");
+			labelAbb.setPreferredSize(new Dimension(120, labelAbb.getHeight()));
+			table.getColumnModel().getColumn(0).setWidth(120);
+			table.getColumnModel().getColumn(0).setMaxWidth(120);
+			table.getColumnModel().getColumn(0).setMinWidth(120);
+			table.getColumnModel().getColumn(0).setResizable(false);
+		}
+		
+		/**
+		 * liberation des ressources et deconnection au DAO
+		 */
+		public void dispose() {
+			table.removeMouseListener(listener);
+			facultyDao.removeListener(daoAdapter);
+			departmentDao.removeListener(tableModel);
+		}
+		
+		/**
+		 * Initialisation des composants graphique du popup menu
+		 */
+		private void initPopup() {
+			popupFaculty.add(itemUpdateFaculty);
+			popupFaculty.add(itemDeleteFaculty);
+			
+			popupDepartment.add(itemUpdateDepartment);
+			popupDepartment.add(itemDeleteDepartment);
+			
+			tablePanel.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseReleased(MouseEvent e) {
+					if(e.isPopupTrigger()) {
+						popupFaculty.show(tablePanel.getHeader(), e.getX(), e.getY());
+					}
+				}
+			});
+			
+			table.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseReleased(MouseEvent e) {
+					if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
+						popupDepartment.show(table, e.getX(), e.getY());
+					}
+				}
+			});
+			
+			itemDeleteFaculty.addActionListener(event -> {
+				Faculty fac = faculty;
+				try {						
+					if(tableModel.getRowCount() != 0) {
+						JOptionPane.showMessageDialog(null, "Impossible de supprimer la faculté '"+fac.toString()+"', \ncar certains départements y font references", "Echec de suppression", JOptionPane.ERROR_MESSAGE);
 					} else {
-						JOptionPane.showMessageDialog(null, "Impossible d'effectuer cette operations\nselectionner d'abord une faculté", "Erreur", JOptionPane.ERROR_MESSAGE);
+						int status = JOptionPane.showConfirmDialog(null, "Voulez-vous vraiment supprimer cette faculté?\n=>"+fac.toString(), "Supression de la facutlé", JOptionPane.YES_NO_OPTION);
+						if(status == JOptionPane.OK_OPTION) {
+							facultyDao.delete(fac.getId());
+						}
 					}
+				} catch (DAOException e) {
+					JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
 				}
-			}
-		});
-		
-		itemDelete.addActionListener(event -> {
-			Faculty fac = tableModel.getRow(table.getSelectedRow());
-			try {						
-				if(departmentDao.checkByFaculty(fac.getId())) {
-					JOptionPane.showMessageDialog(null, "Impossible de supprimer la faculté '"+fac.toString()+"', \ncar certains départements y font references", "Echec de suppression", JOptionPane.ERROR_MESSAGE);
-				} else {
-					int status = JOptionPane.showConfirmDialog(null, "Voulez-vous vraiment supprimer cette faculté?\n=>"+fac.toString(), "Supression de la facutlé", JOptionPane.YES_NO_OPTION);
-					if(status == JOptionPane.OK_OPTION) {
-						facultyDao.delete(fac.getId());
+			});
+			
+			itemUpdateFaculty.addActionListener(event -> {
+				updateFaculty(faculty);
+			});
+			
+			itemDeleteDepartment.addActionListener(event -> {
+				Department dep = tableModel.getRow(table.getSelectedRow());
+				try {						
+					if(promotionDao.checkByDepartment(dep.getId())) {
+						JOptionPane.showMessageDialog(null, "Impossible de supprimer le departement '"+dep.toString()+"', \ncar certain promotions y font references", "Echec de suppression", JOptionPane.ERROR_MESSAGE);
+					} else {
+						int status = JOptionPane.showConfirmDialog(null, "Voulez-vous vraiment supprimer ce département?\n=>"+dep.toString(), "Supression du département", JOptionPane.YES_NO_OPTION);
+						if(status == JOptionPane.OK_OPTION) {
+							departmentDao.delete(dep.getId());
+						}
 					}
+				} catch (DAOException e) {
+					JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
 				}
-			} catch (DAOException e) {
-				JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
-			}
-		});
-		
-		itemUpdate.addActionListener(event -> {
-			createDialog();
-			form.setFaculty(tableModel.getRow(table.getSelectedRow()));
-			dialogForm.setTitle("Modification de la description d'une faculté");
-			dialogForm.setVisible(true);
-		});
+			});
+			
+			itemUpdateDepartment.addActionListener(event -> {
+				updateDepartment(tableModel.getRow(table.getSelectedRow()));
+			});
+		}
 		
 	}
 

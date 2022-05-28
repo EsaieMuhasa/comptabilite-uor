@@ -19,8 +19,6 @@ import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.Student;
 import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.DAOException;
-import net.uorbutembo.dao.InscriptionDao;
-import net.uorbutembo.dao.StudentDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.views.MainWindow;
 import resources.net.uorbutembo.R;
@@ -40,13 +38,11 @@ public class FormReRegister extends AbstractInscriptionForm {
 	/**
 	 * constructeur d'initialisation
 	 * @param mainWindow
-	 * @param inscriptionDao
-	 * @param studentDao
 	 * @param registerForm, true: formulaire de re-inscription. false: formulaire de modication d'une inscription
 	 */
-	public FormReRegister(MainWindow mainWindow, InscriptionDao inscriptionDao, StudentDao studentDao, boolean registerForm) {
-		super(mainWindow, inscriptionDao, studentDao);
-		this.setTitle("Formulaire de re-inscription");
+	public FormReRegister(MainWindow mainWindow, boolean registerForm) {
+		super(mainWindow);
+		setTitle("Formulaire de re-inscription");
 		init();
 		this.fieldsLayout.setRows(4);
 		

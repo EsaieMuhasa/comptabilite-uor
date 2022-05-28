@@ -883,8 +883,9 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	}
 	
 	protected synchronized void emitOnCreate (T e, int requestId) {
-		Thread t = new Thread(() -> {			
-			for (DAOListener<T> ls : listeners) {
+		Thread t = new Thread(() -> {		
+			for (int i = 0; i < listeners.size(); i++) {
+				DAOListener<T> ls = listeners.get(i);
 				try {					
 					ls.onCreate(e, requestId);
 				} catch (Exception ex) {
@@ -897,7 +898,8 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	
 	protected synchronized void emitOnCreate (T[] e, int requestId) {
 		Thread t = new Thread(() -> {			
-			for (DAOListener<T> ls : listeners) {
+			for (int i = 0; i < listeners.size(); i++) {
+				DAOListener<T> ls = listeners.get(i);
 				try {					
 					ls.onCreate(e, requestId);
 				} catch (Exception ex) {
@@ -918,7 +920,8 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	
 	protected synchronized void emitOnUpdate (T e, int requestId) {
 		Thread t = new Thread(() -> {			
-			for (DAOListener<T> ls : listeners) {
+			for (int i = 0; i < listeners.size(); i++) {
+				DAOListener<T> ls = listeners.get(i);
 				try {					
 					ls.onUpdate(e, requestId);
 				} catch (Exception ex) {
@@ -931,7 +934,8 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	
 	protected synchronized void emitOnUpdate (T [] e, int requestId) {
 		Thread t = new Thread(() -> {			
-			for (DAOListener<T> ls : listeners) {
+			for (int i = 0; i < listeners.size(); i++) {
+				DAOListener<T> ls = listeners.get(i);
 				try {					
 					ls.onUpdate(e, requestId);
 				} catch (Exception ex) {
@@ -949,7 +953,8 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	
 	protected synchronized void emitOnDelete (T e, int requestId) {
 		Thread t = new Thread(() -> {			
-			for (DAOListener<T> ls : listeners) {
+			for (int i = 0; i < listeners.size(); i++) {
+				DAOListener<T> ls = listeners.get(i);
 				try {					
 					ls.onDelete(e, requestId);
 				} catch (Exception ex) {

@@ -87,22 +87,20 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 	/**
 	 * constructeur d'initialisation
 	 * @param mainWindow
-	 * @param inscriptionDao
-	 * @param studentDao
 	 */
-	public AbstractInscriptionForm(MainWindow mainWindow, InscriptionDao inscriptionDao, StudentDao studentDao) {
+	public AbstractInscriptionForm(MainWindow mainWindow) {
 		super(mainWindow);
-		this.inscriptionDao = inscriptionDao;
-		this.studentDao = studentDao;
-		this.facultyDao = mainWindow.factory.findDao(FacultyDao.class);
-		this.departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
-		this.studyClassDao = mainWindow.factory.findDao(StudyClassDao.class);
-		this.promotionDao = mainWindow.factory.findDao(PromotionDao.class);
+		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
+		studentDao = mainWindow.factory.findDao(StudentDao.class);
+		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
+		departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
+		studyClassDao = mainWindow.factory.findDao(StudyClassDao.class);
+		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
 		mainWindow.factory.findDao(AcademicYearDao.class).addYearListener(this);
 		
 		container.add(fields, BorderLayout.CENTER);
 		container.add(panelPicture, BorderLayout.EAST);
-		this.getBody().add(container, BorderLayout.CENTER);
+		getBody().add(container, BorderLayout.CENTER);
 	}
 	
 	/**

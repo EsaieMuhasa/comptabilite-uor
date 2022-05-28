@@ -47,7 +47,6 @@ import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.PromotionDao;
-import net.uorbutembo.dao.StudentDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.SearchField;
 import net.uorbutembo.swing.charts.DefaultPieModel;
@@ -86,7 +85,6 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 
 	//dao
 	private final InscriptionDao inscriptionDao;
-	private final StudentDao studentDao;
 	//==dao
 
 	//espace de traival
@@ -172,7 +170,6 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	public PanelStudents(MainWindow mainWindow) {
 		super("Etudiants", new ImageIcon(R.getIcon("student")), mainWindow, false);//la scene gere les scrollbars	
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
-		studentDao = mainWindow.factory.findDao(StudentDao.class);
 		
 		exportConfig = new DialogStudentExportConfig(mainWindow);
 		navigation = new SidebarStudents(mainWindow.factory);
@@ -205,7 +202,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 			return;
 		
 		final JPanel inscriptionFormPanel = new JPanel(new BorderLayout());
-		formInscription = new FormInscription(mainWindow, inscriptionDao, studentDao);
+		formInscription = new FormInscription(mainWindow);
 				
 		inscriptionFormPanel.setBackground(FormUtil.BKG_DARK);
 		inscriptionFormPanel.add(formInscription, BorderLayout.CENTER);
@@ -229,7 +226,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 			return;
 		
 		final JPanel registerFormPanel = new JPanel(new BorderLayout());
-		formRegister = new FormReRegister(mainWindow, inscriptionDao, studentDao, true);
+		formRegister = new FormReRegister(mainWindow, true);
 		
 		registerFormPanel.setBackground(FormUtil.BKG_DARK);
 		registerFormPanel.add(formRegister, BorderLayout.NORTH);

@@ -10,11 +10,13 @@ import javax.swing.ImageIcon;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
-import net.uorbutembo.dao.AcademicYearDao;
+import net.uorbutembo.beans.UniversityRecipe;
+import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.UniversityRecipeDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
+import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.views.forms.FormUniversityRecipe;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.UniversityRecipeTableModel;
@@ -36,6 +38,19 @@ public class PanelUniversityRecipe extends Panel{
 	private final UniversityRecipeTableModel tableModel;
 	
 	private final UniversityRecipeDao universityRecipeDao;
+	private final DAOAdapter<UniversityRecipe> recipeAdapter = new DAOAdapter<UniversityRecipe>() {
+
+		@Override
+		public synchronized void onCreate(UniversityRecipe e, int requestId) {
+			btnNew.doClick();
+		}
+
+		@Override
+		public synchronized void onUpdate(UniversityRecipe e, int requestId) {
+			btnNew.doClick();
+		}
+		
+	};
 
 	/**
 	 * 
@@ -45,15 +60,22 @@ public class PanelUniversityRecipe extends Panel{
 		universityRecipeDao =mainWindow.factory.findDao(UniversityRecipeDao.class);
 		tableModel = new UniversityRecipeTableModel(universityRecipeDao);
 		table = new Table(tableModel);
-		mainWindow.factory.findDao(AcademicYearDao.class).addYearListener( year -> {
-			tableModel.reload();
-		});
+		table.setShowVerticalLines(true);
+		final int w = 140;
+		for (int i = 1; i <= 2; i++) {			
+			table.getColumnModel().getColumn(i).setWidth(w);
+			table.getColumnModel().getColumn(i).setMinWidth(w);
+			table.getColumnModel().getColumn(i).setMaxWidth(w);
+			table.getColumnModel().getColumn(i).setResizable(false);
+		}
+		
+		universityRecipeDao.addListener(recipeAdapter);
 		
 		final Panel container = new Panel(new BorderLayout());
 		final Panel top = new Panel(new BorderLayout());
 		final Box box = Box.createHorizontalBox();
 		
-		form = new FormUniversityRecipe(mainWindow, universityRecipeDao);
+		form = new FormUniversityRecipe(mainWindow);
 		form.setVisible(false);
 		btnNew.addActionListener(event -> {
 			if (btnNew.getText().equals("Ajouter")) {
@@ -64,11 +86,8 @@ public class PanelUniversityRecipe extends Panel{
 				btnNew.setText("Ajouter");
 				btnNew.setIcon(ICO_PLUS);
 				form.setVisible(false);
+				form.setRecipe(null);
 			}
-		});
-		form.getBtnSave().addActionListener(event -> {
-			form.setVisible(false);
-			btnNew.doClick();
 		});
 		
 		JScrollPane scroll = FormUtil.createVerticalScrollPane(container);
@@ -79,7 +98,7 @@ public class PanelUniversityRecipe extends Panel{
 		top.add(form, BorderLayout.CENTER);
 		top.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		container.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-		container.add(table, BorderLayout.CENTER);
+		container.add(new TablePanel(table, "Liste des autres recettes", false), BorderLayout.CENTER);
 		
 		this.add(top, BorderLayout.NORTH);
 		this.add(scroll, BorderLayout.CENTER);

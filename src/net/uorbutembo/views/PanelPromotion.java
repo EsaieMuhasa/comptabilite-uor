@@ -71,7 +71,7 @@ public class PanelPromotion extends Panel {
 		btnNew.addActionListener(event -> {
 			center.removeAll();
 			if(form == null) {
-				form = new FormPromotion(mainWindow, promotionDao);
+				form = new FormPromotion(mainWindow);
 				form.setCurrentYear(year);
 			}
 			center.add(form, BorderLayout.CENTER);
@@ -128,7 +128,7 @@ public class PanelPromotion extends Panel {
 	}
 	
 	public void setCurrentYear (AcademicYear year) {
-		if(this.year != null && year.getId() == this.year.getId()) 
+		if(year == null || (this.year != null && year.getId() == this.year.getId())) 
 			return;
 		
 		this.year = year;

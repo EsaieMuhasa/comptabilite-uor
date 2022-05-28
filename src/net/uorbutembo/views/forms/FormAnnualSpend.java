@@ -40,11 +40,11 @@ public class FormAnnualSpend extends DefaultFormPanel {
 	/**
 	 * 
 	 */
-	public FormAnnualSpend(MainWindow mainWindow, AnnualSpendDao annualSpendDao) {
+	public FormAnnualSpend(MainWindow mainWindow) {
 		super(mainWindow);
-		this.annualSpendDao = annualSpendDao;
-		this.setTitle("Rubriques budgetaire");
+		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
 		universitySpendDao = annualSpendDao.getFactory().findDao(UniversitySpendDao.class);
+		setTitle("Rubriques budgetaire");
 		
 		this.getBody().add(box, BorderLayout.NORTH);
 		this.setVisible(false);

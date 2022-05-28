@@ -14,6 +14,7 @@ import java.util.List;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualRecipe;
 import net.uorbutembo.beans.OtherRecipe;
+import net.uorbutembo.beans.PaymentLocation;
 
 /**
  * @author Esaie MUHASA
@@ -281,31 +282,100 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		
 		return data;
 	}
+	
+	@Override
+	public List<OtherRecipe> findByAccount(AnnualRecipe account, PaymentLocation location) throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	@Override
-	protected OtherRecipe mapping(ResultSet result) throws SQLException, DAOException {
+	public boolean checkByAccount(long account, long location) throws DAOException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean checkByAccount(long account, long location, Date min, Date max) throws DAOException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public int countByAccount(long account, long location, Date min, Date max) throws DAOException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public List<OtherRecipe> findByAccount(AnnualRecipe account, PaymentLocation location, Date min, Date max)
+			throws DAOException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean checkByLocation(long location) throws DAOException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean checkByLocation(long location, Date min, Date max) throws DAOException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean checkByLocation(long location, long year) throws DAOException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	protected OtherRecipe baseMapping (ResultSet result) throws DAOException, SQLException {
 		OtherRecipe recipe = new OtherRecipe(result.getLong("id"));
 		recipe.setAmount(result.getDouble("amount"));
-		recipe.setCollectionYear(new AcademicYear(result.getLong("collectionYear")));
-		recipe.setAccount(new AnnualRecipe(result.getLong("account")));
 		recipe.setLabel(result.getString("label"));
 		recipe.setCollectionDate(new Date(result.getLong("collectionDate")));
-		recipe.setRecordDate(new Date(result.getLong("recordDate")));
 		if(result.getLong("lastUpdate") != 0) 
 			recipe.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		return recipe;
 	}
+
+	@Override
+	protected OtherRecipe mapping(ResultSet result) throws SQLException, DAOException {
+		OtherRecipe recipe = baseMapping(result);
+		recipe.setRecordDate(new Date(result.getLong("recordDate")));
+		recipe.setCollectionYear(new AcademicYear(result.getLong("collectionYear")));
+		recipe.setAccount(new AnnualRecipe(result.getLong("account")));
+		recipe.setLocation(new PaymentLocation(result.getLong("location")));
+		return recipe;
+	}
 	
 	protected OtherRecipe mapping(ResultSet result, AnnualRecipe account) throws SQLException, DAOException {
-		OtherRecipe recipe = new OtherRecipe(result.getLong("id"));
-		recipe.setAmount(result.getDouble("amount"));
-		recipe.setCollectionYear(new AcademicYear(result.getLong("collectionYear")));
+		OtherRecipe recipe = baseMapping(result);
 		recipe.setAccount(account);
-		recipe.setLabel(result.getString("label"));
+		recipe.setCollectionYear(new AcademicYear(result.getLong("collectionYear")));
 		recipe.setCollectionDate(new Date(result.getLong("collectionDate")));
-		recipe.setRecordDate(new Date(result.getLong("recordDate")));
-		if(result.getLong("lastUpdate") != 0) 
-			recipe.setLastUpdate(new Date(result.getLong("lastUpdate")));
+		recipe.setLocation(new PaymentLocation(result.getLong("location")));
+		return recipe;
+	}
+	
+	protected OtherRecipe mapping(ResultSet result, AnnualRecipe account, PaymentLocation location) throws SQLException, DAOException {
+		OtherRecipe recipe = baseMapping(result);
+		recipe.setAccount(account);
+		recipe.setLocation(location);
+		recipe.setCollectionYear(new AcademicYear(result.getLong("collectionYear")));
+		recipe.setCollectionDate(new Date(result.getLong("collectionDate")));
+		return recipe;
+	}
+	
+	protected OtherRecipe mapping(ResultSet result, PaymentLocation location) throws SQLException, DAOException {
+		OtherRecipe recipe = baseMapping(result);
+		recipe.setAccount(new AnnualRecipe(result.getLong("account")));
+		recipe.setLocation(location);
+		recipe.setCollectionYear(new AcademicYear(result.getLong("collectionYear")));
+		recipe.setCollectionDate(new Date(result.getLong("collectionDate")));
 		return recipe;
 	}
 

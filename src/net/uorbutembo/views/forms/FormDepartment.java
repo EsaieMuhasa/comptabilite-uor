@@ -35,43 +35,45 @@ public class FormDepartment extends DefaultFormPanel {
 	private final ComboBox<Faculty> comboFaculties = new ComboBox<>("Faculté");
 	private final FormGroup<Faculty> faculty = FormGroup.createComboBox(comboFaculties);
 	
-	private FacultyDao facultyDao;
-	private DepartmentDao departmentDao;
+	private final FacultyDao facultyDao;
+	private final DepartmentDao departmentDao;
 	private Department department;//lors de la modification, cette reference est != null
 	
-	public FormDepartment(MainWindow mainWindow, DepartmentDao departmentDao) {
-		super(mainWindow);
-		this.departmentDao = departmentDao;
-		this.facultyDao = departmentDao.getFactory().findDao(FacultyDao.class);
-		this.init();
+	private final DAOAdapter<Faculty> facultyAdapter = new DAOAdapter<Faculty>() {
+		@Override
+		public void onCreate(Faculty e, int requestId) {
+			comboFaculties.addItem(e);
+		}
 		
-		facultyDao.addListener(new DAOAdapter<Faculty>() {
-			@Override
-			public void onCreate(Faculty e, int requestId) {
-				comboFaculties.addItem(e);
-			}
-			
-			@Override
-			public void onUpdate(Faculty e, int requestId) {
-				for (int i = 0, max = comboFaculties.getItemCount(); i<max; i++) {
-					if(comboFaculties.getItemAt(i).getId() == e.getId()) {
-						comboFaculties.removeItemAt(i);
-						comboFaculties.addItem(e);
-						return;
-					}
+		@Override
+		public void onUpdate(Faculty e, int requestId) {
+			for (int i = 0, max = comboFaculties.getItemCount(); i<max; i++) {
+				if(comboFaculties.getItemAt(i).getId() == e.getId()) {
+					comboFaculties.removeItemAt(i);
+					comboFaculties.addItem(e);
+					return;
 				}
 			}
-			
-			@Override
-			public void onDelete(Faculty e, int requestId) {
-				for (int i = 0, max = comboFaculties.getItemCount(); i<max; i++) {
-					if(comboFaculties.getItemAt(i).getId() == e.getId()) {
-						comboFaculties.removeItemAt(i);
-						return;
-					}
+		}
+		
+		@Override
+		public void onDelete(Faculty e, int requestId) {
+			for (int i = 0, max = comboFaculties.getItemCount(); i<max; i++) {
+				if(comboFaculties.getItemAt(i).getId() == e.getId()) {
+					comboFaculties.removeItemAt(i);
+					return;
 				}
 			}
-		});
+		}
+	};
+	
+	public FormDepartment(MainWindow mainWindow) {
+		super(mainWindow);
+		departmentDao = mainWindow.factory.findDao(DepartmentDao.class);
+		facultyDao = departmentDao.getFactory().findDao(FacultyDao.class);
+		init();
+		
+		facultyDao.addListener(facultyAdapter);
 	}
 	
 	private void init() {

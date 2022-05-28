@@ -48,7 +48,6 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 		this.setSize(w, h);
 		this.setMinimumSize(new Dimension(880, 400));
 		this.setLocationRelativeTo(null);
-		this.requestFocus();
 		
 		this.workspace = new WorkspacePanel(this);
 		this.sidebar = new Sidebar(workspace);
@@ -66,6 +65,7 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 			JOptionPane.showMessageDialog(null, "Une erreur est survenue \nlors de la lecture de l'icone \n"+e.getMessage(), "Erreur icone", JOptionPane.ERROR_MESSAGE);
 		}
 		
+		this.requestFocus();
 		
 //		this.btnExist.addActionListener(event -> {
 //			System.exit(MainWindow.NORMAL);

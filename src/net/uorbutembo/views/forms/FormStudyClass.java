@@ -30,10 +30,10 @@ public class FormStudyClass extends DefaultFormPanel {
 	
 	private StudyClass studyClass;
 	
-	public FormStudyClass(MainWindow mainWindow, StudyClassDao studyClassDao) {
+	public FormStudyClass(MainWindow mainWindow) {
 		super(mainWindow);
-		this.studyClassDao = studyClassDao;
-		this.setTitle("Formulaire d'enregistrement");
+		studyClassDao = mainWindow.factory.findDao(StudyClassDao.class);
+		setTitle("Formulaire d'enregistrement");
 		this.init();
 	}
 	
@@ -78,12 +78,13 @@ public class FormStudyClass extends DefaultFormPanel {
 				this.studyClassDao.create(sc);
 			} else {
 				sc.setLastUpdate(now);
+				sc.setRecordDate(studyClass.getRecordDate());
 				studyClassDao.update(sc, studyClass.getId());
 			}
-			this.showMessageDialog("Info", name+"\nEnregistrer avec succes", JOptionPane.INFORMATION_MESSAGE);
+			showMessageDialog("Info", name+"\nEnregistrer avec succes", JOptionPane.INFORMATION_MESSAGE);
 			setStudyClass(null);
 		} catch (DAOException e) {
-			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

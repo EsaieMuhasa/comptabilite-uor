@@ -1277,7 +1277,7 @@ public class StudentsDatatableView extends Panel {
 					dialogInscription.setModal(true);
 					dialogInscription.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
 					
-					formRegister = new FormReRegister(mainWindow, inscriptionDao, studentDao, false);
+					formRegister = new FormReRegister(mainWindow, false);
 					formRegister.setCurrentYear(currentYear);
 					dialogInscription.getContentPane().add(formRegister, BorderLayout.CENTER);
 					dialogInscription.getContentPane().setBackground(FormUtil.BKG_START);

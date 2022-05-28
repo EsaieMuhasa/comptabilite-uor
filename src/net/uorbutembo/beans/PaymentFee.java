@@ -19,6 +19,11 @@ public class PaymentFee extends DBEntity {
 	private Inscription inscription;
 	
 	/**
+	 * lieu de payment des frais
+	 */
+	private PaymentLocation location;
+	
+	/**
 	 * Le montant payer
 	 */
 	private float amount;
@@ -177,6 +182,28 @@ public class PaymentFee extends DBEntity {
 	 */
 	public void setInscription(Inscription inscription) {
 		this.inscription = inscription;
+	}
+
+	/**
+	 * @return the location
+	 */
+	public PaymentLocation getLocation() {
+		return location;
+	}
+
+	/**
+	 * @param location the location to set
+	 */
+	public void setLocation(PaymentLocation location) {
+		this.location = location;
+	}
+	
+	/**
+	 * surcharge de setLocation(PaymentLocationlocation)
+	 * @param location
+	 */
+	public void setLocation (long location) {
+		setLocation(new PaymentLocation(location));
 	}
 
 }

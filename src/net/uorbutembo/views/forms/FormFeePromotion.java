@@ -91,48 +91,48 @@ public class FormFeePromotion extends DefaultFormPanel  {
 			promotionDao.bindToAcademicFee(promotions, fee);
 		}
 	};
-	/**
-	 * 
-	 */
-	public FormFeePromotion(MainWindow mainWindow, PromotionDao promotionDao) {
-		super(mainWindow);
-		this.setTitle("Formulaire d'enregistrement");
-		
-		this.promotionDao  = promotionDao.getFactory().findDao(PromotionDao.class);
-		academicFeeDao = promotionDao.getFactory().findDao(AcademicFeeDao.class);
-		academicYearDao = promotionDao.getFactory().findDao(AcademicYearDao.class);
-		
-		academicFeeDao.addListener(new DAOAdapter<AcademicFee>() {
-			@Override
-			public void onCreate(AcademicFee fee, int requestId) {
-				if(currentYear == null || fee.getAcademicYear().getId() != currentYear.getId())
-					return;
-				
-				PanelAcademicFeeConfig panel = new PanelAcademicFeeConfig(fee, configListener, promotionDao);
-				panelsConfig.add(panel);
-				container.add(panel);
-			}
+	
+	private final DAOAdapter<AcademicFee> feeAdapter = new DAOAdapter<AcademicFee>() {
+		@Override
+		public void onCreate(AcademicFee fee, int requestId) {
+			if(currentYear == null || fee.getAcademicYear().getId() != currentYear.getId())
+				return;
 			
-			@Override
-			public void onDelete(AcademicFee fee, int requestId) {
-				if(currentYear == null || fee.getAcademicYear().getId() != currentYear.getId())
-					return;
-				
-				for (int i = 0, count = panelsConfig.size(); i < count; i++) {
-					PanelAcademicFeeConfig p = panelsConfig.get(i);
-					if(p.getFee().getId() == fee.getId()) {
-						container.remove(p);
-						panelsConfig.remove(i);
-						container.repaint();
-						break;
-					}
+			PanelAcademicFeeConfig panel = new PanelAcademicFeeConfig(fee, configListener, promotionDao);
+			panelsConfig.add(panel);
+			container.add(panel);
+		}
+		
+		@Override
+		public void onDelete(AcademicFee fee, int requestId) {
+			if(currentYear == null || fee.getAcademicYear().getId() != currentYear.getId())
+				return;
+			
+			for (int i = 0, count = panelsConfig.size(); i < count; i++) {
+				PanelAcademicFeeConfig p = panelsConfig.get(i);
+				if(p.getFee().getId() == fee.getId()) {
+					container.remove(p);
+					panelsConfig.remove(i);
+					container.repaint();
+					break;
 				}
 			}
-		});
-
-		this.getBody().add(container, BorderLayout.CENTER);
+		}
+	};
+	
+	public FormFeePromotion (MainWindow mainWindow) {
+		super(mainWindow);
 		
-		this.init();
+		promotionDao  = mainWindow.factory.findDao(PromotionDao.class);
+		academicFeeDao = mainWindow.factory.findDao(AcademicFeeDao.class);
+		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
+		
+		academicFeeDao.addListener(feeAdapter);
+
+		setTitle("Formulaire d'enregistrement");
+		getBody().add(container, BorderLayout.CENTER);
+		
+		init();
 	}
 	
 	@Override

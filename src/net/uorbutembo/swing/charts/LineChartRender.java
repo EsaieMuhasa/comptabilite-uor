@@ -501,7 +501,8 @@ public class LineChartRender extends JComponent{
 			}
 			
 			if (model.getYAxis().isResponsive()) {				
-				final double yStep = absYmax >= absYmin? (absYmax/4 == 0? absYmax/4 : absYmax/5) : (absYmin/4 == 0? absYmin/4 : absYmin/5);//maxY <= 10? 1 : (maxY > 10 && maxY < 50 ? 5 : (maxY <= 1000? 50 : 1000));
+				final double yStep = Math.abs(yMax - yMin) / 5;
+				//final double yStep = absYmax >= absYmin? (absYmax/4 == 0? absYmax/4 : absYmax/5) : (absYmin/4 == 0? absYmin/4 : absYmin/5);//maxY <= 10? 1 : (maxY > 10 && maxY < 50 ? 5 : (maxY <= 1000? 50 : 1000));
 				yAxis.setStep(yStep);
 			}
 			

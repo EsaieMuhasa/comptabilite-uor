@@ -32,7 +32,8 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 
 	protected static final String 
 		TITLE_1 = "Formulaire d'enregistrement",
-		TITLE_2 = "Formulaire de modification";
+		TITLE_2 = "Formulaire de modification",
+		RGX_SIMBLE_DATE = "^(([0-9]{1,2}-){2})([0-9]{4})$";
 
 	private String title;
 	private JLabel label;
@@ -131,6 +132,13 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 
 	public JPanel getFooter() {
 		return footer;
+	}
+
+	/**
+	 * @return the btnSave
+	 */
+	public JButton getBtnSave() {
+		return btnSave;
 	}
 
 }

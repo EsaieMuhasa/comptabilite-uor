@@ -33,13 +33,13 @@ public class FormUniversitySpend extends DefaultFormPanel {
 	private final FormGroup<String> titleGroup = FormGroup.createTextField(title);
 	private final FormGroup<String> descriptionGroup = FormGroup.createTextArea(description);
 	
-	private UniversitySpendDao universitySpendDao;
+	private final UniversitySpendDao universitySpendDao;
+	private UniversitySpend spend;
 
-
-	public FormUniversitySpend(MainWindow mainWindow, UniversitySpendDao universitySpendDao) {
+	public FormUniversitySpend(MainWindow mainWindow) {
 		super(mainWindow);
-		this.universitySpendDao = universitySpendDao;
-		this.setTitle("Formultaire d'enregistrement");
+		universitySpendDao = mainWindow.factory.findDao(UniversitySpendDao.class);
+		setTitle("Formultaire d'enregistrement");
 		Box box = Box.createVerticalBox();
 		box.add(this.titleGroup);
 		box.add(this.descriptionGroup);
@@ -56,6 +56,21 @@ public class FormUniversitySpend extends DefaultFormPanel {
 		validateFields();
 	}
 	
+	/**
+	 * @param spend the spend to set
+	 */
+	public void setSpend (UniversitySpend spend) {
+		this.spend = spend;
+		
+		if (spend != null) {
+			title.setValue(spend.getTitle());
+			description.setValue(spend.getDescription());
+		} else {
+			title.setValue("");
+			description.setValue("");
+		}
+	}
+
 	/**
 	 * activation/desativation du bouton d'enregistrement.
 	 */
@@ -81,13 +96,21 @@ public class FormUniversitySpend extends DefaultFormPanel {
 		UniversitySpend spend = new UniversitySpend();
 		spend.setTitle(title);
 		spend.setDescription(description);
-		spend.setRecordDate(new Date());
+		
+		Date now = new Date();
 		
 		try {
-			this.universitySpendDao.create(spend);
-			this.showMessageDialog("Information", "Success d'enregistrement de la rubrique budgetaire", JOptionPane.INFORMATION_MESSAGE);
+			if (this.spend == null) {
+				spend.setRecordDate(now);
+				this.universitySpendDao.create(spend);
+			} else {
+				spend.setLastUpdate(now);
+				spend.setRecordDate(this.spend.getRecordDate());
+				universitySpendDao.update(spend, this.spend.getId());
+			}
+			setSpend(null);
 		} catch (DAOException e) {
-			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}
 
 	}

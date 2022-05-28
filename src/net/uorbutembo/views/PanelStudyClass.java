@@ -22,6 +22,7 @@ import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Dialog;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
+import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.views.forms.FormStudyClass;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.StudyClassTableModel;
@@ -34,7 +35,7 @@ import resources.net.uorbutembo.R;
 public class PanelStudyClass extends Panel {
 	private static final long serialVersionUID = 1827370862407233020L;
 
-	private Button btnNew = new Button(new ImageIcon(R.getIcon("plus")), "Ajouter une classe d'étude");
+	private Button btnNew = new Button(new ImageIcon(R.getIcon("plus")), "Nouvelle classe d'étude");
 	private Dialog formDialog;
 	private FormStudyClass form;
 	private final Table table;
@@ -47,33 +48,30 @@ public class PanelStudyClass extends Panel {
 	private final JMenuItem itemDelete = new  JMenuItem("Suprimer", new ImageIcon(R.getIcon("close")));
 	private final JPopupMenu popupMenu = new JPopupMenu();
 	
-	private MainWindow mainWindow;
+	private final MainWindow mainWindow;
+	private final DAOAdapter<StudyClass> classAdapter = new DAOAdapter<StudyClass>() {
+		@Override
+		public void onCreate(StudyClass e, int requestId) {
+			formDialog.setVisible(false);
+		}
+		
+		@Override
+		public void onUpdate(StudyClass e, int requestId) {
+			formDialog.setVisible(false);
+		}
+	};
 	
-	/**
-	 * 
-	 */
 	public PanelStudyClass(MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.mainWindow = mainWindow;
 		studyClassDao = mainWindow.factory.findDao(StudyClassDao.class);
 		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
 		
-		studyClassDao.addListener(new DAOAdapter<StudyClass>() {
-			@Override
-			public void onCreate(StudyClass e, int requestId) {
-				formDialog.setVisible(false);
-			}
-			
-			@Override
-			public void onUpdate(StudyClass e, int requestId) {
-				formDialog.setVisible(false);
-			}
-		});
+		studyClassDao.addListener(classAdapter);
 		
 		Panel top = new Panel(new BorderLayout());
 		top.add(btnNew, BorderLayout.EAST);
 		top.add(FormUtil.createTitle("Classes d'étude"), BorderLayout.CENTER);
-		this.add(top, BorderLayout.NORTH);
 		
 		btnNew.setEnabled(false);
 		btnNew.addActionListener(event -> {
@@ -82,16 +80,21 @@ public class PanelStudyClass extends Panel {
 			this.formDialog.setVisible(true);
 		});
 		
-		Panel center = new Panel(new BorderLayout());
+		final Panel center = new Panel(new BorderLayout());
 		tableModel = new StudyClassTableModel(this.studyClassDao);
 		table = new Table(tableModel);
+		table.setShowVerticalLines(true);
+		table.getColumnModel().getColumn(0).setWidth(130);
+		table.getColumnModel().getColumn(0).setMinWidth(130);
+		table.getColumnModel().getColumn(0).setMaxWidth(130);
+		table.getColumnModel().getColumn(0).setResizable(false);
 		
-		center.add(table.getTableHeader(), BorderLayout.NORTH);
-		center.add(table, BorderLayout.CENTER);
+		center.add(new TablePanel(table, "Liste des classes d'étude", false), BorderLayout.CENTER);
 		center.setBorder(new EmptyBorder(10, 0, 10, 0));
 		
-		this.add(center, BorderLayout.CENTER);
-		this.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		add(top, BorderLayout.NORTH);
+		add(center, BorderLayout.CENTER);
+		setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		initPopup();
 	}
@@ -103,12 +106,14 @@ public class PanelStudyClass extends Panel {
 	
 	private void createDialog() {
 		if(formDialog == null) {
-			form = new FormStudyClass(mainWindow, this.studyClassDao);
-			this.formDialog = new Dialog(mainWindow);
-			this.formDialog.getContentPane().add(this.form, BorderLayout.CENTER);
-			this.formDialog.setSize(600, 270);
+			form = new FormStudyClass(mainWindow);
+			formDialog = new Dialog(mainWindow);
+			formDialog.getContentPane().add(this.form, BorderLayout.CENTER);
+			formDialog.pack();
+			formDialog.setSize(600, formDialog.getHeight());
+			formDialog.setResizable(false);
 		}
-		this.formDialog.setLocationRelativeTo(mainWindow);
+		formDialog.setLocationRelativeTo(mainWindow);
 	}
 	
 	private void initPopup() {
@@ -118,12 +123,8 @@ public class PanelStudyClass extends Panel {
 		table.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if(e.isPopupTrigger() ) {
-					if(table.getSelectedRow() != -1) {						
-						popupMenu.show(table, e.getX(), e.getY());
-					} else {
-						JOptionPane.showMessageDialog(null, "Impossible d'effectuer cette operations\nselectionner d'abord une faculté", "Erreur", JOptionPane.ERROR_MESSAGE);
-					}
+				if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
+					popupMenu.show(table, e.getX(), e.getY());
 				}
 			}
 		});

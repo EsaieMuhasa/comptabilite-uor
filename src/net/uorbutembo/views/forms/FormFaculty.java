@@ -5,12 +5,9 @@ package net.uorbutembo.views.forms;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.Date;
 
 import javax.swing.Box;
-import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 
 import net.uorbutembo.beans.Faculty;
@@ -32,26 +29,11 @@ public class FormFaculty extends DefaultFormPanel {
 	private FacultyDao facultyDao;
 	private Faculty faculty;//lors de la modification
 	
-	private JDialog dialog;
-	
-	public FormFaculty(MainWindow mainWindow, FacultyDao facultyDao) {
+	public FormFaculty(MainWindow mainWindow) {
 		super(mainWindow);
-		this.facultyDao = facultyDao;
-		this.setTitle(TITLE_1);
-		this.init();
-	}
-	
-	/**
-	 * @param dialog the dialog to set
-	 */
-	public void setDialog(JDialog dialog) {
-		this.dialog = dialog;
-		dialog.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				setFaculty(null);
-			};
-		});
+		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
+		setTitle(TITLE_1);
+		init();
 	}
 
 	private void init() {
@@ -60,7 +42,7 @@ public class FormFaculty extends DefaultFormPanel {
 		box.add(this.acronym);
 		box.add(this.fullname);
 
-		this.getBody().add(box, BorderLayout.CENTER);
+		getBody().add(box, BorderLayout.CENTER);
 	}
 	
 	/**
@@ -93,16 +75,14 @@ public class FormFaculty extends DefaultFormPanel {
 			
 			if(faculty == null) {
 				fac.setRecordDate(now);
-				this.facultyDao.create(fac);
-			}
-			else {
+				facultyDao.create(fac);
+			} else {
 				fac.setLastUpdate(now);
+				fac.setRecordDate(faculty.getRecordDate());
 				facultyDao.update(fac, faculty.getId());
 			}
-			setFaculty(null);			
-			this.showMessageDialog("Info", name+"\nEnregistrer avec succes", JOptionPane.INFORMATION_MESSAGE);
-			if(dialog != null)
-				dialog.setVisible(false);
+			showMessageDialog("Info", name+"\nEnregistrer avec succes", JOptionPane.INFORMATION_MESSAGE);
+			setFaculty(null);
 		} catch (DAOException e) {
 			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}

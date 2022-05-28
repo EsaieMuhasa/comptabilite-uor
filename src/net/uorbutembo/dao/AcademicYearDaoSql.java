@@ -212,11 +212,6 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 			if(currentYear == null && checkCurrent())
 				findCurrent();
 			
-			if(currentYear == null){
-				reloadRunning = false;
-				return;
-			}
-			
 			for (AcademicYearDaoListener ls : yearListeners) {
 				ls.onCurrentYear(currentYear);
 			}				

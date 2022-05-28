@@ -68,6 +68,39 @@ public class PanelAcademicYear extends Panel {
 	
 	private JDialog dialogYear;
 	private FormAcademicYear formYear;
+	private final DAOAdapter<AcademicYear> yearListener = new DAOAdapter<AcademicYear>() {
+		@Override
+		public void onCreate(AcademicYear e, int requestId) {
+			if(dialogYear != null) 
+				dialogYear.setVisible(false);
+		}
+		
+		@Override
+		public void onUpdate(AcademicYear e, int requestId) {
+			if(dialogYear != null) 
+				dialogYear.setVisible(false);
+			
+			if(comboYear.getSelectedIndex() != -1 && comboYearModel.getElementAt(comboYear.getSelectedIndex()).getId() == e.getId())
+				title.setText(e.toString());
+			
+			for (int i = 0, count = comboYearModel.getSize(); i < count; i++) {
+				if(comboYearModel.getElementAt(i).getId() == e.getId()) {
+					comboYearModel.getElementAt(i);
+					break;
+				}
+			}
+		}
+		
+		@Override
+		public void onDelete(AcademicYear e, int requestId) {				
+			reload();
+		}
+		
+		@Override
+		public synchronized void onCurrentYear(AcademicYear year) {
+			reload();
+		}
+	};
 	
 	private AcademicYear oldYear;//annee derierement selectionner
 	
@@ -77,41 +110,7 @@ public class PanelAcademicYear extends Panel {
 		academicFeeDao = mainWindow.factory.findDao(AcademicFeeDao.class);
 		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
 		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
-		
-		final DAOAdapter<AcademicYear> yearListener = new DAOAdapter<AcademicYear>() {
-			@Override
-			public void onCreate(AcademicYear e, int requestId) {
-				if(dialogYear != null) 
-					dialogYear.setVisible(false);
-			}
-			
-			@Override
-			public void onUpdate(AcademicYear e, int requestId) {
-				if(dialogYear != null) 
-					dialogYear.setVisible(false);
-				
-				if(comboYear.getSelectedIndex() != -1 && comboYearModel.getElementAt(comboYear.getSelectedIndex()).getId() == e.getId())
-					title.setText(e.toString());
-				
-				for (int i = 0, count = comboYearModel.getSize(); i < count; i++) {
-					if(comboYearModel.getElementAt(i).getId() == e.getId()) {
-						comboYearModel.getElementAt(i);
-						break;
-					}
-				}
-			}
-			
-			@Override
-			public void onDelete(AcademicYear e, int requestId) {				
-				reload();
-			}
-			
-			@Override
-			public synchronized void onCurrentYear(AcademicYear year) {
-				reload();
-			}
-		};
-		
+
 		academicYearDao.addListener(yearListener);
 		academicYearDao.addYearListener(yearListener);
 
@@ -205,7 +204,7 @@ public class PanelAcademicYear extends Panel {
 			return;
 		
 		dialogYear = new JDialog(parent, true);
-		formYear = new FormAcademicYear(parent, academicYearDao);
+		formYear = new FormAcademicYear(parent);
 		
 		dialogYear.setTitle("Année académique");
 		dialogYear.getContentPane().add(formYear, BorderLayout.CENTER);

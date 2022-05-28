@@ -5,18 +5,22 @@ package net.uorbutembo.views.forms;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.util.Date;
 
+import javax.swing.Box;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.border.LineBorder;
 
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
+import net.uorbutembo.beans.PaymentLocation;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.swing.Button;
+import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.views.MainWindow;
@@ -35,12 +39,16 @@ public class FormPaymentFee extends DefaultFormPanel {
 	private PaymentFeeDao paymentFeeDao;
 	private Inscription inscription;
 	
-	private final FormGroup<String> slipNumber = FormGroup.createTextField("Numéro du bordereau");
-	private final FormGroup<String> slipDate = FormGroup.createTextField("Date de livraison du bordereau (jj-mm-aaaa)");
-	private final FormGroup<String> receipNumber = FormGroup.createTextField("Numéro du reçu");
-	private final FormGroup<String> receipDate = FormGroup.createTextField("Date de reception du reçu (jj-mm-aaaa)");
+	private final DefaultComboBoxModel<PaymentLocation> locationModel = new DefaultComboBoxModel<>();
+	private final ComboBox<PaymentLocation> comboLocation = new ComboBox<>("Lieux de payment", locationModel);
+	
+	private final FormGroup<String> slipNumber = FormGroup.createTextField("Numéro");
+	private final FormGroup<String> slipDate = FormGroup.createTextField("Date de payement (jj-mm-aaaa)");
+	private final FormGroup<String> receipNumber = FormGroup.createTextField("Numéro du réçu en caisse");
+	private final FormGroup<String> receivedDate = FormGroup.createTextField("Date du reçu en caisse (jj-mm-aaaa)");
 	private final FormGroup<String> wording = FormGroup.createTextField("libelé");
 	private final FormGroup<String> amount = FormGroup.createTextField("Montant payer (en USD)");
+	private final FormGroup<PaymentLocation> location = FormGroup.createComboBox(comboLocation);
 	
 	private PaymentFee fee = new  PaymentFee();//objet encours de traitement
 	
@@ -48,7 +56,6 @@ public class FormPaymentFee extends DefaultFormPanel {
 
 
 	/**
-	 * 
 	 * @param mainWindow
 	 * @param paymentFeeDao
 	 */
@@ -59,20 +66,53 @@ public class FormPaymentFee extends DefaultFormPanel {
 		
 		Panel content = new Panel (new BorderLayout());
 		
-		Panel panTop = new Panel (new GridLayout(6, 1));
-		Panel panBottom = new Panel (new BorderLayout());
-		panTop.add(slipDate);
-		panTop.add(slipNumber);
-		panTop.add(receipDate);
-		panTop.add(receipNumber);
-		panTop.add(wording, BorderLayout.NORTH);
-		panTop.add(amount, BorderLayout.SOUTH);
+		final Panel 
+			panelReference = new Panel (new BorderLayout()),
+			panelCaisse = new Panel(new BorderLayout());
 		
-		content.add(panTop, BorderLayout.NORTH);
-		content.add(panBottom, BorderLayout.SOUTH);
+		final Box 
+			boxReference = Box.createVerticalBox(),
+			boxCaisse = Box.createVerticalBox();
+		
+		//titles
+		final Panel 
+			pTitleReference = new Panel(new BorderLayout()),
+			pTitleCaisse = new Panel(new BorderLayout());
+		
+		final JLabel 
+			labelReference = new  JLabel("Référence du lieux de payement"),
+			labelCaisse = new  JLabel("Référence en caisse");
+		
+		final LineBorder border = new LineBorder(FormUtil.BORDER_COLOR);
+		
+		boxReference.add(location);
+		boxReference.add(slipDate);
+		boxReference.add(slipNumber);
+		boxReference.add(amount);
+		
+		pTitleReference.setBackground(FormUtil.BORDER_COLOR);
+		pTitleReference.add(labelReference, BorderLayout.NORTH);
+		
+		panelReference.add(pTitleReference, BorderLayout.NORTH);
+		panelReference.add(boxReference, BorderLayout.CENTER);
+		panelReference.setBorder(border);
+		
+		boxCaisse.add(receivedDate);
+		boxCaisse.add(receipNumber);
+		boxCaisse.add(wording);
+		
+		pTitleCaisse.setBackground(FormUtil.BORDER_COLOR);
+		pTitleCaisse.add(labelCaisse, BorderLayout.NORTH);
+		
+		panelCaisse.add(pTitleCaisse, BorderLayout.NORTH);
+		panelCaisse.add(boxCaisse, BorderLayout.CENTER);
+		panelCaisse.setBorder(border);
+		
+		content.add(panelReference, BorderLayout.NORTH);
+		content.add(panelCaisse, BorderLayout.SOUTH);
 		
 		this.setBorder(new LineBorder(Color.BLACK));
-		this.getBody().add(content, BorderLayout.CENTER);
+		this.getBody().add(FormUtil.createVerticalScrollPane(content), BorderLayout.CENTER);
 		this.setBackground(Color.BLACK);
 		this.setOpaque(true);
 		
@@ -103,20 +143,27 @@ public class FormPaymentFee extends DefaultFormPanel {
 		this.amount.getField().setValue(fee.getAmount()+"");
 		this.slipDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(fee.getSlipDate()));
 		this.slipNumber.getField().setValue(fee.getSlipNumber());
-		this.receipDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(fee.getReceivedDate()));
+		this.receivedDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(fee.getReceivedDate()));
 		this.receipNumber.getField().setValue(fee.getReceiptNumber());
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent event) {
+		String 
+			amount = this.amount.getValue(),
+			receipNumber = this.receipNumber.getValue(),
+			wording = this.wording.getValue(),
+			receivedDate = this.receivedDate.getValue(),
+			slipDate = this.slipDate.getValue();
+		
 		fee.setInscription(inscription);
-		fee.setWording(wording.getValue());
-		fee.setReceiptNumber(receipNumber.getValue());
+		fee.setWording(wording);
+		fee.setReceiptNumber(receipNumber);
 		fee.setSlipNumber(slipNumber.getValue());
 		try {
-			fee.setAmount(Float.parseFloat(amount.getValue()));
-			fee.setReceivedDate(FormUtil.DEFAULT_FROMATER.parse(receipDate.getValue()));
-			fee.setSlipDate(FormUtil.DEFAULT_FROMATER.parse(slipDate.getValue()));
+			fee.setAmount(Float.parseFloat(amount));
+			fee.setReceivedDate(FormUtil.DEFAULT_FROMATER.parse(receivedDate));
+			fee.setSlipDate(FormUtil.DEFAULT_FROMATER.parse(slipDate));
 		} catch (Exception e) {
 			this.showMessageDialog("Error", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 			return;

@@ -21,7 +21,6 @@ public class PanelOrientation extends Panel implements AcademicYearDaoListener{
 	
 	private boolean loaded = false;
 	private final PanelFaculty panelFaculty;
-	private final PanelDepartment panelDepartment;
 	private final PanelStudyClass panelStudyClass;
 	
 	/**
@@ -33,12 +32,10 @@ public class PanelOrientation extends Panel implements AcademicYearDaoListener{
 		mainWindow.factory.findDao(AcademicYearDao.class).addYearListener(this);
 		
 		panelFaculty=new PanelFaculty(mainWindow);
-		panelDepartment=new PanelDepartment(mainWindow);
 		panelStudyClass=new PanelStudyClass(mainWindow);
 		
 		JTabbedPane tabbed = new JTabbedPane(JTabbedPane.BOTTOM);
 		tabbed.addTab("Facultés", panelFaculty);
-		tabbed.addTab("Départements", panelDepartment);
 		tabbed.addTab("Classe d'étude", panelStudyClass);
 
 		this.add(tabbed, BorderLayout.CENTER);
@@ -50,7 +47,6 @@ public class PanelOrientation extends Panel implements AcademicYearDaoListener{
 			return;
 		
 		panelFaculty.load();
-		panelDepartment.load();
 		panelStudyClass.load();
 	}
 

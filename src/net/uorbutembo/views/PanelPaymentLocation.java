@@ -1,6 +1,3 @@
-/**
- * 
- */
 package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
@@ -10,52 +7,57 @@ import javax.swing.ImageIcon;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
-import net.uorbutembo.beans.UniversitySpend;
+import net.uorbutembo.beans.PaymentLocation;
 import net.uorbutembo.dao.DAOAdapter;
-import net.uorbutembo.dao.UniversitySpendDao;
+import net.uorbutembo.dao.PaymentLocationDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
-import net.uorbutembo.views.forms.FormUniversitySpend;
+import net.uorbutembo.views.forms.FormPaymentLocation;
 import net.uorbutembo.views.forms.FormUtil;
-import net.uorbutembo.views.models.UniversitySpendTableModel;
+import net.uorbutembo.views.models.PaymentLocationTableModel;
 import resources.net.uorbutembo.R;
 
 /**
+ * panel de configuration des lieux de payement
  * @author Esaie MUHASA
  *
  */
-public class PanelUniversitySpend extends Panel{
-	private static final long serialVersionUID = -6678192465363319784L;
+public class PanelPaymentLocation extends Panel {
+	private static final long serialVersionUID = 5031377974753784475L;
+
 	
 	private static final ImageIcon ICO_PLUS  = new ImageIcon(R.getIcon("plus"));
 	private static final ImageIcon ICO_CLOSE  = new ImageIcon(R.getIcon("close"));
 	
 	private final Button btnNew = new Button(ICO_PLUS, "Ajouter");
-	private final FormUniversitySpend form;
+	private final FormPaymentLocation form;
 	private final Table table;
-	private final UniversitySpendTableModel tableModel;
+	private final PaymentLocationTableModel tableModel;
 	
-	private final UniversitySpendDao universitySpendDao;
-	private final DAOAdapter<UniversitySpend> spendAdapter = new DAOAdapter<UniversitySpend>() {
+	private final PaymentLocationDao paymentLocationDao;
+	private final DAOAdapter<PaymentLocation> locationAdapter = new DAOAdapter<PaymentLocation>() {
 
 		@Override
-		public synchronized void onCreate(UniversitySpend e, int requestId) {
+		public synchronized void onCreate(PaymentLocation e, int requestId) {
 			btnNew.doClick();
 		}
 
 		@Override
-		public synchronized void onUpdate(UniversitySpend e, int requestId) {
+		public synchronized void onUpdate(PaymentLocation e, int requestId) {
 			btnNew.doClick();
 		}
 		
 	};
-	
-	public PanelUniversitySpend(MainWindow mainWindow) {
+
+	/**
+	 * 
+	 */
+	public PanelPaymentLocation (MainWindow mainWindow) {
 		super(new BorderLayout());
-		universitySpendDao =mainWindow.factory.findDao(UniversitySpendDao.class);
-		tableModel = new UniversitySpendTableModel(universitySpendDao);
+		paymentLocationDao =mainWindow.factory.findDao(PaymentLocationDao.class);
+		tableModel = new PaymentLocationTableModel(paymentLocationDao);
 		table = new Table(tableModel);
 		table.setShowVerticalLines(true);
 		final int w = 140;
@@ -66,13 +68,13 @@ public class PanelUniversitySpend extends Panel{
 			table.getColumnModel().getColumn(i).setResizable(false);
 		}
 		
-		universitySpendDao.addListener(spendAdapter);
+		paymentLocationDao.addListener(locationAdapter);
 		
 		final Panel container = new Panel(new BorderLayout());
 		final Panel top = new Panel(new BorderLayout());
 		final Box box = Box.createHorizontalBox();
 		
-		form = new FormUniversitySpend(mainWindow);
+		form = new FormPaymentLocation(mainWindow);
 		form.setVisible(false);
 		btnNew.addActionListener(event -> {
 			if (btnNew.getText().equals("Ajouter")) {
@@ -83,7 +85,7 @@ public class PanelUniversitySpend extends Panel{
 				btnNew.setText("Ajouter");
 				btnNew.setIcon(ICO_PLUS);
 				form.setVisible(false);
-				form.setSpend(null);
+				form.setPaymentLocation(null);
 			}
 		});
 		
@@ -96,7 +98,7 @@ public class PanelUniversitySpend extends Panel{
 		top.add(form, BorderLayout.CENTER);
 		top.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		container.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-		container.add(new TablePanel(table, "Liste des dépsenses", false), BorderLayout.CENTER);
+		container.add(new TablePanel(table, "Liste des lieux de perceptions des recettes", false), BorderLayout.CENTER);
 		
 		this.add(top, BorderLayout.NORTH);
 		this.add(scroll, BorderLayout.CENTER);

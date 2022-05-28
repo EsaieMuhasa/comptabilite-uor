@@ -11,7 +11,6 @@ import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.geom.Rectangle2D;
 
 import javax.swing.JComponent;
 import javax.swing.JTextArea;
@@ -94,7 +93,7 @@ public class TextArea extends JTextArea implements InputComponent<String> {
 
             @Override
             public void focusLost(FocusEvent fe) {
-                showing(true);
+                showing(getText().trim().length() == 0);
             }
         });
 	}
@@ -146,7 +145,7 @@ public class TextArea extends JTextArea implements InputComponent<String> {
         Insets in = getInsets();
         g2.setColor(new Color(150, 150, 150));
         FontMetrics ft = g2.getFontMetrics();
-        Rectangle2D r2 = ft.getStringBounds(this.getHint(), g2);
+        //Rectangle2D r2 = ft.getStringBounds(this.getHint(), g2);
         //double height = getHeight() - in.top - in.bottom;
         double textY = 2;//(height - r2.getHeight());
         double size;

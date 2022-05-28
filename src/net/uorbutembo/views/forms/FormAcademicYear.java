@@ -38,13 +38,12 @@ public class FormAcademicYear extends DefaultFormPanel {
 
 	/**
 	 * @param mainWindow
-	 * @param academicYearDao
 	 */
-	public FormAcademicYear(MainWindow mainWindow, AcademicYearDao academicYearDao) {
+	public FormAcademicYear(MainWindow mainWindow) {
 		super(mainWindow);
-		this.academicYearDao = academicYearDao;
-		this.setTitle("Formulaire de déclaration d'une année académique");
-		this.init();
+		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
+		setTitle("Formulaire de déclaration d'une année académique");
+		init();
 	}
 	
 	/**

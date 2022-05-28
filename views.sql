@@ -93,6 +93,7 @@ CREATE VIEW V_PaymentFeePart AS
 		PaymentFee.wording AS wording,
 		PaymentFee.receiptNumber AS receiptNumber,
 		PaymentFee.amount AS amount,
+		PaymentFee.location AS "location",
 		(SELECT (Student.name || ' '|| Student.postName || ' ' || Student.lastName) FROM Student WHERE Student.id = Inscription.student) AS label,
 		AnnualSpend.id  AS spend,
 		UniversitySpend.title AS title,
@@ -117,6 +118,7 @@ CREATE VIEW V_OtherRecipePart AS
         OtherRecipe.account AS account,
         OtherRecipe.label AS label,
         OtherRecipe.amount AS amount,
+        OtherRecipe.location AS "location",
         AllocationRecipe.spend  AS spend,
         UniversityRecipe.title AS title,
 		(

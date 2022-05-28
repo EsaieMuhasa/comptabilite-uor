@@ -73,7 +73,7 @@ public class DepartmentTableModel extends TableModel<Department> {
 
 	@Override
 	public int getColumnCount() {
-		return 2;
+		return 4;
 	}
 
 	@Override
@@ -81,6 +81,12 @@ public class DepartmentTableModel extends TableModel<Department> {
 		switch (columnIndex) {
 			case 0: return (this.data.get(rowIndex).getAcronym());
 			case 1: return (this.data.get(rowIndex).getName());
+			case 2 : return DEFAULT_DATE_FORMAT.format(data.get(rowIndex).getRecordDate());
+			case 3 : {
+				if(data.get(rowIndex).getLastUpdate() == null)
+					return "-";
+				return DEFAULT_DATE_FORMAT.format(data.get(rowIndex).getLastUpdate());
+			}
 		}
 		return "";
 	}
@@ -88,10 +94,12 @@ public class DepartmentTableModel extends TableModel<Department> {
 	@Override
 	public String getColumnName(int column) {
 		switch (column) {
-			case 0: return ("Abbreviation");
-			case 1: return ("Appelation complette");
+			case 0: return "Abbreviation";
+			case 1: return "Appelation complette";
+			case 2: return "Date enregistrement";
+			case 3: return "Dernière modification";
 		}
-		return "Option";
+		return super.getColumnName(column);
 	}
 
 }

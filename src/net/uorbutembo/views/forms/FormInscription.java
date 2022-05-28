@@ -14,8 +14,6 @@ import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.Student;
 import net.uorbutembo.beans.User.Kind;
 import net.uorbutembo.dao.DAOException;
-import net.uorbutembo.dao.InscriptionDao;
-import net.uorbutembo.dao.StudentDao;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.views.MainWindow;
@@ -43,10 +41,10 @@ public class FormInscription extends AbstractInscriptionForm{
 	private FormGroup<Kind> groupKind = FormGroup.createComboBox(comboKind);
 	//-- fields
 
-	public FormInscription(MainWindow mainWindow, InscriptionDao inscriptionDao, StudentDao studentDao) {
-		super(mainWindow, inscriptionDao, studentDao);	
+	public FormInscription(MainWindow mainWindow) {
+		super(mainWindow);	
 		
-		this.setTitle("Formulaire d'inscription");
+		setTitle("Formulaire d'inscription");
 
 		init();
 		setEnabled(false);
@@ -127,14 +125,13 @@ public class FormInscription extends AbstractInscriptionForm{
 				bDate = this.birthDate.getField().getValue().trim(),
 				matricul = this.matricul.getField().getValue().trim();
 		Date birthDate = null;
+		
+		String message = "";
 		try {
 			birthDate = FormUtil.DEFAULT_FROMATER.parse(bDate);
 		} catch (ParseException e) {
-			this.showMessageDialog("Erreur", "Entrez la date au format dd/MM/yyyy ou jj/MM/aaaa", JOptionPane.ERROR_MESSAGE);
-			return;
+			message += "Entrez la date au format dd-MM-yyyy ou jj/MM/aaaa\n";
 		}
-		
-		String message = "";
 		
 		if(name.length() < 3)
 			message += "Le nom doit avoir entre 3 et 20 carracteres\n";
@@ -147,10 +144,17 @@ public class FormInscription extends AbstractInscriptionForm{
 		
 		if(telephone.length() == 0)
 			message += "Entrez un numéro de téléphone de l'étudiant\n";
-		else if(!telephone.matches("(^\\+243[98]([0-9]{9})$)|(^0[98]([0-9]{8})$)"))
+		else if(!telephone.matches("^0[98]([0-9]{8})$") && !telephone.matches("^\\+243[98]([0-9]{8})$"))
 			message += "Entrez un numéro de téléphone valide\n";
-		else if (studentDao.checkByTelephone(telephone))
-			message += "Ce numéro de téléphone est déjà utiliser par un autre étudiant\n";
+		else {
+			if (telephone.startsWith("0")) {
+				telephone = "+243"+telephone.substring(1);
+				this.telephone.getField().setValue(telephone);
+			}
+			
+			if (studentDao.checkByTelephone(telephone))
+				message += "Ce numéro de téléphone est déjà utiliser par un autre étudiant\n";
+		}
 		
 		if(email.length() != 0) {
 			if(!email.matches("^([a-zA-Z]+)([a-zA-Z0-9_\\.]*)@([a-zA-Z0-9]{2,20})\\.([a-z]{2,6})$"))
@@ -164,7 +168,7 @@ public class FormInscription extends AbstractInscriptionForm{
 		else if (studentDao.checkByMatricul(matricul))
 			message += "Ce matricule est déjà attribuer à un autre étudiant";
 		
-		if (message.trim().isEmpty()){
+		if (!message.trim().isEmpty()){
 			showMessageDialog("Erreur", message, JOptionPane.ERROR_MESSAGE);
 			return;
 		}

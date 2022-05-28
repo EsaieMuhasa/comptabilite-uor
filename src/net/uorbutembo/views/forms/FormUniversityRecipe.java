@@ -28,18 +28,19 @@ public class FormUniversityRecipe extends DefaultFormPanel {
 	private static final long serialVersionUID = 6428356255918143364L;
 	
 	private final TextField<String> title = new TextField<>("Titre");
-	private final TextArea description = new TextArea("Description", 5, 5);
+	private final TextArea description = new TextArea("Description", 3, 5);
 	
 	private final FormGroup<String> titleGroup = FormGroup.createTextField(title);
 	private final FormGroup<String> descriptionGroup = FormGroup.createTextArea(description);
 	
-	private UniversityRecipeDao universityRecipeDao;
+	private final UniversityRecipeDao universityRecipeDao;
+	
+	private UniversityRecipe recipe;
 
-
-	public FormUniversityRecipe(MainWindow mainWindow, UniversityRecipeDao universityRecipeDao) {
+	public FormUniversityRecipe (MainWindow mainWindow) {
 		super(mainWindow);
-		this.universityRecipeDao = universityRecipeDao;
-		this.setTitle("Formultaire d'enregistrement");
+		universityRecipeDao = mainWindow.factory.findDao(UniversityRecipeDao.class);
+		setTitle("Formultaire d'enregistrement");
 		Box box = Box.createVerticalBox();
 		box.add(this.titleGroup);
 		box.add(this.descriptionGroup);
@@ -56,6 +57,21 @@ public class FormUniversityRecipe extends DefaultFormPanel {
 		validateFields();
 	}
 	
+	/**
+	 * @param recipe the recipe to set
+	 */
+	public void setRecipe (UniversityRecipe recipe) {
+		this.recipe = recipe;
+		
+		if (recipe != null) {
+			title.setValue(recipe.getTitle());
+			description.setValue(recipe.getDescription());
+		} else {
+			title.setValue("");
+			description.setValue("");
+		}
+	}
+
 	/**
 	 * activation/desativation du bouton d'enregistrement.
 	 */
@@ -78,14 +94,22 @@ public class FormUniversityRecipe extends DefaultFormPanel {
 		String title = this.title.getValue();
 		String description = this.description.getValue();
 		
-		UniversityRecipe spend = new UniversityRecipe();
-		spend.setTitle(title);
-		spend.setDescription(description);
-		spend.setRecordDate(new Date());
+		UniversityRecipe r = new UniversityRecipe();
+		r.setTitle(title);
+		r.setDescription(description);
+		
+		Date now = new Date();
 		
 		try {
-			universityRecipeDao.create(spend);
-			showMessageDialog("Information", "Success d'enregistrement de la recete", JOptionPane.INFORMATION_MESSAGE);
+			if (recipe == null) {				
+				r.setRecordDate(now);
+				universityRecipeDao.create(r);
+			} else {
+				r.setLastUpdate(now);
+				r.setRecordDate(recipe.getRecordDate());
+				universityRecipeDao.update(r, recipe.getId());
+			}
+			setRecipe(null);
 		} catch (DAOException e) {
 			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}

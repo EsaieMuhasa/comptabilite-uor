@@ -11,9 +11,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
+import net.uorbutembo.beans.PaymentLocation;
 import net.uorbutembo.beans.Promotion;
 
 /**
@@ -34,11 +36,12 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		try {
 			long id = insertInTable(
 					new String[] {
-							"inscription", "amount", "receivedDate", "receiptNumber",
+							"inscription", "location", "amount", "receivedDate", "receiptNumber",
 							"slipDate", "slipNumber", "wording", "recordDate"
 					},
 					new Object[] {
 							p.getInscription().getId(),
+							p.getLocation().getId(),
 							p.getAmount(),
 							p.getReceivedDate().getTime(),
 							p.getReceiptNumber(),
@@ -58,10 +61,11 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	public void update(PaymentFee p, long id) throws DAOException {
 		try {
 			updateInTable(new String[] {
-								"amount", "receivedDate", "receiptNumber",
+								"location", "amount", "receivedDate", "receiptNumber",
 								"slipDate", "slipNumber", "wording", "lastUpdate"
 						},
 						new Object[] {
+								p.getLocation().getId(),
 								p.getAmount(),
 								p.getReceivedDate().getTime(),
 								p.getReceiptNumber(),
@@ -464,7 +468,7 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	}
 
 	@Override
-	public List<PaymentFee> findByAcademicYearBeforDate(long yearId, Date date) throws DAOException {
+	public List<PaymentFee> findByAcademicYearBeforDate (long yearId, Date date) throws DAOException {
 		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d ", Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), yearId);
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) AND slipDate < %d LIMIT 1 OFFSET 0", getTableName(), sqlInscrits, toMinTimestampOfDay(date).getTime());
@@ -505,16 +509,192 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	}
 
 	@Override
-	protected PaymentFee mapping(ResultSet result) throws SQLException, DAOException {
+	public int countByLocation(long location) throws DAOException {
+		final String sql = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE location = %d", getTableName(), location);
+		int count  = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if(result.next())
+				count = result.getInt("nombre");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return count;
+	}
+
+	@Override
+	public int countByLocation(long location, long year) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE location = %d AND inscription IN(%s)", getTableName(), location, sqlInscrits);
+		int count  = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if(result.next())
+				count = result.getInt("nombre");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return count;
+	}
+
+	@Override
+	public boolean checkByLocation(long location, long year) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE location = %d AND inscription IN(%s) LIMIT 1 OFFSET 0", getTableName(), location, sqlInscrits);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			return result.next();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public boolean checkByLocation(long location, long year, int offset) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE location = %d AND inscription IN(%s) LIMIT 1 OFFSET %d", getTableName(), location, sqlInscrits, offset);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			return result.next();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public List<PaymentFee> findByLocation(PaymentLocation location, AcademicYear year) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year.getId());
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE location = %d AND inscription IN(%s)", getTableName(), location.getId(), sqlInscrits);
+		
+		List<PaymentFee> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next()) 
+				data.add(mapping(result, location));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if (data.isEmpty())
+			throw new DAOException("Aucun payement deja fait pour l'annee academique "+year.toString()+" => "+location.toString());
+		return data;
+	}
+
+	@Override
+	public List<PaymentFee> findByLocation(PaymentLocation location, AcademicYear year, int limit, int offset) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year.getId());
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE location = %d AND inscription IN(%s) LIMIT %d OFFSET %d", getTableName(), location.getId(), sqlInscrits, limit, offset);
+		
+		List<PaymentFee> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next()) 
+				data.add(mapping(result, location));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if (data.isEmpty())
+			throw new DAOException("Aucun payement deja fait pour l'annee academique "+year.toString()+" => "+location.toString());
+		return data;
+	}
+	
+	@Override
+	public List<PaymentFee> findByLocation(PaymentLocation location, AcademicYear year, Date min, Date max, int limit, int offset) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year.getId());
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE location = %d AND inscription IN(%s) AND (receivedDate BETWEEN %d AND %d) LIMIT %d OFFSET %d",
+				getTableName(), location.getId(), sqlInscrits, toMinTimestampOfDay(min), toMaxTimestampOfDay(max), limit, offset);
+		
+		List<PaymentFee> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next()) 
+				data.add(mapping(result, location));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if (data.isEmpty())
+			throw new DAOException("Aucun payement deja fait pour l'annee academique "+year.toString()+" => "+location.toString());
+		return data;
+	}
+
+	@Override
+	public List<PaymentFee> findByLocation(PaymentLocation location, AcademicYear year, Date min, Date max) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year.getId());
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE location = %d AND inscription IN(%s) AND (receivedDate BETWEEN %d AND %d)",
+				getTableName(), location.getId(), sqlInscrits, toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
+		
+		List<PaymentFee> data = new ArrayList<>();
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			while (result.next()) 
+				data.add(mapping(result, location));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if (data.isEmpty())
+			throw new DAOException("Aucun payement deja fait pour l'annee academique "+year.toString()+" => "+location.toString());
+		return data;
+	}
+
+	protected PaymentFee baseMapping(ResultSet result) throws SQLException, DAOException {
 		PaymentFee fee = new PaymentFee(result.getLong("id"));
 		fee.setRecordDate(new Date(result.getLong("recordDate")));
-		fee.setInscription(new Inscription(result.getLong("inscription")));
 		fee.setAmount(result.getFloat("amount"));
 		fee.setReceivedDate(new Date(result.getLong("receivedDate")));
 		fee.setReceiptNumber(result.getString("receiptNumber"));
 		fee.setSlipDate(new Date(result.getLong("slipDate")));
 		fee.setSlipNumber(result.getString("slipNumber"));
 		fee.setWording(result.getString("wording"));
+		if(result.getLong("lastUpdate") > 0 )
+			fee.setLastUpdate(new Date(result.getLong("lastUpdate")));
+		return fee;
+	}
+
+	@Override
+	protected PaymentFee mapping(ResultSet result) throws SQLException, DAOException {
+		PaymentFee fee = baseMapping(result);
+		fee.setInscription(new Inscription(result.getLong("inscription")));
+		fee.setLocation(factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")));
 		return fee;
 	}
 	
@@ -526,15 +706,16 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	 * @throws DAOException
 	 */
 	protected PaymentFee mapping(ResultSet result, Inscription inscription) throws SQLException, DAOException {
-		PaymentFee fee = new PaymentFee(result.getLong("id"));
-		fee.setRecordDate(new Date(result.getLong("recordDate")));
+		PaymentFee fee = baseMapping(result);
 		fee.setInscription(inscription);
-		fee.setAmount(result.getFloat("amount"));
-		fee.setReceivedDate(new Date(result.getLong("receivedDate")));
-		fee.setReceiptNumber(result.getString("receiptNumber"));
-		fee.setSlipDate(new Date(result.getLong("slipDate")));
-		fee.setSlipNumber(result.getString("slipNumber"));
-		fee.setWording(result.getString("wording"));
+		fee.setLocation(factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")));
+		return fee;
+	}
+	
+	protected PaymentFee mapping(ResultSet result, PaymentLocation location) throws SQLException, DAOException {
+		PaymentFee fee = baseMapping(result);
+		fee.setInscription(new Inscription(result.getLong("inscription")));
+		fee.setLocation(location);
 		return fee;
 	}
 
@@ -744,6 +925,28 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
 				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		final String sql = String.format("SELECT SUM(%s.amount) AS sold FROM %s WHERE inscription IN(%s)", getTableName(), sqlInscrits);
+		
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return sold;
+	}
+	
+	@Override
+	public double getSoldByLocation(long location, long year) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT SUM(%s.amount) AS sold FROM %s WHERE location = %d AND inscription IN(%s)", getTableName(), location, sqlInscrits);
 		
 		double sold = 0;
 		try (
