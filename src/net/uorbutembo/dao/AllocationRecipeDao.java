@@ -23,6 +23,16 @@ public interface AllocationRecipeDao extends DAOInterface<AllocationRecipe> {
 	 * @throws DAOException
 	 */
 	boolean check (long recipeId, long spendId) throws DAOException;
+	/**
+	 * Verification de l'existance de l'unicite des cles en parametre
+	 * @param recipe
+	 * @param spend
+	 * @return
+	 * @throws DAOException
+	 */
+	default boolean check (AnnualRecipe recipe, AnnualSpend spend) throws DAOException{
+		return check (recipe.getId(), spend.getId());
+	}
 	
 	/**
 	 * renvoie l'occurence qui correspond aux clee uniques en parametre 

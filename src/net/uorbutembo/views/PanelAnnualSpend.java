@@ -17,6 +17,7 @@ import javax.swing.ListSelectionModel;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
+import net.uorbutembo.beans.UniversitySpend;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
@@ -55,6 +56,43 @@ public class PanelAnnualSpend extends Panel {
 	private JPopupMenu popupMenu = new JPopupMenu();
 	private JMenuItem itemDelete = new JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
 
+	private DAOAdapter<UniversitySpend> univSpendAdapter = new DAOAdapter<UniversitySpend>() {
+
+		@Override
+		public synchronized void onCreate(UniversitySpend e, int requestId) {
+			if (!btnNew.isVisible() && !btnList.isVisible())
+				btnNew.setVisible(true);
+		}
+
+		@Override
+		public synchronized void onDelete(UniversitySpend e, int requestId) {
+			if (tableModel.getRowCount() == universitySpendDao.countAll()) {
+				btnList.doClick();
+				btnNew.setVisible(false);
+				btnList.setVisible(false);
+			}
+		}
+		
+	};
+	
+	private final DAOAdapter<AnnualSpend> annualSpendAdapter = new DAOAdapter<AnnualSpend>() {
+		@Override
+		public void onCreate(AnnualSpend e, int requestId) {
+			btnList.doClick();
+			reload();
+		}
+		
+		@Override
+		public void onCreate(AnnualSpend[] e, int requestId) {
+			btnList.doClick();
+			reload();
+		}
+		
+		@Override
+		public void onDelete(AnnualSpend e, int requestId) { reload(); }
+		
+	};
+	
 	/**
 	 * @param mainWindow
 	 */
@@ -64,27 +102,8 @@ public class PanelAnnualSpend extends Panel {
 		universitySpendDao = mainWindow.factory.findDao(UniversitySpendDao.class);
 		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
 		
-		annualSpendDao.addListener(new DAOAdapter<AnnualSpend>() {
-			@Override
-			public void onCreate(AnnualSpend e, int requestId) {
-				if(!btnList.isVisible()) {
-					btnList.doClick();
-					reload();
-				}
-			}
-			
-			@Override
-			public void onCreate(AnnualSpend[] e, int requestId) {
-				btnList.doClick();
-				reload();
-			}
-			
-			@Override
-			public void onDelete(AnnualSpend e, int requestId) { reload(); }
-			
-			@Override
-			public void onDelete(AnnualSpend[] e, int requestId) { reload(); }
-		});
+		annualSpendDao.addListener(annualSpendAdapter);
+		universitySpendDao.addListener(univSpendAdapter);
 		
 		final Panel padding = new Panel(new BorderLayout());
 		tableModel = new AnnualSpendTableModel(annualSpendDao);
@@ -172,6 +191,7 @@ public class PanelAnnualSpend extends Panel {
 		if(form != null)
 			form.loadData();
 		
+		btnList.doClick();
 		if(universitySpendDao.countAll() == annualSpendDao.countByAcademicYear(currentYear.getId())) {
 			btnList.setVisible(false);
 			btnNew.setVisible(false);

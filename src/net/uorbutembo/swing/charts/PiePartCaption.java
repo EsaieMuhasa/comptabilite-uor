@@ -113,12 +113,18 @@ class PiePartCaption extends JComponent implements PieModelListener{
 			if (wMax > prefferedWidth)
 				prefferedWidth = wMax;
 			
-			g2.setFont(FONT_VALUE);
-			int x = col - wValue + step/3, y = h- metricsValue.getHeight()/2;
-			g2.drawString(valueVal, x, y);
+			int x = 17, xRect = 8;
+			int y = h- metricsValue.getHeight()/2, yRect = h - (metricsValue.getHeight() + metricsValue.getHeight()/2 );
+			g2.setColor(part.getBackgroundColor().brighter().brighter());
+			g2.fillRoundRect(xRect, yRect, wValue + 20, metricsValue.getHeight() + 2, 20, 20);
 			
+			g2.setColor(getBackground());
+			g2.setFont(FONT_VALUE);
+			g2.drawString(valueVal, x, y-2);
+			
+			g2.setColor(part.getBackgroundColor());
 			g2.setFont(FONT_LABEL);
-			g2.drawString(label, xLabel, y);
+			g2.drawString(label, wValue + 40, y-3);
 			
 			g2.setFont(FONT_PERCENT);
 			g2.setColor(getBackground());

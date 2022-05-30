@@ -91,6 +91,13 @@ public class PiePanel extends Panel {
 	}
 
 	/**
+	 * @return the scroll
+	 */
+	public JScrollPane getScroll() {
+		return scroll;
+	}
+
+	/**
 	 * @param model the model to set
 	 */
 	public void setModel(PieModel model) {

@@ -27,6 +27,9 @@ import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -75,8 +78,9 @@ public class FormGroupAllocationCost extends Panel {
 	private final Panel container = new Panel(layout);
 	private final Panel left = new Panel(new BorderLayout());
 	private final Panel right = new  Panel(new BorderLayout());
-	private final Box center = Box.createVerticalBox();
 	private final Panel bottom = new Panel();
+	private final Box center = Box.createVerticalBox();
+	private final JScrollPane fieldScroll = FormUtil.createScrollPane(center);
 	
 	private final Button  btnSave = new Button(new ImageIcon(R.getIcon("success")), "Enregistrer");
 	
@@ -97,8 +101,10 @@ public class FormGroupAllocationCost extends Panel {
 		@Override
 		public void refresh (PieModel model) {
 			double percent = model.getSumPercent();
-			labelPercentUsed.setText(percent+" %");
-			labelAmountUsed.setText(model.getRealMax()+" "+FormUtil.UNIT_MONEY+"");
+			BigDecimal bigPercent = new BigDecimal(percent).setScale(4, RoundingMode.FLOOR);
+			BigDecimal bigAmount = new BigDecimal(model.getRealMax()).setScale(4, RoundingMode.FLOOR);
+			labelPercentUsed.setText(bigPercent.doubleValue()+" %");
+			labelAmountUsed.setText(bigAmount.doubleValue()+" "+FormUtil.UNIT_MONEY+"");
 			btnSave.setEnabled(percent == 100.0);
 		}
 		
@@ -149,6 +155,30 @@ public class FormGroupAllocationCost extends Panel {
 		piePanel.getRender().setHovable(false);
 		annualSpendDao.addListener(annualAdapter);
 		btnSave.setEnabled(false);
+		pieModel.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
+		
+		//syncronisation des scroll bars
+		fieldScroll.getVerticalScrollBar().addAdjustmentListener(event -> {
+			if (event.getSource() != fieldScroll.getVerticalScrollBar())
+				return;
+			
+			JScrollBar bar = piePanel.getScroll().getVerticalScrollBar();
+			BigDecimal big = new BigDecimal((( 100.0 / event.getAdjustable().getMaximum()) * event.getValue()) * (bar.getMaximum() / 100)).setScale(0, RoundingMode.HALF_UP);
+			int value =  big.intValue();
+			bar.setValue(value - bar.getModel().getExtent()/4);
+		});
+		
+//		piePanel.getScroll().setVerticalScrollBarPolicy(ScrollPaneConstanttants.VERTICAL_SCROLLBAR_NEVER);
+		piePanel.getScroll().getVerticalScrollBar().setVisible(false);
+//		piePanel.getScroll().getVerticalScrollBar().addAdjustmentListener(event -> {
+//			if (event.getSource() != piePanel.getScroll().getVerticalScrollBar())
+//				return;
+//			
+//			JScrollBar bar = fieldScroll.getVerticalScrollBar();
+//			BigDecimal big = new BigDecimal((( 100.0 / event.getAdjustable().getMaximum()) * event.getValue()) * (bar.getMaximum() / 100.0) ).setScale(0, RoundingMode.HALF_UP);
+//			int value =  big.intValue();
+//			bar.setValue(value - bar.getModel().getExtent()/4);
+//		});
 	}
 	
 	/**
@@ -283,7 +313,7 @@ public class FormGroupAllocationCost extends Panel {
 		final Panel labels = new  Panel(new GridLayout(1, 2, DEFAULT_H_GAP, DEFAULT_H_GAP));
 		final Panel padding = new  Panel(new BorderLayout());
 
-		padding.add(FormUtil.createScrollPane(center), BorderLayout.CENTER);
+		padding.add(fieldScroll, BorderLayout.CENTER);
 		padding.setBorder(new EmptyBorder(0, DEFAULT_H_GAP, 0, 0));
 		
 		labels.add(labelAmountUsed);

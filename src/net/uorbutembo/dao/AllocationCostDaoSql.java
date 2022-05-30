@@ -19,7 +19,7 @@ import net.uorbutembo.beans.AnnualSpend;
  * @author Esaie MUHASA
  *
  */
-public class AllocationCostDaoSql extends UtilSql<AllocationCost> implements AllocationCostDao {
+class AllocationCostDaoSql extends UtilSql<AllocationCost> implements AllocationCostDao {
 
 	private AnnualSpendDao annualSpendDao;
 	private AcademicFeeDao academicFeeDao;

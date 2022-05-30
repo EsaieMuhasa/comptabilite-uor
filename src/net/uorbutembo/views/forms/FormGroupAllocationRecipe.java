@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.swing.Box;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.border.LineBorder;
 import javax.swing.event.CaretListener;
@@ -26,13 +27,19 @@ import javax.swing.event.CaretListener;
 import net.uorbutembo.beans.AllocationRecipe;
 import net.uorbutembo.beans.AnnualRecipe;
 import net.uorbutembo.beans.AnnualSpend;
+import net.uorbutembo.beans.UniversityRecipe;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AllocationRecipeDao;
+import net.uorbutembo.dao.AnnualSpendDao;
+import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
+import net.uorbutembo.dao.UniversityRecipeDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.TextField;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
+import net.uorbutembo.swing.charts.PieModel;
+import net.uorbutembo.swing.charts.PieModelListener;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.MainWindow;
@@ -49,6 +56,8 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 	
 	private final DefaultPieModel pieModel = new DefaultPieModel(100);
 	private final PiePanel piePanel = new PiePanel(pieModel);
+	private final JLabel labelMaxTop = FormUtil.createSubTitle("");//le max des % deja occuper
+	private final JLabel labelMaxBottom = FormUtil.createSubTitle("");
 	private final List<AllocationRecipeField> fields = new ArrayList<>();
 	
 	private List<AnnualSpend> spends = new ArrayList<>();//depense annuel
@@ -57,8 +66,75 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 	private final Box boxFields = Box.createVerticalBox(),
 				parentOfBox = Box.createVerticalBox();
 
-	private AllocationRecipeDao allocationRecipeDao;
-	private AcademicYearDao academicYearDao;
+	private final AllocationRecipeDao allocationRecipeDao;
+	private final AcademicYearDao academicYearDao;
+	private final AnnualSpendDao annualSpendDao;
+	private final UniversityRecipeDao universityRecipeDao;
+	
+	private final PieModelListener pieListener = new  PieModelListener() {
+		
+		@Override
+		public void repaintPart(PieModel model, int partIndex) {
+			refresh(model);
+		}
+		
+		@Override
+		public void refresh(PieModel model) {
+			labelMaxBottom.setText(model.getRealMax()+" %");
+			labelMaxTop.setText(labelMaxBottom.getText());
+			btnSave.setEnabled(model.getRealMax() == model.getMax());
+		}
+		
+		@Override
+		public void onSelectedIndex(PieModel model, int oldIndex, int newIndex) {}
+	};
+	
+	private final DAOAdapter<AnnualSpend> spendAdapter = new DAOAdapter <AnnualSpend> () {
+
+		@Override
+		public synchronized void onCreate(AnnualSpend spend, int requestId) {
+			Color color = COLORS[fields.size() % (COLORS.length - 1)];
+			DefaultPiePart part = new DefaultPiePart(color, spend.getUniversitySpend().getTitle());
+			AllocationRecipeField  field = new AllocationRecipeField(spend, part);
+			fields.add(field);
+			spends.add(spend);
+			
+			updateDimensionBoxFields();
+			boxFields.add(field);
+			boxFields.add(Box.createVerticalStrut(5));
+			pieModel.addPart(part);
+		}
+
+		@Override
+		public synchronized void onDelete(AnnualSpend spend, int requestId) {
+			for (int i = 0; i < spends.size(); i++) {
+				if (spends.get(i).getId() == spend.getId()) {//liberation du field (configuration => AllocationRecipe)
+					AllocationRecipeField field = fields.remove(i);
+					
+					field.dispose();
+					updateDimensionBoxFields();
+					spends.remove(i);
+					boxFields.remove(field);
+					
+					break;
+				}
+			}
+		}
+		
+	};
+	
+	private final DAOAdapter<UniversityRecipe> uniRecipeAdapter = new  DAOAdapter<UniversityRecipe>() {
+
+		@Override
+		public synchronized void onUpdate(UniversityRecipe e, int requestId) {
+			if (e.getId() == currentRecipe.getUniversityRecipe().getId()){
+				setTitle(e.getTitle());
+				currentRecipe.setUniversityRecipe(e);
+			}
+		}
+		
+	};
+	
 	
 	/**
 	 * @param mainWindow
@@ -67,19 +143,37 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 		super(mainWindow);
 		allocationRecipeDao = mainWindow.factory.findDao(AllocationRecipeDao.class);
 		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
-		final Panel container = new Panel(layout);
+		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
+		universityRecipeDao = mainWindow.factory.findDao(UniversityRecipeDao.class);
 		
-
+		annualSpendDao.addListener(spendAdapter);
+		universityRecipeDao.addListener(uniRecipeAdapter);
+		
+		final Panel container = new Panel(layout);
+		final Panel left = new Panel(new BorderLayout());
+		
 		parentOfBox.add(Box.createVerticalGlue());
 		parentOfBox.add(boxFields);
 		parentOfBox.add(Box.createVerticalGlue());
 		
 		boxFields.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
-		container.add(piePanel);
+		labelMaxTop.setForeground(Color.WHITE);
+		labelMaxTop.setHorizontalAlignment(JLabel.CENTER);
+		labelMaxBottom.setForeground(Color.WHITE);
+		labelMaxBottom.setHorizontalAlignment(JLabel.CENTER);
+		
+		left.add(labelMaxTop, BorderLayout.NORTH);
+		left.add(piePanel, BorderLayout.CENTER);
+		left.add(labelMaxBottom, BorderLayout.SOUTH);
+		
+		container.add(left);
 		container.add(parentOfBox);
 		piePanel.setCaptionVisibility(false);
+		piePanel.setBackground(getBody().getBackground());
 		this.getBody().add(container, BorderLayout.CENTER);
+		pieModel.addListener(pieListener);
+		btnSave.setEnabled(false);
 	}
 	
 	/**
@@ -143,11 +237,19 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 			pieModel.addPart(part);
 		}
 		
-		int maxH = spends.size() * 52 ;
-		boxFields.setPreferredSize(new Dimension(150, maxH));
-		boxFields.setMaximumSize(new Dimension(1000, maxH));
+		updateDimensionBoxFields();
 		
 		boxFields.repaint();
+	}
+	
+	/**
+	 * mise ne jour des dimensions (prefferedSize et maxSize) du box contenant le champs permetant la 
+	 * modification de repartition des recettes
+	 */
+	private void updateDimensionBoxFields () {
+		int maxH = spends.size() * 55 ;
+		boxFields.setPreferredSize(new Dimension(150, maxH));
+		boxFields.setMaximumSize(new Dimension(1000, maxH));		
 	}
 
 	@Override
@@ -203,8 +305,6 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 			
 			for (int i = 0, count = toDeleteList.size(); i < count; i++)
 				toDeleteList.get(i).setId(0);
-			
-			System.out.println("create: "+toCreate.length+" => update: "+toUpdate.length+" => delete: "+deletableIds.length);
 		} catch (DAOException e) {
 			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}
@@ -256,7 +356,7 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 		public AllocationRecipeField(AnnualSpend spend, PiePart part) {
 			super(new BorderLayout());
 			this.part = part;
-			border = new LineBorder(part.getBackgroundColor());
+			border = new LineBorder(part.getBackgroundColor(), 2);
 			setSpend(spend);
 			init();
 		}
@@ -296,12 +396,17 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 		}
 		
 		/**
-		 * -liberation des resources
-		 * -deconnexion des listeners
+		 * Liberation des ressources
+		 * <ul>
+		 * <li>liberation des resources</li>
+		 * <li>deconnexion des listeners</li>
+		 * <li>Deconnection du part au Pie</li>
+		 * </ul>
 		 */
 		public void dispose () {
 			field.removeFocusListener(focusListener);
 			field.removeCaretListener(caretListener);
+			pieModel.removePart(part);
 		}
 		
 		private void init() {

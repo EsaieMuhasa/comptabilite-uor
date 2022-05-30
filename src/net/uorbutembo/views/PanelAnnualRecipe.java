@@ -44,6 +44,7 @@ public class PanelAnnualRecipe extends Panel {
 	private AnnualRecipeDao annualRecipeDao;
 	private AnnualSpendDao annualSpendDao;
 	private AcademicYearDao academicYearDao;
+	private final UniversityRecipeDao universityRecipeDao;
 	
 	private AcademicYear currentYear;//l'annee academique actuel
 	
@@ -57,6 +58,52 @@ public class PanelAnnualRecipe extends Panel {
 	private final JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelCenter, panelRight); 
 	
 	private FormGroupAllocationRecipe formRecipe;
+	
+	private final DAOAdapter<UniversityRecipe> univRecipeAdapter = new DAOAdapter<UniversityRecipe>() {
+
+		@Override
+		public synchronized void onCreate(UniversityRecipe e, int requestId) {
+			if (!btnAdd.isEnabled())
+				btnAdd.setEnabled(true);
+		}
+
+		@Override
+		public synchronized void onDelete(UniversityRecipe e, int requestId) {
+			if (universityRecipeDao.countAll() == modelRecipe.getSize())
+				btnAdd.setEnabled(false);
+		}
+		
+	};
+	
+	private final DAOAdapter<AnnualRecipe> annualRecipeAdapter = new DAOAdapter<AnnualRecipe>() {
+
+		@Override
+		public synchronized void onCreate(AnnualRecipe e, int requestId) {
+			modelRecipe.addElement(e);
+			btnAdd.setEnabled(universityRecipeDao.countAll() != modelRecipe.getSize());
+		}
+
+		@Override
+		public synchronized void onDelete(AnnualRecipe e, int requestId) {
+			if(e.getAcademicYear().getId() != currentYear.getId())
+				return;
+			
+			for (int i = 0; i < modelRecipe.getSize(); i++) {
+				if (modelRecipe.get(i).getId() == e.getId()) {
+					
+					if (listRecipe.getSelectedIndex() == i) {
+						if (modelRecipe.getSize() != 1) 
+							listRecipe.setSelectedIndex(i + ( i == 0? 1 : -1));
+					}
+					modelRecipe.remove(i);
+					break;
+				}
+			}
+			
+			btnAdd.setEnabled(true);
+		}
+		
+	};
 
 	/**
 	 * @param mainWindow
@@ -67,6 +114,10 @@ public class PanelAnnualRecipe extends Panel {
 		annualRecipeDao = mainWindow.factory.findDao(AnnualRecipeDao.class);
 		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
 		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
+		universityRecipeDao = mainWindow.factory.findDao(UniversityRecipeDao.class);
+		
+		universityRecipeDao.addListener(univRecipeAdapter);
+		annualRecipeDao.addListener(annualRecipeAdapter);
 		formRecipe = new FormGroupAllocationRecipe(mainWindow);
 		init();
 	}
@@ -92,7 +143,11 @@ public class PanelAnnualRecipe extends Panel {
 			split.setDividerLocation(getWidth() - 250);
 		}
 		
-		btnAdd.setVisible(academicYearDao.isCurrent(currentYear));
+		if (academicYearDao.isCurrent(currentYear)) {			
+			btnAdd.setVisible(true);
+			btnAdd.setEnabled(modelRecipe.getSize() != universityRecipeDao.countAll());
+		} else 
+			btnAdd.setVisible(false);
 		
 		if(dialog != null)
 			dialog.setCurrentYear(currentYear);
@@ -119,6 +174,7 @@ public class PanelAnnualRecipe extends Panel {
 		this.add(split, BorderLayout.CENTER);
 		
 		//event
+		btnAdd.setEnabled(false);
 		btnAdd.addActionListener(event -> {
 			
 			if(dialog == null) {
