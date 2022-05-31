@@ -169,16 +169,7 @@ public class FormGroupAllocationCost extends Panel {
 		});
 		
 //		piePanel.getScroll().setVerticalScrollBarPolicy(ScrollPaneConstanttants.VERTICAL_SCROLLBAR_NEVER);
-		piePanel.getScroll().getVerticalScrollBar().setVisible(false);
-//		piePanel.getScroll().getVerticalScrollBar().addAdjustmentListener(event -> {
-//			if (event.getSource() != piePanel.getScroll().getVerticalScrollBar())
-//				return;
-//			
-//			JScrollBar bar = fieldScroll.getVerticalScrollBar();
-//			BigDecimal big = new BigDecimal((( 100.0 / event.getAdjustable().getMaximum()) * event.getValue()) * (bar.getMaximum() / 100.0) ).setScale(0, RoundingMode.HALF_UP);
-//			int value =  big.intValue();
-//			bar.setValue(value - bar.getModel().getExtent()/4);
-//		});
+//		piePanel.getScroll().getVerticalScrollBar().setVisible(false);
 	}
 	
 	/**

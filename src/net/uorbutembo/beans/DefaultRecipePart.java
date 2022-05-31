@@ -14,6 +14,7 @@ public class DefaultRecipePart <T extends DBEntity> extends DBEntity implements 
 	
 	private final T source;
 	private final AnnualSpend account;
+	private final PaymentLocation paymentLocation;
 	private final String label;
 	private final String title;
 	private final double amount;
@@ -22,14 +23,16 @@ public class DefaultRecipePart <T extends DBEntity> extends DBEntity implements 
 	/**
 	 * @param source
 	 * @param account
+	 * @param paymentLocation
 	 * @param label
 	 * @param title
 	 * @param amount
 	 */
-	public DefaultRecipePart(T source, AnnualSpend account, String label, String title, double amount) {
+	public DefaultRecipePart(T source, AnnualSpend account, PaymentLocation paymentLocation, String label, String title, double amount) {
 		super();
 		this.source = source;
 		this.account = account;
+		this.paymentLocation = paymentLocation;
 		this.label = label;
 		this.title = title;
 		this.amount = amount;
@@ -93,6 +96,11 @@ public class DefaultRecipePart <T extends DBEntity> extends DBEntity implements 
 	@Override
 	public AnnualSpend getAccount() {
 		return account;
+	}
+	
+	@Override
+	public PaymentLocation getPaymentLocation() {
+		return paymentLocation;
 	}
 
 }

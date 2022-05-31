@@ -83,12 +83,7 @@ public class TablePanel extends Panel {
 		header.add(this.title, BorderLayout.CENTER);
 		
 		if (scrollable) {			
-			JScrollPane scroll = new JScrollPane(this.table);
-			scroll.setVerticalScrollBar(new ScrollBar());
-			scroll.setOpaque(false);
-			scroll.getViewport().setOpaque(false);
-			scroll.getViewport().setBorder(null);
-			scroll.setViewportBorder(null);
+			JScrollPane scroll = FormUtil.createVerticalScrollPane(table);
 			body.add(scroll, BorderLayout.CENTER);
 		} else {
 			JTableHeader tHeader = table.getTableHeader();

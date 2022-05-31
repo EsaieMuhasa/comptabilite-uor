@@ -9,6 +9,7 @@ import java.util.List;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.DBEntity;
 import net.uorbutembo.beans.DefaultRecipePart;
+import net.uorbutembo.beans.PaymentLocation;
 import net.uorbutembo.beans.RecipePart;
 
 /**
@@ -53,6 +54,18 @@ public interface RecipePartDao <T extends RecipePart<S>, H extends DefaultRecipe
 	List<T> findBySpendAtDate (AnnualSpend spend, Date min, Date max) throws DAOException;
 	
 	/**
+	 * renvoie la collection des operations faite dans un leux sur un compte dans leux de payement 
+	 * en une intervale de date
+	 * @param spend
+	 * @param location
+	 * @param min
+	 * @param max
+	 * @return
+	 * @throws DAOException
+	 */
+	List<T> findBySpendAtDate (AnnualSpend spend, PaymentLocation location, Date min, Date max) throws DAOException;
+	
+	/**
 	 * renvoie la collection des operations faites sur un compte avant la date en 2em parametre
 	 * @param spend
 	 * @param date
@@ -61,6 +74,18 @@ public interface RecipePartDao <T extends RecipePart<S>, H extends DefaultRecipe
 	 */
 	default List<T> findBySpendAtDate (AnnualSpend spend, Date date) throws DAOException {
 		return findBySpendAtDate(spend, date, date);
+	}
+	
+	/**
+	 * renvoie la collection des operation sur un compte en un leux de payement en une date
+	 * @param spend
+	 * @param location
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	default List<T> findBySpendAtDate (AnnualSpend spend, PaymentLocation location, Date date) throws DAOException {
+		return findBySpendAtDate(spend, location, date, date);
 	}
 	
 	/**
@@ -73,12 +98,71 @@ public interface RecipePartDao <T extends RecipePart<S>, H extends DefaultRecipe
 	List<T> findBySpendBeforDate (AnnualSpend spend, Date date) throws DAOException;
 	
 	/**
+	 * renvoie la collection des operations faite sur un compte dans un leux de payement 
+	 * avant la date en troixieme parametre
+	 * @param spend
+	 * @param location
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	List<T> findBySpendBeforDate (AnnualSpend spend, PaymentLocation location, Date date) throws DAOException;
+	
+	/**
 	 * Verifie s'il y a deja aumoin une miette mis au compte en parametres
 	 * @param spend
 	 * @return
 	 * @throws DAOException
 	 */
 	boolean checkBySpend (AnnualSpend spend) throws DAOException;
+	
+	/**
+	 * verification des operations sur un compte dans un lieux de payment
+	 * @param spend
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	boolean checkBySpend (AnnualSpend spend, PaymentLocation location) throws DAOException;
+	
+	/**
+	 * compteage des operation dans un lieux de payement
+	 * @param spend
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	int countBySpend (AnnualSpend spend, PaymentLocation location) throws DAOException;
+	
+	/**
+	 * Renvoie la collection des operations qui ont ete faite sur compte dans un lieux de payement
+	 * @param spend
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	List<T> findBySpend (AnnualSpend spend, PaymentLocation location) throws DAOException;
+	
+	/**
+	 * renvoie la somme des recettes pour un compte en un lieux de payement
+	 * @param spend
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldBySpend (AnnualSpend spend, PaymentLocation location) throws DAOException;
+	
+	/**
+	 * Renvoie la collection des operations qui ont ete faite sur un compte dans un lieux.
+	 * (7x6 avec intervale de selection)
+	 * @param spend
+	 * @param location
+	 * @param limit
+	 * @param offset
+	 * @return
+	 * @throws DAOException
+	 */
+	List<T> findBySpend (AnnualSpend spend, PaymentLocation location, int limit, int offset) throws DAOException;
 	
 	/**
 	 * Comptage des operation concernant un compte

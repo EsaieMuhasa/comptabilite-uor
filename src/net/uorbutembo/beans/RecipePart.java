@@ -16,6 +16,12 @@ public interface RecipePart <T extends DBEntity>{
 	String getLabel ();
 	
 	/**
+	 * Renvoie le leux où l'argent a ete deposer
+	 * @return
+	 */
+	PaymentLocation getPaymentLocation ();
+	
+	/**
 	 * renvoie le label de provenance
 	 * @return
 	 */

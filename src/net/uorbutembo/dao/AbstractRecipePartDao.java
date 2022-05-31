@@ -14,6 +14,7 @@ import java.util.List;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.DBEntity;
 import net.uorbutembo.beans.DefaultRecipePart;
+import net.uorbutembo.beans.PaymentLocation;
 import net.uorbutembo.beans.RecipePart;
 
 /**
@@ -325,6 +326,120 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 		return count;
 	}
 
+	@Override
+	public List<RecipePart<S>> findBySpendAtDate(AnnualSpend spend, PaymentLocation location, Date min, Date max) throws DAOException {
+		List<RecipePart<S>> data = new ArrayList<>();
+		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND location = %d AND (recordDate BETWEEN %d AND %d)", getViewName(), spend.getId(), location.getId(), toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
+		try (Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			while(result.next())
+				data.add(mapping(result, spend));
+		} catch (Exception e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune recete pour le depense indexer par "+spend.getId());
+		return data;
+	}
+
+	@Override
+	public List<RecipePart<S>> findBySpendBeforDate(AnnualSpend spend, PaymentLocation location, Date date) throws DAOException {
+		List<RecipePart<S>> data = new ArrayList<>();
+		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND location = %d AND recordDate <= %d", getViewName(), spend.getId(), location.getId(), toMinTimestampOfDay(date));
+		try (Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			while(result.next())
+				data.add(mapping(result, spend));
+		} catch (Exception e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune recete pour le depense indexer par "+spend.getId());
+		return data;
+	}
+
+	@Override
+	public boolean checkBySpend(AnnualSpend spend, PaymentLocation location) throws DAOException {
+		final String SQL  = String.format("SELECT * AS nombre FROM %s WHERE spend = %d AND location = %d LIMIT 1 OFFSET 0", getViewName(), spend.getId(), location.getId());
+		try (Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			return result.next();
+		} catch (Exception e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public int countBySpend(AnnualSpend spend, PaymentLocation location) throws DAOException {
+		final String SQL  = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE spend = %d AND location = %d", getViewName(), spend.getId(), location.getId());
+		int count = 0;
+		try (Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if (result.next()) 
+				count = result.getInt("nombre");
+		} catch (Exception e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return count;
+	}
+
+	@Override
+	public List<RecipePart<S>> findBySpend(AnnualSpend spend, PaymentLocation location) throws DAOException {
+		List<RecipePart<S>> data = new ArrayList<>();
+		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND location = %d", getViewName(), spend.getId(), location.getId());
+		try (Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			while(result.next())
+				data.add(mapping(result, spend));
+		} catch (Exception e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune recette pour le dépense indexer par "+spend.getId());
+		return data;
+	}
+
+	@Override
+	public double getSoldBySpend(AnnualSpend spend, PaymentLocation location) throws DAOException {
+		final String SQL  = String.format("SELECT SUM(part) AS amount FROM %s WHERE spend = %d AND location = %d", getViewName(), spend.getId(), location.getId());
+		double sum = 0;
+		try ( Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if (result.next()) 
+				sum = result.getDouble("amount");
+		} catch (Exception e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
+
+	@Override
+	public List<RecipePart<S>> findBySpend(AnnualSpend spend, PaymentLocation location, int limit, int offset) throws DAOException {
+		List<RecipePart<S>> data = new ArrayList<>();
+		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND location = %d LIMIT %d OFFSET %d", getViewName(), spend.getId(), location.getId(), limit, offset);
+		try (Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			while(result.next())
+				data.add(mapping(result, spend));
+		} catch (Exception e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune recete pour le depense indexer par "+spend.getId());
+		return data;
+	}
+
 	/**
 	 * cartographie des resultats dont la source est connnue
 	 * @param result
@@ -335,6 +450,7 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 	protected RecipePart<S> mapping(ResultSet result, S source) throws SQLException {
 		DefaultRecipePart<S> data = new DefaultRecipePart<S>(source,
 				factory.findDao(AnnualSpendDao.class).findById(result.getLong("spend")), 
+				factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")),
 				result.getString("label"), result.getString("title"), result.getDouble("part"));
 		return data;
 	}
@@ -350,6 +466,7 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 		DefaultRecipePart<S> data = new DefaultRecipePart<>(
 				mapSource(result),
 				spend,
+				factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")),
 				result.getString("label"), result.getString("title"), result.getDouble("part"));
 		return data;
 	}
@@ -359,6 +476,7 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 		DefaultRecipePart<S> data = new DefaultRecipePart<>(
 				mapSource(result),
 				factory.findDao(AnnualSpendDao.class).findById(result.getLong("spend")),
+				factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")),
 				result.getString("label"), result.getString("title"), result.getDouble("amount"));
 		return data;
 	}
