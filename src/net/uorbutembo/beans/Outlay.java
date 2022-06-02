@@ -20,7 +20,7 @@ public class Outlay extends DBEntity {
 	private AnnualSpend account;//rubrique toucher par la dite sortie
 	private AcademicYear academicYear;//annee qui doit suporter le depence 
 	private AcademicYear deliveryYear;//l'annee academique pour le quel le montant a ete payer (pour une bonne localisation dans le temps)
-
+	private PaymentLocation location;//lieu de livraison
 	
 	public Outlay() {
 		super();
@@ -139,6 +139,20 @@ public class Outlay extends DBEntity {
 	 */
 	public void setDeliveryYear(AcademicYear deliveryYear) {
 		this.deliveryYear = deliveryYear;
+	}
+
+	/**
+	 * @return the location
+	 */
+	public PaymentLocation getLocation() {
+		return location;
+	}
+
+	/**
+	 * @param location the location to set
+	 */
+	public void setLocation(PaymentLocation location) {
+		this.location = location;
 	}
 
 }

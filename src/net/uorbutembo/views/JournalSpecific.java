@@ -10,6 +10,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,6 +18,8 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,14 +40,12 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.AllocationRecipe;
-import net.uorbutembo.beans.AnnualRecipe;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.DefaultRecipePart;
 import net.uorbutembo.beans.OtherRecipe;
@@ -66,18 +67,23 @@ import net.uorbutembo.dao.OutlayDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.PaymentFeePartDao;
 import net.uorbutembo.dao.PaymentLocationDao;
+import net.uorbutembo.swing.Card;
+import net.uorbutembo.swing.DefaultCardModel;
+import net.uorbutembo.swing.DefaultCardModel.CardType;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.swing.charts.DefaultLineChartModel;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
+import net.uorbutembo.swing.charts.LineChartRender;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.components.JournalMenuItem;
+import net.uorbutembo.views.components.JournalMenuItemListener;
 import net.uorbutembo.views.forms.FormOtherRecipe;
 import net.uorbutembo.views.forms.FormOutlay;
 import net.uorbutembo.views.forms.FormUtil;
-import net.uorbutembo.views.models.OtherRecipeTableModel;
 import net.uorbutembo.views.models.OutlayTableModel;
 import resources.net.uorbutembo.R;
 
@@ -110,15 +116,8 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 	private JDialog dialogOutlay;
 	private JDialog dialogRecipe;
 	
-	private OtherRecipeTableModel recipeTableModel;
-	private Table recipeTable;
-	
 	private final DAOFactory factory;
 	private final MainWindow mainWindow;
-	
-	private JPopupMenu popupRecipe;
-	private JMenuItem itemDeleteRecipe;
-	private JMenuItem itemUpdateRecipe;
 	
 	private JPopupMenu popupOutlay;
 	private JMenuItem itemDeleteOutlay;
@@ -195,14 +194,6 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 	}
 	
 	/**
-	 * demande de modification d'une recette
-	 * @param recipe
-	 */
-	private void updateRecipe (OtherRecipe recipe) {
-		formRecipe.setOtherRecipe(recipe);
-	}
-	
-	/**
 	 * creation du boite de dialogue d'ajout d'une recete
 	 */
 	private void createRecipeDialog () {
@@ -211,33 +202,16 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 		
 		formRecipe = new FormOtherRecipe(mainWindow);
 		dialogRecipe = new JDialog(mainWindow, "Entrée", true);
-		dialogRecipe.setIconImage(mainWindow.getIconImage());
+		dialogRecipe.setIconImage(mainWindow.getIconImage());		
 		
-		recipeTableModel = new OtherRecipeTableModel(otherRecipeDao);
-		recipeTable = new Table(recipeTableModel);
-		recipeTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		recipeTable.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				if(e.isPopupTrigger() && recipeTable.getSelectedRow() != -1) {
-					createPopupRecipe();
-					popupRecipe.show(recipeTable, e.getX(), e.getY());
-				}
-			}
-		});
-		
-		final Panel panel = new Panel(new BorderLayout());
-		panel.add(FormUtil.createVerticalScrollPane(recipeTable), BorderLayout.CENTER);
-		
-		panel.setBorder(new LineBorder(FormUtil.BORDER_COLOR));
 		
 		dialogRecipe.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
-		dialogRecipe.getContentPane().add(formRecipe, BorderLayout.NORTH);
-		dialogRecipe.getContentPane().add(panel, BorderLayout.CENTER);
+		dialogRecipe.getContentPane().add(formRecipe, BorderLayout.CENTER);
 		dialogRecipe.getContentPane().setBackground(FormUtil.BKG_DARK);
-		dialogRecipe.setSize(800, 550);
-		dialogRecipe.setResizable(false);
-		recipeTableModel.reload();
+		dialogRecipe.pack();
+		Dimension size = new Dimension(dialogRecipe.getWidth() < 800? 800 : dialogRecipe.getWidth() , dialogRecipe.getHeight() < 550 ? 550 : 600);
+		dialogRecipe.setSize(size);
+		dialogRecipe.setMinimumSize(size);
 		
 		recipeAdapter = new DAOAdapter<OtherRecipe>() {
 
@@ -271,9 +245,9 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 		dialogOutlay.getContentPane().add(formOutlay, BorderLayout.CENTER);
 		dialogOutlay.getContentPane().setBackground(FormUtil.BKG_DARK);
 		dialogOutlay.pack();
-		dialogOutlay.setSize(650, dialogOutlay.getHeight());
-		dialogOutlay.setResizable(false);
-		
+		final Dimension size = new Dimension(dialogOutlay.getWidth() < 650? 650 : dialogOutlay.getWidth(), dialogOutlay.getHeight());
+		dialogOutlay.setSize(size);
+		dialogOutlay.setMinimumSize(size);
 		outlayAdapter = new DAOAdapter<Outlay>() {
 
 			@Override
@@ -321,38 +295,6 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 		});
 	}
 	
-	/**
-	 * creation du popup menu permetant de modifier/supprimer recette (autres, que les frais academique)
-	 */
-	private void createPopupRecipe() {
-		if (popupRecipe != null)
-			return;
-		
-		popupRecipe = new JPopupMenu();
-		
-		itemDeleteRecipe = new JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
-		itemUpdateRecipe = new JMenuItem("Modifier", new ImageIcon(R.getIcon("edit")));
-		popupRecipe.add(itemDeleteRecipe);
-		popupRecipe.add(itemUpdateRecipe);
-		
-		itemDeleteRecipe.addActionListener(event -> {
-			OtherRecipe recipe = recipeTableModel.getRow(recipeTable.getSelectedRow());
-			int status = JOptionPane.showConfirmDialog(dialogRecipe, "Voulez-vous vraiment supprimer \nla dite recette??", "Suppression", JOptionPane.OK_CANCEL_OPTION);
-			if(status == JOptionPane.OK_OPTION) {
-				try {					
-					otherRecipeDao.delete(recipe.getId());
-				} catch (DAOException e) {
-					JOptionPane.showMessageDialog(dialogRecipe, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
-				}
-			}
-		});
-		
-		itemUpdateRecipe.addActionListener(event -> {
-			OtherRecipe recipe = recipeTableModel.getRow(recipeTable.getSelectedRow());
-			updateRecipe(recipe);
-		});
-	}
-	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		for (JournalMenuItem menu : listAccount.items) 
@@ -360,7 +302,7 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 		
 		JournalMenuItem item = (JournalMenuItem) e.getSource();
 		item.setActive(true);
-		containerPanel.setAccount(item.getAccount());
+		containerPanel.setAccount(item);
 	}
 	
 	@Override
@@ -496,7 +438,7 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 					item.addActionListener(JournalSpecific.this);
 				}
 				items.get(0).setActive(true);
-				containerPanel.setAccount(items.get(0).getAccount());
+				containerPanel.setAccount(items.get(0));
 				container.add(Box.createVerticalGlue());
 			} else {
 				containerPanel.setAccount(null);
@@ -572,43 +514,32 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 	/**
 	 * @author Esaie MUHASA
 	 */
-	private final class PanelRecipes extends Panel{
+	private final class PanelRecipes extends Panel implements JournalMenuItemListener{
 		private static final long serialVersionUID = 6642674739813359838L;
 		
 		private final RecipeTableModel tableModel = new RecipeTableModel();
-		private final Table tableRecipes = new Table(tableModel);
-		private final TablePanel tablePanel = new TablePanel(tableRecipes, "Liste des opérations d'entrées");
+		private final Table table = new Table(tableModel);
+		private final TablePanel tablePanel = new TablePanel(table, "Liste des opérations d'entrées");
 		
 		private List<PaymentLocation> locations = null;
 		private final DefaultPieModel pieModelSource = new DefaultPieModel();
 		private final DefaultPieModel pieModelLocation = new DefaultPieModel();
 		private final PiePanel piePanel = new PiePanel(pieModelSource);
-		private AnnualSpend account;
+		private JournalMenuItem account;
 		
 		private final JLabel labelCount = FormUtil.createSubTitle("");//afiche le nombre doperation
 		private final JButton btnNext = new JButton( new ImageIcon(R.getIcon("next")));
 		private final JButton btnPrev = new JButton( new ImageIcon(R.getIcon("prev")));
-		private final JRadioButton [] radiosList = { new JRadioButton("Frais academique", true), new JRadioButton("Autres recettes")};
 		private final JRadioButton [] radiosChart = { new JRadioButton("Sources", true), new JRadioButton("Localisation")};
-		private final JComboBox<AnnualRecipe> comboGroup = new JComboBox<>();
+		private final JButton btnFilter = new JButton("Filtrer", new ImageIcon(R.getIcon("normalize")));
+		
 		private final Panel panelCommand = new  Panel(new BorderLayout());//conteneur des elements de navigation dans les donnees
-		private final Box boxRadiosList = Box.createHorizontalBox();//buttons radios filtrage liste source de donnees
 		private final Box boxRadiosChart = Box.createHorizontalBox();//filtrage graphique
+		private final Box boxFilter = Box.createHorizontalBox();
 		
 		private final JButton btnToExcel = new JButton("Excel", new ImageIcon(R.getIcon("export")));
 		private final JButton btnToPdf = new JButton("PDF", new ImageIcon(R.getIcon("pdf")));
 		private final JButton btnToPrint = new JButton("Imprimer", new ImageIcon(R.getIcon("print")));
-		
-		private final ChangeListener radioListListener = (event) -> {
-			JRadioButton radio = (JRadioButton) event.getSource();
-			if(!radio.isSelected())
-				return;
-			int index = Integer.parseInt(radio.getName());
-			comboGroup.setVisible(index == 1);
-			if ( index == 1 ) {
-				
-			}
-		};
 		
 		private final ChangeListener radioChartListener = (event) ->  {
 			JRadioButton radio = (JRadioButton) event.getSource();
@@ -668,6 +599,8 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 		
 		{
 			//chart
+			pieModelSource.setRealMaxPriority(true);
+			pieModelLocation.setRealMaxPriority(true);
 			pieModelSource.setSuffix(" $");
 			pieModelLocation.setSuffix(" $");
 			pieModelSource.setTitle("Répartition sélon les sources d'alimentation du compte");
@@ -685,19 +618,8 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 			}
 			boxRadiosChart.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			//==
-			
-			final ButtonGroup groupList = new ButtonGroup();
-			for (int i = 0; i < radiosList.length; i++) {
-				JRadioButton radio = radiosList[i];
-				radio.setName(i+"");
-				radio.addChangeListener(radioListListener);
-				radio.setForeground(Color.WHITE);
-				groupList.add(radio);
-				boxRadiosList.add(radio);
-			}
-			comboGroup.setPreferredSize(new Dimension(120, 20));
-			comboGroup.setVisible(false);
-			boxRadiosList.add(comboGroup);
+
+			boxFilter.add(btnFilter);
 			 
 			final Box box = Box.createHorizontalBox();
 			box.add(btnPrev);
@@ -707,7 +629,7 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 			labelCount.setHorizontalAlignment(JLabel.LEFT);
 			 
 			panelCommand.add(box, BorderLayout.EAST);
-			panelCommand.add(boxRadiosList, BorderLayout.WEST);
+			panelCommand.add(boxFilter, BorderLayout.WEST);
 			 
 			panelCommand.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		}
@@ -739,15 +661,38 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 			add(split, BorderLayout.CENTER);
 			add(panelTop, BorderLayout.NORTH);
 			paymentLocationDao.addListener(locationAdapter);
+			
+			//table columns width
+			final int [] cols = {0, 3};
+			final int w = 100;
+			for(int i = 0; i < cols.length; i ++) {				
+				table.getColumnModel().getColumn(cols[i]).setMinWidth(w);
+				table.getColumnModel().getColumn(cols[i]).setMaxWidth(w);
+				table.getColumnModel().getColumn(cols[i]).setWidth(w);
+				table.getColumnModel().getColumn(cols[i]).setResizable(false);
+			}
+			//==
+			
 		}
+	
+		@Override
+		public void onReload(JournalMenuItem item) {
+			updatePie();
+		};
 
 
 		/**
 		 * @param account the account to set
 		 */
-		public void setAccount (AnnualSpend account) {
+		public void setAccount (JournalMenuItem account) {
+			if(this.account != null)
+				this.account.removeItemListener(this);
 			this.account = account;
-			tableModel.reload(account);
+			
+			if(account != null) {
+				account.addItemListener(this);
+				tableModel.reload(account.getAccount());
+			}
 			
 			labelCount.setText(tableModel.getRowCount()+" Opération"+(tableModel.getRowCount() > 1? "s":""));
 			updatePie();
@@ -770,19 +715,21 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 			if(account == null)
 				return;
 			
-			pieModelSource.setMax(account.getCollectedCost() + account.getCollectedRecipe());
-			pieModelSource.addPart(new DefaultPiePart(FormUtil.COLORS[0], account.getCollectedCost(), "Frais académiques"));
+			int colorIndex = 0;
+			pieModelSource.setMax(account.getAccount().getCollectedCost() + account.getAccount().getCollectedRecipe());
+			pieModelLocation.setMax(pieModelSource.getMax());
+			pieModelSource.addPart(new DefaultPiePart(FormUtil.COLORS[colorIndex++], account.getAccount().getCollectedCost(), "Frais académiques"));
 			
-			if (allocationRecipeDao.checkBySpend(account)) {
-				List<AllocationRecipe> all = allocationRecipeDao.findBySpend(account);
+			if (allocationRecipeDao.checkBySpend(account.getAccount())) {
+				List<AllocationRecipe> all = allocationRecipeDao.findBySpend(account.getAccount());
 				for (int i = 0, count = all.size(); i < count; i++) {					
 					pieModelSource.addPart(
 							new DefaultPiePart(
-								FormUtil.COLORS[ (i+1) % (FormUtil.COLORS.length-1) ],
+								FormUtil.COLORS[ (colorIndex++) % (FormUtil.COLORS.length-1) ],
 								all.get(i).getCollected(),
 								all.get(i).getRecipe().getUniversityRecipe().getTitle()
 							)
-						);
+						); 
 				}
 			} else {
 				pieModelSource.addPart(new DefaultPiePart(FormUtil.COLORS[1], 0d, "Autres recettes"));				
@@ -796,9 +743,9 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 			
 			for (int i = 0; i < locations.size(); i++) {
 				PaymentLocation location = locations.get(i);
-				double sold = otherRecipePartDao.getSoldBySpend(account, location);
+				double sold = otherRecipePartDao.getSoldBySpend(account.getAccount(), location);
 				if (sold > 0.0) {
-					DefaultPiePart part = new DefaultPiePart( FormUtil.COLORS[ (i) % (FormUtil.COLORS.length-1) ], sold, location.toString());
+					DefaultPiePart part = new DefaultPiePart( FormUtil.COLORS[ (colorIndex++) % (FormUtil.COLORS.length-1) ], sold, location.toString());
 					part.setData(location);
 					pieModelLocation.addPart(part);
 				}
@@ -809,17 +756,219 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 		
 	}
 	
+	private final class PanelTabDashboard extends Panel implements JournalMenuItemListener {
+		private static final long serialVersionUID = 484389202609625039L;
+		
+		private final DefaultPieModel pieModel = new DefaultPieModel();
+		private final PiePanel piePanel = new PiePanel(pieModel, FormUtil.BKG_END_2);
+		
+		private final DefaultLineChartModel lineChartModel = new DefaultLineChartModel();
+		private final LineChartRender lineChartRender = new LineChartRender(lineChartModel);
+		
+		private final DefaultCardModel<Double> cardSoldModel = new DefaultCardModel<>(CardType.DARK, R.getIcon("caisse"), "$");
+		private final DefaultCardModel<Double> cardOutlayModel = new DefaultCardModel<>(CardType.DARK, R.getIcon("btn-cancel"), "$");
+		private final DefaultCardModel<Double> cardRecipeModel = new DefaultCardModel<>(CardType.DARK, R.getIcon("btn-add"), "$");
+		
+		{
+			cardSoldModel.setTitle("Solde");
+			cardSoldModel.setInfo("Montant disponible");
+			cardSoldModel.setValue(0d);
+			
+			cardOutlayModel.setTitle("Depenses");
+			cardOutlayModel.setInfo("Déjà utiliser");
+			cardOutlayModel.setValue(0d);
+			
+			cardRecipeModel.setTitle("Recettes");
+			cardRecipeModel.setInfo("Totale des recettes");
+			cardRecipeModel.setValue(0d);
+			
+			pieModel.setRealMaxPriority(true);
+			pieModel.setSuffix("$");
+		}
+		
+		private final Card cardSold = new Card(cardSoldModel);
+		private final Card cardOutlay = new Card(cardOutlayModel);
+		private final Card cardRecipe = new Card(cardRecipeModel);
+		
+		private final JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
+		private List<PaymentLocation> locations = null;
+		private JournalMenuItem account;
+		
+		private final DAOAdapter<PaymentLocation> locationAdapter = new DAOAdapter<PaymentLocation>() {
+
+			@Override
+			public synchronized void onCreate(PaymentLocation e, int requestId) {
+				
+				if (locations == null) {
+					if (paymentLocationDao.countAll() == 0)
+						locations = new  ArrayList<>();
+					else 
+						locations = paymentLocationDao.findAll();
+				}
+				locations.add(e);
+			}
+
+			@Override
+			public synchronized void onUpdate(PaymentLocation e, int requestId) {
+				if(locations == null)
+					return;
+				
+				for (PaymentLocation location : locations) {
+					if (location.getId() == e.getId()){
+						locations.set(locations.indexOf(location), e);
+						reloadPie();
+						break;
+					}
+				}
+				
+				if (account == null)
+					return;
+				
+				if (paymentFeePartDao.checkBySpend(account.getAccount(), e) || otherRecipePartDao.checkBySpend(account.getAccount(), e))
+					reloadPie();
+			}
+
+			@Override
+			public synchronized void onDelete(PaymentLocation e, int requestId) {
+				if(locations == null)
+					return;
+				
+				for (PaymentLocation location : locations) {
+					if (location.getId() == e.getId()){
+						locations.remove(location);
+						break;
+					}
+				}
+			}
+			
+		};
+		
+		public PanelTabDashboard () {
+			super(new BorderLayout());
+			final Panel 
+				center = new Panel(new BorderLayout()),
+				bottom = new Panel(new GridLayout(1, 3, 10, 0));
+			
+			final Panel 
+				lineContainer = new Panel(new BorderLayout()),
+				pieContainer = new Panel(new  BorderLayout());
+			
+			pieContainer.add(piePanel, BorderLayout.CENTER);
+			lineContainer.add(lineChartRender, BorderLayout.CENTER);
+			
+			tabbedPane.addTab("", new ImageIcon(R.getIcon("pie")), pieContainer, "Soldes par emplacement");
+			tabbedPane.addTab("", new ImageIcon(R.getIcon("chart")), lineContainer, "Ligne de temps");
+			
+			center.add(tabbedPane, BorderLayout.CENTER);
+			center.setBorder(new EmptyBorder(0, 0, 10, 0));
+			
+			bottom.add(cardSold);
+			bottom.add(cardRecipe);
+			bottom.add(cardOutlay);
+			
+			add(center, BorderLayout.CENTER);
+			add(bottom, BorderLayout.SOUTH);
+			
+			paymentLocationDao.addListener(locationAdapter);
+		}
+		
+		@Override
+		public void onReload (JournalMenuItem item) {
+			reload();
+		}
+		
+		/**
+		 * rechargement complette de toutes les graphiques,
+		 * et contenue de cards
+		 */
+		public void reload () {
+			reloadLine();
+			reloadPie();
+		}
+		
+		/**
+		 * Rechargement du graphique sous forme tarte
+		 * et des cards
+		 */
+		public void reloadPie () {
+			pieModel.removeAll();
+			
+			if (locations == null && paymentLocationDao.countAll() != 0) 
+				locations = paymentLocationDao.findAll();
+			
+			if (locations == null || account == null)
+				return;
+			
+			AnnualSpend account = this.account.getAccount();
+			int count = locations.size();
+			PiePart [] parts = new PiePart[count];
+			
+			double out = 0, in = 0;
+			
+			for (int i = 0, colorIndex = 0; i < count; i++) {
+				PaymentLocation l = locations.get(i);
+				if (paymentFeePartDao.checkBySpend(account, l) || otherRecipePartDao.checkBySpend(account, l)) {
+					
+					double soldFee = paymentFeePartDao.getSoldBySpend(account, l);
+					double soldOther = otherRecipePartDao.getSoldBySpend(account, l);
+					double soldOut = outlayDao.getSoldByAccount(account.getId(), l.getId());
+					
+					double sold = soldFee + soldOther - soldOut;
+					in += soldFee + soldOther;
+					out += soldOut;
+					DefaultPiePart part = new DefaultPiePart(FormUtil.COLORS[(colorIndex) % (FormUtil.COLORS.length-1)], sold, l.toString());
+					part.setData(l);
+					parts[colorIndex++] = part;
+				}
+			}
+			
+			pieModel.addParts(parts);
+			pieModel.setTitle(account.toString()+", soldes diponibles par emplacement");
+			
+			BigDecimal 
+				bigSold = new BigDecimal(pieModel.getRealMax()).setScale(3, RoundingMode.FLOOR),
+				bigIn = new BigDecimal(in).setScale(3, RoundingMode.FLOOR),
+				bigOut = new BigDecimal(out).setScale(3, RoundingMode.FLOOR);
+			
+			cardOutlayModel.setValue(bigOut.doubleValue());
+			cardRecipeModel.setValue(bigIn.doubleValue());
+			cardSoldModel.setValue(bigSold.doubleValue());
+		}
+		
+		/**
+		 * Rechargement du graphique lineaire qui visualise les entrees et les sorties
+		 * pour le compte sectionner
+		 */
+		public void reloadLine () {
+		}
+
+		/**
+		 * @param account the account to set
+		 */
+		public void setAccount(JournalMenuItem account) {
+			if(this.account != null)
+				this.account.removeItemListener(this);
+			this.account = account;
+			
+			if(account != null)
+				account.addItemListener(this);
+			reload();
+		}
+		
+	}
+	
 	/**
 	 * @author Esaie MUHASA
 	 */
 	private class ContainerPanel extends Panel{
 		private static final long serialVersionUID = -5154188254710321300L;
 		
-		private AnnualSpend account;
+		private JournalMenuItem account;
 		private final Panel centerPanel = new Panel(new BorderLayout());
 		private final JTabbedPane tabbedPanel = new JTabbedPane(JTabbedPane.TOP);
 		private final PanelOutlays panelOutlays = new PanelOutlays();
 		private final PanelRecipes panelRecipes = new PanelRecipes();
+		private final PanelTabDashboard panelDashboard = new PanelTabDashboard();
 		
 		private final JLabel title = FormUtil.createSubTitle("");
 		
@@ -830,8 +979,9 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 			centerPanel.add(title, BorderLayout.NORTH);
 			centerPanel.add(tabbedPanel, BorderLayout.CENTER);
 
-			tabbedPanel.addTab("Dépenses", panelOutlays);
-			tabbedPanel.addTab("Recettes", panelRecipes);
+			tabbedPanel.addTab("Etat ", new ImageIcon(R.getIcon("status")), panelDashboard);
+			tabbedPanel.addTab("Recettes ", new ImageIcon(R.getIcon("new")), panelRecipes);
+			tabbedPanel.addTab("Dépenses ", new ImageIcon(R.getIcon("drop")), panelOutlays);
 			
 			centerPanel.add(tabbedPanel, BorderLayout.CENTER);
 			add(centerPanel, BorderLayout.CENTER);
@@ -841,18 +991,19 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 		/**
 		 * @param account the account to set
 		 */
-		public void setAccount (AnnualSpend account) {
+		public void setAccount (JournalMenuItem account) {
 			
-			if (this.account != null && account!=null && this.account.getId() == account.getId())
+			if (this.account != null && account!=null && this.account.getAccount().getId() == account.getAccount().getId())
 				return;
 			
 			this.account = account;
 			centerPanel.setVisible(account != null);
-			panelRecipes.setAccount(this.account);
-			panelOutlays.setAccount(this.account);
 			
 			if(account != null) {
-				title.setText(account.getUniversitySpend().getTitle());
+				panelDashboard.setAccount(account);
+				panelRecipes.setAccount(this.account);
+				panelOutlays.setAccount(this.account.getAccount());
+				title.setText(account.getAccount().getUniversitySpend().getTitle());
 			}
 		}
 
@@ -980,7 +1131,7 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 
 		@Override
 		public int getColumnCount() {
-			return 3;
+			return 4;
 		}
 		
 		@Override
@@ -988,8 +1139,8 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 			switch (column) {
 				case 0 : return "Date";
 				case 1 : return "libelé";
-				case 2 : return "Montant";
-				case 3 : return "Lieux";
+				case 2 : return "Lieux";
+				case 3 : return "Montant";
 			}
 			return super.getColumnName(column);
 		}
@@ -1000,8 +1151,8 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 			switch (columnIndex) {
 				case 0: return FormUtil.DEFAULT_FROMATER.format(data.get(rowIndex).getSource().getRecordDate());
 				case 1: return data.get(rowIndex).getLabel();
-				case 2: return data.get(rowIndex).getAmount()+" USD";
-				case 3: return data.get(rowIndex).getPaymentLocation();
+				case 2: return data.get(rowIndex).getPaymentLocation();
+				case 3: return data.get(rowIndex).getAmount()+" USD";
 			}
 			return null;
 		}

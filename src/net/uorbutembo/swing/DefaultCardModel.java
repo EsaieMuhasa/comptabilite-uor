@@ -4,6 +4,8 @@
 package net.uorbutembo.swing;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Esaie MUHASA
@@ -33,21 +35,13 @@ public class DefaultCardModel <T> implements CardModel <T> {
 	private String info;
 	private String suffix="";
 	
-	private Card view;
+	private final List<CardModelListener> listeners = new ArrayList<>();
+	
 	private Color backgroundColor;
 	private Color foregroundColor;
 	
 	public DefaultCardModel() {
 		super();
-	}
-
-	/**
-	 * constructeur d'initialisation de la vue
-	 * @param view
-	 */
-	public DefaultCardModel(Card view) {
-		super();
-		this.view = view;
 	}
 	
 	/**
@@ -68,7 +62,7 @@ public class DefaultCardModel <T> implements CardModel <T> {
 				this.backgroundColor = Color.RED;
 				break;
 			case DARK:
-				this.backgroundColor = Color.BLACK;
+				this.backgroundColor = new Color(0x353535);
 				break;
 			case INFO:
 				this.backgroundColor = new Color(0x5050C0);
@@ -86,15 +80,15 @@ public class DefaultCardModel <T> implements CardModel <T> {
 	}
 	
 	/**
-	 * @param view
-	 * @param backgroundColor
-	 * @param foregroundColor
+	 * Constructeur d'initialisation rapide d'un card
+	 * @param type
+	 * @param icon
+	 * @param suffix
 	 */
-	public DefaultCardModel(Card view, Color backgroundColor, Color foregroundColor) {
-		super();
-		this.view = view;
-		this.backgroundColor = backgroundColor;
-		this.foregroundColor = foregroundColor;
+	public DefaultCardModel(CardType type, String icon, String suffix)  {
+		this(type);
+		this.icon = icon;
+		this.suffix = suffix;
 	}
 
 	/**
@@ -105,6 +99,14 @@ public class DefaultCardModel <T> implements CardModel <T> {
 		super();
 		this.backgroundColor = backgroundColor;
 		this.foregroundColor = foregroundColor;
+	}
+	
+	public DefaultCardModel(Color backgroundColor, Color foregroundColor, String icon, String suffix) {
+		super();
+		this.backgroundColor = backgroundColor;
+		this.foregroundColor = foregroundColor;
+		this.icon = icon;
+		this.suffix = suffix;
 	}
 
 	@Override
@@ -121,22 +123,35 @@ public class DefaultCardModel <T> implements CardModel <T> {
 	 * @param backgroundColor the backgroundColor to set
 	 */
 	public void setBackgroundColor(Color backgroundColor) {
+		if (this.backgroundColor == backgroundColor)
+			return;
+		
+		Color oldColor = this.backgroundColor;
 		this.backgroundColor = backgroundColor;
+		for (CardModelListener ls : listeners) 
+			ls.onColorChange(this, 2, oldColor);
 	}
 
 	/**
 	 * @param foregroundColor the foregroundColor to set
 	 */
 	public void setForegroundColor(Color foregroundColor) {
+		if (this.foregroundColor == foregroundColor)
+			return;
+		
+		Color old = this.foregroundColor;
 		this.foregroundColor = foregroundColor;
+		for (CardModelListener ls : listeners) 
+			ls.onColorChange(this, 1, old);
 	}
-
+	
 	/**
-	 * demade a la vue de ce redessiner
+	 * Lors du changement de la value
+	 * @param old
 	 */
-	protected void repaintView() {
-		if(view != null)
-			view.repaint();
+	protected void emitOnValueChange (T old) {
+		for (CardModelListener ls : listeners) 
+			ls.onValueChange(this, old);
 	}
 
 	/**
@@ -145,40 +160,48 @@ public class DefaultCardModel <T> implements CardModel <T> {
 	public void setValue(T value) {
 		if (value == this.value)
 			return;
+		T old = this.value;
 		this.value = value;
-		repaintView();
+		emitOnValueChange(old);
 	}
 
 	/**
 	 * @param title the title to set
 	 */
 	public void setTitle(String title) {
+		if(this.title == title)
+			return;
+		
+		String old = this.title;
 		this.title = title;
-		this.repaintView();
+		for (CardModelListener ls : listeners) 
+			ls.onTitleChange(this, 1, old);
 	}
 
 	/**
 	 * @param icon the icon to set
 	 */
 	public void setIcon(String icon) {
+		if(this.icon == icon)
+			return;
+		
+		String old = this.icon;
 		this.icon = icon;
-		this.repaintView();
+		for (CardModelListener ls : listeners) 
+			ls.onIconChange(this, old);
 	}
 
 	/**
 	 * @param info the info to set
 	 */
 	public void setInfo(String info) {
+		if(this.info == info)
+			return;
+		
+		String old = this.info;
 		this.info = info;
-		this.repaintView();
-	}
-
-	/**
-	 * @param view the view to set
-	 */
-	@Override
-	public void setCard(Card view) {
-		this.view = view;
+		for (CardModelListener ls : listeners) 
+			ls.onTitleChange(this, 2, old);
 	}
 
 	@Override
@@ -212,9 +235,21 @@ public class DefaultCardModel <T> implements CardModel <T> {
 	/**
 	 * @param suffix the suffix to set
 	 */
-	public void setSuffix(String suffix) {
+	public void setSuffix (String suffix) {
 		this.suffix = suffix;
-		this.repaintView();
+		for (CardModelListener ls : listeners) 
+			ls.onChange(this);
+	}
+
+	@Override
+	public void removeListener(CardModelListener listener) {
+		listeners.remove(listener);
+	}
+
+	@Override
+	public void addListener(CardModelListener listener) {
+		if (listener != null && !listeners.contains(listener))
+			listeners.add(listener);
 	}
 
 }

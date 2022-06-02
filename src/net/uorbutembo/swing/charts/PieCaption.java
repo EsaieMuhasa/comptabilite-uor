@@ -14,12 +14,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import javax.swing.JComponent;
+import javax.swing.border.EmptyBorder;
 
 /**
  * @author Esaie MUHASA
  *
  */
-class PiePartCaption extends JComponent implements PieModelListener{
+class PieCaption extends JComponent implements PieModelListener{
 	private static final long serialVersionUID = 124364175204094635L;
 	
 	private final Font 
@@ -34,16 +35,18 @@ class PiePartCaption extends JComponent implements PieModelListener{
 	private int prefferedHeight;
 	private int step = 30;
 	
-	public PiePartCaption() {
+	public PieCaption() {
 		this.borderColor = Color.WHITE;
+		setBorder(new EmptyBorder(1, 1, 1, 1));
 	}
 
 	/**
 	 * @param part
 	 */
-	public PiePartCaption(final PieModel model) {
+	public PieCaption(final PieModel model) {
 		super();
 		this.borderColor = Color.WHITE;
+		setBorder(new EmptyBorder(1, 1, 1, 1));
 		setModel(model);
 	}
 	

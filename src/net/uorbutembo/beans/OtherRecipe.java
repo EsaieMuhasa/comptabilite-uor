@@ -18,6 +18,7 @@ public class OtherRecipe extends DBEntity {
 	private AnnualRecipe account;
 	private Date collectionDate;
 	private PaymentLocation location;
+	private int receivedNumber;//classement en caisse
 
 	/**
 	 * 
@@ -115,6 +116,20 @@ public class OtherRecipe extends DBEntity {
 	 */
 	public void setLocation (PaymentLocation location) {
 		this.location = location;
+	}
+
+	/**
+	 * @return the receivedNumber
+	 */
+	public int getReceivedNumber() {
+		return receivedNumber;
+	}
+
+	/**
+	 * @param receivedNumber the receivedNumber to set
+	 */
+	public void setReceivedNumber(int receivedNumber) {
+		this.receivedNumber = receivedNumber;
 	}
 
 }

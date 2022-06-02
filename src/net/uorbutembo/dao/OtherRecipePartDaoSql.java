@@ -39,5 +39,11 @@ class OtherRecipePartDaoSql extends AbstractRecipePartDao<OtherRecipe> implement
 			recipe.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		return recipe;
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	protected <L extends DAOInterface<OtherRecipe>> Class<L> getSourceDAOInterface() {
+		return  (Class<L>) OtherRecipeDao.class;
+	}
 
 }

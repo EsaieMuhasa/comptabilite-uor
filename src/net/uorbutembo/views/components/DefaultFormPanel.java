@@ -33,12 +33,14 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 	protected static final String 
 		TITLE_1 = "Formulaire d'enregistrement",
 		TITLE_2 = "Formulaire de modification",
-		RGX_SIMBLE_DATE = "^(([0-9]{1,2}-){2})([0-9]{4})$";
+		RGX_SIMBLE_DATE = "^(([0-9]{1,2}-){2})([0-9]{4})$",
+		RGX_NUMBER = "^([0-9]+)(\\.([0-9]{1,8}))?$";
 
 	private String title;
 	private JLabel label;
 	protected JButton btnSave;
 	
+	private final JPanel middle = new JPanel(new BorderLayout());
 	private JPanel header;
 	private JPanel body;
 	private JPanel footer;
@@ -54,7 +56,6 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 		this.title = TITLE_1;
 		
 		this.setOpaque(false);
-		this.setBorder(new LineBorder(BORDER_COLOR, 1));
 		
 		//header
 		this.header = new JPanel(new BorderLayout());
@@ -80,14 +81,14 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 		//--footer
 
 		//adding components to panel
-		final JPanel middle = new JPanel(new BorderLayout());
 		middle.add(this.body, BorderLayout.CENTER);
 		if(this.createButtonAccept()) 
 			middle.add(this.footer, BorderLayout.SOUTH);
 		middle.setOpaque(false);
+		middle.setBorder(new LineBorder(BORDER_COLOR, 1));
 
-		this.add(header, BorderLayout.NORTH);
-		this.add(middle, BorderLayout.CENTER);
+		middle.add(header, BorderLayout.NORTH);
+		add(middle, BorderLayout.NORTH);
 	}
 	
 	/**
@@ -128,6 +129,14 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 	 */
 	public JPanel getBody() {
 		return body;
+	}
+	
+	/**
+	 * Renvoie le panel conteneur du body et du header
+	 * @return
+	 */
+	public JPanel getMiddle () {
+		return middle;
 	}
 
 	public JPanel getFooter() {

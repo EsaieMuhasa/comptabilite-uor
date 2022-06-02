@@ -50,23 +50,22 @@ public class Table extends JTable {
 	 * 
 	 */
 	private void init() {
-		this.setShowHorizontalLines(true);
-        this.setGridColor(FormUtil.BORDER_COLOR);
-        this.setRowHeight(40);
-        this.getTableHeader().setReorderingAllowed(false);
-        this.getTableHeader().setBackground(FormUtil.BKG_END_2);
-        this.setForeground(Color.WHITE);
-//        this.setOpaque(false);
+		setShowHorizontalLines(true);
+		setShowVerticalLines(true);
+        setGridColor(FormUtil.BORDER_COLOR);
+        setRowHeight(40);
+        getTableHeader().setReorderingAllowed(false);
+        getTableHeader().setBackground(FormUtil.BKG_END_2);
+        setForeground(Color.WHITE);
         
-        this.setSelectionBackground(FormUtil.BKG_END);
-        this.setBackground(FormUtil.BKG_DARK);
+        setSelectionBackground(FormUtil.BKG_END);
+        setBackground(FormUtil.BKG_DARK);
         
         setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
 			private static final long serialVersionUID = 5825532896554469057L;
 
 			@Override
         	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-//        		return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         		Component com = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 setBorder(padding);
                 com.setForeground(Table.this.getForeground());

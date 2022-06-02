@@ -23,11 +23,45 @@ import net.uorbutembo.beans.RecipePart;
  */
 abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<DefaultRecipePart<S>> implements RecipePartDao<RecipePart<S>, DefaultRecipePart<S>, S> {
 
+	@SuppressWarnings("unchecked")
+	protected final DAOAdapter<S> sourceAdapter = new DAOAdapter<S>() {
+
+		@Override
+		public synchronized void onCreate(S e, int requestId) {
+			if (checkBySource(e)) {
+				List<RecipePart<S>> parts = findBySource(e);
+				DefaultRecipePart<S> [] rps = new DefaultRecipePart [parts.size()];
+				for (int i = 0; i < parts.size(); i++) {
+					RecipePart<S> part = parts.get(i);
+					rps[i] = (DefaultRecipePart<S>) part;
+				}
+				parts.clear();
+				emitOnCreate(rps);
+			}
+		}
+
+		@Override
+		public synchronized void onUpdate(S e, int requestId) {
+			if (checkBySource(e)) {
+				List<RecipePart<S>> parts = findBySource(e);
+				DefaultRecipePart<S> [] rps = new DefaultRecipePart [parts.size()];
+				for (int i = 0; i < parts.size(); i++) {
+					RecipePart<S> part = parts.get(i);
+					rps [i] = (DefaultRecipePart<S>) part;
+				}
+				parts.clear();
+				emitOnUpdate(rps);
+			}
+		}
+		
+	};
+	
 	/**
 	 * @param factory
 	 */
 	public AbstractRecipePartDao(DefaultSqlDAOFactory factory) {
 		super(factory);
+		factory.findDao(getSourceDAOInterface()).addListener(sourceAdapter);
 	}
 	
 	@Override
@@ -251,6 +285,18 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 			throw new DAOException("Aucune recete pour la source indexer par "+source.getId()+" => "+source.getClass().getSimpleName());
 		return data;
 	}
+	
+	@Override
+	public boolean checkBySource(S source) throws DAOException {
+		final String SQL  = String.format("SELECT * FROM %s WHERE id = %d LIMIT 1", getViewName(), source.getId());
+		try (Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			return result.next();
+		} catch (Exception e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
 
 	@Override
 	public List<RecipePart<S>> findBySpend (AnnualSpend spend, int limit, int offset) throws DAOException {
@@ -364,7 +410,7 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 
 	@Override
 	public boolean checkBySpend(AnnualSpend spend, PaymentLocation location) throws DAOException {
-		final String SQL  = String.format("SELECT * AS nombre FROM %s WHERE spend = %d AND location = %d LIMIT 1 OFFSET 0", getViewName(), spend.getId(), location.getId());
+		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND location = %d LIMIT 1 OFFSET 0", getViewName(), spend.getId(), location.getId());
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL)) {
@@ -488,5 +534,12 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 	 * @throws SQLException
 	 */
 	protected abstract S mapSource(ResultSet result) throws SQLException;
+	
+	/** 
+	 * renvie la classe de l'interface DAO de la source
+	 * @param <L>
+	 * @return
+	 */
+	protected abstract <L extends DAOInterface <S>> Class<L> getSourceDAOInterface ();
 
 }

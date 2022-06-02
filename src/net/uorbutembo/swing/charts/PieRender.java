@@ -22,7 +22,7 @@ import javax.swing.JComponent;
 public class PieRender extends JComponent implements PieModelListener{
 	private static final long serialVersionUID = -1944742088465191107L;
 	
-	private static final BasicStroke LINE_STROKE = new BasicStroke(2f);
+	private static final BasicStroke LINE_STROKE = new BasicStroke(1.2f);
 	
 	private PieModel model;
 	private int radius;//le rayons d'un cercle
@@ -140,7 +140,7 @@ public class PieRender extends JComponent implements PieModelListener{
 		this.minRaduis = (radius * 2) /3;
 		int start = 0;
 
-		Point O = new Point(radius, 0);
+		Point O = new Point(radius+6, 0);//6 pour les segments ne soient pas invisible pour les bordure du pie selectionner
 		Point center = new Point(0, 0);
 		if(model == null) {
 			return;

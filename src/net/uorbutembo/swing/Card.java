@@ -23,12 +23,12 @@ import net.uorbutembo.swing.DefaultCardModel.CardType;
  * @author Esaie MUHASA
  *
  */
-public class Card extends JComponent {
+public class Card extends JComponent implements CardModelListener {
 	private static final long serialVersionUID = 2035862107414961620L;
 	private static final Dimension 
-			DEFAULT_SIZE = new Dimension(300, 150),
-			MIN_SIZE = new Dimension(150, 150),
-			MAX_SIZE = new Dimension(1000, 200);
+			DEFAULT_SIZE = new Dimension(300, 130),
+			MIN_SIZE = new Dimension(150, 130),
+			MAX_SIZE = new Dimension(1000, 150);
 	
 	public static final Font 
 			FONT_TITLE = new Font("Arial", Font.PLAIN, 22),
@@ -36,12 +36,12 @@ public class Card extends JComponent {
 			FONT_INFO = new Font("Arial", Font.PLAIN, 13);
 	
 	private CardModel<?> model;
+	private Image icon;
 
-	public Card() {//default constructor
+	public Card () {//default constructor
 		super();
-		DefaultCardModel<?> model = new DefaultCardModel<>(CardType.PRIMARY);
-		this.model = model;
-		model.setCard(this);
+		model = new DefaultCardModel<>(CardType.PRIMARY);
+		model.addListener(this);
 		this.init();
 	}
 	
@@ -49,13 +49,53 @@ public class Card extends JComponent {
 	 * Consctructeur d'initialisation du model du card
 	 * @param model
 	 */
-	public Card(CardModel<?> model) {
+	public Card (CardModel<?> model) {
 		super();
 		this.model = model;
-		model.setCard(this);
+		model.addListener(this);
+		if (model.getIcon() != null) {			
+			try {
+				icon = ImageIO.read(new File(model.getIcon()));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		this.init();
 	}
 	
+	/**
+	 * @return the model
+	 */
+	public CardModel<?> getModel() {
+		return model;
+	}
+
+	/**
+	 * @param model the model to set
+	 */
+	public void setModel(CardModel<?> model) {
+		if (this.model == model)
+			return;
+		
+		if(this.model != null)
+			this.model.removeListener(this);
+		
+		this.model = model;
+		
+		if (model != null) {			
+			model.addListener(this);
+			try {
+				icon = ImageIO.read(new File(model.getIcon()));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		repaint();
+	}
+
+	/**
+	 * initialisiation des dimension du card
+	 */
 	private void init() {
 		this.setPreferredSize(DEFAULT_SIZE);
 		this.setMinimumSize(MIN_SIZE);
@@ -75,6 +115,36 @@ public class Card extends JComponent {
 	}
 	
 	@Override
+	public void onValueChange(CardModel<?> model, Object oldValue) {
+		repaint();
+	}
+	
+	@Override
+	public void onChange(CardModel<?> model) {
+		repaint();
+	}
+
+	@Override
+	public void onTitleChange(CardModel<?> model, int index, String oldTitle) {
+		repaint();
+	}
+
+	@Override
+	public void onColorChange(CardModel<?> model, int index, Color oldColor) {
+		repaint();
+	}
+
+	@Override
+	public void onIconChange(CardModel<?> model, String oldIcon) {
+		try {
+			icon = ImageIO.read(new File(model.getIcon()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		repaint();
+	}
+
+	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		
@@ -88,13 +158,8 @@ public class Card extends JComponent {
 		g2.fillRect(0, 0, width, height);
 		
 		//icon
-		try {
-			Image img = ImageIO.read(new File(model.getIcon()));
-			
-			g2.drawImage(img, 5, 5, 80, 80, null);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		if (icon != null)
+			g2.drawImage(icon, 10, 10, 50, 50, null);
 		//==icon
 		
 		FontMetrics metricsInfo = g2.getFontMetrics(FONT_INFO);

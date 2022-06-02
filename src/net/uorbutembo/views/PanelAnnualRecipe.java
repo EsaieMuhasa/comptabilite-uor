@@ -40,10 +40,10 @@ import net.uorbutembo.views.forms.FormUtil;
 public class PanelAnnualRecipe extends Panel {
 	private static final long serialVersionUID = -6487804127168576480L;
 	
-	protected final MainWindow mainWindow;
-	private AnnualRecipeDao annualRecipeDao;
-	private AnnualSpendDao annualSpendDao;
-	private AcademicYearDao academicYearDao;
+	private final MainWindow mainWindow;
+	private final AnnualRecipeDao annualRecipeDao;
+	private final AnnualSpendDao annualSpendDao;
+	private final AcademicYearDao academicYearDao;
 	private final UniversityRecipeDao universityRecipeDao;
 	
 	private AcademicYear currentYear;//l'annee academique actuel
@@ -80,7 +80,7 @@ public class PanelAnnualRecipe extends Panel {
 		@Override
 		public synchronized void onCreate(AnnualRecipe e, int requestId) {
 			modelRecipe.addElement(e);
-			btnAdd.setEnabled(universityRecipeDao.countAll() != modelRecipe.getSize());
+			btnAdd.setEnabled(universityRecipeDao.countAll() != annualRecipeDao.countByAcademicYear(currentYear));
 		}
 
 		@Override
@@ -163,7 +163,7 @@ public class PanelAnnualRecipe extends Panel {
 		panelBottom.add(btnAdd);
 		//left
 		listRecipe.setBackground(FormUtil.BKG_END);
-		listRecipe.setForeground(FormUtil.BORDER_COLOR);
+		listRecipe.setForeground(Color.WHITE);
 		panelRight.add(panelBottom, BorderLayout.SOUTH);
 		panelRight.add(FormUtil.createScrollPane(listRecipe), BorderLayout.CENTER);
 		panelRight.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);

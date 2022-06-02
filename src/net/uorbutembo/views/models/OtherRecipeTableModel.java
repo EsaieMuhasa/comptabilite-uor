@@ -45,7 +45,7 @@ public class OtherRecipeTableModel extends TableModel<OtherRecipe> {
 
 	@Override
 	public int getColumnCount() {
-		return 4;
+		return 5;
 	}
 	
 	@Override
@@ -54,7 +54,8 @@ public class OtherRecipeTableModel extends TableModel<OtherRecipe> {
 			case 0 : return "Date";
 			case 1 : return "Compte";
 			case 2 : return "libelé";
-			case 3 : return "Montant";
+			case 3 : return "Lieux de perception";
+			case 4 : return "Montant";
 		}
 		return super.getColumnName(column);
 	}
@@ -65,7 +66,8 @@ public class OtherRecipeTableModel extends TableModel<OtherRecipe> {
 			case 0 : return FormUtil.DEFAULT_FROMATER.format(data.get(rowIndex).getRecordDate());
 			case 1 : return data.get(rowIndex).getAccount().getUniversityRecipe().getTitle();
 			case 2 : return data.get(rowIndex).getLabel();
-			case 3 : return data.get(rowIndex).getAmount()+" USD";
+			case 3 : return data.get(rowIndex).getLocation().toString();
+			case 4 : return data.get(rowIndex).getAmount()+" USD";
 		}
 		return null;
 	}

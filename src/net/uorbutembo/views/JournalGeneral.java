@@ -348,15 +348,7 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 		private final DefaultCardModel<Double> cardSoldModel = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
 		private final DefaultCardModel<Double> cardOutModel = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
 		private final DefaultCardModel<Double> cardInModel = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
-		
-		private final Card cardSold = new Card(cardSoldModel);
-		private final Card cardOut = new Card(cardOutModel);
-		private final Card cardIn = new Card(cardInModel);
-
-		public CardsPanel() {
-			
-			super(new BorderLayout());
-			
+		{			
 			cardSoldModel.setTitle("Solde");
 			cardSoldModel.setInfo("Montant disponible");
 			cardSoldModel.setSuffix("$");
@@ -374,6 +366,13 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 			cardInModel.setSuffix("$");
 			cardInModel.setIcon(R.getIcon("btn-add"));
 			cardInModel.setValue(0d);
+		}
+		private final Card cardSold = new Card(cardSoldModel);
+		private final Card cardOut = new Card(cardOutModel);
+		private final Card cardIn = new Card(cardInModel);
+
+		public CardsPanel() {
+			super(new BorderLayout());
 			
 			container.add(cardSold);
 			container.add(cardIn);

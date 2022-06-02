@@ -18,6 +18,24 @@ import net.uorbutembo.beans.PaymentLocation;
 public interface OtherRecipeDao extends DAOInterface<OtherRecipe>, BaseStatistic<OtherRecipe>{
 	
 	/**
+	 * verification du numero du recu en caisse
+	 * @param receivedNumber
+	 * @return
+	 * @throws DAOException
+	 */
+	default boolean checkByReceivedNumber (int receivedNumber) throws DAOException {
+		return check("receivedNumber", receivedNumber);
+	}
+	
+	/**
+	 * Renvoie l'occurence qui fais reference au numero du recu en parametre
+	 * @param receivedNumber
+	 * @return
+	 * @throws DAOException
+	 */
+	OtherRecipe findByReceivedNumber (int receivedNumber) throws DAOException;
+	
+	/**
 	 * Verifie l'existance les recettes concernat un compte
 	 * @param accountId
 	 * @return

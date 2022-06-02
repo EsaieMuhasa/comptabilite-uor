@@ -25,7 +25,7 @@ public class PiePanel extends Panel {
 	private static final long serialVersionUID = 8834575442903333237L;
 	
 	private PieRender render;
-	private PiePartCaption caption;
+	private PieCaption caption;
 	private JLabel title = FormUtil.createSubTitle("");
 	private JScrollPane scroll;
 	private Color borderColor;
@@ -66,7 +66,7 @@ public class PiePanel extends Panel {
 		super ();
 		this.setOpaque(true);
 		this.render = new PieRender();
-		this.caption = new  PiePartCaption();
+		this.caption = new  PieCaption();
 		this.init();
 	}
 	
@@ -77,7 +77,7 @@ public class PiePanel extends Panel {
 		super ();
 		this.model = model;
 		this.render = new PieRender(model);
-		this.caption = new PiePartCaption(model);
+		this.caption = new PieCaption(model);
 		this.title.setText(model.getTitle());
 		this.init();
 		model.addListener(modelListener);

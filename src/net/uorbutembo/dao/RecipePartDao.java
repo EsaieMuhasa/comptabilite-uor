@@ -34,6 +34,14 @@ public interface RecipePartDao <T extends RecipePart<S>, H extends DefaultRecipe
 	List<T> findBySource (S source) throws DAOException;
 	
 	/**
+	 * Verification si la source a une refference de repartition
+	 * @param source
+	 * @return
+	 * @throws DAOException
+	 */
+	boolean checkBySource (S source) throws DAOException;
+	
+	/**
 	 * renvoie une partie des operations concernant un compte
 	 * @param spend
 	 * @param limit

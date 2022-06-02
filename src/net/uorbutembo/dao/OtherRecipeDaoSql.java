@@ -30,13 +30,15 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public void create(OtherRecipe o) throws DAOException {
 		try {
 			long id = insertInTable(
-					new String[] {"amount", "account", "collectionYear", "collectionDate", "recordDate", "label"},
+					new String[] {"amount", "account", "collectionYear", "collectionDate", "recordDate", "label", "location", "receivedNumber"},
 					new Object[] {
 							o.getAmount(), o.getAccount().getId(),
 							o.getCollectionYear().getId(),
 							o.getCollectionDate().getTime(),
 							o.getRecordDate().getTime(),
-							o.getLabel()
+							o.getLabel(),
+							o.getLocation().getId(),
+							o.getReceivedNumber() == 0? null : o.getReceivedNumber()
 					});
 			o.setId(id);
 			emitOnCreate(o);
@@ -49,19 +51,26 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public void update(OtherRecipe o, long id) throws DAOException {
 		try {
 			updateInTable(
-					new String[] {"amount", "account", "collectionYear", "collectionDate", "lastUpdate", "label"},
+					new String[] {"amount", "account", "collectionYear", "collectionDate", "lastUpdate", "label", "location", "receivedNumber"},
 					new Object[] {
 							o.getAmount(), o.getAccount().getId(),
 							o.getCollectionYear().getId(),
 							o.getCollectionDate().getTime(),
 							o.getLastUpdate().getTime(),
-							o.getLabel()
+							o.getLabel(),
+							o.getLocation().getId(),
+							o.getReceivedNumber() == 0? null : o.getReceivedNumber()
 					}, id);
 			o.setId(id);
 			emitOnUpdate(o);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
+	}
+
+	@Override
+	public OtherRecipe findByReceivedNumber(int receivedNumber) throws DAOException {
+		return find("receivedNumber", receivedNumber);
 	}
 
 	@Override
@@ -337,6 +346,7 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		recipe.setAmount(result.getDouble("amount"));
 		recipe.setLabel(result.getString("label"));
 		recipe.setCollectionDate(new Date(result.getLong("collectionDate")));
+		recipe.setReceivedNumber(result.getInt("receivedNumber"));
 		if(result.getLong("lastUpdate") != 0) 
 			recipe.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		return recipe;
@@ -348,7 +358,7 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		recipe.setRecordDate(new Date(result.getLong("recordDate")));
 		recipe.setCollectionYear(new AcademicYear(result.getLong("collectionYear")));
 		recipe.setAccount(new AnnualRecipe(result.getLong("account")));
-		recipe.setLocation(new PaymentLocation(result.getLong("location")));
+		recipe.setLocation(factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")));
 		return recipe;
 	}
 	
@@ -357,7 +367,7 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		recipe.setAccount(account);
 		recipe.setCollectionYear(new AcademicYear(result.getLong("collectionYear")));
 		recipe.setCollectionDate(new Date(result.getLong("collectionDate")));
-		recipe.setLocation(new PaymentLocation(result.getLong("location")));
+		recipe.setLocation(factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")));
 		return recipe;
 	}
 	

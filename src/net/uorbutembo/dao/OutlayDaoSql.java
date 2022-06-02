@@ -14,6 +14,7 @@ import java.util.List;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.Outlay;
+import net.uorbutembo.beans.PaymentLocation;
 
 /**
  * @author Esaie MUHASA
@@ -29,7 +30,7 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public void create(Outlay o) throws DAOException {
 		try {
 			long id = insertInTable(
-					new String[] {"account", "academicYear", "amount", "wording", "deliveryDate", "deliveryYear", "recordDate"},
+					new String[] {"account", "academicYear", "amount", "wording", "deliveryDate", "deliveryYear", "recordDate", "location"},
 					new Object[] {
 							o.getAccount().getId(),
 							o.getAcademicYear().getId(),
@@ -37,7 +38,8 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 							o.getWording(),
 							o.getDeliveryDate().getTime(),
 							o.getDeliveryYear().getId(),
-							o.getRecordDate().getTime()
+							o.getRecordDate().getTime(),
+							o.getLocation().getId()
 					});
 			o.setId(id);
 			emitOnCreate(o);
@@ -50,14 +52,15 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	public void update(Outlay o, long id) throws DAOException {
 		try {
 			updateInTable(
-					new String[] {"account", "academicYear", "amount", "wording", "deliveryDate", "lastUpdate"},
+					new String[] {"account", "academicYear", "amount", "wording", "deliveryDate", "lastUpdate", "location"},
 					new Object[] {
 							o.getAccount().getId(),
 							o.getAcademicYear().getId(),
 							o.getAmount(),
 							o.getWording(),
 							o.getDeliveryDate().getTime(),
-							o.getLastUpdate().getTime()
+							o.getLastUpdate().getTime(),
+							o.getLocation().getId()
 					}, id);
 			o.setId(id);
 			emitOnUpdate(o);
@@ -221,6 +224,67 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 			throw new DAOException(e.getMessage(), e);
 		}
 	}
+	
+	@Override
+	public double getSoldByAccount(long account) throws DAOException {
+		final String SQL = String.format("SELECT SUM(amount) AS sold FROM %s WHERE account = %d", getTableName(), account);
+		double sum = 0;
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if (result.next())
+				sum = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
+	
+	@Override
+	public double getSoldByAccount (long account, long location) throws DAOException {
+		final String SQL = String.format("SELECT SUM(amount) AS sold FROM %s WHERE account = %d AND location = %d", getTableName(), account, location);
+		double sum = 0;
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if (result.next())
+				sum = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
+	
+	@Override
+	public boolean checkByAccount(long account, long location) throws DAOException {
+		final String SQL = String.format("SELECT id FROM %s WHERE account = %d AND location = %d LIMIT 1", getTableName(), account, location);
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			return result.next();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+
+	@Override
+	public int countByAccount(long account, long location) throws DAOException {
+		final String SQL = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE account = %d AND location = %d", getTableName(), account, location);
+		int count = 0;
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if (result.next()) 
+				count = result.getInt("nombre");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return count;
+	}
 
 	@Override
 	public boolean checkByAccount(long accountId, Date min, Date max) throws DAOException {
@@ -246,12 +310,31 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 				ResultSet result = statement.executeQuery(SQL)) {
 			while (result.next())
 				data.add(mapping(result, account));
-			
-			if(data.isEmpty())
-				throw new DAOException("Aucune operation pour le compte indexer par: "+account.getId());
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune operation pour le compte indexer par: "+account.getId());
+		return data;
+	}
+	
+	@Override
+	public List<Outlay> findByAccount(AnnualSpend account, PaymentLocation location) throws DAOException {
+		final String SQL = String.format("SELECT * FROM %s WHERE account = %d AND location = %d", getTableName(), account.getId(), location.getId());
+		List<Outlay> data = new ArrayList<>();
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			while (result.next())
+				data.add(mapping(result, account, location));
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune operation pour le compte indexer par: "+account.getId());
 		return data;
 	}
 
@@ -265,12 +348,12 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 				ResultSet result = statement.executeQuery(SQL)) {
 			while (result.next())
 				data.add(mapping(result, account));
-			
-			if(data.isEmpty())
-				throw new DAOException("Aucune operation pour le compte indexer par: "+account.getId()+" pour l'intervale selection de "+offset+" a "+(offset+limit));
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune operation pour le compte indexer par: "+account.getId()+" pour l'intervale selection de "+offset+" a "+(offset+limit));
 		return data;
 	}
 
@@ -285,12 +368,12 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 				ResultSet result = statement.executeQuery(SQL)) {
 			while (result.next())
 				data.add(mapping(result, account));
-			
-			if(data.isEmpty())
-				throw new DAOException("Aucune operation pour le compte indexer par: "+account.getId()+" pour la l'intervale de date "+min+" a "+max);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune operation pour le compte indexer par: "+account.getId()+" pour la l'intervale de date "+min+" a "+max);
 		return data;
 	}
 
@@ -328,34 +411,42 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 		return data;
 	}
 
-	@Override
-	protected Outlay mapping(ResultSet result) throws SQLException, DAOException {
+	protected Outlay baseMapping(ResultSet result) throws SQLException, DAOException{
 		Outlay out = new Outlay(result.getLong("id"));
-		out.setAccount(result.getLong("account"));
 		out.setRecordDate(new Date(result.getLong("recordDate")));
 		out.setDeliveryDate(new Date(result.getLong("deliveryDate")));
 		out.setWording(result.getString("wording"));
 		out.setReference(result.getString("reference"));
 		out.setAmount(result.getDouble("amount"));
-		out.setAcademicYear(new AcademicYear(result.getLong("academicYear")));
+		
 		if(result.getLong("lastUpdate") > 0) {
 			out.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}
 		return out;
 	}
 	
-	protected Outlay mapping(ResultSet result, AnnualSpend account) throws SQLException, DAOException {
-		Outlay out = new Outlay(result.getLong("id"));
-		out.setAccount(account);
-		out.setRecordDate(new Date(result.getLong("recordDate")));
-		out.setDeliveryDate(new Date(result.getLong("deliveryDate")));
-		out.setWording(result.getString("wording"));
-		out.setReference(result.getString("reference"));
-		out.setAmount(result.getDouble("amount"));
+	@Override
+	protected Outlay mapping(ResultSet result) throws SQLException, DAOException {
+		Outlay out = baseMapping(result);
+		out.setAccount(result.getLong("account"));
 		out.setAcademicYear(new AcademicYear(result.getLong("academicYear")));
-		if(result.getLong("lastUpdate") > 0) {
-			out.setLastUpdate(new Date(result.getLong("lastUpdate")));
-		}
+		out.setLocation(factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")));
+		return out;
+	}
+	
+	protected Outlay mapping(ResultSet result, AnnualSpend account) throws SQLException, DAOException {
+		Outlay out = baseMapping(result);
+		out.setAccount(account);
+		out.setAcademicYear(new AcademicYear(result.getLong("academicYear")));
+		out.setLocation(factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")));
+		return out;
+	}
+	
+	protected Outlay mapping(ResultSet result, AnnualSpend account, PaymentLocation location) throws SQLException, DAOException {
+		Outlay out = baseMapping(result);
+		out.setAccount(account);
+		out.setLocation(location);
+		out.setAcademicYear(new AcademicYear(result.getLong("academicYear")));
 		return out;
 	}
 

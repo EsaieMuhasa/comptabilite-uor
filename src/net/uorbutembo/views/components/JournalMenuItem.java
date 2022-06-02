@@ -56,6 +56,7 @@ public class JournalMenuItem extends Panel {
 			MAX_SIZE = new Dimension(320, 70);
 	
 	private final List<ActionListener> actionListeners = new ArrayList<>();
+	private final List<JournalMenuItemListener> itemListeners = new ArrayList<>();
 	
 	private boolean hover = false;
 	private boolean active = false;
@@ -99,16 +100,19 @@ public class JournalMenuItem extends Panel {
 		@Override
 		public synchronized void onCreate(PaymentFee e, int requestId) {
 			annualSpendDao.reload(account);
+			emitOnReload();
 		}
 
 		@Override
 		public synchronized void onUpdate(PaymentFee e, int requestId) {
 			annualSpendDao.reload(account);
+			emitOnReload();
 		}
 
 		@Override
 		public synchronized void onDelete(PaymentFee e, int requestId) {
 			annualSpendDao.reload(account);
+			emitOnReload();
 		}
 		
 	};
@@ -120,6 +124,7 @@ public class JournalMenuItem extends Panel {
 			if(allocationRecipeDao.check(e.getAccount().getId(), account.getId())) {
 				annualSpendDao.reload(account);
 				repaint();
+				emitOnReload();
 			}
 		}
 
@@ -128,6 +133,7 @@ public class JournalMenuItem extends Panel {
 			if(allocationRecipeDao.check(e.getAccount().getId(), account.getId())) {
 				annualSpendDao.reload(account);
 				repaint();
+				emitOnReload();
 			}
 		}
 
@@ -136,6 +142,7 @@ public class JournalMenuItem extends Panel {
 			if(allocationRecipeDao.check(e.getAccount().getId(), account.getId())) {
 				annualSpendDao.reload(account);
 				repaint();
+				emitOnReload();
 			}
 		}
 		
@@ -148,6 +155,7 @@ public class JournalMenuItem extends Panel {
 			if(e.getAccount().getId() == account.getId()){
 				account.setUsed(account.getUsed() + e.getAmount());
 				repaint();
+				emitOnReload();
 			}
 		}
 
@@ -156,6 +164,7 @@ public class JournalMenuItem extends Panel {
 			if(e.getAccount().getId() == account.getId()){
 				annualSpendDao.reload(account);
 				repaint();
+				emitOnReload();
 			}
 		}
 
@@ -164,6 +173,7 @@ public class JournalMenuItem extends Panel {
 			if(e.getAccount().getId() == account.getId()){
 				account.setUsed(account.getUsed() - e.getAmount());
 				repaint();
+				emitOnReload();
 			}
 		}
 	};
@@ -179,7 +189,7 @@ public class JournalMenuItem extends Panel {
 		setMaximumSize(MAX_SIZE);
 		setMinimumSize(MIN_SIZE);
 		addMouseListener(mouseAdapter);
-		setCursor(new Cursor(Cursor.HAND_CURSOR));
+		setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		
 		annualSpendDao = factory.findDao(AnnualSpendDao.class);
 		allocationRecipeDao = factory.findDao(AllocationRecipeDao.class);
@@ -219,11 +229,36 @@ public class JournalMenuItem extends Panel {
 	}
 	
 	/**
+	 * ajout ecouteur de changement d'etat (mis en jours des donnees du model)
+	 * @param listener
+	 */
+	public void addItemListener (JournalMenuItemListener listener) {
+		if (!itemListeners.contains(listener))
+			itemListeners.add(listener);
+	}
+	
+	/**
 	 * supression d'un listener
 	 * @param listener
 	 */
 	public void removeActionListener (ActionListener listener) {
 		actionListeners.remove(listener);
+	}
+	
+	/**
+	 * supression d'un itemListener
+	 * @param listener
+	 */
+	public void removeItemListener (JournalMenuItemListener listener) {
+		itemListeners.remove(listener);
+	}
+	
+	/**
+	 * emission du changement du menu
+	 */
+	protected void emitOnReload () {
+		for (JournalMenuItemListener listener : itemListeners)
+			listener.onReload(this);
 	}
 	
 	/**

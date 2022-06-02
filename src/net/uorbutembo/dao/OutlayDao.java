@@ -9,6 +9,7 @@ import java.util.List;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.Outlay;
+import net.uorbutembo.beans.PaymentLocation;
 
 /**
  * @author Esaie MUHASA
@@ -148,6 +149,30 @@ public interface OutlayDao extends DAOInterface<Outlay>, BaseStatistic<Outlay> {
 	default boolean checkByAccount (AnnualSpend account) throws DAOException{
 		return checkByAccount(account.getId());
 	}
+	
+	/**
+	 * verification des operations sur compte dans un lieux
+	 * @param account
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	boolean checkByAccount (long account, long location) throws DAOException;
+	default boolean checkByAccount (AnnualSpend account, PaymentLocation location) throws DAOException {
+		return checkByAccount(account.getId(), location.getId());
+	}
+	
+	/**
+	 * comptage des operations faite sur un compte dans un lieux
+	 * @param account
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	int countByAccount (long account, long location) throws DAOException;
+	default int countByAccount (AnnualSpend account, PaymentLocation location) throws DAOException {
+		return countByAccount(account.getId(), location.getId());
+	}
 
 	default boolean checkByAccount (AnnualSpend account, Date date) throws DAOException {
 		return checkByAccount(account.getId(), date, date);
@@ -171,6 +196,20 @@ public interface OutlayDao extends DAOInterface<Outlay>, BaseStatistic<Outlay> {
 	List<Outlay> findByAccount (AnnualSpend account) throws DAOException;
 	default List<Outlay> findByAccount (long accountId) throws DAOException {
 		return findByAccount(getFactory().findDao(AnnualSpendDao.class).findById(accountId));
+	}
+	
+	/**
+	 * renvoie la collection des operations faite sur un compte en un lieux
+	 * @param account
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	List<Outlay> findByAccount (AnnualSpend account, PaymentLocation location) throws DAOException;
+	default List<Outlay> findByAccount (long account, long location) throws DAOException {
+		return findByAccount(
+				getFactory().findDao(AnnualSpendDao.class).findById(account),
+				getFactory().findDao(PaymentLocationDao.class).findById(location));
 	}
 	
 	/**
@@ -219,6 +258,29 @@ public interface OutlayDao extends DAOInterface<Outlay>, BaseStatistic<Outlay> {
 	List<Outlay> findByAccount (AnnualSpend account, Date min, Date max) throws DAOException;
 	default List<Outlay> findByAccount (long accountId, Date min, Date max) throws DAOException {
 		return findByAccount(getFactory().findDao(AnnualSpendDao.class).findById(accountId), min, max);
+	}
+	
+	/**
+	 * renvie le solde des sorties pour le compte en premier paramtre dans le lieux en deuxieme paramtre
+	 * @param account
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAccount (long account, long location) throws DAOException;
+	default double getSoldByAccount (AnnualSpend account, PaymentLocation location) throws DAOException {
+		return getSoldByAccount(account.getId(), location.getId());
+	}
+	
+	/**
+	 * renvoie le solde des sorties pour un compte
+	 * @param account
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAccount (long account) throws DAOException;
+	default double getSoldByAccount (AnnualSpend account) throws DAOException {
+		return getSoldByAccount(account.getId());
 	}
 	
 }

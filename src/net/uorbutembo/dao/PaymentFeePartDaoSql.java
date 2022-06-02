@@ -38,5 +38,11 @@ class PaymentFeePartDaoSql extends AbstractRecipePartDao<PaymentFee> implements 
 		fee.setWording(result.getString("wording"));
 		return fee;
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	protected <L extends DAOInterface<PaymentFee>> Class<L> getSourceDAOInterface() {
+		return (Class<L>) PaymentFeeDao.class;
+	}
 
 }
