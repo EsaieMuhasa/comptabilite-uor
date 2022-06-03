@@ -21,8 +21,6 @@ import javax.swing.border.EmptyBorder;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Faculty;
 import net.uorbutembo.beans.Inscription;
-import net.uorbutembo.dao.AcademicYearDao;
-import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.FacultyDao;
 import net.uorbutembo.dao.InscriptionDao;
@@ -34,6 +32,7 @@ import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.components.DefaultScenePanel;
+import net.uorbutembo.views.components.Sidebar.YearChooserListener;
 import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.GeneralBudgetPieModel;
 import resources.net.uorbutembo.R;
@@ -42,7 +41,7 @@ import resources.net.uorbutembo.R;
  * @author Esaie MUHASA
  *
  */
-public class PanelDashboard extends DefaultScenePanel implements AcademicYearDaoListener{
+public class PanelDashboard extends DefaultScenePanel implements YearChooserListener{
 	private static final long serialVersionUID = 4525497607858984186L;
 	
 	private Box panelCards = Box.createHorizontalBox();
@@ -71,8 +70,8 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
 		
-		mainWindow.factory.findDao(AcademicYearDao.class).addYearListener(this);
-		modelPieStudents.setSuffix(" : ");
+		mainWindow.getSidebar().addYearChooserListener(this);
+		modelPieStudents.setSuffix("");
 		init();
 		
 		Panel center = new Panel(new BorderLayout());
@@ -132,7 +131,7 @@ public class PanelDashboard extends DefaultScenePanel implements AcademicYearDao
 	}
 	
 	@Override
-	public void onCurrentYear(AcademicYear year) {
+	public void onChange(AcademicYear year) {		
 		currentYear = year;
 		if(year == null)
 			return;

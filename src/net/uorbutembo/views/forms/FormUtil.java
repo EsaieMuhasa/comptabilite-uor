@@ -138,10 +138,10 @@ public abstract class FormUtil {
 	
 	//couleurs
 	public static final Color [] COLORS = new Color[] {
-			new Color(0xFFCE30), new Color(0xE83845), new Color(0xE9889F),
-			new Color(0x746AB0), new Color(0x288BA8), new Color(0xFF88FF), 
-			new Color(0x5F7FF0), new Color(0x90C86F), new Color(0x0756FF),
-			new Color(0xA2D5C6), new Color(0x077B8A), new Color(0x5C3C92),
+			new Color(0xFFCE30), new Color(0xE83845), new Color(0xE9669F),
+			new Color(0x746AB0), new Color(0x2050FA), new Color(0x9A9A00), 
+			new Color(0xEF5020), new Color(0xF0CF6F), new Color(0xAFAFAF),
+			new Color(0x20FF76), new Color(0x077B8A), new Color(0x5C3C92),
 			new Color(0xE2D810), new Color(0xD9138A), new Color(0x12A4D9),
 			new Color(0x22780F), new Color(0x381A3C), new Color(0x004C56),
 			new Color(0x9B571D), new Color(0xB03468), new Color(0x4E5352),

@@ -72,11 +72,11 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
     	this.setLabel(label);
     }
     
-    private void init() {
+    protected void init() {
     	this.setBackground(FormUtil.BKG_DARK);
     	setBorder(TextField.DEFAULT_EMPTY_BORDER);
     	setUI(new ComboUI(this));
-    	this.setForeground(DEFAULT_COLOR);
+    	setForeground(DEFAULT_COLOR);
     	
     	
     	//on utilise le rendu par de faut du JList
@@ -151,7 +151,7 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
      * @author Esaie MUHASA
      *
      */
-    private class ComboUI extends BasicComboBoxUI {//BasicComboBoxUI
+    protected class ComboUI extends BasicComboBoxUI {//BasicComboBoxUI
 
         private final Animator animator;
         private boolean animateHinText = true;
@@ -303,7 +303,7 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
             g2.drawString(combo.getLabel(), in.right, (int) (in.top + textY + ft.getAscent() - size));
         }
 
-        private void createLineStyle(Graphics2D g2) {
+        protected void createLineStyle(Graphics2D g2) {
             if (isFocusOwner()) {
                 double width = getWidth() - 4;
                 int height = getHeight();

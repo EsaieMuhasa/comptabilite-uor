@@ -34,7 +34,9 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 		TITLE_1 = "Formulaire d'enregistrement",
 		TITLE_2 = "Formulaire de modification",
 		RGX_SIMBLE_DATE = "^(([0-9]{1,2}-){2})([0-9]{4})$",
-		RGX_NUMBER = "^([0-9]+)(\\.([0-9]{1,8}))?$";
+		RGX_NUMBER = "^([0-9]+)(\\.([0-9]{1,8}))?$",
+		RGX_INT = "^-?([0-9]+)$",
+		RGX_POSITIV_INT = "^([0-9]+)(\\.([0-9]{1,8}))?$";
 
 	private String title;
 	private JLabel label;

@@ -7,7 +7,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -21,10 +20,11 @@ import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JProgressBar;
-import javax.swing.JRadioButton;
+import javax.swing.JTabbedPane;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicYear;
@@ -35,6 +35,7 @@ import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.dao.AnnualSpendDao;
+import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.OtherRecipeDao;
 import net.uorbutembo.dao.OutlayDao;
 import net.uorbutembo.dao.PaymentFeeDao;
@@ -57,53 +58,17 @@ import resources.net.uorbutembo.R;
  * @author Esaie MUHASA
  *
  */
-public class JournalGeneral extends Panel implements ItemListener, AcademicYearDaoListener, LineChartRenderListener{
+public class JournalGeneral extends Panel implements ItemListener, AcademicYearDaoListener{
 	private static final long serialVersionUID = 5001737357466282501L;
 	
-	private JCheckBox checkBoxGridChart = new JCheckBox("Grille", true);
-	
-//	private JRadioButton radioLineChart = new JRadioButton("Lignes");
-//	private JRadioButton radioHistoChart = new JRadioButton("Histogrammes");
-	
-	private JRadioButton radioStepDay = new JRadioButton("Par jour");
-	private JRadioButton radioStepWeek = new JRadioButton("Par semaine");
-	private JRadioButton radioStepMonth = new JRadioButton("Mensuel");
-	
-	private JCheckBox checkBoxIn = new JCheckBox("Recettes", true);
-	private JCheckBox checkBoxOut = new JCheckBox("Dépenses", true);
-	private JCheckBox checkBoxSold = new JCheckBox("Solde", true);
-	
+	private final CenterContainer container;	
+	private final CardsPanel cards;
 	private final JProgressBar progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
-	private Panel panelChart = new Panel(new BorderLayout());//panel contenant la visualisation graphique
-	
-	private final DefaultAxis yAxis = new DefaultAxis(24 * 60 * 60 * 1000, "Monain", "$");
-	private final DefaultTimeAxis xAxis = new DefaultTimeAxis(0, "Temps", "t");
-	
-	private final DefaultLineChartModel chartModel = new DefaultLineChartModel(xAxis, yAxis);
-	private final LineChartRender chartRender = new LineChartRender(chartModel);
-	private final DefaultPointCloud cloudRecipes = new DefaultPointCloud(FormUtil.COLORS_ALPHA[0], FormUtil.COLORS[0], FormUtil.COLORS[0]);
-	private final DefaultPointCloud cloudOutlays = new DefaultPointCloud(FormUtil.COLORS_ALPHA[1], FormUtil.COLORS[1], FormUtil.COLORS[1]);
-	private final DefaultPointCloud cloudSold = new DefaultPointCloud(FormUtil.COLORS_ALPHA[2], FormUtil.COLORS[2], FormUtil.COLORS[2]);
 	
 	private final DefaultComboBoxModel<AcademicYear> comboModel = new DefaultComboBoxModel<>();
 	private final JComboBox<AcademicYear> comboBox = new JComboBox<>(comboModel);
+
 	
-	{
-		chartModel.addChart(cloudRecipes);
-		chartModel.addChart(cloudSold);
-		chartModel.addChart(cloudOutlays);
-		
-		cloudRecipes.setFill(true);
-		cloudSold.setFill(true);
-		cloudOutlays.setFill(true);
-		
-		xAxis.setResponsive(false);
-		xAxis.setInterval(-10, 0);
-		xAxis.setStep(2);
-		yAxis.setMeasureUnit(" $");
-	}
-	
-	private final CardsPanel cards = new CardsPanel();
 	private final AnnualSpendDao annualSpendDao;
 	private final AcademicYearDao academicYearDao;
 	private final OutlayDao outlayDao;
@@ -121,73 +86,33 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 		
 		academicYearDao.addYearListener(this);
 		
-		final Panel container = new Panel(new BorderLayout()),
-				panelCenter = new Panel(new BorderLayout()),
-				panelBottom = new Panel(new BorderLayout(5, 0)),
-				panelTools = new  Panel(new BorderLayout()),
-				panelSteps = new Panel(new FlowLayout(FlowLayout.LEFT)),
-				panelCharts = new Panel();
-		final Box boxOthers = Box.createHorizontalBox(); 
+		container = new CenterContainer();
+		cards = new CardsPanel();
 		
-		chartRender.addRenderListener(this);
-		chartRender.setDraggable(true);
-		panelChart.add(chartRender, BorderLayout.CENTER);
-		panelChart.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		final Panel content = new Panel(new BorderLayout()),
+				bottom = new Panel(new BorderLayout(5, 0));
 		
-		checkBoxGridChart.setForeground(FormUtil.BORDER_COLOR);
-		checkBoxGridChart.addChangeListener(event -> {
-			chartRender.setVisibleGrid(checkBoxGridChart.isSelected());
-		});
-		
-		radioStepDay.setForeground(Color.WHITE);
-		radioStepWeek.setForeground(Color.WHITE);
-		radioStepMonth.setForeground(Color.WHITE);
-		panelSteps.add(radioStepDay);
-		panelSteps.add(radioStepWeek);
-		panelSteps.add(radioStepMonth);
 		
 		comboBox.setPreferredSize(new Dimension(200, 24));
 		comboBox.setEnabled(false);
 		comboBox.addItemListener(this);
 		progressBar.setStringPainted(true);
 		progressBar.setVisible(false);
-		panelBottom.add(panelSteps, BorderLayout.WEST);
-		panelBottom.add(comboBox, BorderLayout.EAST);
-		panelBottom.setBorder(new EmptyBorder(0, 0, 0, 5));
-		panelBottom.add(progressBar, BorderLayout.CENTER);
 		
-		checkBoxIn.setForeground(FormUtil.COLORS[0]);
-		checkBoxOut.setForeground(FormUtil.COLORS[1]);
-		checkBoxSold.setForeground(FormUtil.COLORS[4]);
-		panelCharts.add(checkBoxIn);
-		panelCharts.add(checkBoxOut);
-		panelCharts.add(checkBoxSold);
-		checkBoxIn.addChangeListener(event -> {
-			cloudRecipes.setVisible(checkBoxIn.isSelected());
-		});
-		checkBoxOut.addChangeListener(event -> {
-			cloudOutlays.setVisible(checkBoxOut.isSelected());
-		});
-		checkBoxSold.addChangeListener(event -> {
-			cloudSold.setVisible(checkBoxSold.isSelected());
-		});
-
-		boxOthers.add(checkBoxGridChart);
+		bottom.add(comboBox, BorderLayout.EAST);
+		bottom.add(progressBar, BorderLayout.CENTER);
+		bottom.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		bottom.setOpaque(true);
+		bottom.setBackground(FormUtil.BKG_END);
 		
-		panelTools.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-		panelTools.add(panelCharts, BorderLayout.EAST);
-		panelTools.add(boxOthers, BorderLayout.WEST);
+		content.add(container, BorderLayout.CENTER);
+//		content.add(bottom, BorderLayout.SOUTH);
 		
-		panelCenter.add(panelChart, BorderLayout.CENTER);
-		panelCenter.add(panelTools, BorderLayout.NORTH);
-		panelCenter.add(panelBottom, BorderLayout.SOUTH);
-		
-		container.add(panelCenter, BorderLayout.CENTER);
-		add(container, BorderLayout.CENTER);
+		add(content, BorderLayout.CENTER);
 		add(cards, BorderLayout.SOUTH);
 	}
 	
-	private void wait(boolean status) {
+	private void wait (boolean status) {
 		
 		if (status) {
 			setCursor(FormUtil.WAIT_CURSOR);
@@ -195,20 +120,10 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 			setCursor(Cursor.getDefaultCursor());
 		}
 		
-		progressBar.setVisible(status);
-		
-		checkBoxIn.setEnabled(!status);
-		checkBoxOut.setEnabled(!status);
-		checkBoxSold.setEnabled(!status);
 		comboBox.setEnabled(!status);
-		radioStepDay.setEnabled(!status);
-		radioStepWeek.setEnabled(!status);
-		radioStepMonth.setEnabled(!status);
-		checkBoxGridChart.setEnabled(!status);
+		progressBar.setVisible(status);
+		progressBar.setIndeterminate(status);
 		
-		if(status) {
-			progressBar.setIndeterminate(true);
-		}
 	}
 	
 	@Override
@@ -227,103 +142,11 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 			}
 			
 			cards.updateCards(year);
-			reloadChart(year);
+			container.reload(year);
 		}
 		wait(false);
 	}
-	
-	@Override
-	public void onRequireTranslation(LineChartRender source, Axis axis, Interval interval) {
-		if (axis != xAxis)
-			return;
-		
-		AcademicYear year = comboModel.getElementAt(comboBox.getSelectedIndex());
-		reloadChart(year);
-	}
-	
-	@Override
-	public void onRequireTranslation(LineChartRender source, Interval xInterval, Interval yInterval) {
-		onRequireTranslation(source, source.getModel().getXAxis(), xInterval);
-	}
-	
-	private synchronized void reloadChart(AcademicYear year) {
-		progressBar.setValue(0);
-		progressBar.setIndeterminate(true);
 
-		double first = chartRender.getLastxInterval() != null? chartRender.getLastxInterval().getMin() : -12;
-		double last = chartRender.getLastxInterval() != null? chartRender.getLastxInterval().getMax() : 0;
-		
-		int min = (int) first;
-		int max = (int) last;
-		
-		cloudRecipes.removePoints();
-		cloudOutlays.removePoints();
-		cloudSold.removePoints();
-		
-		
-		long time = 0, now = System.currentTimeMillis();
-		
-		for(int day = min; day <= max; day++) {
-			time = now + (day * 60 * 60 * 1000 * 24);
-			Date date = new Date(time);
-			
-			double y = 0;
-			//recettes
-			if (otherRecipeDao.countByAcademicYear(year.getId(), date) != 0) {
-				List<OtherRecipe> recipes = otherRecipeDao.findByAcademicYear(year.getId(), date);
-				for (OtherRecipe r : recipes) {
-					y += r.getAmount();
-				}
-			}
-			
-			if(paymentFeeDao.countByAcademicYear(year.getId(), date) != 0) {
-				List<PaymentFee> fees = paymentFeeDao.findByAcademicYear(year.getId(), date);
-				for (PaymentFee p : fees) {
-					y += p.getAmount();
-				}
-			}
-			Point2d pointIn = new Point2d(day, y);
-			pointIn.setLabel(y+" USD");
-			cloudRecipes.addPoint(pointIn);
-			
-			//depense
-			y = 0;
-			if(outlayDao.checkByAcademicYear(year.getId(), date)) {
-				List<Outlay> outlays = outlayDao.findByAcademicYear(year.getId(), date);
-				for (Outlay o : outlays) {
-					y += o.getAmount();
-				}
-			}
-			
-			Point2d pointOut = new Point2d(day, -y);
-			pointOut.setLabel(y+" USD");
-			cloudOutlays.addPoint(pointOut);
-			//==
-			
-			y = 0;
-			if (otherRecipeDao.checkByAcademicYearBeforDate(year, date)) {
-				List<OtherRecipe> recipes = otherRecipeDao.findByAcademicYearBeforDate(year, date);
-				for (OtherRecipe r : recipes) {
-					y += r.getAmount();
-				}
-			}
-			
-			if(paymentFeeDao.checkByAcademicYearBeforDate(year.getId(), date)) {
-				List<PaymentFee> fees = paymentFeeDao.findByAcademicYearBeforDate(year.getId(), date);
-				for (PaymentFee p : fees) {
-					y += p.getAmount();
-				}
-			}
-			Point2d pointSold = new Point2d(day, y - pointOut.getY());
-			pointSold.setLabel(y+" USD");
-			cloudSold.addPoint(pointSold);
-			//==
-		}
-		
-//		cloudRecipes.toSquareSignal();
-//		cloudOutlays.toSquareSignal();
-//		cloudSold.toSquareSignal();
-	}
 	
 	@Override
 	public void itemStateChanged(ItemEvent event) {
@@ -355,7 +178,7 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 			cardSoldModel.setIcon(R.getIcon("caisse"));
 			cardSoldModel.setValue(0d);
 			
-			cardOutModel.setTitle("Depenses");
+			cardOutModel.setTitle("Dépenses");
 			cardOutModel.setInfo("Montant déjà utiliser");
 			cardOutModel.setSuffix("$");
 			cardOutModel.setIcon(R.getIcon("btn-cancel"));
@@ -370,6 +193,97 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 		private final Card cardSold = new Card(cardSoldModel);
 		private final Card cardOut = new Card(cardOutModel);
 		private final Card cardIn = new Card(cardInModel);
+		
+		private AcademicYear year;
+		
+		private final DAOAdapter<PaymentFee> feeAdapter = new DAOAdapter<PaymentFee>() {
+
+			@Override
+			public synchronized void onCreate(PaymentFee e, int requestId) {
+				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cardSoldModel.setValue(cardSoldModel.getValue() + e.getAmount());
+				cardInModel.setValue(cardInModel.getValue() + e.getAmount());
+			}
+
+			@Override
+			public synchronized void onUpdate(PaymentFee e, int requestId) {
+				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
+					return;
+				updateCards(year);
+			}
+
+			@Override
+			public synchronized void onDelete(PaymentFee e, int requestId) {
+				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cardSoldModel.setValue(cardSoldModel.getValue() - e.getAmount());
+				cardInModel.setValue(cardInModel.getValue() - e.getAmount());
+			}
+			
+		};
+		
+		private final DAOAdapter<OtherRecipe> otherAdapter = new DAOAdapter<OtherRecipe>() {
+
+			@Override
+			public synchronized void onCreate(OtherRecipe e, int requestId) {
+				if(e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cardSoldModel.setValue(cardSoldModel.getValue() + e.getAmount());
+				cardInModel.setValue(cardInModel.getValue() + e.getAmount());
+			}
+
+			@Override
+			public synchronized void onUpdate(OtherRecipe e, int requestId) {
+				if(e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				updateCards(year);
+			}
+
+			@Override
+			public synchronized void onDelete(OtherRecipe e, int requestId) {
+				if(e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cardSoldModel.setValue(cardSoldModel.getValue() - e.getAmount());
+				cardInModel.setValue(cardInModel.getValue() - e.getAmount());
+			}
+			
+		};
+		
+		private final DAOAdapter<Outlay> outlayAdaapter = new  DAOAdapter<Outlay>() {
+
+			@Override
+			public synchronized void onCreate(Outlay e, int requestId) {
+				if (e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cardSoldModel.setValue(cardSoldModel.getValue() - e.getAmount());
+				cardOutModel.setValue(cardOutModel.getValue() + e.getAmount());
+			}
+
+			@Override
+			public synchronized void onUpdate(Outlay e, int requestId) {
+				if (e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				updateCards(year);
+			}
+
+			@Override
+			public synchronized void onDelete(Outlay e, int requestId) {
+				if (e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cardSoldModel.setValue(cardSoldModel.getValue() + e.getAmount());
+				cardOutModel.setValue(cardOutModel.getValue() - e.getAmount());
+			}
+			
+		};
 
 		public CardsPanel() {
 			super(new BorderLayout());
@@ -380,6 +294,10 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 			
 			add(container, BorderLayout.CENTER);
 			setBorder(new EmptyBorder(10, 10, 10, 10));
+			
+			otherRecipeDao.addListener(otherAdapter);
+			paymentFeeDao.addListener(feeAdapter);
+			outlayDao.addListener(outlayAdaapter);
 		}
 		
 		/**
@@ -387,6 +305,8 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 		 * @param year
 		 */
 		public void updateCards(AcademicYear year) {
+			
+			this.year = year;
 			
 			double recipe = 0, used = 0, sold = 0;
 			progressBar.setValue(0);
@@ -431,6 +351,241 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 		}
 	}
 	
+	private class CenterContainer extends Panel {
+		private static final long serialVersionUID = -2449570582834436476L;
+		
+		private final LineChartPanel linePanel = new LineChartPanel ();
+		private final PieChartPanel piePanel = new PieChartPanel();
+		private final RecipePanel recipePanel = new RecipePanel();
+		private final OutlayPanel outlayPanel = new OutlayPanel();
+		
+		public CenterContainer() {
+			super (new BorderLayout());
+			final JTabbedPane tabbed = new JTabbedPane(JTabbedPane.BOTTOM);
+			
+			tabbed.addTab("", new ImageIcon(R.getIcon("pie")), piePanel, "Graphiques de repartition");
+			tabbed.addTab("", new ImageIcon(R.getIcon("chart")), linePanel, "Evolution dans le temps");
+			tabbed.addTab("", new ImageIcon(R.getIcon("plus")), recipePanel, "Recettes");
+			tabbed.addTab("", new ImageIcon(R.getIcon("moin")), outlayPanel, "Dépenses");
+			
+			add(tabbed, BorderLayout.CENTER);
+			setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		}
+		
+		public void reload (AcademicYear year) {
+			
+		}
+		
+		public void dispose () {
+			
+		}
+		
+	}
 	
+	private class LineChartPanel extends Panel implements LineChartRenderListener{
+		private static final long serialVersionUID = 2734887735495665253L;
+		
+		private Panel panelChart = new Panel(new BorderLayout());//panel contenant la visualisation graphique
+		
+		private final DefaultAxis yAxis = new DefaultAxis(24 * 60 * 60 * 1000, "Monain", "$");
+		private final DefaultTimeAxis xAxis = new DefaultTimeAxis(0, "Temps", "t");
+		
+		private final DefaultLineChartModel chartModel = new DefaultLineChartModel(xAxis, yAxis);
+		private final LineChartRender chartRender = new LineChartRender(chartModel);
+		private final DefaultPointCloud cloudRecipes = new DefaultPointCloud(FormUtil.COLORS_ALPHA[0], FormUtil.COLORS[0], FormUtil.COLORS[0]);
+		private final DefaultPointCloud cloudOutlays = new DefaultPointCloud(FormUtil.COLORS_ALPHA[1], FormUtil.COLORS[1], FormUtil.COLORS[1]);
+		private final DefaultPointCloud cloudSold = new DefaultPointCloud(FormUtil.COLORS_ALPHA[2], FormUtil.COLORS[2], FormUtil.COLORS[2]);
+		
+		private final JCheckBox checkBoxGridChart = new JCheckBox("Grille", true);
+		
+		private final JCheckBox checkBoxIn = new JCheckBox("Recettes", true);
+		private final JCheckBox checkBoxOut = new JCheckBox("Dépenses", true);
+		private final JCheckBox checkBoxSold = new JCheckBox("Solde", true);
+		
+		{
+			chartModel.addChart(cloudRecipes);
+			chartModel.addChart(cloudSold);
+			chartModel.addChart(cloudOutlays);
+			
+			cloudRecipes.setFill(true);
+			cloudSold.setFill(true);
+			cloudOutlays.setFill(true);
+			
+			xAxis.setResponsive(false);
+			xAxis.setInterval(-10, 0);
+			xAxis.setStep(2);
+			yAxis.setMeasureUnit(" $");
+		}
+		
+		public LineChartPanel() {
+			super(new BorderLayout());
+			
+			final Panel 
+					panelTools = new  Panel(new BorderLayout()),
+					panelCharts = new Panel();
+			final Box boxOthers = Box.createHorizontalBox(); 
+			
+			chartRender.addRenderListener(this);
+			chartRender.setDraggable(true);
+			panelChart.add(chartRender, BorderLayout.CENTER);
+//			panelChart.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			
+			checkBoxGridChart.setForeground(FormUtil.BORDER_COLOR);
+			checkBoxGridChart.addChangeListener(event -> {
+				chartRender.setVisibleGrid(checkBoxGridChart.isSelected());
+			});
+			
+			checkBoxIn.setForeground(FormUtil.COLORS[0]);
+			checkBoxOut.setForeground(FormUtil.COLORS[1]);
+			checkBoxSold.setForeground(FormUtil.COLORS[2]);
+			panelCharts.add(checkBoxIn);
+			panelCharts.add(checkBoxOut);
+			panelCharts.add(checkBoxSold);
+			checkBoxIn.addChangeListener(event -> {
+				cloudRecipes.setVisible(checkBoxIn.isSelected());
+			});
+			checkBoxOut.addChangeListener(event -> {
+				cloudOutlays.setVisible(checkBoxOut.isSelected());
+			});
+			checkBoxSold.addChangeListener(event -> {
+				cloudSold.setVisible(checkBoxSold.isSelected());
+			});
 
+			boxOthers.add(checkBoxGridChart);
+			
+			panelTools.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			panelTools.add(panelCharts, BorderLayout.EAST);
+			panelTools.add(boxOthers, BorderLayout.WEST);
+			
+			add(panelChart, BorderLayout.CENTER);
+			add(panelTools, BorderLayout.NORTH);
+		}
+		
+		private void wait (boolean status) {
+			
+			if (status) {
+				setCursor(FormUtil.WAIT_CURSOR);
+			} else {
+				setCursor(Cursor.getDefaultCursor());
+			}
+			
+			checkBoxIn.setEnabled(!status);
+			checkBoxOut.setEnabled(!status);
+			checkBoxSold.setEnabled(!status);
+			checkBoxGridChart.setEnabled(!status);
+		}
+		
+		private synchronized void reloadChart(AcademicYear year) {
+			progressBar.setValue(0);
+			progressBar.setIndeterminate(true);
+
+			double first = chartRender.getLastxInterval() != null? chartRender.getLastxInterval().getMin() : -12;
+			double last = chartRender.getLastxInterval() != null? chartRender.getLastxInterval().getMax() : 0;
+			
+			int min = (int) first;
+			int max = (int) last;
+			
+			cloudRecipes.removePoints();
+			cloudOutlays.removePoints();
+			cloudSold.removePoints();
+			
+			
+			long time = 0, now = System.currentTimeMillis();
+			
+			for(int day = min; day <= max; day++) {
+				time = now + (day * 60 * 60 * 1000 * 24);
+				Date date = new Date(time);
+				
+				double y = 0;
+				//recettes
+				if (otherRecipeDao.countByAcademicYear(year.getId(), date) != 0) {
+					List<OtherRecipe> recipes = otherRecipeDao.findByAcademicYear(year.getId(), date);
+					for (OtherRecipe r : recipes) {
+						y += r.getAmount();
+					}
+				}
+				
+				if(paymentFeeDao.countByAcademicYear(year.getId(), date) != 0) {
+					List<PaymentFee> fees = paymentFeeDao.findByAcademicYear(year.getId(), date);
+					for (PaymentFee p : fees) {
+						y += p.getAmount();
+					}
+				}
+				Point2d pointIn = new Point2d(day, y);
+				pointIn.setLabel(y+" USD");
+				cloudRecipes.addPoint(pointIn);
+				
+				//depense
+				y = 0;
+				if(outlayDao.checkByAcademicYear(year.getId(), date)) {
+					List<Outlay> outlays = outlayDao.findByAcademicYear(year.getId(), date);
+					for (Outlay o : outlays) {
+						y += o.getAmount();
+					}
+				}
+				
+				Point2d pointOut = new Point2d(day, -y);
+				pointOut.setLabel(y+" USD");
+				cloudOutlays.addPoint(pointOut);
+				//==
+				
+				y = 0;
+				if (otherRecipeDao.checkByAcademicYearBeforDate(year, date)) {
+					List<OtherRecipe> recipes = otherRecipeDao.findByAcademicYearBeforDate(year, date);
+					for (OtherRecipe r : recipes) {
+						y += r.getAmount();
+					}
+				}
+				
+				if(paymentFeeDao.checkByAcademicYearBeforDate(year.getId(), date)) {
+					List<PaymentFee> fees = paymentFeeDao.findByAcademicYearBeforDate(year.getId(), date);
+					for (PaymentFee p : fees) {
+						y += p.getAmount();
+					}
+				}
+				Point2d pointSold = new Point2d(day, y - pointOut.getY());
+				pointSold.setLabel(y+" USD");
+				cloudSold.addPoint(pointSold);
+				//==
+			}
+			
+//			cloudRecipes.toSquareSignal();
+//			cloudOutlays.toSquareSignal();
+//			cloudSold.toSquareSignal();
+		}
+		
+		
+		@Override
+		public void onRequireTranslation(LineChartRender source, Axis axis, Interval interval) {
+			if (axis != xAxis)
+				return;
+			
+			AcademicYear year = comboModel.getElementAt(comboBox.getSelectedIndex());
+			reloadChart(year);
+		}
+		
+		@Override
+		public void onRequireTranslation(LineChartRender source, Interval xInterval, Interval yInterval) {
+			onRequireTranslation(source, source.getModel().getXAxis(), xInterval);
+		}
+		
+		
+		
+	}
+	
+	private class PieChartPanel extends Panel {
+		private static final long serialVersionUID = -8328178244978488613L;
+		
+	}
+	
+	private class RecipePanel extends Panel {
+		private static final long serialVersionUID = 1744540939252963612L;
+		
+	}
+	
+	private class OutlayPanel extends Panel {
+		private static final long serialVersionUID = -2786706226334778839L;
+		
+	}
+	
 }

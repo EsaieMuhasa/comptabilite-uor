@@ -14,8 +14,6 @@ import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.math.BigDecimal;
@@ -25,10 +23,8 @@ import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -53,8 +49,6 @@ import net.uorbutembo.beans.Outlay;
 import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.beans.PaymentLocation;
 import net.uorbutembo.beans.RecipePart;
-import net.uorbutembo.dao.AcademicYearDao;
-import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.dao.AllocationCostDao;
 import net.uorbutembo.dao.AllocationRecipeDao;
 import net.uorbutembo.dao.AnnualSpendDao;
@@ -81,6 +75,7 @@ import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.components.JournalMenuItem;
 import net.uorbutembo.views.components.JournalMenuItemListener;
+import net.uorbutembo.views.components.Sidebar.YearChooserListener;
 import net.uorbutembo.views.forms.FormOtherRecipe;
 import net.uorbutembo.views.forms.FormOutlay;
 import net.uorbutembo.views.forms.FormUtil;
@@ -91,10 +86,9 @@ import resources.net.uorbutembo.R;
  * @author Esaie MUHASA
  *
  */
-public class JournalSpecific extends Panel  implements ActionListener, AcademicYearDaoListener{
+public class JournalSpecific extends Panel  implements ActionListener{
 	private static final long serialVersionUID = 790476345630470695L;
 	
-	private final AcademicYearDao academicYearDao;
 	private final AnnualSpendDao annualSpendDao;
 	private final AllocationRecipeDao allocationRecipeDao;
 	private final AllocationCostDao allocationCostDao;
@@ -133,7 +127,6 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 		
 		factory = mainWindow.factory;
 		annualSpendDao = factory.findDao(AnnualSpendDao.class);
-		academicYearDao = factory.findDao(AcademicYearDao.class);
 		allocationRecipeDao = factory.findDao(AllocationRecipeDao.class);
 		allocationCostDao = factory.findDao(AllocationCostDao.class);
 		outlayDao = factory.findDao(OutlayDao.class);
@@ -143,13 +136,13 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 		otherRecipeDao = factory.findDao(OtherRecipeDao.class);
 		paymentLocationDao = factory.findDao(PaymentLocationDao.class);
 		
-		academicYearDao.addYearListener(this);
-		
 		listAccount = new ListAccount();
 		containerPanel = new ContainerPanel();
 		
 		add(containerPanel, BorderLayout.CENTER);
 		add(listAccount, BorderLayout.EAST);
+		
+		mainWindow.getSidebar().addYearChooserListener(listAccount);
 		
 		btnRecipe.addActionListener(event -> {
 			createRecipe();
@@ -305,55 +298,15 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 		containerPanel.setAccount(item);
 	}
 	
-	@Override
-	public void onCurrentYear(AcademicYear year) {
-		containerPanel.wait(true);
-		listAccount.reload();
-		containerPanel.wait(false);
-	}
-	
 	/**
 	 * consultation de la liste des compte et des operations effectuer sur ces comptes
 	 * @author Esaie MUHASA
 	 */
-	private class ListAccount extends Panel{
+	private class ListAccount extends Panel implements YearChooserListener{
 		private static final long serialVersionUID = 6893735808920207627L;
 
 		private final Box container = Box.createVerticalBox();
-		private final DefaultComboBoxModel<AcademicYear> model = new DefaultComboBoxModel<>();
-		private final JComboBox<AcademicYear> comboBox = new JComboBox<>(model);
 		private final List<JournalMenuItem> items = new ArrayList<>();
-		
-		/**
-		 * Ecouteur de changement de l'annee academique selectionner dans le combobox
-		 */
-		private final ItemListener itemListener = (event) -> {
-			int index = comboBox.getSelectedIndex();
-			if (event.getStateChange() == ItemEvent.SELECTED && index != -1) {
-				
-				AcademicYear year = model.getElementAt(index);
-				comboBox.setEnabled(false);
-				comboBox.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				containerPanel.wait(true);
-				Thread t = new Thread(() ->{
-					reload(year);
-					
-					container.revalidate();
-					container.repaint();
-					comboBox.setCursor(Cursor.getDefaultCursor());
-					comboBox.setEnabled(true);
-					containerPanel.wait(false);
-				});
-				
-				t.start();
-				
-			} else if (index == -1) {
-				containerPanel.setAccount(null);
-			}
-			
-			container.revalidate();
-			container.repaint();
-		};
 		
 		/**
 		 * Construction du sidebar
@@ -362,23 +315,27 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 			super(new BorderLayout());
 			
 			setPreferredSize(new Dimension(340, 600));
-			final Panel top = new Panel(new BorderLayout());
 			final Panel bottom = new Panel();
 			final JScrollPane scroll = FormUtil.createVerticalScrollPane(container);
-			
-			comboBox.addItemListener(itemListener);
-
-			top.add(comboBox, BorderLayout.CENTER);
-			top.setBorder(new EmptyBorder(0, 0, 5, 0));
 			
 			bottom.add(btnRecipe);
 			bottom.add(btnSpend);
 			
-			add(top, BorderLayout.NORTH);
 			add(bottom, BorderLayout.SOUTH);
 			add(scroll, BorderLayout.CENTER);
 			setBorder(new EmptyBorder(10, 10, 10, 10));
 		}
+		
+		@Override
+		public void onChange(AcademicYear year) {
+			containerPanel.wait(true);
+			reload(year);
+			container.revalidate();
+			container.repaint();
+			containerPanel.wait(false);
+		}
+		
+		
 		
 		@Override
 		protected void paintComponent(Graphics g) {
@@ -393,25 +350,6 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 			g2.drawLine(6, getHeight() - 48, getWidth()-6, getHeight() - 48);
 			
 			super.paintComponent(g);
-		}
-		
-		/**
-		 * Mis en jours complete du sidebar
-		 * le contenue du combobox est recharger
-		 * puis la liste des comptes
-		 */
-		public void reload () {
-			comboBox.removeItemListener(itemListener);
-			model.removeAllElements();
-			if (academicYearDao.countAll() != 0) {				
-				final List<AcademicYear> years = academicYearDao.findAll();
-				for (AcademicYear year : years) {
-					model.addElement(year);
-				}
-				comboBox.setSelectedIndex(0);
-				reload(model.getElementAt(0));
-			}
-			comboBox.addItemListener(itemListener);
 		}
 		
 		/**
@@ -744,6 +682,7 @@ public class JournalSpecific extends Panel  implements ActionListener, AcademicY
 			for (int i = 0; i < locations.size(); i++) {
 				PaymentLocation location = locations.get(i);
 				double sold = otherRecipePartDao.getSoldBySpend(account.getAccount(), location);
+				sold += paymentFeePartDao.getSoldBySpend(account.getAccount(), location);
 				if (sold > 0.0) {
 					DefaultPiePart part = new DefaultPiePart( FormUtil.COLORS[ (colorIndex++) % (FormUtil.COLORS.length-1) ], sold, location.toString());
 					part.setData(location);

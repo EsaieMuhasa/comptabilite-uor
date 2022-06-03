@@ -41,8 +41,11 @@ import javax.swing.filechooser.FileFilter;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
+import net.uorbutembo.beans.Inscription;
+import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.StudyClass;
+import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.PaymentFeeDao;
@@ -172,7 +175,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		
 		exportConfig = new DialogStudentExportConfig(mainWindow);
-		navigation = new SidebarStudents(mainWindow.factory);
+		navigation = new SidebarStudents(mainWindow);
 		
 		container = new TabbedPanelContainer(mainWindow);
 		datatablePanel = new TabDatatablePanel();
@@ -537,6 +540,54 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 			});
 		};
 		
+		private final DAOAdapter<Inscription> inscriptionAdapter = new DAOAdapter<Inscription>() {
+
+			@Override
+			public synchronized void onCreate(Inscription e, int requestId) {
+				this.reloadingProcess();
+			}
+
+			@Override
+			public synchronized void onUpdate(Inscription e, int requestId) {
+				this.reloadingProcess();
+			}
+
+			@Override
+			public synchronized void onDelete(Inscription e, int requestId) {
+				this.reloadingProcess();
+			}
+			
+			private void reloadingProcess () {
+				if (filterTypeIndex == 2)
+					reload(filterIndex, filterTypeIndex);
+			}
+			
+		};
+		
+		private final DAOAdapter<PaymentFee> paymentAdapter = new DAOAdapter<PaymentFee>() {
+
+			@Override
+			public synchronized void onCreate(PaymentFee e, int requestId) {
+				this.reloadingProcess();
+			}
+
+			@Override
+			public synchronized void onUpdate(PaymentFee e, int requestId) {
+				this.reloadingProcess();
+			}
+
+			@Override
+			public synchronized void onDelete(PaymentFee e, int requestId) {
+				this.reloadingProcess();
+			}
+			
+			private void reloadingProcess () {
+				if (filterTypeIndex != 2)
+					reload(filterIndex, filterTypeIndex);
+			}
+			
+		};
+		
 		
 		{//groupement des boutons radio et ecoute de leurs changement d'etat
 			final ButtonGroup group = new ButtonGroup();
@@ -586,6 +637,9 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 			
 			pieModel.setTitle("Graphique");
 			piePanel.setBorderColor(FormUtil.BORDER_COLOR);
+			
+			paymentFeeDao.addListener(paymentAdapter);
+			inscriptionDao.addListener(inscriptionAdapter);
 
 			add(panelRadiosType, BorderLayout.NORTH);
 			add(panelRadios, BorderLayout.SOUTH);
@@ -657,7 +711,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 			
 			pieModel.removeAll();
 			if(type == 2) 
-				pieModel.setSuffix(":");
+				pieModel.setSuffix("");
 			else 
 				pieModel.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
 			

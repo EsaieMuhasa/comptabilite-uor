@@ -6,64 +6,134 @@ package net.uorbutembo.views.components;
 import static net.uorbutembo.views.forms.FormUtil.BKG_END;
 import static net.uorbutembo.views.forms.FormUtil.BKG_START;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
+import net.uorbutembo.beans.AcademicYear;
+import net.uorbutembo.dao.AcademicYearDao;
+import net.uorbutembo.dao.DAOAdapter;
+import net.uorbutembo.dao.DAOFactory;
+import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.views.forms.FormUtil;
 import resources.net.uorbutembo.R;
 /**
  * @author Esaie MUHASA
  *
  */
-public class Sidebar extends Panel {
+public class Sidebar extends Panel implements ItemListener{
 	private static final long serialVersionUID = -1925348829690899865L;
 	
 
 	private final JLabel logo = new JLabel(new ImageIcon(R.getIcon("x32")));
 	private final JLabel title = new JLabel("U.O.R");
 	
+	public final MigLayout layout = new MigLayout("wrap, fillx, insets 0", "[fill]", "[]0[]");
 	private final Panel header = new Panel(new BorderLayout());
-	private final Panel body = new Panel();//conteneur des items du menu
-	private final JScrollPane scroll = new JScrollPane();
-	public final MigLayout layout = new MigLayout("wrap, fillx, insets 0", "[fill]", "[]0[]");	
-	private MenuItemListener listener;
+	private final Panel footer = new Panel(new BorderLayout());
+	private final Panel body = new Panel(layout);//conteneur des items du menu
+	private final JScrollPane scroll = new JScrollPane(body);
+	private final MenuItemListener listener;
 	
 	private List<MenuItem> items = new ArrayList<>();
 	
+	private final DefaultComboBoxModel<AcademicYear> comboModel = new  DefaultComboBoxModel<AcademicYear>();
+	private final ComboBoxTool comboBox = new ComboBoxTool(comboModel);
+	private final ButtonTool btnPupup = new ButtonTool();
+	
+	private final List<YearChooserListener> yearChooserListeners = new ArrayList<>();
+	private final DAOAdapter<AcademicYear> yearAdapter = new DAOAdapter<AcademicYear>() {
+
+		@Override
+		public synchronized void onCreate (AcademicYear e, int requestId) {
+			comboBox.removeItemListener(Sidebar.this);
+			comboModel.insertElementAt(e, 0);
+			if (comboBox.getSelectedIndex() != 0)
+				comboBox.setSelectedIndex(0);
+			
+			AcademicYear year = comboModel.getElementAt(comboBox.getSelectedIndex());
+			for (YearChooserListener listener : yearChooserListeners)
+				listener.onChange(year);
+			
+			comboBox.addItemListener(Sidebar.this);
+		}
+
+		@Override
+		public synchronized void onUpdate (AcademicYear e, int requestId) {
+			comboBox.removeItemListener(Sidebar.this);
+			for (int i = 0, count  = comboModel.getSize(); i < count; i++) {
+				if(comboModel.getElementAt(i).getId() ==e.getId()) {
+					
+				}
+			}
+		}
+
+		@Override
+		public synchronized void onDelete (AcademicYear e, int requestId) {
+			
+		}
+
+		@Override
+		public synchronized void onCurrentYear(AcademicYear year) {
+			if (comboModel.getSize() == 0) {
+				List<AcademicYear> years = academicYearDao.findAll();
+				for (AcademicYear y : years) 
+					comboModel.addElement(y);
+			}
+		}
+		
+	};
+	
+	private AcademicYearDao academicYearDao;
+	
 	/**
-	 * constructeur d'initilisation du Sidebar
+	 * @param listener
+	 * @param factory
 	 */
-	public Sidebar(MenuItemListener listener) {
+	public Sidebar (MenuItemListener listener, DAOFactory factory) {
 		super(new BorderLayout());
 		this.listener = listener;
 		
-		body.setLayout(layout);
+		academicYearDao = factory.findDao(AcademicYearDao.class);
+		academicYearDao.addYearListener(yearAdapter);
+		academicYearDao.addListener(yearAdapter);
 		
 		scroll.getViewport().setOpaque(false);
-//		scroll.setVerticalScrollBar(new ScrollBar());
 		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		scroll.setBorder(null);
 		scroll.setViewportBorder(null);
-		scroll.setViewportView(body);
 		
-		
-		this.add(scroll, BorderLayout.CENTER);
+		add(scroll, BorderLayout.CENTER);
         
-        this.initHeader();
+        initHeader();
+        initFooter();
 	}
 	
 	/**
@@ -77,7 +147,47 @@ public class Sidebar extends Panel {
 		title.setForeground(Color.LIGHT_GRAY);
 		header.setBorder(new EmptyBorder(0, 5, 0, 10));
 		
-		this.add(header, BorderLayout.NORTH);
+		add(header, BorderLayout.NORTH);
+	}
+	
+	/**
+	 * initialisation du footer du sidebar
+	 */
+	private void initFooter() {
+		footer.add(btnPupup, BorderLayout.WEST);
+		footer.add(comboBox, BorderLayout.CENTER);
+		footer.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		
+		comboBox.addItemListener(this);
+		
+		add(footer, BorderLayout.SOUTH);
+	}
+	
+	@Override
+	public void itemStateChanged (ItemEvent e) {
+		if (e.getStateChange() != ItemEvent.SELECTED)
+			return;
+		
+		AcademicYear year = comboModel.getElementAt(comboBox.getSelectedIndex());
+		for (YearChooserListener listener : yearChooserListeners)
+			listener.onChange(year);
+	}
+	
+	/**
+	 * Ecoute du combo de selection d'un annee academique
+	 * @param ls
+	 */
+	public void addYearChooserListener (YearChooserListener ls) {
+		if(!yearChooserListeners.contains(ls))
+			yearChooserListeners.add(ls);
+	}
+	
+	/**
+	 * Desabonnement d'un listener
+	 * @param ls
+	 */
+	public void removeYearChooserListener (YearChooserListener ls) {
+		yearChooserListeners.remove(ls);
 	}
 	
 	/**
@@ -142,6 +252,133 @@ public class Sidebar extends Panel {
         GradientPaint gra = new GradientPaint(0, 0, BKG_START, this.getWidth(), 0, BKG_END);
         g2.setPaint(gra);
         g2.fillRect(0, 0, getWidth(), getHeight());
+    }
+    
+    
+    private static final class ButtonTool extends MenuItemButton {
+		private static final long serialVersionUID = 6585041084631602673L;
+    	
+		private static final Dimension DEFAULT_SIZE = new Dimension(40, 40);
+		private static final BasicStroke STROKE = new BasicStroke(1.4f);
+		
+		private Image icon;
+		
+		public ButtonTool() {
+			super("");
+			setPreferredSize(DEFAULT_SIZE);
+			setMinimumSize(DEFAULT_SIZE);
+			setMaximumSize(DEFAULT_SIZE);
+			
+			try {
+				icon = ImageIO.read(new File(R.getIcon("box")));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			setOpaque(false);
+			setBorder(new EmptyBorder(1, 40, 1, 20));
+		}
+		
+		@Override
+		protected void paintComponent(Graphics grphcs) {
+			int w = 34, h = w, x = 2, y = 2;
+			pressedPoint = null;
+			super.paintComponent(grphcs);
+			
+			Graphics2D g2 = (Graphics2D) grphcs;
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			GradientPaint gra = new GradientPaint(0, 0, FormUtil.BKG_DARK, getWidth(), 0, FormUtil.BKG_DARK.darker());
+			g2.setPaint(gra);
+			g2.fillOval(x, y, w+x, h+y);
+			g2.setColor(FormUtil.ACTIVE_COLOR);
+			g2.setStroke(STROKE);
+			g2.drawOval(x*2, y*2, w-4, h-4);
+			g2.drawImage(icon, 8+x, 8+y, 20, 20, null);
+			
+		}
+    }
+    
+    private static final class ComboBoxTool extends ComboBox<AcademicYear> {
+		private static final long serialVersionUID = -9198030526636496335L;
+		
+		public static final EmptyBorder DEFAULT_EMPTY_BORDER = new EmptyBorder(2, 15, 2, 15);
+
+		public ComboBoxTool(ComboBoxModel<AcademicYear> model) {
+			super("", model);
+		}
+		
+		@Override
+		protected void init() {
+			setOpaque(false);
+			setForeground(DEFAULT_COLOR);
+	    	setBorder(DEFAULT_EMPTY_BORDER);
+	    	setBackground(FormUtil.BKG_DARK);
+	    	setUI(new CustomComboUI(this));
+	    	
+	    	
+	    	//on utilise le rendu par de faut du JList
+	    	setRenderer(new DefaultListCellRenderer() {
+	    		private static final long serialVersionUID = 1L;
+	    		
+	    		@Override
+	    		public Component getListCellRendererComponent(JList<?> jlist, Object o, int i, boolean bln, boolean bln1) {
+	    			Component com = super.getListCellRendererComponent(jlist, o, i, bln, bln1);
+	    			setBorder(EMPTY_BORDER);
+	    			if (bln) {
+	    				com.setBackground(FormUtil.BORDER_COLOR);
+	    			}
+	    			com.setForeground(DEFAULT_COLOR);
+	    			return com;
+	    		}
+	    	});
+		}
+		
+	    @Override
+	    protected void paintBorder(Graphics g) {
+	    	
+	    	Graphics2D g2 = (Graphics2D) g;
+	        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+
+	        g2.setColor(FormUtil.ACTIVE_COLOR);
+			g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 40, 40);
+	    }
+	    
+	    @Override
+	    protected void paintComponent(Graphics g) {
+	    	Graphics2D g2 = (Graphics2D) g;
+	        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+	        
+	        g2.setColor(getBackground());
+	        g2.fillRoundRect(0, 0, getWidth()-1, getHeight()-1, 40, 40);
+	        
+	    	super.paintComponent(g);
+	    }
+	    
+	    private final class CustomComboUI extends ComboUI {
+	    	
+	    	public CustomComboUI(ComboBox<?> combo) {
+	    		super(combo);
+	    	}
+	    	
+	    	@Override
+	    	protected void createLineStyle(Graphics2D g2) {}
+	    	
+	    }
+    }
+    
+    
+    /**
+     * Listener du combobox permetant de selectionner une annee academique
+     * @author Esaie MUHASA
+     */
+    public static interface YearChooserListener {
+    	
+    	/**
+    	 * lors de la selection d'une nouvelle annee academique
+    	 * @param year
+    	 */
+    	void onChange (AcademicYear year);
     }
 
 }

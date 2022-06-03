@@ -36,6 +36,25 @@ public interface PaymentFeeDao extends DAOInterface <PaymentFee>, OverallStatist
 	}
 	
 	/**
+	 * Verifie s'il y a un payment correspondant au numero de recu
+	 * @param receiptNumber
+	 * @return
+	 * @throws DAOException
+	 */
+	default boolean checkByReceiptNumber (String receiptNumber) throws DAOException {
+		if(receiptNumber == null || receiptNumber.trim().length() == 0)
+			return false;
+		return check("receiptNumber", receiptNumber);
+	}
+	
+	default boolean checkByReceiptNumber (String receiptNumber, long id) throws DAOException {
+		if(receiptNumber == null || receiptNumber.trim().length() == 0)
+			return false;
+		if(id <= 0)
+			return check("receiptNumber", receiptNumber);
+		return check("receiptNumber", receiptNumber, id);
+	}
+	/**
 	 * Renvoie la collection des payements des frais universitaire par un inscrit
 	 * @param inscription
 	 * @return

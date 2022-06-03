@@ -6,18 +6,13 @@ package net.uorbutembo.views.components;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionListener;
@@ -33,7 +28,6 @@ import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOAdapter;
-import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.FacultyDao;
@@ -41,13 +35,15 @@ import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.TreeCellRender;
+import net.uorbutembo.views.MainWindow;
+import net.uorbutembo.views.components.Sidebar.YearChooserListener;
 import net.uorbutembo.views.forms.FormUtil;
 
 /**
  * @author Esaie MUHASA
  * Panel du menu de navigation d'une scene du dashboard
  */
-public class SidebarStudents extends Panel{
+public class SidebarStudents extends Panel implements YearChooserListener{
 	private static final long serialVersionUID = -26597150295854443L;
 	
 	private final DefaultMutableTreeNode root = new DefaultMutableTreeNode();
@@ -71,12 +67,6 @@ public class SidebarStudents extends Panel{
 	private PromotionDao promotionDao;
 	
 	private AcademicYear currentYear;
-	
-	
-	//selection d'une annee academique
-	private DefaultComboBoxModel<AcademicYear> comboModel = new DefaultComboBoxModel<>();
-	private JComboBox<AcademicYear> comboBox = new JComboBox<>(comboModel);
-	//==
 	
 	private final TreeSelectionListener treeListener = (event) -> {
 		TreePath [] paths = tree.getSelectionPaths();
@@ -115,61 +105,21 @@ public class SidebarStudents extends Panel{
 			prepareFilter();
 	};
 	
-	private final ItemListener comboListener = (event) -> {
-		if (event.getStateChange() == ItemEvent.DESELECTED)
-			return;
-		
-		comboBox.setEnabled(false);
-		EventQueue.invokeLater(() -> {			
-			Thread t = new Thread(() -> {
-				boolean  current = academicYearDao.isCurrent(comboModel.getElementAt(comboBox.getSelectedIndex()));
-				btnInscription.setEnabled(current);
-				btnReinscription.setEnabled(current);
-				setCurrentYear(comboModel.getElementAt(comboBox.getSelectedIndex()));
-				comboBox.setEnabled(true);
-			});
-			t.start();
-		});
-	};
 	
-	public SidebarStudents(DAOFactory factory) {
-		super(new BorderLayout());	
+	public SidebarStudents(MainWindow mainWindow) {
+		super(new BorderLayout());
+		DAOFactory factory = mainWindow.factory;
+		
 		facultyDao = factory.findDao(FacultyDao.class);
 		departmentDao = factory.findDao(DepartmentDao.class);
 		studyClassDao = factory.findDao(StudyClassDao.class);
 		academicYearDao = factory.findDao(AcademicYearDao.class);
 		promotionDao = factory.findDao(PromotionDao.class);
 		
+		mainWindow.getSidebar().addYearChooserListener(this);
+		
 		tree.setSelectionModel(treeSelection);
 		init();
-		DAOAdapter<AcademicYear> listener = new DAOAdapter<AcademicYear>() {
-			@Override
-			public void onCurrentYear(AcademicYear year) {
-				if(comboModel.getSize() == 0) {
-					comboBox.removeItemListener(comboListener);
-					if(academicYearDao.countAll() != 0) {
-						List<AcademicYear> years = academicYearDao.findAll();
-						for (AcademicYear y : years) {
-							comboModel.addElement(y);
-						}
-						comboBox.setEnabled(true);
-						checkFilter.setEnabled(true);
-					}
-					comboBox.addItemListener(comboListener);
-					btnInscription.setEnabled(true);
-					btnReinscription.setEnabled(true);
-				}
-				setCurrentYear(year);
-				checkFilter.setSelected(false);
-			}
-			
-			@Override
-			public synchronized void onError(DAOException e, int requestId) {
-				e.printStackTrace();
-			}
-		};
-		academicYearDao.addYearListener(listener);
-		academicYearDao.addListener(listener);
 		promotionDao.addListener(new DAOAdapter<Promotion>() {
 			@Override
 			public synchronized void onCreate(Promotion e, int requestId) {
@@ -197,26 +147,17 @@ public class SidebarStudents extends Panel{
 	public AcademicYear getCurrentYear() {
 		return currentYear;
 	}
-
-	/**
-	 * @param currentYear the currentYear to set
-	 */
-	public synchronized void setCurrentYear(AcademicYear currentYear) {
-		if(this.currentYear == currentYear)
-			return;
-		
-		this.currentYear = currentYear;
-		if(comboBox.getSelectedIndex() != -1 && comboModel.getElementAt(comboBox.getSelectedIndex()).getId() != currentYear.getId()) {
-			for (int i = 0, count = comboModel.getSize(); i < count; i++) {
-				if(comboModel.getElementAt(i).getId() == currentYear.getId()) {
-					comboBox.setSelectedIndex(i);
-					break;
-				}
-			}
-		}
+	
+	@Override
+	public void onChange(AcademicYear year) {
+		currentYear = year;
 		
 		wait(true);
-		this.reload();
+		boolean  current = academicYearDao.isCurrent(year);
+		btnInscription.setEnabled(current);
+		btnReinscription.setEnabled(current);
+		
+		reload();
 		wait(false);
 		
 		checkFilter.setEnabled(root.getChildCount() != 0);
@@ -277,7 +218,6 @@ public class SidebarStudents extends Panel{
 		});
 		
 		top.add(checkFilter, BorderLayout.EAST);
-		top.add(comboBox, BorderLayout.CENTER);
 		top.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		center.add(scroll, BorderLayout.CENTER);
@@ -286,8 +226,6 @@ public class SidebarStudents extends Panel{
 		bottom.add(btnInscription);
 		bottom.add(btnReinscription);
 		bottom.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-		comboBox.setEnabled(false);
-		comboBox.addItemListener(comboListener);
 		
 		btnInscription.setEnabled(false);
 		btnInscription.addActionListener(event -> {

@@ -19,6 +19,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
 import net.uorbutembo.beans.PaymentFee;
@@ -75,7 +76,9 @@ public class IndividualSheet extends Panel {
 		}
 	};
 	
-	private FormPaymentFee form;
+	private final Panel panelForm = new Panel(new BorderLayout());
+	private final FormPaymentFee form;
+	private final JScrollPane formScroll;
 
 	/**
 	 * constucteur d'initialisation
@@ -92,10 +95,20 @@ public class IndividualSheet extends Panel {
 		
 		tableModel = new PaymentFeeTableModel(paymentFeeDao);
 		table = new Table(tableModel);
+		final Panel padding = new Panel(new BorderLayout());
 		
-		form = new FormPaymentFee(mainWindow, mainWindow.factory.findDao(PaymentFeeDao.class));
-		form.setVisible(false);
-		form.setPreferredSize(new Dimension(300, 500));
+		form = new FormPaymentFee(mainWindow);
+		form.getBtnCancel().addActionListener(event -> {
+			panelForm.setVisible(false);
+		});
+		form.setPreferredSize(new Dimension(300, 550));
+		padding.add(form, BorderLayout.CENTER);
+		padding.setBorder(new EmptyBorder(5, 0, 5, 18));
+		formScroll = FormUtil.createVerticalScrollPane(padding);
+		panelForm.add(formScroll, BorderLayout.CENTER);
+		panelForm.setBackground(Color.BLACK);
+		panelForm.setOpaque(true);
+		panelForm.setVisible(false);
 		
 		final Panel pan = new Panel(new BorderLayout());
 		pan.add(scroll, BorderLayout.CENTER);
@@ -105,7 +118,7 @@ public class IndividualSheet extends Panel {
 		scroll.setBorder(new LineBorder(FormUtil.BORDER_COLOR));
 		
 		this.add(pan, BorderLayout.CENTER);
-		this.add(form, BorderLayout.EAST);
+		this.add(panelForm, BorderLayout.EAST);
 		this.setBorder(BorderFactory.createLineBorder(FormUtil.BORDER_COLOR));
 		
 		page.add(container, BorderLayout.CENTER);
@@ -156,11 +169,11 @@ public class IndividualSheet extends Panel {
 		popup.add(itemExportPDF);
 		
 		itemPayement.addActionListener(event -> {
-			form.setVisible(true);
+			panelForm.setVisible(true);
 		});
 		itemUpdatePayement.addActionListener(event -> {
 			form.setFee(tableModel.getRow(table.getSelectedRow()));
-			form.setVisible(true);
+			panelForm.setVisible(true);
 		});
 		itemDeletePayement.addActionListener(event -> {
 			

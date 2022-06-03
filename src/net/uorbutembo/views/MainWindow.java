@@ -40,24 +40,25 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 		super("U.O.R. Data Manager");
 		this.factory = factory;
 		factory.addListener(this);
+		
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int w = (int) (screenSize.getWidth() - screenSize.getWidth()/10);
 		int h = (int) (screenSize.getHeight() - screenSize.getHeight()/10); 
 		
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setSize(w, h);
-		this.setMinimumSize(new Dimension(880, 400));
-		this.setLocationRelativeTo(null);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setSize(w, h);
+		setMinimumSize(new Dimension(880, 400));
+		setLocationRelativeTo(null);
 		
-		this.workspace = new WorkspacePanel(this);
-		this.sidebar = new Sidebar(workspace);
-		this.workspace.init(this.sidebar);
+		workspace = new WorkspacePanel(this);
+		sidebar = new Sidebar(workspace, factory);
+		workspace.init(sidebar);
 		
-		this.getContentPane().add(this.workspace, BorderLayout.CENTER);
-		this.getContentPane().add(this.sidebar, BorderLayout.WEST);
-		this.getContentPane().setBackground(Color.WHITE);
+		getContentPane().add(workspace, BorderLayout.CENTER);
+		getContentPane().add(sidebar, BorderLayout.WEST);
+		getContentPane().setBackground(Color.WHITE);
 		
-		this.getLayeredPane().setOpaque(false);		
+		getLayeredPane().setOpaque(false);		
 		
 		try {
 			this.setIconImage(ImageIO.read(new File(R.getIcon("logo"))));
@@ -65,9 +66,9 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 			JOptionPane.showMessageDialog(null, "Une erreur est survenue \nlors de la lecture de l'icone \n"+e.getMessage(), "Erreur icone", JOptionPane.ERROR_MESSAGE);
 		}
 		
-		this.requestFocus();
+		requestFocus();
 		
-//		this.btnExist.addActionListener(event -> {
+//		btnExist.addActionListener(event -> {
 //			System.exit(MainWindow.NORMAL);
 //
 //			int state = JOptionPane.showConfirmDialog(this.parent, "Voulez-vous vraiment quitter ce programme??", 
@@ -77,6 +78,20 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 //		});
 	}
 	
+	/**
+	 * @return the sidebar
+	 */
+	public Sidebar getSidebar() {
+		return sidebar;
+	}
+
+	/**
+	 * @return the workspace
+	 */
+	public WorkspacePanel getWorkspace() {
+		return workspace;
+	}
+
 	@Override
 	public void onEvent(DAOEvent event) {
 		if(event.getType() == EventType.ERROR) {

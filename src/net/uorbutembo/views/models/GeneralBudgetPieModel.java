@@ -387,7 +387,9 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		pieModelCaisse = new DefaultPieModel();
 		pieModelCaisse.setTitle("Solde pour chaque compte");
 		pieModelCaisse.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
-		this.setTitle("Répartition général du budget");
+		pieModelCaisse.setRealMaxPriority(true);
+		setTitle("Répartition général du budget");
+		setRealMaxPriority(true);
 	}
 	
 	@Override
@@ -486,14 +488,12 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	private synchronized void reloadCaisse () {
 		
 		pieModelCaisse.removeAll();
-		pieModelCaisse.setMax(0);
 		for (int i = 0, count = getCountPart(); i < count; i++) {//creation des copies de part du model du budget generale
 			PiePart part = new DefaultPiePart(getPartAt(i));
 			part.setValue(0);
 			pieModelCaisse.addPart(part);
 		}
 
-		double max = 0;
 		for (AcademicFee f: academicFees) {
 			if (!allocationCostDao.checkByAcademicFee(f.getId()))
 				continue;
@@ -506,7 +506,6 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 					continue;
 				PiePart part = pieModelCaisse.findByData(globalPart.getData());
 				part.setValue(part.getValue() + al.getCollecetd());
-				max += al.getCollecetd();
 			}
 		}
 		
@@ -523,8 +522,6 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 					part.setValue(value + part.getValue());
 				}
 			}
-			
-			max += recipe.getCollected();
 		}
 		
 		//depences
@@ -541,7 +538,6 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			}
 		}
 		
-		pieModelCaisse.setMax(max);
 		cardModelCaisse.setValue(pieModelCaisse.getRealMax());
 	}
 
@@ -552,9 +548,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	private synchronized void calculAll() {
 		
 		removeAll();
-		setMax(0);
-		
-		double max = 0;
+		int colorIndex = 0;
 		for (AcademicFee fee : academicFees) {
 			
 			if (!allocationCostDao.checkByAcademicFee(fee.getId()))
@@ -580,7 +574,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 				PiePart part = this.findByData(al.getAnnualSpend());
 				
 				if(part == null) {
-					Color color = COLORS[i%(COLORS.length-1)];
+					Color color = COLORS[(colorIndex++)%(COLORS.length-1)];
 					UniversitySpend sp = universitySpendDao.findById(al.getAnnualSpend().getUniversitySpend().getId());
 					part = new DefaultPiePart(color, 0, sp.getTitle());
 					part.setData(al.getAnnualSpend());
@@ -590,11 +584,9 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 				part.setValue(part.getValue()+al.getTotalExpected());
 				this.addPart(part);
 			}
-			max += fee.getAmount();
 		}
 		
 		for (AnnualRecipe recipe : annualRecipes) {
-			max += recipe.getCollected();
 			
 			if (!allocationRecipeDao.checkByRecipe(recipe)) 
 				continue;
@@ -606,7 +598,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 				PiePart part = this.findByData(al.getSpend());
 				
 				if(part == null) {
-					Color color = COLORS[i%(COLORS.length-1)];
+					Color color = COLORS[(colorIndex++)%(COLORS.length-1)];
 					UniversitySpend sp = universitySpendDao.findById(al.getSpend().getUniversitySpend().getId());
 					part = new DefaultPiePart(color, 0, sp.getTitle());
 					part.setData(al.getSpend());
@@ -619,7 +611,8 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			}
 			
 		}
-		this.setMax(max);
+		
+		cardModel.setValue(getRealMax());
 	}
 	
 }

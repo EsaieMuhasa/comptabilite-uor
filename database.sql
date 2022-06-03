@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS "AllocationCost" (
 	"lastUpdate"	INTEGER,
 	CONSTRAINT "fk_AllocationCost_academicFee" FOREIGN KEY("academicFee") REFERENCES "AcademicFee"("id"),
 	CONSTRAINT "fk_AllocationCost_annualSpend" FOREIGN KEY("annualSpend") REFERENCES "AnnualSpend"("id"),
-	CONSTRAINT "PIRMARY_KEY" PRIMARY KEY("id" AUTOINCREMENT),
+	CONSTRAINT "pk_AllocationCost" PRIMARY KEY("id" AUTOINCREMENT),
 	CONSTRAINT "uni_AllocationCost_academicFee_annualSpend" UNIQUE("annualSpend","academicFee")
 );
 DROP TABLE IF EXISTS "PaymentFee";
@@ -98,8 +98,8 @@ CREATE TABLE IF NOT EXISTS "PaymentFee" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"inscription"	INTEGER NOT NULL,
 	"amount"	NUMERIC NOT NULL,
-	"receivedDate"	INTEGER NOT NULL,
-	"receiptNumber"	INTEGER NOT NULL,
+	"receivedDate"	INTEGER DEFAULT NULL,
+	"receiptNumber"	INTEGER DEFAULT NULL,
 	"slipDate"	INTEGER NOT NULL,
 	"slipNumber"	INTEGER NOT NULL,
 	"wording"	INTEGER,
@@ -107,8 +107,8 @@ CREATE TABLE IF NOT EXISTS "PaymentFee" (
 	"lastUpdate"	INTEGER,
 	"location"	INTEGER NOT NULL DEFAULT 1,
 	CONSTRAINT "fk_PaymentFee_inscription" FOREIGN KEY("inscription") REFERENCES "Inscription"("id"),
-	CONSTRAINT "fk_PaymenttFee_location" FOREIGN KEY("location") REFERENCES "PaymentLocation"("id"),
-	CONSTRAINT "PRIMARY_KEY" PRIMARY KEY("id" AUTOINCREMENT),
+	CONSTRAINT "fk_PaymentFee_location" FOREIGN KEY("location") REFERENCES "PaymentLocation"("id"),
+	CONSTRAINT "pk_PaymentFee" PRIMARY KEY("id" AUTOINCREMENT),
 	CONSTRAINT "uni_PaymentFee_slepNumber" UNIQUE("slipNumber"),
 	CONSTRAINT "uni_PaymentFee_receiptNumber" UNIQUE("receiptNumber")
 );

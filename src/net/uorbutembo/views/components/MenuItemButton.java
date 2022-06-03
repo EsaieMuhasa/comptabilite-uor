@@ -30,7 +30,7 @@ public class MenuItemButton extends JButton {
 	private Animator animator;
 	private int targetSize;
 	private float animatSize;
-	private Point pressedPoint;//le point où l'on a cliquer avec la souris
+	protected Point pressedPoint;//le point où l'on a cliquer avec la souris
 	private float alpha;
 	private final Color effectColor = new Color(255, 255, 255, 150);
 
