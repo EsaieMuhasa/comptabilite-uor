@@ -59,14 +59,14 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 	
 	//model pie
 	private final DefaultPieModel modelPieStudents = new DefaultPieModel(0, "Etudiant par faculté");
-	private final GeneralBudgetPieModel modelPieBudget;
+	private final GeneralBudgetPieModel globalModel;
 	
 	private PiePanel piePanel = new PiePanel();
 	private Panel panelBottom = new Panel();
 	
 	public PanelDashboard(MainWindow mainWindow) {
 		super("Tableau de board", new ImageIcon(R.getIcon("dashboard")), mainWindow, false);
-		modelPieBudget = new GeneralBudgetPieModel(mainWindow.factory);
+		globalModel = new GeneralBudgetPieModel(mainWindow.factory);
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
 		
@@ -98,9 +98,9 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 			if(event.getSource() == radio) {
 				piePanel.setModel(modelPieStudents);
 			} else if(event.getSource() == payment) {
-				piePanel.setModel(modelPieBudget.getPieModelPayment());
+				piePanel.setModel(globalModel.getPieModelCaisse());
 			} else if (event.getSource() == budget) {
-				piePanel.setModel(modelPieBudget);
+				piePanel.setModel(globalModel);
 			} else {
 				piePanel.setModel(null);
 			}
@@ -125,6 +125,13 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 		this.getBody().add(panelCurrent, BorderLayout.CENTER);
 	}
 	
+	/**
+	 * @return the globalModel
+	 */
+	public GeneralBudgetPieModel getGlobalModel() {
+		return globalModel;
+	}
+
 	@Override
 	public boolean hasHeader() {
 		return false;
@@ -157,7 +164,7 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 			part.setData(faculty);
 			modelPieStudents.addPart(part);
 		}
-		this.modelPieBudget.setCurrentYear(currentYear);
+		this.globalModel.setCurrentYear(currentYear);
 	}
 	
 	/**
@@ -188,9 +195,9 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 		
 		panelCards.add(new Card(modelCardStudents));
 		panelCards.add(Box.createHorizontalStrut(10));
-		panelCards.add(new Card(modelPieBudget.getCardModelPayment()));
+		panelCards.add(new Card(globalModel.getCardModelPayment()));
 		panelCards.add(Box.createHorizontalStrut(10));
-		panelCards.add( new Card(modelPieBudget.getCardModel()));
+		panelCards.add( new Card(globalModel.getCardModel()));
 	}
 	
 	@Override

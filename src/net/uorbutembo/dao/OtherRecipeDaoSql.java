@@ -82,6 +82,25 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	public int countByAccount(long accountId) throws DAOException {
 		return count("account", accountId);
 	}
+	
+	@Override
+	public double getSoldByAccounts (long [] accounts, long location) throws DAOException {
+		String [] ids = new String [accounts.length];
+		for (int i = 0; i < accounts.length; i++)
+			ids[i] = accounts[i]+"";
+		
+		final String SQL = String.format("SELECT SUM(amount) AS amount FROM %s WHERE account IN(%s) AND location = %d", getTableName(), String.join(", ", ids), location);
+		double sum = 0;
+		try (Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if(result.next())
+				sum = result.getDouble("amount");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
 
 	@Override
 	public int countByAccount(long accountId, Date min, Date max) throws DAOException {

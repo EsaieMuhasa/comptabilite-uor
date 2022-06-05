@@ -52,6 +52,9 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 	
 	protected AcademicYear currentYear;
 	private AcademicYearDao academicYearDao;
+	
+	
+	private PanelDashboard dashboard;
 
 	
 	public WorkspacePanel(MainWindow mainWindow) {
@@ -88,8 +91,10 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 		MenuItemModel<String> journal = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("calendar")), "Journal ");
 		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Configurations globales");
 		
+		this.dashboard = new PanelDashboard(mainWindow);
+		
 		this
-		.add(dashbord, new PanelDashboard(mainWindow))
+		.add(dashbord, dashboard)
 		.add(students, new PanelStudents(mainWindow))
 		.add(journal, new JournalWorkspace(mainWindow))
 		.add(config, new PanelConfigGlobal(mainWindow));
@@ -97,6 +102,13 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 		head.setVisible(false);
 		navbar.hideItems();
 		navbar.setVisible(false);
+	}
+
+	/**
+	 * @return the dashboard
+	 */
+	public PanelDashboard getDashboard() {
+		return dashboard;
 	}
 
 	/**

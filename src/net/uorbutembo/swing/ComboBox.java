@@ -52,7 +52,7 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
     private String label;
     
     private Color lineColor = new Color(3, 155, 216);
-    private boolean mouseOver;
+    protected boolean mouseOver;
 
     /**
      * construcurter par defaut

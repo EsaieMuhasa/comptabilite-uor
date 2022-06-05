@@ -437,7 +437,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	/**
 	 * @return the pieModelCaisse
 	 */
-	public DefaultPieModel getPieModelPayment() {
+	public DefaultPieModel getPieModelCaisse() {
 		return pieModelCaisse;
 	}
 

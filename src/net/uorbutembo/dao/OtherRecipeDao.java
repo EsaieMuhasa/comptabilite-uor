@@ -146,6 +146,16 @@ public interface OtherRecipeDao extends DAOInterface<OtherRecipe>, BaseStatistic
 	}
 	
 	/**
+	 * Renvoie le sold de tout ce compte en un lieux de payement
+	 * (montant deja recu pour chaque compte en un leiux de payment)
+	 * @param accounts
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAccounts (long [] accounts, long location) throws DAOException;
+	
+	/**
 	 * selection des operations faite sur un compte en un leux en une intervale de date
 	 * @param account
 	 * @param location

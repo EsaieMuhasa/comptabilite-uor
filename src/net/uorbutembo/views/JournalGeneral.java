@@ -6,51 +6,57 @@ package net.uorbutembo.views;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.RenderingHints;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.swing.Box;
-import javax.swing.DefaultComboBoxModel;
+import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JProgressBar;
+import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeListener;
 
 import net.uorbutembo.beans.AcademicYear;
+import net.uorbutembo.beans.AnnualRecipe;
 import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.OtherRecipe;
 import net.uorbutembo.beans.Outlay;
 import net.uorbutembo.beans.PaymentFee;
-import net.uorbutembo.dao.AcademicYearDao;
-import net.uorbutembo.dao.AcademicYearDaoListener;
+import net.uorbutembo.beans.PaymentLocation;
+import net.uorbutembo.dao.AnnualRecipeDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.OtherRecipeDao;
 import net.uorbutembo.dao.OutlayDao;
 import net.uorbutembo.dao.PaymentFeeDao;
+import net.uorbutembo.dao.PaymentLocationDao;
 import net.uorbutembo.swing.Card;
 import net.uorbutembo.swing.DefaultCardModel;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.charts.Axis;
 import net.uorbutembo.swing.charts.DefaultAxis;
 import net.uorbutembo.swing.charts.DefaultLineChartModel;
+import net.uorbutembo.swing.charts.DefaultPieModel;
+import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.DefaultPointCloud;
 import net.uorbutembo.swing.charts.DefaultTimeAxis;
 import net.uorbutembo.swing.charts.LineChartRender;
 import net.uorbutembo.swing.charts.LineChartRender.Interval;
 import net.uorbutembo.swing.charts.LineChartRenderListener;
+import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.Point2d;
+import net.uorbutembo.views.components.Sidebar.YearChooserListener;
 import net.uorbutembo.views.forms.FormUtil;
 import resources.net.uorbutembo.R;
 
@@ -58,33 +64,36 @@ import resources.net.uorbutembo.R;
  * @author Esaie MUHASA
  *
  */
-public class JournalGeneral extends Panel implements ItemListener, AcademicYearDaoListener{
+public class JournalGeneral extends Panel implements YearChooserListener{
 	private static final long serialVersionUID = 5001737357466282501L;
 	
 	private final CenterContainer container;	
 	private final CardsPanel cards;
 	private final JProgressBar progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
-	
-	private final DefaultComboBoxModel<AcademicYear> comboModel = new DefaultComboBoxModel<>();
-	private final JComboBox<AcademicYear> comboBox = new JComboBox<>(comboModel);
 
-	
+	private final AnnualRecipeDao annualRecipeDao;
 	private final AnnualSpendDao annualSpendDao;
-	private final AcademicYearDao academicYearDao;
 	private final OutlayDao outlayDao;
 	private final PaymentFeeDao paymentFeeDao;
 	private final OtherRecipeDao otherRecipeDao;
+	private final PaymentLocationDao paymentLocationDao;
+	
+	private AcademicYear year;//annee actuelement selectionner dans le combo du sidebar
+	private final MainWindow mainWindow;
 	
 	public JournalGeneral(MainWindow mainWindow) {
 		super(new BorderLayout());
 		
+		this.mainWindow = mainWindow;
+		
+		annualRecipeDao = mainWindow.factory.findDao(AnnualRecipeDao.class);
 		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
 		outlayDao = mainWindow.factory.findDao(OutlayDao.class);
 		otherRecipeDao = mainWindow.factory.findDao(OtherRecipeDao.class);
 		paymentFeeDao = mainWindow.factory.findDao(PaymentFeeDao.class);
-		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
+		paymentLocationDao = mainWindow.factory.findDao(PaymentLocationDao.class);
 		
-		academicYearDao.addYearListener(this);
+		mainWindow.getSidebar().addYearChooserListener(this);
 		
 		container = new CenterContainer();
 		cards = new CardsPanel();
@@ -92,14 +101,9 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 		final Panel content = new Panel(new BorderLayout()),
 				bottom = new Panel(new BorderLayout(5, 0));
 		
-		
-		comboBox.setPreferredSize(new Dimension(200, 24));
-		comboBox.setEnabled(false);
-		comboBox.addItemListener(this);
 		progressBar.setStringPainted(true);
 		progressBar.setVisible(false);
-		
-		bottom.add(comboBox, BorderLayout.EAST);
+
 		bottom.add(progressBar, BorderLayout.CENTER);
 		bottom.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		bottom.setOpaque(true);
@@ -120,41 +124,17 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 			setCursor(Cursor.getDefaultCursor());
 		}
 		
-		comboBox.setEnabled(!status);
 		progressBar.setVisible(status);
 		progressBar.setIndeterminate(status);
-		
 	}
 	
 	@Override
-	public void onCurrentYear(AcademicYear year) {
+	public void onChange(AcademicYear year) {	
+		this.year = year;
 		wait(true);
-		if (year != null) {			
-			if(comboModel.getSize() == 0) {
-				comboBox.removeItemListener(this);
-				List<AcademicYear> years = academicYearDao.findAll();
-				for (AcademicYear y : years) {
-					comboModel.addElement(y);
-					if(y.getId() == year.getId())
-						comboBox.setSelectedItem(y);
-				}
-				comboBox.addItemListener(this);
-			}
-			
-			cards.updateCards(year);
-			container.reload(year);
-		}
+		cards.updateCards();
+		container.reload();
 		wait(false);
-	}
-
-	
-	@Override
-	public void itemStateChanged(ItemEvent event) {
-		if(event.getStateChange() != ItemEvent.SELECTED) 
-			return;
-		
-		AcademicYear year = comboModel.getElementAt(comboBox.getSelectedIndex());
-		onCurrentYear(year);
 	}
 	
 	/**
@@ -194,8 +174,6 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 		private final Card cardOut = new Card(cardOutModel);
 		private final Card cardIn = new Card(cardInModel);
 		
-		private AcademicYear year;
-		
 		private final DAOAdapter<PaymentFee> feeAdapter = new DAOAdapter<PaymentFee>() {
 
 			@Override
@@ -211,7 +189,7 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 			public synchronized void onUpdate(PaymentFee e, int requestId) {
 				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
 					return;
-				updateCards(year);
+				updateCards();
 			}
 
 			@Override
@@ -241,7 +219,7 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 				if(e.getAccount().getAcademicYear().getId() != year.getId())
 					return;
 				
-				updateCards(year);
+				updateCards();
 			}
 
 			@Override
@@ -271,7 +249,7 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 				if (e.getAccount().getAcademicYear().getId() != year.getId())
 					return;
 				
-				updateCards(year);
+				updateCards();
 			}
 
 			@Override
@@ -302,11 +280,8 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 		
 		/**
 		 * mise en jours des valeurs des cards, conformement a l'annee academique en parametre
-		 * @param year
 		 */
-		public void updateCards(AcademicYear year) {
-			
-			this.year = year;
+		public void updateCards () {
 			
 			double recipe = 0, used = 0, sold = 0;
 			progressBar.setValue(0);
@@ -372,8 +347,9 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 			setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		}
 		
-		public void reload (AcademicYear year) {
-			
+		public void reload () {
+			linePanel.reloadChart();
+			piePanel.reloadChart();
 		}
 		
 		public void dispose () {
@@ -382,6 +358,10 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 		
 	}
 	
+	/**
+	 * panel de visualisation des operations d'entree sotie en caissse
+	 * @author Esaie MUHASA
+	 */
 	private class LineChartPanel extends Panel implements LineChartRenderListener{
 		private static final long serialVersionUID = 2734887735495665253L;
 		
@@ -428,7 +408,6 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 			chartRender.addRenderListener(this);
 			chartRender.setDraggable(true);
 			panelChart.add(chartRender, BorderLayout.CENTER);
-//			panelChart.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			
 			checkBoxGridChart.setForeground(FormUtil.BORDER_COLOR);
 			checkBoxGridChart.addChangeListener(event -> {
@@ -475,7 +454,8 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 			checkBoxGridChart.setEnabled(!status);
 		}
 		
-		private synchronized void reloadChart(AcademicYear year) {
+		private synchronized void reloadChart() {
+			wait(true);
 			progressBar.setValue(0);
 			progressBar.setIndeterminate(true);
 
@@ -552,6 +532,7 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 //			cloudRecipes.toSquareSignal();
 //			cloudOutlays.toSquareSignal();
 //			cloudSold.toSquareSignal();
+			wait(false);
 		}
 		
 		
@@ -560,8 +541,7 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 			if (axis != xAxis)
 				return;
 			
-			AcademicYear year = comboModel.getElementAt(comboBox.getSelectedIndex());
-			reloadChart(year);
+			reloadChart();
 		}
 		
 		@Override
@@ -573,8 +553,256 @@ public class JournalGeneral extends Panel implements ItemListener, AcademicYearD
 		
 	}
 	
+	/**
+	 * Panel de presentation du graphique pie de la caisse
+	 * @author Esaie MUHASA
+	 */
 	private class PieChartPanel extends Panel {
 		private static final long serialVersionUID = -8328178244978488613L;
+		
+		private final JRadioButton [] types = {
+				new JRadioButton("Soldes", true),
+				new JRadioButton("Recettes"),
+				new JRadioButton("Dépenses")
+		};
+		
+		private final JRadioButton [] locations = {
+				new JRadioButton("Comptes", true),
+				new JRadioButton("Localisations")
+		};
+		
+		private final Box box = Box.createHorizontalBox();
+		
+		//index
+		private int indexType = 0;
+		private int indexLocation = 0;
+		//==
+		
+		private final ChangeListener typeListener = event -> {
+			JRadioButton radio = (JRadioButton) event.getSource();
+			if(!radio.isSelected())
+				return;
+			
+			int index = Integer.parseInt(radio.getName());
+			if (index == indexType)
+				return;
+			
+			if (index != 1) 
+				locations[0].setText("Comptes");
+			else
+				locations[0].setText("Sources");
+			
+			indexType = index;
+			EventQueue.invokeLater(() -> {reloadChart();}); 
+		};
+		
+		private final ChangeListener locationListener = event -> {
+			JRadioButton radio = (JRadioButton) event.getSource();
+			if(!radio.isSelected())
+				return;
+			
+			int index = Integer.parseInt(radio.getName());
+			if (index == indexLocation)
+				return;
+			
+			indexLocation = index;
+			EventQueue.invokeLater(() -> {reloadChart();}); 
+		};
+		
+		{
+			ButtonGroup group = new ButtonGroup();
+			for (int i = 0; i < locations.length; i++) {
+				JRadioButton radio = locations[i];
+				radio.setForeground(Color.WHITE);
+				radio.setName(i+"");
+				radio.addChangeListener(locationListener);
+				group.add(radio);
+				box.add(radio);
+			}
+			
+			box.add(Box.createHorizontalGlue());
+			
+			group = new ButtonGroup();
+			for (int i = 0; i < types.length; i++) {
+				JRadioButton radio = types[i];
+				radio.setForeground(Color.WHITE);
+				radio.setName(i+"");
+				radio.addChangeListener(typeListener);
+				group.add(radio);
+				box.add(radio);
+			}
+		}
+		
+		private final DefaultPieModel pieModel = new DefaultPieModel();
+		private final PiePanel piePanel = new PiePanel(pieModel, FormUtil.BORDER_COLOR);
+		{
+			pieModel.setRealMaxPriority(true);
+			pieModel.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
+		}
+		
+		public PieChartPanel() {
+			super(new BorderLayout());
+			
+			final Panel top = new Panel(new BorderLayout());
+			top.setBorder(new EmptyBorder(5, 0, 5, 0));
+			top.add(box, BorderLayout.CENTER);
+			
+			add(top, BorderLayout.NORTH);
+			add(piePanel, BorderLayout.CENTER);
+		}
+		
+		/**
+		 * Changement d'etat des boutons radio
+		 * @param enable
+		 */
+		private void setEnableButtons (boolean enable) {
+			for (int i = 0; i < types.length; i++)
+				types[i].setEnabled(enable);
+			
+			for (int i = 0; i < locations.length; i++)
+				locations[i].setEnabled(enable);
+			
+			setCursor(enable? Cursor.getDefaultCursor() : Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		}
+		
+		/**
+		 * rechargement du graphique
+		 */
+		private synchronized void reloadChart () {
+			setEnableButtons(false);
+			
+			pieModel.removeAll();
+			int colorIndex = 0;
+			
+			switch (indexType) {
+				case 0 : {//pour le solde
+					if (indexLocation == 0) {//comptes
+						//on recupere directement le model tout cuit du dash board
+						piePanel.setModel(mainWindow.getWorkspace().getDashboard().getGlobalModel().getPieModelCaisse());
+						setEnableButtons(true);
+						return;
+					} else {//lieux de payment
+						final List<PaymentLocation> all = paymentLocationDao.countAll() != 0? paymentLocationDao.findAll() : new ArrayList<>();
+						final List<AnnualRecipe> rps = annualRecipeDao.checkByAcademicYear(year)? annualRecipeDao.findByAcademicYear(year) : new ArrayList<>();
+						final List<AnnualSpend> sps = annualSpendDao.checkByAcademicYear(year.getId())? annualSpendDao.findByAcademicYear(year) : new ArrayList<>();
+						
+						final long [] sAccounts = new long[sps.size()];
+						final long [] aAccounts = new long[rps.size()];
+						
+						for (int i = 0; i < sAccounts.length; i++) //pour les depense annuel
+							sAccounts[i] = sps.get(i).getId();
+						
+						for (int i = 0; i < aAccounts.length; i++) //pour les autres recettes annuel
+							aAccounts[i] = rps.get(i).getId();
+						
+						for (int i = 0, count = all.size(); i < count; i++) {
+							
+							double amount = paymentFeeDao.getSoldByLocation(all.get(i), year);
+							amount += otherRecipeDao.getSoldByAccounts(aAccounts, all.get(i).getId());
+							amount -= outlayDao.getSoldByAccounts (sAccounts, all.get(i).getId());
+							
+							pieModel.addPart(
+									new DefaultPiePart (
+											FormUtil.COLORS[ (colorIndex++) % (FormUtil.COLORS.length-1) ],
+											amount,
+											all.get(i).getName()
+										)
+									);
+						}
+						pieModel.setTitle("Solde disponible pour chaque lieux de perception");
+					}
+				}break;
+				case 1 : {//les recettes
+					if (indexLocation == 0) {//sources de la recette
+						
+						double fees = paymentFeeDao.getSoldByAcademicYear(year);//montant deja payer par tout les etudant
+						pieModel.addPart(new DefaultPiePart(FormUtil.COLORS[colorIndex++], fees, "Frais académiques"));
+						
+						if (annualRecipeDao.checkByAcademicYear(year)) {
+							List<AnnualRecipe> recipes = annualRecipeDao.findByAcademicYear(year);
+							for (int i = 0, count = recipes.size(); i < count; i++) {					
+								pieModel.addPart(
+										new DefaultPiePart(
+											FormUtil.COLORS[ (colorIndex++) % (FormUtil.COLORS.length-1) ],
+											recipes.get(i).getCollected(),
+											recipes.get(i).getUniversityRecipe().getTitle()
+										)
+									); 
+							}
+						} else {
+							pieModel.addPart(new DefaultPiePart(FormUtil.COLORS[colorIndex++], 0d, "Autres recettes"));				
+						}
+						pieModel.setTitle("Repartition des recettes selons les sources de financement");
+					} else {//lieux de payment
+						
+						final List<PaymentLocation> all = paymentLocationDao.countAll() != 0? paymentLocationDao.findAll() : new ArrayList<>();
+						final List<AnnualRecipe> rps = annualRecipeDao.checkByAcademicYear(year)? annualRecipeDao.findByAcademicYear(year) : new ArrayList<>();
+						
+						final long [] accounts = new long[rps.size()];
+						for (int i = 0; i < accounts.length; i++) 
+							accounts[i] = rps.get(i).getId();
+						
+						for (int i = 0, count = all.size(); i < count; i++) {
+							
+							double amount = paymentFeeDao.getSoldByLocation(all.get(i), year);
+							amount += otherRecipeDao.getSoldByAccounts(accounts, all.get(i).getId());
+							
+							pieModel.addPart(
+									new DefaultPiePart (
+											FormUtil.COLORS[ (colorIndex++) % (FormUtil.COLORS.length-1) ],
+											amount,
+											all.get(i).getName()
+										)
+									); 
+						}
+						
+						pieModel.setTitle("Repartition des recettes selon les lieux de perception");
+					}
+				}break;
+				case 2 : {//les depenses
+					if (indexLocation == 0) {//comptes
+						final List<AnnualSpend> all = annualSpendDao.checkByAcademicYear(year.getId())? annualSpendDao.findByAcademicYear(year) : new ArrayList<>();
+						
+						for (int i = 0, count = all.size(); i < count; i++) {
+							double amount = outlayDao.getSoldByAccount(all.get(i).getId());
+							pieModel.addPart(
+									new DefaultPiePart (
+											FormUtil.COLORS[ (colorIndex++) % (FormUtil.COLORS.length-1) ],
+											amount,
+											all.get(i).getUniversitySpend().getTitle()
+										)
+									); 
+						}
+						pieModel.setTitle("Repartition des dépenses pour chaque compte");
+					} else {//lieux de retrait
+						final List<PaymentLocation> all = paymentLocationDao.countAll() != 0? paymentLocationDao.findAll() : new ArrayList<>();
+						final List<AnnualSpend> rps = annualSpendDao.checkByAcademicYear(year.getId())? annualSpendDao.findByAcademicYear(year) : new ArrayList<>();
+						
+						final long [] accounts = new long[rps.size()];
+						for (int i = 0; i < accounts.length; i++) 
+							accounts[i] = rps.get(i).getId();
+						
+						for (int i = 0, count = all.size(); i < count; i++) {
+							
+							double amount = outlayDao.getSoldByAccounts(accounts, all.get(i).getId());
+							
+							pieModel.addPart(
+									new DefaultPiePart (
+											FormUtil.COLORS[ (colorIndex++) % (FormUtil.COLORS.length-1) ],
+											amount,
+											all.get(i).getName()
+										)
+									); 
+						}
+						pieModel.setTitle("Repartition des dépenses, selon le lieux de payments");
+					}
+					
+				}break;
+			}
+			
+			piePanel.setModel(pieModel);
+			setEnableButtons(true);
+		}
 		
 	}
 	

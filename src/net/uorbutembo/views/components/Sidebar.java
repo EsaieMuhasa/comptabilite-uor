@@ -316,8 +316,22 @@ public class Sidebar extends Panel implements ItemListener{
     	
 		private static final Dimension DEFAULT_SIZE = new Dimension(40, 40);
 		private static final BasicStroke STROKE = new BasicStroke(1.4f);
+		private final MouseAdapter mouseAdapter = new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				hovered = true;
+				repaint();
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent e) {
+				hovered = false;
+				repaint();
+			}
+		};
 		
 		private Image icon;
+		private boolean hovered = false;
 		
 		public ButtonTool() {
 			super("");
@@ -326,12 +340,13 @@ public class Sidebar extends Panel implements ItemListener{
 			setMaximumSize(DEFAULT_SIZE);
 			
 			try {
-				icon = ImageIO.read(new File(R.getIcon("box")));
+				icon = ImageIO.read(new File(R.getIcon("menu-tools")));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			setOpaque(false);
 			setBorder(new EmptyBorder(1, 40, 1, 20));
+			addMouseListener(mouseAdapter);
 		}
 		
 		@Override
@@ -345,10 +360,10 @@ public class Sidebar extends Panel implements ItemListener{
 			GradientPaint gra = new GradientPaint(0, 0, FormUtil.BKG_DARK, getWidth(), 0, FormUtil.BKG_DARK.darker());
 			g2.setPaint(gra);
 			g2.fillOval(x, y, w+x, h+y);
-			g2.setColor(FormUtil.ACTIVE_COLOR);
+			g2.setColor(hovered? FormUtil.ACTIVE_COLOR : FormUtil.BORDER_COLOR);
 			g2.setStroke(STROKE);
 			g2.drawOval(x*2, y*2, w-4, h-4);
-			g2.drawImage(icon, 8+x, 8+y, 20, 20, null);
+			g2.drawImage(icon, 7+x, 4+y, 22, 28, null);
 			
 		}
     }
@@ -395,7 +410,7 @@ public class Sidebar extends Panel implements ItemListener{
 	        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 
-	        g2.setColor(FormUtil.ACTIVE_COLOR);
+	        g2.setColor(mouseOver? FormUtil.ACTIVE_COLOR : FormUtil.BORDER_COLOR);
 			g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 40, 40);
 	    }
 	    
@@ -536,6 +551,9 @@ public class Sidebar extends Panel implements ItemListener{
 			}
 		};
 		
+		/**
+		 * @param mainWindow
+		 */
 		public AcademicYeatDialog(MainWindow mainWindow) {
 			super(mainWindow, "Configuration des années académiques", true);
 			
@@ -561,8 +579,8 @@ public class Sidebar extends Panel implements ItemListener{
 			getContentPane().setBackground(FormUtil.BKG_DARK);
 			
 			pack();
-			setSize(getWidth(), 450);
-			setMinimumSize(getSize());
+			setMinimumSize(new Dimension(getWidth(), 400));
+			setSize(getWidth()+250, 450);
 			setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 			setLocationRelativeTo(mainWindow);
 			
@@ -579,7 +597,7 @@ public class Sidebar extends Panel implements ItemListener{
 			table.addMouseListener(mouseListener);
 			
 			itemDelete.addActionListener(event -> {
-				AcademicYear year = new AcademicYear();
+				AcademicYear year = tableModel.getRow(table.getSelectedRow());
 				if(annualSpendDao.checkByAcademicYear(year.getId()) || promotionDao.checkByAcademicYear(year.getId())
 						|| academicFeeDao.checkByAcademicYear(year.getId() )) {
 					String message = "Impossible de supprimer l'année "+year.getLabel()+",\ncar autres données de la base de données \nsont liée à cette occurence.";
@@ -591,7 +609,7 @@ public class Sidebar extends Panel implements ItemListener{
 			});
 			
 			itemUpdate.addActionListener(event -> {
-				AcademicYear year = new AcademicYear();
+				AcademicYear year = tableModel.getRow(table.getSelectedRow());
 				formYear.setAcademicYear(year);
 			});
 		}

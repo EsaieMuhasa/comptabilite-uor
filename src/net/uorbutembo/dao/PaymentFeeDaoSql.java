@@ -924,7 +924,7 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year);
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
 				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
-		final String sql = String.format("SELECT SUM(%s.amount) AS sold FROM %s WHERE inscription IN(%s)", getTableName(), sqlInscrits);
+		final String sql = String.format("SELECT SUM(amount) AS sold FROM %s WHERE inscription IN(%s)", getTableName(), sqlInscrits);
 		
 		double sold = 0;
 		try (
@@ -946,7 +946,7 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year);
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
 				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
-		final String sql = String.format("SELECT SUM(%s.amount) AS sold FROM %s WHERE location = %d AND inscription IN(%s)", getTableName(), location, sqlInscrits);
+		final String sql = String.format("SELECT SUM(amount) AS sold FROM %s WHERE location = %d AND inscription IN(%s)", getTableName(), location, sqlInscrits);
 		
 		double sold = 0;
 		try (

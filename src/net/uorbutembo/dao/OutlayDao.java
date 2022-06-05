@@ -283,4 +283,13 @@ public interface OutlayDao extends DAOInterface<Outlay>, BaseStatistic<Outlay> {
 		return getSoldByAccount(account.getId());
 	}
 	
+	/**
+	 * Renvoie le sold du montant deja retirer pour tout ces comptes en un lieux de payement
+	 * @param accounts
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAccounts (long [] accounts, long location) throws DAOException;
+	
 }

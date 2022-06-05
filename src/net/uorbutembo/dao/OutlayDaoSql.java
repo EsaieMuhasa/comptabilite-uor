@@ -410,6 +410,25 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 			throw new DAOException("Aucune operation pour l'annee acadmeique index par "+yearId+" avant la date "+date.toString());
 		return data;
 	}
+	
+	@Override
+	public double getSoldByAccounts (long [] accounts, long location) throws DAOException {
+		String [] ids = new String [accounts.length];
+		for (int i = 0; i < accounts.length; i++)
+			ids[i] = accounts[i]+"";
+		
+		final String SQL = String.format("SELECT SUM(amount) AS amount FROM %s WHERE account IN(%s) AND location = %d", getTableName(), String.join(", ", ids), location);
+		double sum = 0;
+		try (Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if(result.next())
+				sum = result.getDouble("amount");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
 
 	protected Outlay baseMapping(ResultSet result) throws SQLException, DAOException{
 		Outlay out = new Outlay(result.getLong("id"));
