@@ -4,11 +4,11 @@
 package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -38,11 +38,13 @@ import resources.net.uorbutembo.R;
  */
 public class PanelAnnualSpend extends Panel {
 	private static final long serialVersionUID = -1871314050736755404L;
-	private Button btnNew = new Button(new ImageIcon(R.getIcon("plus")), "Ajouter");
-	private Button btnList = new Button(new ImageIcon(R.getIcon("menu")), "voir la liste");
+	private Button btnNew = new Button(new ImageIcon(R.getIcon("new")), "Ajouter");
+	{btnNew.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);}
 	
-	private Panel center = new Panel(new BorderLayout());
+	
+	private JDialog dialogForm;
 	private FormAnnualSpend form;
+	private Panel center = new Panel(new BorderLayout());
 	private TablePanel tablePanel;
 	private JScrollPane scroll;
 	private Table table;
@@ -55,21 +57,18 @@ public class PanelAnnualSpend extends Panel {
 	
 	private JPopupMenu popupMenu = new JPopupMenu();
 	private JMenuItem itemDelete = new JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
-
+	
 	private DAOAdapter<UniversitySpend> univSpendAdapter = new DAOAdapter<UniversitySpend>() {
 
 		@Override
 		public synchronized void onCreate(UniversitySpend e, int requestId) {
-			if (!btnNew.isVisible() && !btnList.isVisible())
-				btnNew.setVisible(true);
+			
 		}
 
 		@Override
 		public synchronized void onDelete(UniversitySpend e, int requestId) {
 			if (tableModel.getRowCount() == universitySpendDao.countAll()) {
-				btnList.doClick();
-				btnNew.setVisible(false);
-				btnList.setVisible(false);
+				
 			}
 		}
 		
@@ -78,13 +77,11 @@ public class PanelAnnualSpend extends Panel {
 	private final DAOAdapter<AnnualSpend> annualSpendAdapter = new DAOAdapter<AnnualSpend>() {
 		@Override
 		public void onCreate(AnnualSpend e, int requestId) {
-			btnList.doClick();
 			reload();
 		}
 		
 		@Override
 		public void onCreate(AnnualSpend[] e, int requestId) {
-			btnList.doClick();
 			reload();
 		}
 		
@@ -92,6 +89,8 @@ public class PanelAnnualSpend extends Panel {
 		public void onDelete(AnnualSpend e, int requestId) { reload(); }
 		
 	};
+	
+	private MainWindow mainWindow;
 	
 	/**
 	 * @param mainWindow
@@ -148,41 +147,37 @@ public class PanelAnnualSpend extends Panel {
 		});
 		//==
 		
-		Panel top = new Panel(new FlowLayout(FlowLayout.RIGHT));
-		top.add(btnNew);
-		top.add(btnList);
-		
 		btnNew.setEnabled(false);
 		btnNew.addActionListener(event -> {
-			center.removeAll();
+			createDialog();
 			
-			if(form == null ) {
-				form = new FormAnnualSpend(mainWindow);
-				form.setCurrentYear(currentYear);
-			}
-			
-			center.add(form, BorderLayout.NORTH);
-			center.revalidate();
-			center.repaint();
-			btnNew.setVisible(false);
-			btnList.setVisible(true);
+			dialogForm.setLocationRelativeTo(mainWindow);
+			dialogForm.setVisible(true);
 		});
-		
-		btnList.setVisible(false);
-		btnList.addActionListener(event -> {
-			center.removeAll();
-			center.add(scroll, BorderLayout.CENTER);
-			center.revalidate();
-			center.repaint();
-			
-			btnList.setVisible(false);
-			btnNew.setVisible(true);
-		});
+		tablePanel.getHeader().add(btnNew, BorderLayout.EAST);
+		tablePanel.getHeader().setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+
 		padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		center.add(scroll, BorderLayout.CENTER);
-		add(top, BorderLayout.NORTH);
 		add(center, BorderLayout.CENTER);
 	}
+	
+	private void createDialog() {
+		if (dialogForm != null)
+			return;
+		
+		final Panel padding = new Panel(new BorderLayout());
+		form = new FormAnnualSpend(mainWindow);
+		dialogForm = new JDialog(mainWindow, "Récupération dépenses annuel", true);
+		dialogForm.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialogForm.getContentPane().add(padding, BorderLayout.CENTER);
+		dialogForm.getContentPane().setBackground(FormUtil.BKG_DARK);
+		
+		padding.add(form, BorderLayout.CENTER);
+		padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		dialogForm.pack();
+	}
+
 	
 	/**
 	 * rechargement des donnees
@@ -191,9 +186,7 @@ public class PanelAnnualSpend extends Panel {
 		if(form != null)
 			form.loadData();
 		
-		btnList.doClick();
 		if(universitySpendDao.countAll() == annualSpendDao.countByAcademicYear(currentYear.getId())) {
-			btnList.setVisible(false);
 			btnNew.setVisible(false);
 		}
 		
@@ -215,7 +208,6 @@ public class PanelAnnualSpend extends Panel {
 		else 
 			tablePanel.setTitle("");
 		
-		btnList.doClick();
 		btnNew.setVisible(currentYear != null && academicYearDao.isCurrent(currentYear));//0975612604
 		
 		reload();

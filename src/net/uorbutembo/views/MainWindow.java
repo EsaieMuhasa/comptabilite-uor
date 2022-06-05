@@ -7,6 +7,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 
@@ -32,12 +34,24 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 	private WorkspacePanel workspace;
 	public final DAOFactory factory;
 	
+	private Dimension lastSize;
+	
+	private final WindowAdapter windowListener = new WindowAdapter() {
+
+		@Override
+		public void windowClosing(WindowEvent e) {
+			// TODO Auto-generated method stub
+			super.windowClosing(e);
+		}
+		
+	};
+	
 	/**
 	 * constructeur d'initialisation
 	 * configuration elementaire du formulaire
 	 */
 	public MainWindow(DAOFactory factory) {
-		super("U.O.R. Data Manager");
+		super(R.getConfig().get("appName"));
 		this.factory = factory;
 		factory.addListener(this);
 		
@@ -51,7 +65,7 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 		setLocationRelativeTo(null);
 		
 		workspace = new WorkspacePanel(this);
-		sidebar = new Sidebar(workspace, factory);
+		sidebar = new Sidebar(this);
 		workspace.init(sidebar);
 		
 		getContentPane().add(workspace, BorderLayout.CENTER);
@@ -68,14 +82,37 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 		
 		requestFocus();
 		
-//		btnExist.addActionListener(event -> {
-//			System.exit(MainWindow.NORMAL);
-//
-//			int state = JOptionPane.showConfirmDialog(this.parent, "Voulez-vous vraiment quitter ce programme??", 
-//					"Fermeture du programme", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-//			if(state == JOptionPane.OK_OPTION) {
-//			}
-//		});
+		lastSize = getSize();
+		addWindowListener(windowListener);
+	}
+	
+	/**
+	 * demande d'arret de l'application
+	 */
+	public void doClose () {
+		int state = JOptionPane.showConfirmDialog(this, "Voulez-vous vraiment quitter ce programme??", 
+				"Fermeture du programme", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		if(state == JOptionPane.OK_OPTION) {
+			System.exit(MainWindow.NORMAL);
+		}		
+	}
+	
+	/**
+	 * mis en plain ecran
+	 * @param fullScreen
+	 */
+	public void setFullScreen (boolean fullScreen) {
+		dispose();
+		setVisible(false);
+		if (fullScreen)
+			setExtendedState(JFrame.MAXIMIZED_BOTH);
+		else {
+			setExtendedState(JFrame.NORMAL);
+			setSize(lastSize);
+			setLocationRelativeTo(null);
+		}
+		setUndecorated(fullScreen);
+		setVisible(true);
 	}
 	
 	/**

@@ -5,10 +5,9 @@ package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
 
-import javax.swing.Box;
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
 import javax.swing.JScrollPane;
-import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.UniversityRecipe;
 import net.uorbutembo.dao.DAOAdapter;
@@ -29,11 +28,10 @@ import resources.net.uorbutembo.R;
 public class PanelUniversityRecipe extends Panel{
 	private static final long serialVersionUID = -6678192465363319784L;
 	
-	private static final ImageIcon ICO_PLUS  = new ImageIcon(R.getIcon("plus"));
-	private static final ImageIcon ICO_CLOSE  = new ImageIcon(R.getIcon("close"));
-	
-	private final Button btnNew = new Button(ICO_PLUS, "Ajouter");
-	private final FormUniversityRecipe form;
+	private final Button btnNew = new Button(new ImageIcon(R.getIcon("new")), "Ajouter");
+	{btnNew.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);}
+	private JDialog dialogForm;
+	private FormUniversityRecipe form;
 	private final Table table;
 	private final UniversityRecipeTableModel tableModel;
 	
@@ -51,13 +49,17 @@ public class PanelUniversityRecipe extends Panel{
 		}
 		
 	};
+	
+	private final MainWindow mainWindow;
 
 	/**
 	 * 
 	 */
 	public PanelUniversityRecipe(MainWindow mainWindow) {
 		super(new BorderLayout());
-		universityRecipeDao =mainWindow.factory.findDao(UniversityRecipeDao.class);
+		this.mainWindow = mainWindow;
+		
+		universityRecipeDao = mainWindow.factory.findDao(UniversityRecipeDao.class);
 		tableModel = new UniversityRecipeTableModel(universityRecipeDao);
 		table = new Table(tableModel);
 		table.setShowVerticalLines(true);
@@ -70,38 +72,44 @@ public class PanelUniversityRecipe extends Panel{
 		}
 		
 		universityRecipeDao.addListener(recipeAdapter);
+		final TablePanel tablePanel = new TablePanel(table, "Liste des autres recettes", false);
 		
 		final Panel container = new Panel(new BorderLayout());
-		final Panel top = new Panel(new BorderLayout());
-		final Box box = Box.createHorizontalBox();
 		
-		form = new FormUniversityRecipe(mainWindow);
-		form.setVisible(false);
 		btnNew.addActionListener(event -> {
-			if (btnNew.getText().equals("Ajouter")) {
-				form.setVisible(true);
-				btnNew.setText("Annuler");
-				btnNew.setIcon(ICO_CLOSE);
-			} else {
-				btnNew.setText("Ajouter");
-				btnNew.setIcon(ICO_PLUS);
-				form.setVisible(false);
-				form.setRecipe(null);
-			}
+			createDialog();
+			
+			dialogForm.setLocationRelativeTo(mainWindow);
+			dialogForm.setVisible(true);
 		});
 		
 		JScrollPane scroll = FormUtil.createVerticalScrollPane(container);
-		box.add(Box.createHorizontalGlue());
-		box.add(btnNew);
-		box.setBorder(new EmptyBorder(0, 0, 10, 0));
-		top.add(box, BorderLayout.NORTH);
-		top.add(form, BorderLayout.CENTER);
-		top.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		tablePanel.getHeader().add(btnNew, BorderLayout.EAST);
+		tablePanel.getHeader().setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		container.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-		container.add(new TablePanel(table, "Liste des autres recettes", false), BorderLayout.CENTER);
+		container.add(tablePanel, BorderLayout.CENTER);
+
+		add(scroll, BorderLayout.CENTER);
+	}
+	
+	/**
+	 * utilitaire de creation de la boite de dialogue d'enregistrement/modification
+	 * des recettes
+	 */
+	private void createDialog() {
+		if (dialogForm != null)
+			return;
 		
-		this.add(top, BorderLayout.NORTH);
-		this.add(scroll, BorderLayout.CENTER);
+		final Panel padding = new Panel(new BorderLayout());
+		form = new FormUniversityRecipe(mainWindow);
+		dialogForm = new JDialog(mainWindow, "Recettes de l'université", true);
+		dialogForm.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialogForm.getContentPane().add(padding, BorderLayout.CENTER);
+		dialogForm.getContentPane().setBackground(FormUtil.BKG_DARK);
+		
+		padding.add(form, BorderLayout.CENTER);
+		padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		dialogForm.pack();
 	}
 
 }

@@ -123,14 +123,12 @@ public class PanelFaculty extends Panel {
 		btnNewFaculty.addActionListener(event -> {
 			createFaculty();
 			dialogFaculty.setTitle("Enregistrement d'une faculté");
-			dialogFaculty.setVisible(true);
 		});
 		
 		btnNewDepartment.setEnabled(false);
 		btnNewDepartment.addActionListener(event -> {
 			createDepartment();
 			dialogDepartment.setTitle("Enregistrement d'un département");
-			dialogDepartment.setVisible(true);
 		});
 		
 		Panel top = new Panel(new BorderLayout());
@@ -177,10 +175,13 @@ public class PanelFaculty extends Panel {
 	 */
 	private void buildFacultyDialog () {
 		if(dialogFaculty == null) {
+			final Panel padding = new Panel(new BorderLayout());
 			dialogFaculty = new Dialog(mainWindow);
 			formFaculty = new FormFaculty(mainWindow);
-			dialogFaculty.getContentPane().add(formFaculty, BorderLayout.CENTER);
-			dialogFaculty.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+			dialogFaculty.getContentPane().add(padding, BorderLayout.CENTER);
+			dialogFaculty.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+			padding.add(formFaculty, BorderLayout.CENTER);
+			padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			dialogFaculty.pack();
 			dialogFaculty.setSize(600, dialogFaculty.getHeight());
 			dialogFaculty.setResizable(false);
@@ -196,11 +197,13 @@ public class PanelFaculty extends Panel {
 	/**
 	 * Construction dela poite de dialogue de creation et modification d'un departement
 	 */
-	private void buildDepartment () {
+	private void buildDepartmentDialog () {
 		if(dialogDepartment == null) {
+			final Panel padding = new Panel(new BorderLayout());
 			formDepartment = new FormDepartment(mainWindow);
 			dialogDepartment = new Dialog(mainWindow);
-			dialogDepartment.getContentPane().add(formDepartment, BorderLayout.CENTER);
+			dialogDepartment.getContentPane().add(padding, BorderLayout.CENTER);
+			padding.add(formDepartment, BorderLayout.CENTER);
 			dialogDepartment.pack();
 			dialogDepartment.setSize(600, dialogDepartment.getHeight());
 			dialogDepartment.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
@@ -242,7 +245,7 @@ public class PanelFaculty extends Panel {
 	 * @param department
 	 */
 	private void updateDepartment (Department department) {
-		buildDepartment();
+		buildDepartmentDialog();
 		formDepartment.setDepartment(department);
 		dialogDepartment.setTitle("Modification d'un département");
 		dialogDepartment.setLocationRelativeTo(mainWindow);
@@ -254,7 +257,7 @@ public class PanelFaculty extends Panel {
 	 * d'enregistrer un nouveau departement
 	 */
 	private void createDepartment() {
-		buildDepartment();
+		buildDepartmentDialog();
 		
 		dialogDepartment.setLocationRelativeTo(mainWindow);
 		dialogDepartment.setVisible(true);

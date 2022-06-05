@@ -133,6 +133,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		getBody().add(container, BorderLayout.CENTER);
 		
 		init();
+		add(getMiddle(), BorderLayout.CENTER);
 	}
 	
 	@Override

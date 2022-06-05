@@ -17,8 +17,11 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,20 +32,31 @@ import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
 
 import net.miginfocom.swing.MigLayout;
 import net.uorbutembo.beans.AcademicYear;
+import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.AcademicYearDao;
+import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
-import net.uorbutembo.dao.DAOFactory;
+import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.swing.Table;
+import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.views.MainWindow;
+import net.uorbutembo.views.forms.FormAcademicYear;
 import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.views.models.AcademicYearTableModel;
 import resources.net.uorbutembo.R;
 /**
  * @author Esaie MUHASA
@@ -50,6 +64,9 @@ import resources.net.uorbutembo.R;
  */
 public class Sidebar extends Panel implements ItemListener{
 	private static final long serialVersionUID = -1925348829690899865L;
+
+	private static final ImageIcon ICON_FULL_SCREEN = new ImageIcon(R.getIcon("viewInFullscreen"));
+	private static final ImageIcon ICON_CLOSE_FULL_SCREEN = new ImageIcon(R.getIcon("exitFullscreen"));
 	
 
 	private final JLabel logo = new JLabel(new ImageIcon(R.getIcon("x32")));
@@ -67,6 +84,8 @@ public class Sidebar extends Panel implements ItemListener{
 	private final DefaultComboBoxModel<AcademicYear> comboModel = new  DefaultComboBoxModel<AcademicYear>();
 	private final ComboBoxTool comboBox = new ComboBoxTool(comboModel);
 	private final ButtonTool btnPupup = new ButtonTool();
+	private final PopupTool popup = new PopupTool();
+	private AcademicYeatDialog yearDialog;
 	
 	private final List<YearChooserListener> yearChooserListeners = new ArrayList<>();
 	private final DAOAdapter<AcademicYear> yearAdapter = new DAOAdapter<AcademicYear>() {
@@ -111,17 +130,27 @@ public class Sidebar extends Panel implements ItemListener{
 		
 	};
 	
+	private MouseAdapter mouseAdapter = new MouseAdapter() {
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			popup.show(Sidebar.this, 10, Sidebar.this.getHeight() - 120);
+		}
+		
+	};
+	
 	private AcademicYearDao academicYearDao;
+	private final MainWindow mainWindow;
 	
 	/**
-	 * @param listener
-	 * @param factory
+	 * @param mainWindow
 	 */
-	public Sidebar (MenuItemListener listener, DAOFactory factory) {
+	public Sidebar (MainWindow mainWindow) {
 		super(new BorderLayout());
-		this.listener = listener;
+		listener = mainWindow.getWorkspace();
+		this.mainWindow = mainWindow;
 		
-		academicYearDao = factory.findDao(AcademicYearDao.class);
+		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
 		academicYearDao.addYearListener(yearAdapter);
 		academicYearDao.addListener(yearAdapter);
 		
@@ -159,6 +188,7 @@ public class Sidebar extends Panel implements ItemListener{
 		footer.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		comboBox.addItemListener(this);
+		btnPupup.addMouseListener(mouseAdapter);
 		
 		add(footer, BorderLayout.SOUTH);
 	}
@@ -242,6 +272,32 @@ public class Sidebar extends Panel implements ItemListener{
 		this.body.add(item);
 		this.items.add(item);
 		return this;
+	}
+	
+	/**
+	 * Affichage de la fenetre de configuration d'une annee academiques
+	 */
+	private void showAcademicYearConfig () {
+		if(yearDialog == null)
+			yearDialog = new AcademicYeatDialog(mainWindow);
+		
+		yearDialog.setLocationRelativeTo(mainWindow);
+		yearDialog.setVisible(true);
+	}
+	
+	/**
+	 * mise en plaine ecran de la fennetre principale
+	 * @param fullscreen
+	 */
+	private void setFullScreenMainWindow (boolean fullscreen) {
+		mainWindow.setFullScreen(fullscreen);
+	}
+	
+	/**
+	 * lors de la demnde de fermeture de l'application
+	 */
+	private void closeApplication () {
+		mainWindow.doClose();
 	}
 	
     @Override
@@ -367,7 +423,6 @@ public class Sidebar extends Panel implements ItemListener{
 	    }
     }
     
-    
     /**
      * Listener du combobox permetant de selectionner une annee academique
      * @author Esaie MUHASA
@@ -380,5 +435,166 @@ public class Sidebar extends Panel implements ItemListener{
     	 */
     	void onChange (AcademicYear year);
     }
-
+    
+    public final class PopupTool extends JPopupMenu {
+		private static final long serialVersionUID = -9121297130688307056L;
+		
+		private final JMenuItem [] items = {
+				new JMenuItem("Année académique", new ImageIcon(R.getIcon("events"))),
+				new JMenuItem("Plain écran", ICON_FULL_SCREEN),
+				new JMenuItem("Quitter", new ImageIcon(R.getIcon("minus")))
+		};
+		
+		/**
+		 * ecoute de items du menu
+		 * le name d'un item correpond a son index
+		 */
+		private final ActionListener itemAction = event -> {
+			JMenuItem item = (JMenuItem) event.getSource();
+			int itemIndex = Integer.parseInt(item.getName());
+			switch (itemIndex) {
+				case 0:{
+					showAcademicYearConfig();
+				}break;
+				case 1:{
+					boolean fullScreen = item.getIcon() == ICON_FULL_SCREEN;
+					if (fullScreen)
+						item.setIcon(ICON_CLOSE_FULL_SCREEN);
+					else
+						item.setIcon(ICON_FULL_SCREEN);
+					setFullScreenMainWindow(fullScreen);
+				}break;
+				case 2:{
+					closeApplication();
+				}break;
+			}
+		};
+		
+		public PopupTool() {
+			super();
+			setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			for (int i = 0; i < items.length; i++) {
+				items[i].setBackground(FormUtil.BKG_DARK);
+				items[i].setForeground(Color.WHITE);
+				items[i].setName(i+"");
+				items[i].addActionListener(itemAction);
+				add(items[i]);
+				if(i==1)
+					addSeparator();
+			}
+			
+			setOpaque(false);
+			setBackground(BKG_END);
+		}
+		
+		@Override
+		protected void paintBorder(Graphics g) {
+			super.paintBorder(g);
+			Graphics2D g2 = (Graphics2D) g;
+	        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+	        
+	        g2.setColor(FormUtil.ACTIVE_COLOR);
+	        g2.drawRect(0, 0, getWidth()-1, getHeight()-1);
+		}
+		
+		@Override
+		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			Graphics2D g2 = (Graphics2D) g;
+	        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+	        
+	        g2.setColor(FormUtil.BKG_DARK);
+	        g2.fillRect(1, 1, getWidth()-2, getHeight()-2);
+		}
+    	
+    }
+    
+    
+    public static class AcademicYeatDialog extends JDialog {
+		private static final long serialVersionUID = -5960791940678862938L;
+		
+		private final JMenuItem itemDelete = new  JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
+		private final JMenuItem itemUpdate = new  JMenuItem("Modifier", new ImageIcon(R.getIcon("edit")));
+		private final JPopupMenu menu = new JPopupMenu();
+		
+		private final AcademicYearTableModel tableModel;
+		private final Table table;
+		private FormAcademicYear formYear;
+		
+		private AcademicYearDao academicYearDao;
+		private AcademicFeeDao academicFeeDao;
+		private PromotionDao promotionDao;
+		private AnnualSpendDao annualSpendDao;
+		
+		private final MouseAdapter mouseListener = new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if(e.isPopupTrigger() && table.getSelectedRow() != -1)
+					menu.show(table, e.getX(), e.getY());
+			}
+		};
+		
+		public AcademicYeatDialog(MainWindow mainWindow) {
+			super(mainWindow, "Configuration des années académiques", true);
+			
+			academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
+			academicFeeDao = mainWindow.factory.findDao(AcademicFeeDao.class);
+			promotionDao = mainWindow.factory.findDao(PromotionDao.class);
+			annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
+			
+			tableModel = new AcademicYearTableModel(academicYearDao);
+			table = new Table(tableModel);
+			final TablePanel tablePanel = new TablePanel(table, "Liste des années academiques");
+			final Panel root = new Panel(new BorderLayout(5, 5));
+			
+			formYear = new FormAcademicYear(mainWindow);
+			
+			initPupup();
+			
+			root.add(formYear, BorderLayout.NORTH);
+			root.add(tablePanel, BorderLayout.CENTER);
+			root.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			
+			getContentPane().add(root, BorderLayout.CENTER);
+			getContentPane().setBackground(FormUtil.BKG_DARK);
+			
+			pack();
+			setSize(getWidth(), 450);
+			setMinimumSize(getSize());
+			setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+			setLocationRelativeTo(mainWindow);
+			
+			tableModel.reload();
+		}
+		
+		/**
+		 * Creation du popup et ecouter des evenements
+		 */
+		private void initPupup() {
+			menu.add(itemUpdate);
+			menu.add(itemDelete);
+			
+			table.addMouseListener(mouseListener);
+			
+			itemDelete.addActionListener(event -> {
+				AcademicYear year = new AcademicYear();
+				if(annualSpendDao.checkByAcademicYear(year.getId()) || promotionDao.checkByAcademicYear(year.getId())
+						|| academicFeeDao.checkByAcademicYear(year.getId() )) {
+					String message = "Impossible de supprimer l'année "+year.getLabel()+",\ncar autres données de la base de données \nsont liée à cette occurence.";
+					message += "\nEn plus les suppressions récursives ne sont pas pris en charge";
+					JOptionPane.showMessageDialog(this, message, "Echec de suppression", JOptionPane.ERROR_MESSAGE);
+				} else {
+					academicYearDao.delete(year.getId());
+				}
+			});
+			
+			itemUpdate.addActionListener(event -> {
+				AcademicYear year = new AcademicYear();
+				formYear.setAcademicYear(year);
+			});
+		}
+    	
+    }
 }

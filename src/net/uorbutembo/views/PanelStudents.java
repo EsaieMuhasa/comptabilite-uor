@@ -216,7 +216,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		dialogInscription.setContentPane(inscriptionFormScroll);
 		dialogInscription.pack();
 		dialogInscription.setSize(900, dialogInscription.getHeight());
-		dialogInscription.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+		dialogInscription.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		
 		formInscription.setCurrentYear(navigation.getCurrentYear());
 	}
@@ -241,7 +241,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		dialogRegister.pack();
 		dialogRegister.setSize(700, dialogRegister.getHeight());
 		dialogRegister.setResizable(false);
-		dialogRegister.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+		dialogRegister.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		
 		formRegister.setCurrentYear(navigation.getCurrentYear());
 	}
@@ -257,7 +257,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		sheet = new IndividualSheet(mainWindow);
 		dialogSheet = new JDialog(mainWindow,"Fiche de payement", true);
 		dialogSheet.setSize(mainWindow.getWidth()-mainWindow.getWidth()/4, mainWindow.getHeight()-mainWindow.getHeight()/4);
-		dialogSheet.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+		dialogSheet.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		dialogSheet.getContentPane().add(sheet, BorderLayout.CENTER);
 	}
 	
@@ -277,7 +277,6 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		center.add(box, BorderLayout.SOUTH);
 		
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		
 		
 		progress.setBorderPainted(false);
 		progress.setStringPainted(true);

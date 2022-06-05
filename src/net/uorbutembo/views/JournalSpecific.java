@@ -198,7 +198,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		dialogRecipe.setIconImage(mainWindow.getIconImage());		
 		
 		
-		dialogRecipe.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+		dialogRecipe.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		dialogRecipe.getContentPane().add(formRecipe, BorderLayout.CENTER);
 		dialogRecipe.getContentPane().setBackground(FormUtil.BKG_DARK);
 		dialogRecipe.pack();
@@ -234,7 +234,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		dialogOutlay = new JDialog(mainWindow, "Sortie", true);
 		dialogOutlay.setIconImage(mainWindow.getIconImage());
 		
-		dialogOutlay.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+		dialogOutlay.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		dialogOutlay.getContentPane().add(formOutlay, BorderLayout.CENTER);
 		dialogOutlay.getContentPane().setBackground(FormUtil.BKG_DARK);
 		dialogOutlay.pack();

@@ -2,10 +2,9 @@ package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
 
-import javax.swing.Box;
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
 import javax.swing.JScrollPane;
-import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.PaymentLocation;
 import net.uorbutembo.dao.DAOAdapter;
@@ -26,13 +25,12 @@ import resources.net.uorbutembo.R;
  */
 public class PanelPaymentLocation extends Panel {
 	private static final long serialVersionUID = 5031377974753784475L;
-
 	
-	private static final ImageIcon ICO_PLUS  = new ImageIcon(R.getIcon("plus"));
-	private static final ImageIcon ICO_CLOSE  = new ImageIcon(R.getIcon("close"));
+	private final Button btnNew = new Button(new ImageIcon(R.getIcon("new")), "Ajouter");
+	{btnNew.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);}
 	
-	private final Button btnNew = new Button(ICO_PLUS, "Ajouter");
-	private final FormPaymentLocation form;
+	private JDialog dialogForm;
+	private FormPaymentLocation form;
 	private final Table table;
 	private final PaymentLocationTableModel tableModel;
 	
@@ -50,12 +48,17 @@ public class PanelPaymentLocation extends Panel {
 		}
 		
 	};
+	
+	private final MainWindow mainWindow;
 
 	/**
 	 * 
 	 */
 	public PanelPaymentLocation (MainWindow mainWindow) {
 		super(new BorderLayout());
+		
+		this.mainWindow = mainWindow;
+		
 		paymentLocationDao =mainWindow.factory.findDao(PaymentLocationDao.class);
 		tableModel = new PaymentLocationTableModel(paymentLocationDao);
 		table = new Table(tableModel);
@@ -71,37 +74,40 @@ public class PanelPaymentLocation extends Panel {
 		paymentLocationDao.addListener(locationAdapter);
 		
 		final Panel container = new Panel(new BorderLayout());
-		final Panel top = new Panel(new BorderLayout());
-		final Box box = Box.createHorizontalBox();
 		
-		form = new FormPaymentLocation(mainWindow);
-		form.setVisible(false);
 		btnNew.addActionListener(event -> {
-			if (btnNew.getText().equals("Ajouter")) {
-				form.setVisible(true);
-				btnNew.setText("Annuler");
-				btnNew.setIcon(ICO_CLOSE);
-			} else {
-				btnNew.setText("Ajouter");
-				btnNew.setIcon(ICO_PLUS);
-				form.setVisible(false);
-				form.setPaymentLocation(null);
-			}
+			createDialog();
+			
+			dialogForm.setLocationRelativeTo(mainWindow);
+			dialogForm.setVisible(true);
 		});
 		
 		JScrollPane scroll = FormUtil.createVerticalScrollPane(container);
-		
-		box.add(Box.createHorizontalGlue());
-		box.add(btnNew);
-		box.setBorder(new EmptyBorder(0, 0, 10, 0));
-		top.add(box, BorderLayout.NORTH);
-		top.add(form, BorderLayout.CENTER);
-		top.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		final TablePanel tablePanel = new TablePanel(table, "Liste des lieux de perceptions des recettes", false);
+
+		tablePanel.getHeader().add(btnNew, BorderLayout.EAST);
+		tablePanel.getHeader().setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		container.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-		container.add(new TablePanel(table, "Liste des lieux de perceptions des recettes", false), BorderLayout.CENTER);
+		container.add(tablePanel, BorderLayout.CENTER);
 		
-		this.add(top, BorderLayout.NORTH);
-		this.add(scroll, BorderLayout.CENTER);
+		add(scroll, BorderLayout.CENTER);
+	}
+	
+	private void createDialog() {
+		if (dialogForm != null)
+			return;
+		
+		final Panel padding = new Panel(new BorderLayout());
+		form = new FormPaymentLocation(mainWindow);
+		
+		dialogForm = new JDialog(mainWindow, "Lieux de payement", true);
+		dialogForm.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialogForm.getContentPane().add(padding, BorderLayout.CENTER);
+		dialogForm.getContentPane().setBackground(FormUtil.BKG_DARK);
+		
+		padding.add(form, BorderLayout.CENTER);
+		padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		dialogForm.pack();
 	}
 
 }

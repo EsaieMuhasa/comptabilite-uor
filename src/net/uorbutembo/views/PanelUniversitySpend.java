@@ -5,10 +5,9 @@ package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
 
-import javax.swing.Box;
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
 import javax.swing.JScrollPane;
-import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.UniversitySpend;
 import net.uorbutembo.dao.DAOAdapter;
@@ -29,11 +28,13 @@ import resources.net.uorbutembo.R;
 public class PanelUniversitySpend extends Panel{
 	private static final long serialVersionUID = -6678192465363319784L;
 	
-	private static final ImageIcon ICO_PLUS  = new ImageIcon(R.getIcon("plus"));
-	private static final ImageIcon ICO_CLOSE  = new ImageIcon(R.getIcon("close"));
+	private static final ImageIcon ICO_PLUS  = new ImageIcon(R.getIcon("new"));
 	
 	private final Button btnNew = new Button(ICO_PLUS, "Ajouter");
-	private final FormUniversitySpend form;
+	{btnNew.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);}
+	
+	private JDialog dialogForm;
+	private FormUniversitySpend form;
 	private final Table table;
 	private final UniversitySpendTableModel tableModel;
 	
@@ -42,19 +43,25 @@ public class PanelUniversitySpend extends Panel{
 
 		@Override
 		public synchronized void onCreate(UniversitySpend e, int requestId) {
-			btnNew.doClick();
+			dialogForm.setVisible(false);
+			dialogForm.dispose();
 		}
 
 		@Override
 		public synchronized void onUpdate(UniversitySpend e, int requestId) {
-			btnNew.doClick();
+			dialogForm.setVisible(false);
+			dialogForm.dispose();
 		}
 		
 	};
 	
+	private final MainWindow mainWindow;
+	
 	public PanelUniversitySpend(MainWindow mainWindow) {
 		super(new BorderLayout());
-		universitySpendDao =mainWindow.factory.findDao(UniversitySpendDao.class);
+		this.mainWindow = mainWindow;
+		
+		universitySpendDao = mainWindow.factory.findDao(UniversitySpendDao.class);
 		tableModel = new UniversitySpendTableModel(universitySpendDao);
 		table = new Table(tableModel);
 		table.setShowVerticalLines(true);
@@ -68,38 +75,45 @@ public class PanelUniversitySpend extends Panel{
 		
 		universitySpendDao.addListener(spendAdapter);
 		
+		final TablePanel tablePanel = new TablePanel(table, "Liste des dépenses", false);
 		final Panel container = new Panel(new BorderLayout());
-		final Panel top = new Panel(new BorderLayout());
-		final Box box = Box.createHorizontalBox();
 		
-		form = new FormUniversitySpend(mainWindow);
-		form.setVisible(false);
 		btnNew.addActionListener(event -> {
-			if (btnNew.getText().equals("Ajouter")) {
-				form.setVisible(true);
-				btnNew.setText("Annuler");
-				btnNew.setIcon(ICO_CLOSE);
-			} else {
-				btnNew.setText("Ajouter");
-				btnNew.setIcon(ICO_PLUS);
-				form.setVisible(false);
-				form.setSpend(null);
-			}
+			if (dialogForm == null)
+				createDialog();
+			
+			dialogForm.setLocationRelativeTo(mainWindow);
+			dialogForm.setVisible(true);
 		});
 		
 		JScrollPane scroll = FormUtil.createVerticalScrollPane(container);
-		
-		box.add(Box.createHorizontalGlue());
-		box.add(btnNew);
-		box.setBorder(new EmptyBorder(0, 0, 10, 0));
-		top.add(box, BorderLayout.NORTH);
-		top.add(form, BorderLayout.CENTER);
-		top.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+
+		tablePanel.getHeader().add(btnNew, BorderLayout.EAST);
+		tablePanel.getHeader().setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		container.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-		container.add(new TablePanel(table, "Liste des dépsenses", false), BorderLayout.CENTER);
+		container.add(tablePanel, BorderLayout.CENTER);
 		
-		this.add(top, BorderLayout.NORTH);
-		this.add(scroll, BorderLayout.CENTER);
+		add(scroll, BorderLayout.CENTER);
+	}
+	
+	/**
+	 * Utilitaire de creation de la boite de dialogue qui permet d'enregistrer
+	 * et de modifier un depense
+	 */
+	private void createDialog() {
+		if (dialogForm != null)
+			return;
+		
+		final Panel padding = new Panel(new BorderLayout());
+		form = new FormUniversitySpend(mainWindow);
+		dialogForm = new JDialog(mainWindow, "Ajout d'une nouvelle dépense", true);
+		dialogForm.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialogForm.getContentPane().add(padding, BorderLayout.CENTER);
+		dialogForm.getContentPane().setBackground(FormUtil.BKG_DARK);
+		
+		padding.add(form, BorderLayout.CENTER);
+		padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		dialogForm.pack();
 	}
 
 }
