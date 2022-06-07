@@ -22,6 +22,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -29,8 +30,18 @@ import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xddf.usermodel.chart.ChartTypes;
+import org.apache.poi.xddf.usermodel.chart.LegendPosition;
+import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFChartLegend;
+import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
+import org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory;
+import org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFChart;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -54,6 +65,7 @@ import net.uorbutembo.dao.StudentDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.swing.charts.PieModel;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DialogStudentExportConfig.ExportConfig;
 import net.uorbutembo.views.components.SidebarStudents.DepartmentFilter;
@@ -317,13 +329,14 @@ public class StudentsDatatableView extends Panel {
 	
 	//EXPORATION DES DONNEE
 	//		=== || ====
-	
+
 	/**
 	 * Exportation des donnees au format excel
 	 * @param fileName chemain du fichier de serialisation
-	 * @param fullRow faut-il exporter la ligne compte??
+	 * @param config
+	 * @param models
 	 */
-	public synchronized void exportToExcel (String fileName, ExportConfig config) {
+	public synchronized void exportToExcel (String fileName, ExportConfig config, PieModel ...models) {
 		progress.setIndeterminate(true);
 		progress.setVisible(true);
 		progress.setValue(0);
@@ -349,7 +362,7 @@ public class StudentsDatatableView extends Panel {
 			
 			//EXPORTATION GLOBALE
 			if(config.isSelected(1)) {
-				createGlobalSheet(book, config);
+				createGlobalSheet(book, config, models);
 			}
 			//===
 			
@@ -448,10 +461,11 @@ public class StudentsDatatableView extends Panel {
 	 * exportation de la vue globale du rapport au format excel
 	 * @param book
 	 * @param config
+	 * @param models
 	 * @return
 	 * @throws Exception
 	 */
-	private XSSFSheet createGlobalSheet (XSSFWorkbook book, ExportConfig config) throws Exception{
+	private XSSFSheet createGlobalSheet (XSSFWorkbook book, ExportConfig config, PieModel ...models) throws Exception{
 		XSSFSheet sheet = book.createSheet("globale");
 		int columnCount = 0;
 		int rowCount = -1;
@@ -467,6 +481,8 @@ public class StudentsDatatableView extends Panel {
 				columns[lastIndex++] = i;
 		}
 		columnCount += 1 + +config.countChecked(2);
+		
+		exportGlobalChart(sheet, columnCount, models);
 		
 		XSSFRow row = sheet.createRow(++rowCount);
 		XSSFCell cell = null;
@@ -610,6 +626,36 @@ public class StudentsDatatableView extends Panel {
 			sheet.addMergedRegion(address);
 		
 		return sheet;
+	}
+	
+	/**
+	 * Exportation des donnees sous forme de graphique
+	 * @param sheet
+	 * @param offsetColumns
+	 * @param models
+	 */
+	private void exportGlobalChart (XSSFSheet sheet, int offsetColumns, PieModel ...models) {
+		for (int i = 0; i < models.length; i++) {
+			XSSFDrawing drawing = sheet.createDrawingPatriarch();
+			
+			XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, offsetColumns, (i * 30) + 1, 30, 30);
+			
+			XSSFChart chart = drawing.createChart(anchor);
+			chart.setTitleText(models[i].getTitle());
+			chart.setTitleOverlay(false);
+			
+			XDDFChartLegend legend = chart.getOrAddLegend();
+			legend.setPosition(LegendPosition.TOP_RIGHT);
+			XDDFDataSource<String> testOutcomes = XDDFDataSourcesFactory.fromArray(PieModel.toLabelsArray(models[i]));
+			XDDFNumericalDataSource<Double> values = XDDFDataSourcesFactory.fromArray(PieModel.toValuesArray(models[i]));
+			
+			XDDFChartData data = chart.createData(ChartTypes.PIE, null, null);
+			chart.displayBlanksAs(null);
+			data.setVaryColors(true);
+			data.addSeries(testOutcomes, values);
+			
+			chart.plot(data);
+		}
 	}
 	
 	/**
@@ -914,7 +960,7 @@ public class StudentsDatatableView extends Panel {
 		/**
 		 * 
 		 */
-		public DataGroup() {
+		public DataGroup () {
 			super(new BorderLayout());
 		}
 
@@ -1182,6 +1228,7 @@ public class StudentsDatatableView extends Panel {
 		private final Promotion promotion;
 		private PromotionPaymentTableModel tableModel;
 		private Table table;
+		private final JLabel labelCount = FormUtil.createSubTitle("0 étidiant");
 		
 		private JPopupMenu popupMenu = new JPopupMenu();
 		
@@ -1190,6 +1237,95 @@ public class StudentsDatatableView extends Panel {
 		private JMenuItem itemOpenFile = new JMenuItem("Fiche individuelle", new ImageIcon(R.getIcon("report")));
 		private JMenuItem itemDelete = new JMenuItem("Suprimer l'inscription", new ImageIcon(R.getIcon("close")));
 		
+		private final TableModelListener tableModelListener = event -> {
+			int count = tableModel.getRowCount();
+			labelCount.setText(count+" étudiant"+(count>1? "s":""));
+			if(count == 0)
+				setAutohide(true);
+		};
+		
+		private final MouseAdapter mouseAdapter = new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(table.getSelectedRow() != -1 && e.getClickCount() == 2) {
+					itemOpenFile.doClick();
+				}
+			}
+			
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
+					itemDelete.setEnabled(academicYearDao.isCurrent(promotion.getAcademicYear()));
+					itemEditInscription.setEnabled(academicYearDao.isCurrent(promotion.getAcademicYear()));
+					popupMenu.show(table, e.getX(), e.getY());
+				}
+			}
+		};
+		
+		private final ActionListener itemDeleteListener = event ->  {
+			InscriptionDataRow row = tableModel.getRow(table.getSelectedRow());
+			String message = "Voulez-vous vraiment suprimer\nl'inscription de '"+row.getInscription().getStudent()+"'?";
+			message += "\n\nN.B: Cette opération est ireversible";
+			int status = JOptionPane.showConfirmDialog(null, message, "Supression de l'inscription", JOptionPane.OK_CANCEL_OPTION);
+			if(status == JOptionPane.OK_OPTION) {
+				if(row.getPayments().size() != 0) {
+					JOptionPane.showMessageDialog(mainWindow, "Impossible d'effectuer cette operation, "
+							+ "\ncar la fiche individuel de cette etudiant contiens \naumoin une données",
+							"Alert", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				try {
+					inscriptionDao.delete(row.getInscription().getId());
+				} catch (DAOException e) {
+					JOptionPane.showMessageDialog(mainWindow, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		};
+		
+		private final ActionListener itemOpenFileListener = event -> {
+			listener.onAction(tableModel.getRow(table.getSelectedRow()));
+		};
+		
+		private final ActionListener itemEditInscriptionListener = event -> {
+			if(dialogInscription == null) {
+				dialogInscription = new JDialog();
+				dialogInscription.setModal(true);
+				dialogInscription.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+				
+				formRegister = new FormReRegister(mainWindow, false);
+				formRegister.setCurrentYear(currentYear);
+				dialogInscription.getContentPane().add(formRegister, BorderLayout.CENTER);
+				dialogInscription.getContentPane().setBackground(FormUtil.BKG_START);
+				formRegister.getBtnCancel().addActionListener(cancelUpdateInscription);
+				dialogInscription.pack();
+			}
+			
+			InscriptionDataRow row = tableModel.getRow(table.getSelectedRow());
+			formRegister.setInscription(row.getInscription());
+			dialogInscription.setLocationRelativeTo(mainWindow);
+			dialogInscription.setVisible(true);
+		};
+		
+		private final ActionListener itemEditProfilListener = event -> {
+			if(dialogStudent == null) {
+				dialogStudent = new JDialog();
+				dialogStudent.setModal(true);
+				dialogStudent.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+				dialogStudent.setSize(650, 450);
+				dialogStudent.setResizable(false);
+				dialogStudent.getContentPane().setBackground(FormUtil.BKG_START);
+				
+				formStudent = new FormStudent(mainWindow);
+				dialogStudent.getContentPane().add(formStudent, BorderLayout.CENTER);
+			}
+			
+			InscriptionDataRow row = tableModel.getRow(table.getSelectedRow());
+			formStudent.setStudent(row.getInscription().getStudent());
+			dialogStudent.setLocationRelativeTo(mainWindow);
+			dialogStudent.setVisible(true);
+		};
+		
 		/**
 		 * @param promotion
 		 */
@@ -1197,9 +1333,14 @@ public class StudentsDatatableView extends Panel {
 			super();
 			this.promotion = promotion;
 			tableModel = new PromotionPaymentTableModel(daoFactory, dataRowListener);
+			tableModel.addTableModelListener(tableModelListener);
 			tableModel.setPromotion(promotion);
 			table = new Table(tableModel);
 			table.setShowVerticalLines(true);
+			
+			TablePanel tablePanel = new TablePanel(table, promotion.getStudyClass().getAcronym()+" "+promotion.getDepartment().getName(), false);
+			tablePanel.getHeader().add(labelCount, BorderLayout.EAST);
+			
 			
 			table.getColumnModel().getColumn(0).setMaxWidth(130);
 			table.getColumnModel().getColumn(0).setWidth(130);
@@ -1215,30 +1356,14 @@ public class StudentsDatatableView extends Panel {
 			table.getColumnModel().getColumn(4).setWidth(140);
 			table.getColumnModel().getColumn(4).setResizable(false);
 			
-			this.add(new TablePanel(table, promotion.getStudyClass().getAcronym()+" "+promotion.getDepartment().getName(), false), BorderLayout.CENTER);
+			this.add(tablePanel, BorderLayout.CENTER);
 			this.setBorder(EMPTY_BOTTOM_BORDER);
 			
 			if(tableModel.getRowCount() == 0) {
 				this.setAutohide(true);
 			}
 			
-			table.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseClicked(MouseEvent e) {
-					if(table.getSelectedRow() != -1 && e.getClickCount() == 2) {
-						itemOpenFile.doClick();
-					}
- 				}
-				
-				@Override
-				public void mouseReleased(MouseEvent e) {
-					if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
-						itemDelete.setEnabled(academicYearDao.isCurrent(promotion.getAcademicYear()));
-						itemEditInscription.setEnabled(academicYearDao.isCurrent(promotion.getAcademicYear()));
-						popupMenu.show(table, e.getX(), e.getY());
-					}
-				}
-			});
+			table.addMouseListener(mouseAdapter);
 			
 			popupMenu.add(itemOpenFile);
 			popupMenu.addSeparator();
@@ -1246,77 +1371,20 @@ public class StudentsDatatableView extends Panel {
 			popupMenu.add(itemEditInscription);
 			popupMenu.add(itemDelete);
 			
-			itemOpenFile.addActionListener(event -> {
-				listener.onAction(tableModel.getRow(table.getSelectedRow()));
-			});
-			itemDelete.addActionListener(event ->  {
-				InscriptionDataRow row = tableModel.getRow(table.getSelectedRow());
-				String message = "Voulez-vous vraiment suprimer\nl'inscription de '"+row.getInscription().getStudent()+"'?";
-				message += "\n\nN.B: Cette opération est ireversible";
-				int status = JOptionPane.showConfirmDialog(null, message, "Supression de l'inscription", JOptionPane.OK_CANCEL_OPTION);
-				if(status == JOptionPane.OK_OPTION) {
-					if(row.getPayments().size() != 0) {
-						JOptionPane.showMessageDialog(mainWindow, "Impossible d'effectuer cette operation, "
-								+ "\ncar la fiche individuel de cette etudiant contiens \naumoin une données",
-								"Alert", JOptionPane.ERROR_MESSAGE);
-						return;
-					}
-					
-					try {
-						inscriptionDao.delete(row.getInscription().getId());
-					} catch (DAOException e) {
-						JOptionPane.showMessageDialog(mainWindow, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
-					}
-				}
-			});
-			
-			//inscription
-			itemEditInscription.addActionListener(event -> {
-				if(dialogInscription == null) {
-					dialogInscription = new JDialog();
-					dialogInscription.setModal(true);
-					dialogInscription.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
-					
-					formRegister = new FormReRegister(mainWindow, false);
-					formRegister.setCurrentYear(currentYear);
-					dialogInscription.getContentPane().add(formRegister, BorderLayout.CENTER);
-					dialogInscription.getContentPane().setBackground(FormUtil.BKG_START);
-					formRegister.getBtnCancel().addActionListener(cancelUpdateInscription);
-					dialogInscription.pack();
-				}
-				
-				InscriptionDataRow row = tableModel.getRow(table.getSelectedRow());
-				formRegister.setInscription(row.getInscription());
-				dialogInscription.setLocationRelativeTo(mainWindow);
-				dialogInscription.setVisible(true);
-			});
-			//==
-			
-			//student
-			itemEditProfil.addActionListener(event -> {
-				if(dialogStudent == null) {
-					dialogStudent = new JDialog();
-					dialogStudent.setModal(true);
-					dialogStudent.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
-					dialogStudent.setSize(650, 450);
-					dialogStudent.setResizable(false);
-					dialogStudent.getContentPane().setBackground(FormUtil.BKG_START);
-					
-					formStudent = new FormStudent(mainWindow);
-					dialogStudent.getContentPane().add(formStudent, BorderLayout.CENTER);
-				}
-				
-				InscriptionDataRow row = tableModel.getRow(table.getSelectedRow());
-				formStudent.setStudent(row.getInscription().getStudent());
-				dialogStudent.setLocationRelativeTo(mainWindow);
-				dialogStudent.setVisible(true);
-			});
-			//==
+			itemOpenFile.addActionListener(itemOpenFileListener);
+			itemDelete.addActionListener(itemDeleteListener);
+			itemEditInscription.addActionListener(itemEditInscriptionListener);
+			itemEditProfil.addActionListener(itemEditProfilListener);
 		}
 		
 		@Override
 		public void dispose() {
 			tableModel.dispose();
+			table.removeMouseListener(mouseAdapter);
+			itemOpenFile.removeActionListener(itemOpenFileListener);
+			itemDelete.removeActionListener(itemDeleteListener);
+			itemEditInscription.removeActionListener(itemEditInscriptionListener);
+			itemEditProfil.removeActionListener(itemEditProfilListener);
 		}
 		
 		@Override

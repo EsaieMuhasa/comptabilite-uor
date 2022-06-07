@@ -40,10 +40,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.table.AbstractTableModel;
 
 import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.AllocationRecipe;
 import net.uorbutembo.beans.AnnualSpend;
-import net.uorbutembo.beans.DefaultRecipePart;
 import net.uorbutembo.beans.OtherRecipe;
 import net.uorbutembo.beans.Outlay;
 import net.uorbutembo.beans.PaymentFee;
@@ -535,7 +533,23 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			
 		};
 		
+		private final ActionListener btnNavigationListener = event -> {
+			int offset = tableModel.getOffset(), step = 0;
+			if (event.getSource() == btnNext)
+				step = 15;
+			else 
+				step = -15;
+			tableModel.setOffset(offset + step);
+			
+			int opt = tableModel.getCountAll();
+			labelCount.setText(opt+" Opération"+(opt > 1? "s":"")+"/ page "+(tableModel.getOffset()/tableModel.getLimit()));
+			btnPrev.setEnabled(tableModel.getOffset() != 0);
+			btnNext.setEnabled((tableModel.getOffset()+tableModel.getLimit()) < opt);
+		};
+		
 		{
+			tableModel.setInterval(15, 0);
+			
 			//chart
 			pieModelSource.setRealMaxPriority(true);
 			pieModelLocation.setRealMaxPriority(true);
@@ -562,6 +576,8 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			final Box box = Box.createHorizontalBox();
 			box.add(btnPrev);
 			box.add(btnNext);
+			btnPrev.addActionListener(btnNavigationListener);
+			btnNext.addActionListener(btnNavigationListener);
 			 
 			labelCount.setFont(new Font("Arial", Font.BOLD, 15));
 			labelCount.setHorizontalAlignment(JLabel.LEFT);
@@ -571,6 +587,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			 
 			panelCommand.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		}
+
 		
 		public PanelRecipes () {
 			super(new BorderLayout());
@@ -616,6 +633,11 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		@Override
 		public void onReload(JournalMenuItem item) {
 			updatePie();
+			tableModel.reload();
+			int opt = tableModel.getCountAll();
+			labelCount.setText(opt+" Opération"+(opt > 1? "s":"")+"/ page "+(tableModel.getOffset()/tableModel.getLimit()));
+			btnPrev.setEnabled(tableModel.getOffset() != 0);
+			btnNext.setEnabled((tableModel.getOffset()+tableModel.getLimit()) < opt);
 		};
 
 
@@ -630,9 +652,12 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			if(account != null) {
 				account.addItemListener(this);
 				tableModel.reload(account.getAccount());
+				int opt = tableModel.getCountAll();
+				labelCount.setText(opt+" Opération"+(opt > 1? "s":"")+"/ page "+(tableModel.getOffset()/tableModel.getLimit()));
+				btnPrev.setEnabled(tableModel.getOffset() != 0);
+				btnNext.setEnabled((tableModel.getOffset()+tableModel.getLimit()) < opt);
 			}
 			
-			labelCount.setText(tableModel.getRowCount()+" Opération"+(tableModel.getRowCount() > 1? "s":""));
 			updatePie();
 		}
 		
@@ -970,6 +995,9 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		private List<RecipePart<?>> data = new ArrayList<>();
 		private AnnualSpend account;
 		
+		private int limit;
+		private int offset;
+		private int countAll;
 		
 		private final DAOAdapter<PaymentFee> feeAdapter = new DAOAdapter<PaymentFee>() {
 
@@ -978,14 +1006,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 				if(account  == null || e.getInscription().getPromotion().getAcademicFee() == null 
 						|| !allocationCostDao.check(account.getId(), e.getInscription().getPromotion().getAcademicFee().getId()))
 					return;
-				
-				AllocationCost allocationCost = allocationCostDao.find(account, e.getInscription().getPromotion().getAcademicFee());
-				
-				double amount = (e.getAmount()/100) * allocationCost.getPercent();
-				DefaultRecipePart<PaymentFee> part = new DefaultRecipePart<PaymentFee>(e, account, e.getLocation(), 
-						e.getInscription().getStudent().getFullName(), account.getUniversitySpend().getTitle(), amount);
-				data.add(part);
-				fireTableRowsDeleted(data.size()-1, data.size()-1);
+				requireReload();
 			}
 
 			@Override
@@ -993,15 +1014,14 @@ public class JournalSpecific extends Panel  implements ActionListener{
 				if(account  == null)
 					return;
 				
-				reload(account);
+				requireReload();
 			}
 
 			@Override
 			public synchronized void onDelete(PaymentFee e, int requestId) {
 				if(account  == null)
 					return;
-				
-				reload(account);
+				requireReload();
 			}
 			
 		};
@@ -1012,60 +1032,68 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			public synchronized void onCreate(OtherRecipe e, int requestId) {
 				if(account == null || !allocationRecipeDao.check(e.getAccount().getId(), account.getId()))
 					return;
-				
-				AllocationRecipe allocationRecipe = allocationRecipeDao.find(e.getAccount(), account);
-				
-				double amount = (e.getAmount()/100) * allocationRecipe.getPercent();
-				DefaultRecipePart<OtherRecipe> part = new DefaultRecipePart<OtherRecipe>(e, account, e.getLocation(),
-						e.getLabel(), account.getUniversitySpend().getTitle(), amount);
-				data.add(part);
-				fireTableRowsDeleted(data.size()-1, data.size()-1);
+				requireReload();
 			}
 
 			@Override
 			public synchronized void onUpdate(OtherRecipe e, int requestId) {
 				if(account == null)
 					return;
-				
-				reload(account);
+				requireReload();
 			}
 
 			@Override
 			public synchronized void onDelete(OtherRecipe e, int requestId) {
 				if(account == null)
 					return;
-				
-				reload(account);
+				requireReload();
 			}
 			
+			
 		};
+		
+		private void requireReload() {
+			countAll = paymentFeePartDao.countBySpend(account) + otherRecipePartDao.countBySpend(account);
+			reload();
+		}
 
 		public RecipeTableModel() {
 			paymentFeeDao.addListener(feeAdapter);
 			otherRecipeDao.addListener(recipeAdapter);
 		}
 		
+		/**
+		 * mis en jour du model des donnees
+		 * @param account
+		 */
 		public void reload (AnnualSpend account) {
-			data.clear();
 			this.account = account;
-			
+			if (account != null)
+				countAll = paymentFeePartDao.countBySpend(account) + otherRecipePartDao.countBySpend(account);
+			else 
+				countAll = 0;
+			reload();
+		}
+		
+		public void reload () {
+			data.clear();
 			if(account != null) {
-				if(paymentFeePartDao.checkBySpend(account)){
-					List<RecipePart<PaymentFee>>  parts = paymentFeePartDao.findBySpend(account);
+				if(paymentFeePartDao.checkBySpend(account, offset)){
+					List<RecipePart<PaymentFee>>  parts = paymentFeePartDao.findBySpend(account, limit, offset);
 					for (RecipePart<PaymentFee> part : parts) {
 						data.add(part);
 					}
 				}
 				
-				if(otherRecipePartDao.checkBySpend(account)){
-					List<RecipePart<OtherRecipe>>  parts = otherRecipePartDao.findBySpend(account);
+				if(otherRecipePartDao.checkBySpend(account, offset)){
+					List<RecipePart<OtherRecipe>>  parts = otherRecipePartDao.findBySpend(account, limit, offset);
 					for (RecipePart<OtherRecipe> part : parts) {
 						data.add(part);
 					}
 				}
 			}
 			
-			fireTableDataChanged();
+			fireTableDataChanged();			
 		}
 
 		@Override
@@ -1099,6 +1127,43 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		@Override
 		public int getRowCount() {
 			return data.size();
+		}
+		
+		/**
+		 * renvoie le compte total d'occurence dans la base de donnees
+		 * @return
+		 */
+		public int getCountAll () {
+			return countAll;
+		}
+
+		/**
+		 * @return the limit
+		 */
+		public int getLimit() {
+			return limit;
+		}
+		
+		public void setInterval (int limit, int offset) {
+			this.limit = limit;
+			this.offset = offset;
+			
+			reload();
+		}
+
+		/**
+		 * @return the offset
+		 */
+		public int getOffset() {
+			return offset;
+		}
+
+		/**
+		 * @param offset the offset to set
+		 */
+		public void setOffset(int offset) {
+			this.offset = offset;
+			reload();
 		}
 		
 	}

@@ -30,6 +30,9 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	private PaymentFeeDao paymentFeeDao;
 	private InscriptionDao inscriptionDao;
 	private StudentDao studentDao;
+	
+	private double solds;//le solde de toute la promotion
+	private double debts;//la dette de toute la promotion
 
 	public static final String [] COLUMN_NAMES = new String[] {"Matricule", "Nom, post-nom et prénom", "Téléphone", "Solde", "Dêtte"};
 	public static final String [] ALL_COLUMN_NAMES = new String[] {"Nom", "Post-nom", "prénom", "Matricule", "Téléphone", "E-mail", "Date de naissance", "Liex de naissance", "Photo", "Solde", "Dêtte"};
@@ -53,9 +56,8 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 					exist= true;
 					if(e.getPromotion().getId() != promotion.getId()) {//modification de la promotion
 						removeRow(i);
-					} else {//meme promotion
-						
 					}
+					break;
 				}
 			}
 			
@@ -89,6 +91,26 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		}
 	};
 	private InscriptionDataRowListener dataRowListener;
+	
+	
+	private final InscriptionDataRowListener inscriptionRowListener = new InscriptionDataRowListener() {
+		
+		@Override
+		public void onReload(InscriptionDataRow row) {
+			solds = 0;
+			debts = 0;
+			for (InscriptionDataRow r : data) {
+				solds += r.getSold();
+				debts += r.getDebt();
+			}
+		}
+		
+		@Override
+		public void onLoad(InscriptionDataRow row) {}
+		
+		@Override
+		public void onDispose(InscriptionDataRow row) {}
+	};
 
 	public PromotionPaymentTableModel(DAOFactory factory) {
 		super();
@@ -119,6 +141,20 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	}
 	
 	/**
+	 * @return the solds
+	 */
+	public double getSolds() {
+		return solds;
+	}
+
+	/**
+	 * @return the debts
+	 */
+	public double getDebts() {
+		return debts;
+	}
+
+	/**
 	 * Renvoie la ligne a l'index en parametre
 	 * @param index
 	 * @return
@@ -135,6 +171,12 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		data.add(row);
 		if(row.getPayments() == null)
 			row.setPayments(new ArrayList<>());
+		
+		solds += row.getSold();
+		debts += row.getDebt();
+		
+		row.addDataRowListener(dataRowListener);
+		row.addDataRowListener(inscriptionRowListener);
 		fireTableRowsInserted(data.size()-1, data.size()-1);
 	}
 	
@@ -144,6 +186,9 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 	 */
 	public void removeRow (int index) {
 		int count = getRowCount();
+		
+		solds -= data.get(index).getSold();
+		debts -= data.get(index).getDebt();
 		
 		data.get(index).dispose();
 		data.remove(index);
@@ -163,6 +208,12 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 			data.add(row);
 			if(row.getPayments() == null)
 				row.setPayments(new ArrayList<>());
+			
+			solds += row.getSold();
+			debts += row.getDebt();
+			
+			row.addDataRowListener(dataRowListener);
+			row.addDataRowListener(inscriptionRowListener);
 		}
 		fireTableRowsInserted(data.size()- rows.length, data.size()-1);
 	}
@@ -232,7 +283,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 			case 3:
 				return data.get(rowIndex).getSold()+" USD";
 			case 4:
-				return data.get(rowIndex).getDebs()+ " USD";
+				return data.get(rowIndex).getDebt()+ " USD";
 		}
 		return null;
 	}
@@ -264,14 +315,14 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		private List<PaymentFee> payments;
 		private int index;//l'index de la ligne dans le model du tableau
 		private double sold;
-		private double debs;//la dette
+		private double debt;//la dette
 		
 		private final DAOAdapter<PaymentFee> paymentListener = new DAOAdapter<PaymentFee>() {
 			@Override
 			public void onCreate(PaymentFee p, int requestId) {
 				if(p.getInscription().getId() == inscription.getId()) {
 					payments.add(p);
-					calcul();
+					calcul(true);
 				}
 			}
 
@@ -286,7 +337,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 						}
 					}
 					payments.add(p);
-					calcul();
+					calcul(true);
 				}
 			}
 
@@ -300,7 +351,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 							break;
 						}
 					}
-					calcul();
+					calcul(true);
 				}
 			}
 		};
@@ -371,7 +422,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 				case 7: return inscription.getStudent().getBirthPlace();
 				case 8: return inscription.getStudent().getPicture();
 				case 9: return getSold()+"";
-				case 10: return getDebs()+"";
+				case 10: return getDebt()+"";
 			}
 			throw new IndexOutOfBoundsException ("Index out of range: "+index);
 		}
@@ -397,7 +448,6 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		 */
 		public void setPayments(List<PaymentFee> payments) {
 			this.payments = payments;
-			calcul();
 		}
 		
 		/**
@@ -422,6 +472,8 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 			} else if(payments == null) 
 				payments = new ArrayList<>();
 			
+			calcul();
+			
 			for (InscriptionDataRowListener l : listeners) 
 				l.onReload(this);
 			
@@ -437,6 +489,8 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 			} else if(payments == null) 
 				payments = new ArrayList<>();
 			
+			calcul();
+			
 			for (InscriptionDataRowListener l : listeners) 
 				l.onLoad(this);
 			
@@ -449,23 +503,26 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 		
 		protected void calcul (boolean fireTable) {
 			sold = 0;
-			debs = promotion.getAcademicFee().getAmount();
+			debt = promotion.getAcademicFee().getAmount();
 			for (PaymentFee p : payments) {
 				sold += p.getAmount();
 			}
-			debs -= sold;
-			if (fireTable)
+			debt -= sold;
+			if (fireTable){
 				fireTableCellUpdated(index, 3);
+				for (InscriptionDataRowListener l : listeners) 
+					l.onReload(this);
+			}
 		}
 		
 		public double getSold () {
 			return sold;
 		}
 		
-		public double getDebs () {
+		public double getDebt () {
 			if (sold == 0)
 				return promotion.getAcademicFee().getAmount();
-			return debs;
+			return debt;
 		}
 
 	}

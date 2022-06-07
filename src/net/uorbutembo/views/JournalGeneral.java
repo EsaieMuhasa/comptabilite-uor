@@ -148,16 +148,9 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		
 		private final Panel container = new Panel(new GridLayout(1, 3, 10, 10));
 		
-		private final DefaultCardModel<Double> cardSoldModel = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
 		private final DefaultCardModel<Double> cardOutModel = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
 		private final DefaultCardModel<Double> cardInModel = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
-		{			
-			cardSoldModel.setTitle("Solde");
-			cardSoldModel.setInfo("Montant disponible");
-			cardSoldModel.setSuffix("$");
-			cardSoldModel.setIcon(R.getIcon("caisse"));
-			cardSoldModel.setValue(0d);
-			
+		{
 			cardOutModel.setTitle("Dépenses");
 			cardOutModel.setInfo("Montant déjà utiliser");
 			cardOutModel.setSuffix("$");
@@ -170,7 +163,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			cardInModel.setIcon(R.getIcon("btn-add"));
 			cardInModel.setValue(0d);
 		}
-		private final Card cardSold = new Card(cardSoldModel);
+		private final Card cardSold = new Card(mainWindow.getWorkspace().getDashboard().getGlobalModel().getCardModelCaisse());
 		private final Card cardOut = new Card(cardOutModel);
 		private final Card cardIn = new Card(cardInModel);
 		
@@ -181,7 +174,6 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
 					return;
 				
-				cardSoldModel.setValue(cardSoldModel.getValue() + e.getAmount());
 				cardInModel.setValue(cardInModel.getValue() + e.getAmount());
 			}
 
@@ -197,7 +189,6 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
 					return;
 				
-				cardSoldModel.setValue(cardSoldModel.getValue() - e.getAmount());
 				cardInModel.setValue(cardInModel.getValue() - e.getAmount());
 			}
 			
@@ -210,7 +201,6 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 				if(e.getAccount().getAcademicYear().getId() != year.getId())
 					return;
 				
-				cardSoldModel.setValue(cardSoldModel.getValue() + e.getAmount());
 				cardInModel.setValue(cardInModel.getValue() + e.getAmount());
 			}
 
@@ -227,7 +217,6 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 				if(e.getAccount().getAcademicYear().getId() != year.getId())
 					return;
 				
-				cardSoldModel.setValue(cardSoldModel.getValue() - e.getAmount());
 				cardInModel.setValue(cardInModel.getValue() - e.getAmount());
 			}
 			
@@ -240,7 +229,6 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 				if (e.getAccount().getAcademicYear().getId() != year.getId())
 					return;
 				
-				cardSoldModel.setValue(cardSoldModel.getValue() - e.getAmount());
 				cardOutModel.setValue(cardOutModel.getValue() + e.getAmount());
 			}
 
@@ -257,7 +245,6 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 				if (e.getAccount().getAcademicYear().getId() != year.getId())
 					return;
 				
-				cardSoldModel.setValue(cardSoldModel.getValue() + e.getAmount());
 				cardOutModel.setValue(cardOutModel.getValue() - e.getAmount());
 			}
 			
@@ -283,7 +270,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		 */
 		public void updateCards () {
 			
-			double recipe = 0, used = 0, sold = 0;
+			double recipe = 0, used = 0;
 			progressBar.setValue(0);
 			
 			if(annualSpendDao.checkByAcademicYear(year.getId())) {
@@ -300,16 +287,13 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 				
 				BigDecimal bigRecipe = new BigDecimal(recipe).setScale(2, RoundingMode.HALF_UP);
 				BigDecimal bigUsed = new BigDecimal(used).setScale(2, RoundingMode.HALF_UP);
-				BigDecimal bigSold = new BigDecimal(recipe - used).setScale(2, RoundingMode.HALF_UP);
 				
 				recipe = bigRecipe.doubleValue();
 				used = bigUsed.doubleValue();
-				sold = bigSold.doubleValue();
 			}
 
 			cardInModel.setValue(recipe);
 			cardOutModel.setValue(used);
-			cardSoldModel.setValue(sold);
 		}
 		
 		@Override
@@ -326,6 +310,12 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		}
 	}
 	
+	/**
+	 * Conteneur principale de journal.
+	 * contien des onclets pour faciltier la manipulation des donnees.
+	 * 2 oclets graphiques et 2 oclets contenant des jtable
+	 * @author Esaie MUHASA
+	 */
 	private class CenterContainer extends Panel {
 		private static final long serialVersionUID = -2449570582834436476L;
 		
@@ -347,13 +337,12 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		}
 		
+		/**
+		 * echargement des donnees des modeles des graphiques
+		 */
 		public void reload () {
 			linePanel.reloadChart();
 			piePanel.reloadChart();
-		}
-		
-		public void dispose () {
-			
 		}
 		
 	}

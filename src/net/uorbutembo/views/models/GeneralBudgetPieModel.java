@@ -430,7 +430,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	/**
 	 * @return the cardModelCaisse
 	 */
-	public DefaultCardModel<Double> getCardModelPayment() {
+	public DefaultCardModel<Double> getCardModelCaisse() {
 		return cardModelCaisse;
 	}
 

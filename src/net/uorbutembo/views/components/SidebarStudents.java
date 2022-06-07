@@ -6,6 +6,7 @@ package net.uorbutembo.views.components;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
@@ -191,7 +192,7 @@ public class SidebarStudents extends Panel implements YearChooserListener{
 	 */
 	private void init() {
 		final JScrollPane scroll = new JScrollPane(tree);
-		final Panel top = new Panel(new BorderLayout());
+		final Panel top = new Panel(new FlowLayout(FlowLayout.LEFT));
 		final Panel bottom = new Panel(new GridLayout(1,2, 5, 5));
 		final Panel center = new Panel(new BorderLayout());
 		
@@ -217,7 +218,7 @@ public class SidebarStudents extends Panel implements YearChooserListener{
 				emitOnFilter(false);
 		});
 		
-		top.add(checkFilter, BorderLayout.EAST);
+		top.add(checkFilter);
 		top.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
 		center.add(scroll, BorderLayout.CENTER);

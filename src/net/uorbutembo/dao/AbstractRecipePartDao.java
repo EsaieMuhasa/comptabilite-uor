@@ -356,6 +356,20 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 	public boolean checkBySpend (AnnualSpend spend) throws DAOException {
 		return check("spend", spend.getId());
 	}
+	
+	@Override
+	public boolean checkBySpend(AnnualSpend spend, int offset) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT id FROM %s WHERE spend=%d LIMIT 1 OFFSET %d", getViewName(), spend.getId(), offset);
+		try (
+				Connection connection =  this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY);
+			) {
+			return result.next();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
 
 	@Override
 	public int countBySpend(AnnualSpend spend) throws DAOException {

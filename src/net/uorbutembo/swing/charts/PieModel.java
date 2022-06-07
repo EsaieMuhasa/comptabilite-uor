@@ -121,6 +121,30 @@ public interface PieModel {
 	void removeAll ();
 	PiePart [] getParts ();
 	
+	/**
+	 * recuperation du contenue d'un model en un tableau des double
+	 * @param model
+	 * @return
+	 */
+	public static Double [] toValuesArray (PieModel model) {
+		Double [] values = new Double[model.getCountPart()];
+		for (int i = 0; i < values.length; i++)
+			values[i] = model.getPartAt(i).getValue();
+		return values;
+	}
+	
+	/**
+	 * Renvoie le tableau des labels d'un model
+	 * @param model
+	 * @return
+	 */
+	public static String [] toLabelsArray (PieModel model) {
+		String [] labels = new String[model.getCountPart()]; 
+		for (int i = 0; i < labels.length; i++)
+			labels[i] = model.getPartAt(i).getLabel();
+		return labels;
+	}
+	
 	void addListener (PieModelListener listener);
 	void removeListener (PieModelListener listener);
 }

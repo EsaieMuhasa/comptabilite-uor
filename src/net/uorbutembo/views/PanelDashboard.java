@@ -195,7 +195,7 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 		
 		panelCards.add(new Card(modelCardStudents));
 		panelCards.add(Box.createHorizontalStrut(10));
-		panelCards.add(new Card(globalModel.getCardModelPayment()));
+		panelCards.add(new Card(globalModel.getCardModelCaisse()));
 		panelCards.add(Box.createHorizontalStrut(10));
 		panelCards.add( new Card(globalModel.getCardModel()));
 	}

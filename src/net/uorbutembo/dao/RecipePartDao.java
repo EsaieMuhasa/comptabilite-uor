@@ -125,6 +125,15 @@ public interface RecipePartDao <T extends RecipePart<S>, H extends DefaultRecipe
 	boolean checkBySpend (AnnualSpend spend) throws DAOException;
 	
 	/**
+	 * verification de l'existance des donnees
+	 * @param spend
+	 * @param offset nombre d'occurence a sauter
+	 * @return
+	 * @throws DAOException
+	 */
+	boolean checkBySpend (AnnualSpend spend, int offset) throws DAOException;
+	
+	/**
 	 * verification des operations sur un compte dans un lieux de payment
 	 * @param spend
 	 * @param location
