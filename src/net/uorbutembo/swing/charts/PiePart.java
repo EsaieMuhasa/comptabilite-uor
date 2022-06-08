@@ -22,12 +22,6 @@ public interface PiePart extends ChartData{
 	void setLabel (String label);
 	
 	/**
-	 * renvoie le nom courte du part
-	 * @return
-	 */
-	String getShortLabel ();
-	
-	/**
 	 * Renvoi le nom du part
 	 * il est preferable de ce nom sois unique dans la collection des parts dans le model
 	 * @return

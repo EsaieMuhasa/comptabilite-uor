@@ -42,13 +42,13 @@ public class PieRender extends JComponent implements PieModelListener{
 	
 	private static final BasicStroke LINE_STROKE = new BasicStroke(1.2f);
 	private static final Font RENDER_FONT = new Font("Arial", Font.PLAIN, 18);
-	private final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,##0.##");
+	public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#,##0.##");
 	
 	private PieModel model;
 	private PieRenderType type;
 	
 	private double diameter;//le rayons d'un cercle
-	private float padding = 0.18f;
+	private float padding = 0.10f;
 	private float borderHover = 0.05f;
 	private final List<PiePartInfo> parts = new ArrayList<>();
 	
@@ -78,6 +78,7 @@ public class PieRender extends JComponent implements PieModelListener{
 		setFont(RENDER_FONT);
 		type = PieRenderType.DONUT_CHART;
 		model.addListener(this);
+		prepareRender();
 		addMouseListener(ls);
 		addMouseMotionListener(ls);
 	}
@@ -229,11 +230,6 @@ public class PieRender extends JComponent implements PieModelListener{
 			
 		}
 		
-//		g2.setColor(Color.WHITE);
-//		int x = (int) (getWidth() / 2 - diameter /2);
-//		int y = (int) (getHeight() / 2 - diameter /2);
-//		g2.drawRect(x, y, (int)diameter, (int)diameter);
-		
 	}
 	
 	/**
@@ -367,6 +363,8 @@ public class PieRender extends JComponent implements PieModelListener{
 				this.model.removeListener(this);
 			this.model = model;
 			this.model.addListener(this);
+			prepareRender();
+			repaint();
 		}
 	}
 	
@@ -374,6 +372,9 @@ public class PieRender extends JComponent implements PieModelListener{
 	 * utilitaire de preparation du rendu du graphique
 	 */
 	private synchronized void prepareRender () {
+		for (int i = 0; i < parts.size(); i++)
+			parts.get(i).dispose();
+		
 		parts.clear();
 		
 		final double width = getWidth();
@@ -459,20 +460,16 @@ public class PieRender extends JComponent implements PieModelListener{
 			if(!hovable)
 				return;
 			
-			for (PiePartInfo info : parts)
-				info.setHover(false);
-			
 			Point point = e.getPoint();
 			int index = -1;
 			for (PiePartInfo info : parts) {
 				if(info.match(point)) {
 					index = model.indexOf(info.getPart());
-					info.setHover(true);
 					break;
 				}
 			}
 			hoverIndex = index;
-			model.setSelectedIndex(index);
+			repaint();
 		}
 		
 	}
@@ -489,7 +486,6 @@ public class PieRender extends JComponent implements PieModelListener{
 		private double textAngle;
 		private double drawAngle;
 		
-		private boolean hover;
 		private double sinTextAngle;
 		private double cosTextAngle;
 		
@@ -522,19 +518,13 @@ public class PieRender extends JComponent implements PieModelListener{
 				return false;
 			return area.contains(M);
 		}
-
+		
 		/**
-		 * @return the hover
+		 * Liberation des resources
 		 */
-		public boolean isHover() {
-			return hover;
-		}
-
-		/**
-		 * @param hover the hover to set
-		 */
-		public void setHover(boolean hover) {
-			this.hover = hover;
+		public void dispose () {
+			part = null;
+			area = null;
 		}
 
 		/**

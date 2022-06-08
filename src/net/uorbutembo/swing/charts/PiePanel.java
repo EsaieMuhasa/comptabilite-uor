@@ -25,7 +25,7 @@ public class PiePanel extends Panel {
 	private static final long serialVersionUID = 8834575442903333237L;
 	
 	private PieRender render;
-	private PieCaption caption;
+	private PieCaptionRender caption;
 	private JLabel title = FormUtil.createSubTitle("");
 	private JScrollPane scroll;
 	private Color borderColor;
@@ -45,17 +45,14 @@ public class PiePanel extends Panel {
 			}
 			
 			setBorderColor(borderColor);
-			scroll.invalidate();
-			scroll.revalidate();
-			scroll.repaint();
 		}
 		
 		@Override
 		public void onSelectedIndex(PieModel model, int oldIndex, int newIndex) {}
 		
 		@Override
-		public void onTitleChange(PieModel  model, String title) {
-			PiePanel.this.title.setText(title);
+		public void onTitleChange(PieModel  model, String text) {
+			title.setText(text);
 		}
 	};
 	
@@ -65,9 +62,9 @@ public class PiePanel extends Panel {
 	public PiePanel() {
 		super ();
 		this.setOpaque(true);
-		this.render = new PieRender();
-		this.caption = new  PieCaption();
-		this.init();
+		render = new PieRender();
+		caption = new  PieCaptionRender();
+		init();
 	}
 	
 	/**
@@ -76,10 +73,10 @@ public class PiePanel extends Panel {
 	public PiePanel (PieModel model) {
 		super ();
 		this.model = model;
-		this.render = new PieRender(model);
-		this.caption = new PieCaption(model);
-		this.title.setText(model.getTitle());
-		this.init();
+		render = new PieRender(model);
+		caption = new PieCaptionRender(model);
+		title.setText(model.getTitle());
+		init();
 		model.addListener(modelListener);
 	}
 	
@@ -104,9 +101,15 @@ public class PiePanel extends Panel {
 		if(this.model != null)
 			this.model.removeListener(modelListener);
 		this.model = model;
-		this.caption.setModel(model);
-		this.render.setModel(model);
-		model.addListener(modelListener);
+		
+		caption.setModel(model);
+		render.setModel(model);
+		
+		if (model != null) {
+			model.addListener(modelListener);
+			if (getHeight()-10 <= caption.getPreferredSize().getHeight())
+				scroll.getVerticalScrollBar();
+		}
 	}
 	
 	/**
@@ -129,24 +132,7 @@ public class PiePanel extends Panel {
 		
 		scroll.setVisible(visible);
 		center.repaint();
-	}
-
-	/**
-	 * Modification du placement des contenue (le graphique et les labels)
-	 * @param horizontalPlacement ceux-ci doivent etre placer selon l'axe de x???
-	 */
-	public void setHorizontalPlacement (boolean horizontalPlacement) {
-		if(horizontalPlacement) {
-			this.layout.setColumns(2);
-			this.layout.setRows(1);
-			caption.setPaddingLeft(false);
-		} else {
-			this.layout.setColumns(1);
-			this.layout.setRows(2);
-			caption.setPaddingLeft(true);
-		}
-	}
-	
+	}	
 
 	/**
 	 * @param borderColor
@@ -184,14 +170,15 @@ public class PiePanel extends Panel {
 	
 	private void init() {
 		this.setLayout(new BorderLayout());
-		scroll = FormUtil.createVerticalScrollPane(caption);
+		final Panel panel = new Panel(new BorderLayout());
+		panel.add(caption, BorderLayout.CENTER);
+		scroll = FormUtil.createVerticalScrollPane(panel);
 		
-		this.add(center, BorderLayout.CENTER);
-		this.add(title, BorderLayout.SOUTH);
+		add(center, BorderLayout.CENTER);
+		add(title, BorderLayout.SOUTH);
 		
-		this.setBackground(FormUtil.BKG_DARK);
+		setBackground(FormUtil.BKG_DARK);
 		title.setFont(Card.FONT_INFO);
-		render.setBackground(this.getBackground());
 		
 		center.add(render);
 		center.add(scroll);
@@ -207,11 +194,11 @@ public class PiePanel extends Panel {
 	@Override
 	public void setBackground(Color bg) {
 		super.setBackground(bg);
-		if(this.render != null)
-			this.render.setBackground(bg);
+		if(render != null)
+			render.setBackground(bg);
 		
-		if(this.caption != null)
-			this.caption.setBackground(bg);
+		if(caption != null)
+			caption.setBackground(bg);
 	}
 	
 	@Override

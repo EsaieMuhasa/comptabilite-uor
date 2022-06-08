@@ -192,7 +192,6 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 		parentOfBox.setVisible(state);
 		
 		layout.setColumns(state? 2: 1);
-		piePanel.setHorizontalPlacement(!state);
 		
 		for (AllocationRecipeField field : fields) {
 			field.reload(recipe);

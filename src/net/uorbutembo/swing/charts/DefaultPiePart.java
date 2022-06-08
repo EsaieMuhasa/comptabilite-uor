@@ -16,7 +16,6 @@ public class DefaultPiePart extends AbstractChartData implements PiePart {
 	protected final List<PiePartListener> listeners = new ArrayList<>();
 	
 	protected String label;
-	protected String shortLabel;
 	protected String name;
 	protected double value;
 	
@@ -49,21 +48,6 @@ public class DefaultPiePart extends AbstractChartData implements PiePart {
 		this.backgroundColor = backgroundColor;
 		this.value = value;
 		this.label = label;
-	}
-	
-
-	/**
-	 * @param backgroundColor
-	 * @param value
-	 * @param label
-	 * @param shortLabel
-	 */
-	public DefaultPiePart(Color backgroundColor, double value, String label, String shortLabel) {
-		this();
-		this.backgroundColor = backgroundColor;
-		this.value = value;
-		this.label = label;
-		this.shortLabel = shortLabel;
 	}
 
 	/**
@@ -106,19 +90,6 @@ public class DefaultPiePart extends AbstractChartData implements PiePart {
 	@Override
 	public String getLabel() {
 		return label;
-	}
-
-
-	@Override
-	public String getShortLabel() {
-		return shortLabel;
-	}
-
-	/**
-	 * @param shortLabel the shortLabel to set
-	 */
-	public void setShortLabel(String shortLabel) {
-		this.shortLabel = shortLabel;
 	}
 
 	@Override

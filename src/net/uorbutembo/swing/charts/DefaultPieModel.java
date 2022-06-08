@@ -328,15 +328,13 @@ public class DefaultPieModel implements PieModel, PiePartListener{
 
 	@Override
 	public synchronized void addListener(PieModelListener listener) {
-		if(!this.listeners.contains(listener)) {
-			this.listeners.add(listener);
-			listener.refresh(this);
-		}
+		if(!listeners.contains(listener))
+			listeners.add(listener);
 	}
 
 	@Override
 	public synchronized void removeListener(PieModelListener listener) {
-		this.listeners.remove(listener);
+		listeners.remove(listener);
 	}
 
 	@Override
