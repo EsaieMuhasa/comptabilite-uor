@@ -65,10 +65,10 @@ import net.uorbutembo.swing.DefaultCardModel.CardType;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
-import net.uorbutembo.swing.charts.DefaultLineChartModel;
+import net.uorbutembo.swing.charts.CloudChartRender;
+import net.uorbutembo.swing.charts.DefaultCloudChartModel;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
-import net.uorbutembo.swing.charts.LineChartRender;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.views.components.JournalMenuItem;
@@ -726,8 +726,8 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		private final DefaultPieModel pieModel = new DefaultPieModel();
 		private final PiePanel piePanel = new PiePanel(pieModel, FormUtil.BKG_END_2);
 		
-		private final DefaultLineChartModel lineChartModel = new DefaultLineChartModel();
-		private final LineChartRender lineChartRender = new LineChartRender(lineChartModel);
+		private final DefaultCloudChartModel lineChartModel = new DefaultCloudChartModel();
+		private final CloudChartRender lineChartRender = new CloudChartRender(lineChartModel);
 		
 		private final DefaultCardModel<Double> cardSoldModel = new DefaultCardModel<>(CardType.DARK, R.getIcon("caisse"), "$");
 		private final DefaultCardModel<Double> cardOutlayModel = new DefaultCardModel<>(CardType.DARK, R.getIcon("btn-cancel"), "$");

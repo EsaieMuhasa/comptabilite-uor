@@ -264,11 +264,11 @@ public class PieRender extends JComponent implements PieModelListener{
 	 */
     private void drawPopupLabel(PiePartInfo info, Graphics2D g2) {
     	
-    	final double size = diameter /2;//taille prefferee
+    	final double size = diameter / 2f;//taille prefferee
 		float x = (float) (center.x + (info.getCosTextAngle() * size));//x par defaut
 		float y = (float) (center.y + (info.getSinTextAngle() * size));//y par defaut
 		final int maxW = getWidth(), maxH = getHeight();//surface de du composant entier
-		final double pd = Math.min(maxW, maxH) - diameter / 2f; //le padding en px
+		final double pd = Math.min(maxW, maxH) - size; //le padding en px
 		
     	final float fontSize = (float) (getFont().getSize() * size * 0.0035f);
         boolean up = !(info.getTextAngle() > 0 && info.getTextAngle() < 180);
@@ -315,13 +315,14 @@ public class PieRender extends JComponent implements PieModelListener{
         double height = r1.getHeight() + r2.getHeight() + spaceV * 2;
         double recY = up ? y - height - space : y + space;
         double recX = x -= width / 2;
-        if (recX <= 0)
-        	recX = pd/2;
         
         recX += paceH;
         
         if (recX + width > maxW)
-        	recX -= pd * 1.5;
+        	recX -= pd;
+        
+        if (recX <= 0)
+        	recX = 10;
         
         if (recY <= 0) {//
         	recY = pd / 4;

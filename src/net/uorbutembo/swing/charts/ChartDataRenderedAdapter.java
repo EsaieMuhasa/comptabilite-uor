@@ -24,6 +24,6 @@ public abstract class ChartDataRenderedAdapter implements ChartDataRenderedListe
 	public void onBackgroundColorChagne(ChartData source, Color oldColor) {}
 
 	@Override
-	public void onBorderWidthChange(ChartData source, int oldBorderWidth) {}
+	public void onBorderWidthChange(ChartData source, float oldBorderWidth) {}
 
 }

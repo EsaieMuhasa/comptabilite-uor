@@ -3,11 +3,13 @@
  */
 package net.uorbutembo.swing.charts;
 
+import net.uorbutembo.swing.charts.PointCloud.CloudType;
+
 /**
  * @author Esaie MUHASA
  *
  */
-public interface LineChartModel extends ChartData{
+public interface CloudChartModel extends ChartData{
 
 	/**
 	 * Renvoie l'axe des X
@@ -25,25 +27,25 @@ public interface LineChartModel extends ChartData{
 	 * renvoie le max sur l'axe des X
 	 * @return
 	 */
-	Point getXMax ();
+	MaterialPoint getXMax ();
 	
 	/**
 	 * Renvoie le max sur l'axe des Y
 	 * @return
 	 */
-	Point getYMax ();
+	MaterialPoint getYMax ();
 	
 	/**
 	 * renvoie le point le plus bas sur l'axe des 
 	 * @return
 	 */
-	Point getXMin ();
+	MaterialPoint getXMin ();
 	
 	/**
 	 * renvoie le point le plus bas sur l'axe des Y
 	 * @return
 	 */
-	Point getYMin ();
+	MaterialPoint getYMin ();
 	
 	/**
 	 * Ajout d'un nuage des point au model des graphique lineaire
@@ -62,14 +64,14 @@ public interface LineChartModel extends ChartData{
 	 * binding point cloud for models
 	 * @param model
 	 */
-	void bindFrom (LineChartModel model);
-	void bindFrom (LineChartModel model, int index);
+	void bindFrom (CloudChartModel model);
+	void bindFrom (CloudChartModel model, int index);
 	
 	/**
-	 * pour detacher les nuages de points du model au model encours
+	 * pour detacher les nuages de materialPoints du model au model encours
 	 * @param model
 	 */
-	void unbindFrom (LineChartModel model);
+	void unbindFrom (CloudChartModel model);
 	
 	/**
 	 * compte le nombre de graphiques ce trouvant dans le modele
@@ -82,6 +84,13 @@ public interface LineChartModel extends ChartData{
 	 * @return
 	 */
 	boolean hasVisibleChart ();
+	
+	/**
+	 * Verifie si parmis les types de graphiques, il y a des graphique du type en parametre
+	 * @param type
+	 * @return
+	 */
+	boolean hasType (CloudType type);
 	
 	/**
 	 * y-t-il un graphique cachee??
@@ -103,7 +112,7 @@ public interface LineChartModel extends ChartData{
 	void removeChartAt (int index);
 	
 	/**
-	 * supression de tout les nuages des points dans le model
+	 * supression de tout les nuages des materialPoints dans le model
 	 */
 	void removeAll();
 	
@@ -119,12 +128,12 @@ public interface LineChartModel extends ChartData{
 	 * Abonnement d'un ecouteur 
 	 * @param listener
 	 */
-	void addListener (LineChartModelListener listener);
+	void addListener (CloudChartModelListener listener);
 	
 	/**
 	 * Desabonnement d'un ecouteur
 	 * @param listener
 	 * @return
 	 */
-	boolean removeListener (LineChartModelListener listener);
+	boolean removeListener (CloudChartModelListener listener);
 }

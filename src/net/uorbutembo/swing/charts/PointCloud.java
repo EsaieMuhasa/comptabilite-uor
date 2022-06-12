@@ -8,29 +8,52 @@ package net.uorbutembo.swing.charts;
  *
  */
 public interface PointCloud extends ChartData{
+	
+	/**
+	 * Type de nuage des points
+	 * @author Esaie MUHASA
+	 */
+	public enum CloudType {
+		LINE_CHART, //pour un nuage des points qui decrits, un graphique de type multiligne
+		STICK_CHART, // pour un nuage des points qui decrit un graphique de type bar
+		STICK_DISPERSION// pour le grahique de dispersion
+	}
+	
 	/**
 	 * renvoie le max sur l'axe des X
 	 * @return
 	 */
-	Point getXMax ();
+	MaterialPoint getXMax ();
 	
 	/**
 	 * Renvoie le max sur l'axe des Y
 	 * @return
 	 */
-	Point getYMax ();
+	MaterialPoint getYMax ();
 	
 	/**
 	 * renvoie le point le plus bas sur l'axe des 
 	 * @return
 	 */
-	Point getXMin ();
+	MaterialPoint getXMin ();
 	
 	/**
 	 * renvoie le point le plus bas sur l'axe des Y
 	 * @return
 	 */
-	Point getYMin ();
+	MaterialPoint getYMin ();
+	
+	/**
+	 * Renvoie le type de graphique decrit par le nuage de point
+	 * @return
+	 */
+	CloudType getType ();
+	
+	/**
+	 * Renvoie le titre du graphique
+	 * @return
+	 */
+	String getTitle ();
 	
 	/**
 	 * Faut il replir la surface limiter par la courbe et l'ax des X
@@ -48,27 +71,27 @@ public interface PointCloud extends ChartData{
 	 * ajout d'un point au nuage des points
 	 * @param point
 	 */
-	void addPoint (Point point);
+	void addPoint (MaterialPoint point);
 	
 	/**
 	 * Insersion d'un point au nuage des points
 	 * @param point
 	 * @param index
 	 */
-	void addPoint(Point point, int index);
+	void addPoint(MaterialPoint point, int index);
 	
 	/**
 	 * Renvoie l'index d'un point dans le model
 	 * @param point
 	 */
-	int indexOf (Point point);
+	int indexOf (MaterialPoint point);
 	
 	/**
 	 * renvoie le point a l'index en parametre
 	 * @param index
 	 * @return
 	 */
-	Point getPointAt (int index);
+	MaterialPoint getPointAt (int index);
 	
 	/**
 	 * suprime le point a l'index en parametre dans le nuage des points
@@ -85,7 +108,7 @@ public interface PointCloud extends ChartData{
 	 * suppression d'un point dans le nuage
 	 * @param point
 	 */
-	void removePoint (Point point);
+	void removePoint (MaterialPoint point);
 	
 	/**
 	 * comptage des points dans le nuage
@@ -97,7 +120,19 @@ public interface PointCloud extends ChartData{
 	 * Renvoie la collection des point dans le nuage
 	 * @return
 	 */
-	Point[] getPoints ();
+	MaterialPoint[] getPoints ();
+	
+	/**
+	 * renvoie la taille par defaut d'un point materiel
+	 * @return
+	 */
+	double getDefaultPointSize ();
+	
+	/**
+	 * les points doit-elle etre visible?
+	 * @return
+	 */
+	boolean getPointVisibility();
 	
 	/**
 	 * Ajout d'un ecouteur du cloud

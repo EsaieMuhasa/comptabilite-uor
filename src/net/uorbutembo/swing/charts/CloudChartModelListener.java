@@ -7,57 +7,57 @@ package net.uorbutembo.swing.charts;
  * @author Esaie MUHASA
  *
  */
-public interface LineChartModelListener{
+public interface CloudChartModelListener{
 	
 	/**
 	 * changement total de la configuration du model
 	 * @param model
 	 */
-	void onChange (LineChartModel model);
+	void onChange (CloudChartModel model);
 	
 	/**
 	 * changement total de la configuration d'un cloud du model
 	 * @param model
 	 * @param index
 	 */
-	void onCloudChange (LineChartModel model, int index);
+	void onChartChange (CloudChartModel model, int index);
 	
 	/**
 	 * Changement de la configuration d'un point
 	 * @param model
-	 * @param cloudIndex
+	 * @param chartIndex
 	 * @param pointIndex
 	 */
-	void onPointChange (LineChartModel model, int cloudIndex, int pointIndex);
+	void onPointChange (CloudChartModel model, int chartIndex, int pointIndex);
 	
 	/**
 	 * insrsion d'un nouveau cloud dans le model
 	 * @param model
-	 * @param cloudIndex
+	 * @param chartIndex
 	 */
-	void onInsertCloud (LineChartModel model, int cloudIndex);
+	void onInsertChart (CloudChartModel model, int chartIndex);
 	
 	/**
 	 * suppression d'un cloud dans le model des donnees
 	 * @param model
-	 * @param cloudIndex
+	 * @param chartIndex
 	 */
-	void onRemoveCloud (LineChartModel model, int cloudIndex);
+	void onRemoveChart (CloudChartModel model, int chartIndex);
 	
 	/**
 	 * insersion d'un point dans un cloud du model
 	 * @param model
-	 * @param cloudIndex
+	 * @param chartIndex
 	 * @param pointIndex
 	 */
-	void onInsertPoint (LineChartModel model, int cloudIndex, int pointIndex);
+	void onInsertPoint (CloudChartModel model, int chartIndex, int pointIndex);
 	
 	/**
 	 * suppression d'un point dansun cloud du model
 	 * @param model
-	 * @param cloudIndex
+	 * @param chartIndex
 	 * @param pointIndex
-	 * @param point
+	 * @param materialPoint
 	 */
-	void onRemovePoint (LineChartModel model, int cloudIndex, int pointIndex, Point point);
+	void onRemovePoint (CloudChartModel model, int chartIndex, int pointIndex, MaterialPoint materialPoint);
 }

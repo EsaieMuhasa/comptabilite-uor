@@ -9,7 +9,7 @@ package net.uorbutembo.swing.charts;
  */
 public interface PointCloudListener {
 	/**
-	 * Lors d'un changement mageur de la configuration du nuage des points
+	 * Lors d'un changement mageur de la configuration du nuage des materialPoints
 	 * @param cloud
 	 */
 	void onChange (PointCloud cloud);
@@ -22,17 +22,17 @@ public interface PointCloudListener {
 	void onPointChange (PointCloud cloud, int index);
 	
 	/**
-	 * Insersion d'un nouveau point dans le nuage des points
+	 * Insersion d'un nouveau point dans le nuage des materialPoints
 	 * @param cloud
 	 * @param index
 	 */
 	void onInsertPoint (PointCloud cloud, int index);
 	
 	/**
-	 * Suppression d'un point dans le nuage des points
+	 * Suppression d'un point dans le nuage des materialPoints
 	 * @param cloud
 	 * @param index
-	 * @param point
+	 * @param materialPoint
 	 */
-	void onRemovePoint (PointCloud cloud, int index, Point point);
+	void onRemovePoint (PointCloud cloud, int index, MaterialPoint materialPoint);
 }

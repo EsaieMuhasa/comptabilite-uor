@@ -18,7 +18,7 @@ public abstract class AbstractChartData implements ChartData {
 	protected Color borderColor;
 	protected boolean visible;
 	protected Object data;
-	protected int borderWidth;
+	protected float borderWidth;
 	
 	protected final List<ChartDataRenderedListener> listListeners = new ArrayList<>();
 
@@ -28,7 +28,7 @@ public abstract class AbstractChartData implements ChartData {
 	public AbstractChartData() {
 		this.backgroundColor = Color.WHITE;
 		this.foregroundColor = Color.BLACK.brighter();
-		this.borderColor = Color.DARK_GRAY.brighter();
+		this.borderColor = Color.DARK_GRAY.darker();
 		this.visible = true;
 		this.borderWidth = 2;
 	}
@@ -65,8 +65,8 @@ public abstract class AbstractChartData implements ChartData {
 	}
 
 	@Override
-	public void setBorderWidth(int borderWidth) {
-		int old = this.borderWidth;
+	public void setBorderWidth(float borderWidth) {
+		float old = this.borderWidth;
 		if(old  == borderWidth)
 			return;
 		
@@ -120,7 +120,7 @@ public abstract class AbstractChartData implements ChartData {
 	}
 
 	@Override
-	public int getBorderWidth() {
+	public float getBorderWidth() {
 		return borderWidth;
 	}
 
@@ -164,7 +164,7 @@ public abstract class AbstractChartData implements ChartData {
 			ls.onBorderColorChagne(this, oldColor);
 	}
 	
-	protected synchronized void emitBorderWithChange (int oldWidth) {
+	protected synchronized void emitBorderWithChange (float oldWidth) {
 		for (ChartDataRenderedListener ls : listListeners)
 			ls.onBorderWidthChange(this, oldWidth);
 	}

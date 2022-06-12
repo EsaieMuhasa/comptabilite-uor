@@ -8,5 +8,5 @@ package net.uorbutembo.swing.charts;
  *
  */
 public interface PointListener {
-	void onChange (Point point);
+	void onChange (MaterialPoint materialPoint);
 }

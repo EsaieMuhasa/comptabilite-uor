@@ -7,21 +7,19 @@ package net.uorbutembo.swing.charts;
  * @author Esaie MUHASA
  *
  */
-public interface Point extends ChartData{
+public interface MaterialPoint extends ChartData{
 	
 	/**
 	 * renvoei la valeur sur l'axe des abs
 	 * @return
 	 */
 	double getX();
-	double getRoundX(int decimal);
 	
 	/**
 	 * valeur sur l'axe des ord
 	 * @return
 	 */
 	double getY();
-	double getRoundY(int decimal);
 	
 	
 	/**
@@ -29,7 +27,6 @@ public interface Point extends ChartData{
 	 * @return
 	 */
 	double getZ();
-	double getRoundZ(int decimal);
 	
 	/**
 	 * transalation du point
@@ -55,10 +52,22 @@ public interface Point extends ChartData{
 	int getSize();
 	
 	/**
-	 * Renvoie le label de point
+	 * Renvoie le label du point materiel sur l'axe des X
 	 * @return
 	 */
-	String getLabel ();
+	String getLabelX ();
+	
+	/**
+	 * Renvoie le label du point materiel sur l'axe des Y
+	 * @return
+	 */
+	String getLabelY ();
+	
+	/**
+	 * Renvoie le label du point materiel sur l'axe des Z
+	 * @return
+	 */
+	String getlabelZ ();
 	
 	/**
 	 * Ajout d'un ecouteur

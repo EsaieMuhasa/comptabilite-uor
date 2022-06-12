@@ -43,5 +43,5 @@ public interface ChartDataRenderedListener {
 	 * @param source
 	 * @param oldBorderWidth
 	 */
-	void onBorderWidthChange (ChartData source, int oldBorderWidth);
+	void onBorderWidthChange (ChartData source, float oldBorderWidth);
 }

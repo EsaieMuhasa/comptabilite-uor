@@ -4,8 +4,6 @@
 package net.uorbutembo.swing.charts;
 
 import java.awt.Color;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,33 +11,55 @@ import java.util.List;
  * @author Esaie MUHASA
  *
  */
-public class Point2d extends AbstractChartData implements Point {
+public class DefaultMaterialPoint extends AbstractChartData implements MaterialPoint {
 	
 	protected final List<PointListener> listeners = new ArrayList<>();
 	
 	private double x;
 	private double y;
-	private int size;
-	private String label;
+	private int size = 1;
+	private String labelX;
+	private String labelY;
 	
 	/**
 	 * @param x
 	 * @param y
 	 */
-	public Point2d(double x, double y) {
+	public DefaultMaterialPoint(double x, double y) {
 		super();
 		this.x = x;
 		this.y = y;
 	}
 	
-	public Point2d (Point point) {
+	/**
+	 * @param x
+	 * @param y
+	 * @param labelX
+	 * @param labelY
+	 */
+	public DefaultMaterialPoint(double x, double y, String labelX, String labelY) {
+		super();
+		this.x = x;
+		this.y = y;
+		this.labelX = labelX;
+		this.labelY = labelY;
+	}
+
+	/**
+	 * Constructeur de copie.
+	 * on recopie seulement les valeurs des cordonnees sur les axes
+	 * et les donnees qui cadre avec le rendue du point (couleur, taille,..)
+	 * @param point
+	 */
+	public DefaultMaterialPoint (MaterialPoint point) {
 		super(point.getBackgroundColor(), point.getForegroundColor(), point.getBorderColor());
 		setBorderWidth(point.getBorderWidth());
 		x = point.getX();
 		y = point.getY();
 		size = point.getSize();
 		data = point.getData();
-		label = point.getLabel();
+		labelX = point.getLabelX();
+		labelY = point.getLabelY();
 	}
 
 	/**
@@ -47,14 +67,14 @@ public class Point2d extends AbstractChartData implements Point {
 	 * @param foregroundColor
 	 * @param borderColor
 	 */
-	public Point2d(Color backgroundColor, Color foregroundColor, Color borderColor) {
+	public DefaultMaterialPoint(Color backgroundColor, Color foregroundColor, Color borderColor) {
 		super(backgroundColor, foregroundColor, borderColor);
 	}
 
 	/**
 	 * @param backgroundColor
 	 */
-	public Point2d(Color backgroundColor) {
+	public DefaultMaterialPoint(Color backgroundColor) {
 		super(backgroundColor);
 	}
 
@@ -63,7 +83,7 @@ public class Point2d extends AbstractChartData implements Point {
 	 * @param y
 	 * @param size
 	 */
-	public Point2d(double x, double y, int size) {
+	public DefaultMaterialPoint(double x, double y, int size) {
 		super();
 		this.x = x;
 		this.y = y;
@@ -129,37 +149,46 @@ public class Point2d extends AbstractChartData implements Point {
 	}
 
 	@Override
-	public double getRoundX(int decimal) {
-		BigDecimal big = new BigDecimal(x).setScale(decimal, RoundingMode.FLOOR);
-		return big.doubleValue();
-	}
-
-	@Override
-	public double getRoundY(int decimal) {
-		BigDecimal big = new BigDecimal(y).setScale(decimal, RoundingMode.FLOOR);
-		return big.doubleValue();
-	}
-
-	@Override
-	public double getRoundZ(int decimal) {
-		return 0;
-	}
-
-	@Override
 	public int getSize() {
 		return size;
 	}
 
 	@Override
-	public String getLabel() {
-		return label;
+	public String getLabelX() {
+		if(labelX == null)
+			return PieRender.DECIMAL_FORMAT.format(x);
+		return labelX;
+	}
+	
+	@Override
+	public String getLabelY() {
+		if(labelY == null)
+			return PieRender.DECIMAL_FORMAT.format(y);
+		return labelY;
+	}
+	
+	@Override
+	public String getlabelZ() {
+		throw new RuntimeException("La 3D n'est pas pris en charge");
 	}
 
 	/**
-	 * @param label the label to set
+	 * @param labelX the labelX to set
 	 */
-	public void setLabel(String label) {
-		this.label = label;
+	public void setLabelX (String labelX) {
+		if(labelX == this.labelX)
+			return;
+		
+		this.labelX = labelX;
+		emitOnChange();
+	}
+	
+	public void setLabelY(String labelY) {
+		if(this.labelY == labelY)
+			return;
+		
+		this.labelY = labelY;
+		emitOnChange();
 	}
 
 	@Override
@@ -180,13 +209,13 @@ public class Point2d extends AbstractChartData implements Point {
 
 	@Override
 	public String toString() {
-		return "Point2d [x=" + x + ", y=" + y + "]";
+		return "DefaultMaterialPoint [x=" + x + ", y=" + y + ", labelX="+labelX+", labelY="+labelY+ "]";
 	}
 
 	@Override
 	public boolean equals (Object obj) {
-		if(obj instanceof Point) {
-			Point point = (Point) obj;
+		if(obj instanceof MaterialPoint) {
+			MaterialPoint point = (MaterialPoint) obj;
 			return point.getX() == x && point.getY() == y;
 		}
 		

@@ -34,6 +34,7 @@ import net.uorbutembo.dao.OtherRecipeDao;
 import net.uorbutembo.dao.OutlayDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.swing.charts.PieRender;
 import net.uorbutembo.views.forms.FormUtil;
 
 /**
@@ -305,7 +306,8 @@ public class JournalMenuItem extends Panel {
         g2.drawString(title, x, y);
         
         metrics = g2.getFontMetrics(FONT_MONEY);
-        String money = ((account.getCollectedRecipe() + account.getCollectedCost()) - account.getUsed()) + " USD";
+        final double amount = ((account.getCollectedRecipe() + account.getCollectedCost()) - account.getUsed());
+        String money =  PieRender.DECIMAL_FORMAT.format(amount)+" "+FormUtil.UNIT_MONEY;
         y = getHeight() - (FONT_MONEY.getSize()/2 + 2);
         g2.setFont(FONT_MONEY);
         g2.drawString(money, x, y);

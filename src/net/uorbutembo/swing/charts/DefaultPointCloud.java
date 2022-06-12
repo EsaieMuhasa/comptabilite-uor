@@ -13,8 +13,9 @@ import java.util.List;
  */
 public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 
+	protected CloudType type;
 	protected boolean fill = false;
-	protected final List<Point> points = new ArrayList<>();
+	protected final List<MaterialPoint> points = new ArrayList<>();
 	protected final List<PointCloudListener> listeners = new ArrayList<>();
 	
 	protected final PointListener pointListener = (point) -> {
@@ -27,11 +28,14 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	private int xMin = -1;
 	private int yMin = -1;
 	
-	/**
-	 * 
-	 */
+	protected double defaultPointSize = 10;
+	protected boolean pointVisibility = true;
+	protected String title;
+	
+
 	public DefaultPointCloud() {
 		super();
+		type = CloudType.LINE_CHART;
 	}
 
 	/**
@@ -39,6 +43,26 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	 */
 	public DefaultPointCloud(Color backgroundColor) {
 		super(backgroundColor);
+		type = CloudType.LINE_CHART;
+	}
+
+	/**
+	 * @param title
+	 */
+	public DefaultPointCloud(String title) {
+		super();
+		this.title = title;
+	}
+	
+
+	/**
+	 * @param title
+	 * @param backgroundColor
+	 */
+	public DefaultPointCloud(String title, Color backgroundColor) {
+		super(backgroundColor);
+		this.title = title;
+		type = CloudType.LINE_CHART;
 	}
 
 	/**
@@ -48,6 +72,57 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	 */
 	public DefaultPointCloud(Color backgroundColor, Color foregroundColor, Color borderColor) {
 		super(backgroundColor, foregroundColor, borderColor);
+		type = CloudType.LINE_CHART;
+	}
+	
+	/**
+	 * @param title
+	 * @param backgroundColor
+	 * @param foregroundColor
+	 * @param borderColor
+	 */
+	public DefaultPointCloud(String title, Color backgroundColor, Color foregroundColor, Color borderColor) {
+		super(backgroundColor, foregroundColor, borderColor);
+		type = CloudType.LINE_CHART;
+		this.title = title;
+	}
+	
+	@Override
+	public String getTitle() {
+		return title;
+	}
+	
+	public void setTitle(String title) {
+		if(this.title == title)
+			return;
+		
+		this.title = title;
+	}
+	
+	@Override
+	public boolean getPointVisibility() {
+		return pointVisibility;
+	}
+	
+	@Override
+	public double getDefaultPointSize() {
+		return defaultPointSize;
+	}
+	
+	public void setPointVisibility(boolean pointVisibility) {
+		if(this.pointVisibility == pointVisibility)
+			return;
+		
+		this.pointVisibility = pointVisibility;
+		emitOnChange();
+	}
+	
+	public void setDefaultPointSize(double defaultPointSize) {
+		if(defaultPointSize == this.defaultPointSize)
+			return;
+		
+		this.defaultPointSize = defaultPointSize;
+		emitOnChange();
 	}
 	
 	/**
@@ -63,8 +138,8 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 			if (i > points.size()-3)
 				break;
 			
-			Point p = getPointAt(i);
-			Point2d copie = new Point2d(getPointAt(i+1).getX(), p.getY());
+			MaterialPoint p = getPointAt(i);
+			DefaultMaterialPoint copie = new DefaultMaterialPoint(getPointAt(i+1).getX(), p.getY());
 			
 			if (getPointAt(i+1).getY() == p.getY() && copie.getX() == getPointAt(i+2).getX()){
 				i -= 1;
@@ -75,13 +150,13 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 			points.add(i+1, copie);
 		}
 		
-		Point last = getPointAt(points.size()-1);
-		Point beforLast = getPointAt(points.size()-2);
+		MaterialPoint last = getPointAt(points.size()-1);
+		MaterialPoint beforLast = getPointAt(points.size()-2);
 		
 		if (last.getY() != beforLast.getY()) {
 			double y = last.getY(),
 					x = last.getX() + Math.abs(last.getX() - beforLast.getX());
-			Point2d copie = new Point2d(x, y);
+			DefaultMaterialPoint copie = new DefaultMaterialPoint(x, y);
 			points.add(copie);
 		}
 		
@@ -103,9 +178,26 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 		this.fill = fill;
 		emitOnChange();
 	}
+	
+	@Override
+	public CloudType getType() {
+		return type;
+	}
+	
+	public void setType(CloudType type) {
+		if (type == this.type)
+			return;
+		
+		this.type = type;
+		if (type == CloudType.STICK_CHART && points.size() >= 2) {
+			borderWidth = 1;
+			defaultPointSize = (Math.abs(Math.abs(points.get(0).getX()) - Math.abs(points.get(1).getX())) / 4f);
+		}
+		emitOnChange();
+	}
 
 	@Override
-	public void addPoint(Point point) {
+	public void addPoint(MaterialPoint point) {
 		if(points.contains(point))
 			return;
 			
@@ -115,7 +207,7 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 
 	@Override
-	public void addPoint(Point point, int index) {
+	public void addPoint(MaterialPoint point, int index) {
 		if(points.contains(point))
 			return;
 			
@@ -125,7 +217,7 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 
 	@Override
-	public int indexOf(Point point) {
+	public int indexOf(MaterialPoint point) {
 		if(point == null)
 			return -1;
 		return points.indexOf(point);
@@ -133,7 +225,7 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 
 	@Override
 	public void removePointAt(int index) {
-		Point point = points.get(index);
+		MaterialPoint point = points.get(index);
 		
 		point.removeListener(pointListener);
 		points.remove(index);		
@@ -170,13 +262,13 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 
 	@Override
-	public void removePoint(Point point) {
+	public void removePoint(MaterialPoint point) {
 		removePointAt(indexOf(point));
 	}
 	
 	@Override
 	public void removePoints() {
-		for (Point p : points)
+		for (MaterialPoint p : points)
 			p.removeListener(pointListener);
 		
 		points.clear();
@@ -190,22 +282,22 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 
 	@Override
-	public Point[] getPoints() {
-		Point [] p = new Point[points.size()];
+	public MaterialPoint[] getPoints() {
+		MaterialPoint [] p = new MaterialPoint[points.size()];
 		for (int i = 0; i < p.length; i++)
 			p[i] = points.get(i);
 		return p;
 	}
 
 	@Override
-	public Point getXMax() {
+	public MaterialPoint getXMax() {
 		if(xMax == -1) 
 			return null;
 		return getPointAt(xMax);
 	}
 
 	@Override
-	public Point getYMax() {
+	public MaterialPoint getYMax() {
 		if(yMax == -1) 
 			return null;
 		
@@ -213,21 +305,21 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 
 	@Override
-	public Point getXMin() {
+	public MaterialPoint getXMin() {
 		if(xMin == -1) 
 			return null;
 		return getPointAt(xMin);
 	}
 
 	@Override
-	public Point getYMin() {
+	public MaterialPoint getYMin() {
 		if(yMin == -1) 
 			return null;
 		return getPointAt(yMin);
 	}
 
 	@Override
-	public Point getPointAt(int index) {
+	public MaterialPoint getPointAt(int index) {
 		return points.get(index);
 	}
 
@@ -248,7 +340,7 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 			ls.onChange(this);
 	}
 	
-	protected synchronized void emitRemovePoint (int index, Point point) {
+	protected synchronized void emitRemovePoint (int index, MaterialPoint point) {
 		for (PointCloudListener ls : listeners)
 			ls.onRemovePoint(this, index, point);
 	}
@@ -265,7 +357,7 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 			setYMax(0);
 			setYMin(0);
 		} else {			
-			Point p = points.get(index);
+			MaterialPoint p = points.get(index);
 			
 			int xMax = p.getX() > getXMax().getX()? index : this.xMax;
 			int xMin = p.getX() < getXMin().getX()? index : this.xMin;
@@ -302,8 +394,8 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 	
 	protected void checkXMax () {
-		Point point = points.size() != 0? points.get(0) : null;
-		for (Point p : points) {				
+		MaterialPoint point = points.size() != 0? points.get(0) : null;
+		for (MaterialPoint p : points) {				
 			if (p.getX() > point.getX())
 				point = p;			
 		}
@@ -321,8 +413,8 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 	
 	protected void checkYMax () {
-		Point point = points.size() != 0? points.get(0) : null;
-		for (Point p : points) {				
+		MaterialPoint point = points.size() != 0? points.get(0) : null;
+		for (MaterialPoint p : points) {				
 			if (p.getY() > point.getY())
 				point = p;			
 		}
@@ -340,8 +432,8 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 	
 	protected void checkXMin () {
-		Point point = points.size() != 0? points.get(0) : null;
-		for (Point p : points) {				
+		MaterialPoint point = points.size() != 0? points.get(0) : null;
+		for (MaterialPoint p : points) {				
 			if (p.getX() < point.getX())
 				point = p;			
 		}
@@ -356,8 +448,8 @@ public class DefaultPointCloud extends AbstractChartData implements PointCloud {
 	}
 	
 	protected void checkYMin () {
-		Point point = points.size() != 0? points.get(0) : null;
-		for (Point p : points) {				
+		MaterialPoint point = points.size() != 0? points.get(0) : null;
+		for (MaterialPoint p : points) {				
 			if (p.getY() < point.getY())
 				point = p;			
 		}

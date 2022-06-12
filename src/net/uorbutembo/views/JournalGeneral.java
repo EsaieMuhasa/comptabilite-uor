@@ -44,18 +44,16 @@ import net.uorbutembo.dao.PaymentLocationDao;
 import net.uorbutembo.swing.Card;
 import net.uorbutembo.swing.DefaultCardModel;
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.swing.charts.Axis;
+import net.uorbutembo.swing.charts.CloudChartRender;
+import net.uorbutembo.swing.charts.DateAxis;
 import net.uorbutembo.swing.charts.DefaultAxis;
-import net.uorbutembo.swing.charts.DefaultLineChartModel;
+import net.uorbutembo.swing.charts.DefaultCloudChartModel;
+import net.uorbutembo.swing.charts.DefaultMaterialPoint;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.DefaultPointCloud;
-import net.uorbutembo.swing.charts.DefaultTimeAxis;
-import net.uorbutembo.swing.charts.LineChartRender;
-import net.uorbutembo.swing.charts.LineChartRender.Interval;
-import net.uorbutembo.swing.charts.LineChartRenderListener;
 import net.uorbutembo.swing.charts.PiePanel;
-import net.uorbutembo.swing.charts.Point2d;
+import net.uorbutembo.swing.charts.PointCloud.CloudType;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
 import net.uorbutembo.views.forms.FormUtil;
 import resources.net.uorbutembo.R;
@@ -351,19 +349,19 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 	 * panel de visualisation des operations d'entree sotie en caissse
 	 * @author Esaie MUHASA
 	 */
-	private class LineChartPanel extends Panel implements LineChartRenderListener{
+	private class LineChartPanel extends Panel{
 		private static final long serialVersionUID = 2734887735495665253L;
 		
 		private Panel panelChart = new Panel(new BorderLayout());//panel contenant la visualisation graphique
 		
-		private final DefaultAxis yAxis = new DefaultAxis(24 * 60 * 60 * 1000, "Monain", "$");
-		private final DefaultTimeAxis xAxis = new DefaultTimeAxis(0, "Temps", "t");
+		private final DefaultAxis yAxis = new DefaultAxis("Montant", "", "$");
+		private final DateAxis xAxis = new DateAxis("Temps", "t", "");
 		
-		private final DefaultLineChartModel chartModel = new DefaultLineChartModel(xAxis, yAxis);
-		private final LineChartRender chartRender = new LineChartRender(chartModel);
-		private final DefaultPointCloud cloudRecipes = new DefaultPointCloud(FormUtil.COLORS_ALPHA[0], FormUtil.COLORS[0], FormUtil.COLORS[0]);
-		private final DefaultPointCloud cloudOutlays = new DefaultPointCloud(FormUtil.COLORS_ALPHA[1], FormUtil.COLORS[1], FormUtil.COLORS[1]);
-		private final DefaultPointCloud cloudSold = new DefaultPointCloud(FormUtil.COLORS_ALPHA[2], FormUtil.COLORS[2], FormUtil.COLORS[2]);
+		private final DefaultCloudChartModel chartModel = new DefaultCloudChartModel(xAxis, yAxis);
+		private final CloudChartRender chartRender = new CloudChartRender(chartModel);
+		private final DefaultPointCloud cloudRecipes = new DefaultPointCloud("Recette", FormUtil.COLORS_ALPHA[0], FormUtil.COLORS[0], FormUtil.COLORS[0]);
+		private final DefaultPointCloud cloudOutlays = new DefaultPointCloud("Dépense", FormUtil.COLORS_ALPHA[1], FormUtil.COLORS[1], FormUtil.COLORS[1]);
+		private final DefaultPointCloud cloudSold = new DefaultPointCloud("Solde", FormUtil.COLORS_ALPHA[2], FormUtil.COLORS[2], FormUtil.COLORS[2]);
 		
 		private final JCheckBox checkBoxGridChart = new JCheckBox("Grille", true);
 		
@@ -376,14 +374,9 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			chartModel.addChart(cloudSold);
 			chartModel.addChart(cloudOutlays);
 			
-			cloudRecipes.setFill(true);
+			//cloudRecipes.setFill(true);
+			//cloudOutlays.setFill(true);
 			cloudSold.setFill(true);
-			cloudOutlays.setFill(true);
-			
-			xAxis.setResponsive(false);
-			xAxis.setInterval(-10, 0);
-			xAxis.setStep(2);
-			yAxis.setMeasureUnit(" $");
 		}
 		
 		public LineChartPanel() {
@@ -394,13 +387,11 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 					panelCharts = new Panel();
 			final Box boxOthers = Box.createHorizontalBox(); 
 			
-			chartRender.addRenderListener(this);
-			chartRender.setDraggable(true);
 			panelChart.add(chartRender, BorderLayout.CENTER);
 			
 			checkBoxGridChart.setForeground(FormUtil.BORDER_COLOR);
 			checkBoxGridChart.addChangeListener(event -> {
-				chartRender.setVisibleGrid(checkBoxGridChart.isSelected());
+				
 			});
 			
 			checkBoxIn.setForeground(FormUtil.COLORS[0]);
@@ -447,12 +438,9 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			wait(true);
 			progressBar.setValue(0);
 			progressBar.setIndeterminate(true);
-
-			double first = chartRender.getLastxInterval() != null? chartRender.getLastxInterval().getMin() : -12;
-			double last = chartRender.getLastxInterval() != null? chartRender.getLastxInterval().getMax() : 0;
 			
-			int min = (int) first;
-			int max = (int) last;
+			int min = -20;
+			int max = 1;
 			
 			cloudRecipes.removePoints();
 			cloudOutlays.removePoints();
@@ -480,8 +468,9 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 						y += p.getAmount();
 					}
 				}
-				Point2d pointIn = new Point2d(day, y);
-				pointIn.setLabel(y+" USD");
+				DefaultMaterialPoint pointIn = new DefaultMaterialPoint(day, y);
+				pointIn.setLabelX(DateAxis.DEFAULT_DATE_FORMAT.format(date));
+				pointIn.setLabelY(y+" USD");
 				cloudRecipes.addPoint(pointIn);
 				
 				//depense
@@ -493,8 +482,9 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 					}
 				}
 				
-				Point2d pointOut = new Point2d(day, -y);
-				pointOut.setLabel(y+" USD");
+				DefaultMaterialPoint pointOut = new DefaultMaterialPoint(day, -y);
+				pointOut.setLabelX(DateAxis.DEFAULT_DATE_FORMAT.format(date));
+				pointOut.setLabelY(y+" USD");
 				cloudOutlays.addPoint(pointOut);
 				//==
 				
@@ -512,8 +502,9 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 						y += p.getAmount();
 					}
 				}
-				Point2d pointSold = new Point2d(day, y - pointOut.getY());
-				pointSold.setLabel(y+" USD");
+				DefaultMaterialPoint pointSold = new DefaultMaterialPoint(day, y - pointOut.getY());
+				pointSold.setLabelX(DateAxis.DEFAULT_DATE_FORMAT.format(date));
+				pointSold.setLabelY(y+" USD");
 				cloudSold.addPoint(pointSold);
 				//==
 			}
@@ -521,24 +512,11 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 //			cloudRecipes.toSquareSignal();
 //			cloudOutlays.toSquareSignal();
 //			cloudSold.toSquareSignal();
+			
+			cloudRecipes.setType(CloudType.STICK_CHART);
+			cloudOutlays.setType(CloudType.STICK_CHART);
 			wait(false);
 		}
-		
-		
-		@Override
-		public void onRequireTranslation(LineChartRender source, Axis axis, Interval interval) {
-			if (axis != xAxis)
-				return;
-			
-			reloadChart();
-		}
-		
-		@Override
-		public void onRequireTranslation(LineChartRender source, Interval xInterval, Interval yInterval) {
-			onRequireTranslation(source, source.getModel().getXAxis(), xInterval);
-		}
-		
-		
 		
 	}
 	

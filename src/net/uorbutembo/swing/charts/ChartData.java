@@ -21,7 +21,7 @@ public interface ChartData {
 	 * Modification de l'epaisseur du bordure
 	 * @param borderWidth
 	 */
-	void setBorderWidth (int borderWidth);
+	void setBorderWidth (float borderWidth);
 	
 	/**
 	 * modification de la coulteur de bordure
@@ -63,7 +63,7 @@ public interface ChartData {
 	 * Renvoie l'epaisseur du bordure
 	 * @return
 	 */
-	int getBorderWidth();
+	float getBorderWidth();
 
 	/**
 	 * Es-ce que le part est visible???

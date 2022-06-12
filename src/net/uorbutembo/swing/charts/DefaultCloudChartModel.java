@@ -6,51 +6,53 @@ package net.uorbutembo.swing.charts;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.uorbutembo.swing.charts.PointCloud.CloudType;
+
 /**
  * @author Esaie MUHASA
  *
  */
-public class DefaultLineChartModel extends AbstractChartData implements LineChartModel{
+public class DefaultCloudChartModel extends AbstractChartData implements CloudChartModel{
 	
 	protected final List<PointCloud> clouds = new ArrayList<>();
-	protected final List<LineChartModelListener> listeners = new  ArrayList<>();
+	protected final List<CloudChartModelListener> listeners = new  ArrayList<>();
 	
 	protected Axis xAxis;
 	protected Axis yAxis;
 	
-	private Point xMax;
-	private Point yMax;
-	private Point xMin;
-	private Point yMin;
+	private MaterialPoint xMax;
+	private MaterialPoint yMax;
+	private MaterialPoint xMin;
+	private MaterialPoint yMin;
 
 	protected final PointCloudListener cloudListener = new PointCloudListener() {
 		
 		@Override
-		public synchronized void onRemovePoint (PointCloud cloud, int index, Point point) {
+		public synchronized void onRemovePoint (PointCloud cloud, int index, MaterialPoint materialPoint) {
 			checkMinMax();
-			for (LineChartModelListener ls : listeners) 
-				ls.onRemovePoint(DefaultLineChartModel.this, indexOf(cloud), index, point);
+			for (CloudChartModelListener ls : listeners) 
+				ls.onRemovePoint(DefaultCloudChartModel.this, indexOf(cloud), index, materialPoint);
 		}
 		
 		@Override
 		public synchronized void onInsertPoint (PointCloud cloud, int index) {
 			checkMinMax();
-			for (LineChartModelListener ls : listeners) 
-				ls.onInsertPoint(DefaultLineChartModel.this, indexOf(cloud), index);
+			for (CloudChartModelListener ls : listeners) 
+				ls.onInsertPoint(DefaultCloudChartModel.this, indexOf(cloud), index);
 		}
 		
 		@Override
 		public synchronized void onChange(PointCloud cloud) {
 			checkMinMax();
-			for (LineChartModelListener ls : listeners) 
-				ls.onCloudChange(DefaultLineChartModel.this, indexOf(cloud));
+			for (CloudChartModelListener ls : listeners) 
+				ls.onChartChange(DefaultCloudChartModel.this, indexOf(cloud));
 		}
 
 		@Override
 		public void onPointChange(PointCloud cloud, int index) {
 			checkMinMax();
-			for (LineChartModelListener ls : listeners) 
-				ls.onPointChange(DefaultLineChartModel.this, indexOf(cloud), index);
+			for (CloudChartModelListener ls : listeners) 
+				ls.onPointChange(DefaultCloudChartModel.this, indexOf(cloud), index);
 			
 		}
 	};
@@ -58,7 +60,7 @@ public class DefaultLineChartModel extends AbstractChartData implements LineChar
 	/**
 	 * 
 	 */
-	public DefaultLineChartModel() {
+	public DefaultCloudChartModel() {
 		super();
 		xAxis = new DefaultAxis();
 		yAxis = new DefaultAxis();
@@ -68,14 +70,14 @@ public class DefaultLineChartModel extends AbstractChartData implements LineChar
 	 * @param xAxis
 	 * @param yAxis
 	 */
-	public DefaultLineChartModel(Axis xAxis, Axis yAxis) {
+	public DefaultCloudChartModel(Axis xAxis, Axis yAxis) {
 		super();
 		this.xAxis = xAxis;
 		this.yAxis = yAxis;
 	}
 
 	@Override
-	public synchronized void bindFrom (LineChartModel model) {
+	public synchronized void bindFrom (CloudChartModel model) {
 		boolean update = false;
 		for (int i = 0, count = model.getSize(); i < count; i++) {
 			if(!clouds.contains(model.getChartAt(i))){
@@ -90,9 +92,17 @@ public class DefaultLineChartModel extends AbstractChartData implements LineChar
 			emitOnChange();
 		}
 	}
+	
+	@Override
+	public boolean hasType (CloudType type) {
+		for (int i = 0, count = getSize(); i < count; i++) 
+			if(clouds.get(i).getType() == type)
+				return true;
+		return false;
+	}
 
 	@Override
-	public void bindFrom(LineChartModel model, int index) {
+	public void bindFrom(CloudChartModel model, int index) {
 		boolean update = false;
 		for (int i = 0, count = model.getSize(); i < count; i++) {
 			if(!clouds.contains(model.getChartAt(i))){
@@ -109,7 +119,7 @@ public class DefaultLineChartModel extends AbstractChartData implements LineChar
 	}
 
 	@Override
-	public void unbindFrom(LineChartModel model) {
+	public void unbindFrom(CloudChartModel model) {
 		boolean update = false;
 		for (int i = 0, count = model.getSize(); i < count; i++) {
 			int index = indexOf(model.getChartAt(i));
@@ -207,13 +217,13 @@ public class DefaultLineChartModel extends AbstractChartData implements LineChar
 	}
 
 	@Override
-	public void addListener(LineChartModelListener listener) {
+	public void addListener(CloudChartModelListener listener) {
 		if(!listeners.contains(listener))
 			listeners.add(listener);
 	}
 
 	@Override
-	public boolean removeListener(LineChartModelListener listener) {
+	public boolean removeListener(CloudChartModelListener listener) {
 		return listeners.remove(listener);
 	}
 
@@ -228,110 +238,110 @@ public class DefaultLineChartModel extends AbstractChartData implements LineChar
 	}
 
 	@Override
-	public Point getXMax() {
+	public MaterialPoint getXMax() {
 		return xMax;
 	}
 	
 	protected void checkXMax () {
-		Point point = null;
+		MaterialPoint materialPoint = null;
 		
 		for (PointCloud c : clouds)
 			if(c.isVisible() && c.countPoints() != 0) {
-				point = c.getXMax();
+				materialPoint = c.getXMax();
 				break;
 			}
 		
-		if(point == null)
+		if(materialPoint == null)
 			xMax = null;
 		
 		for (PointCloud c : clouds) {
 			if(!c.isVisible() || c.getXMax() == null)
 				continue;
 			
-			if (c.getXMax().getX() > point.getX())
-				point = c.getXMax();
+			if (c.getXMax().getX() > materialPoint.getX())
+				materialPoint = c.getXMax();
 		}
-		xMax = point;		
+		xMax = materialPoint;		
 	}
 
 	@Override
-	public Point getYMax() {
+	public MaterialPoint getYMax() {
 		return yMax;
 	}
 	
 	protected void checkYMax () {
-		Point point = null;
+		MaterialPoint materialPoint = null;
 		
 		for (PointCloud c : clouds)
 			if(c.isVisible() && c.countPoints() != 0) {
-				point = c.getYMax();
+				materialPoint = c.getYMax();
 				break;
 			}
 		
-		if(point == null)
+		if(materialPoint == null)
 			yMax = null;
 		
 		for (PointCloud c : clouds) {
 			if(!c.isVisible() || c.getYMax() == null)
 				continue;
 			
-			if (c.getYMax().getY() > point.getY())
-				point = c.getYMax();
+			if (c.getYMax().getY() > materialPoint.getY())
+				materialPoint = c.getYMax();
 		}
-		yMax = point;		
+		yMax = materialPoint;		
 	}
 
 	@Override
-	public Point getXMin() {
+	public MaterialPoint getXMin() {
 		return xMin;
 	}
 	
 	protected void checkXMin () {
-		Point point = null;
+		MaterialPoint materialPoint = null;
 		for (PointCloud c : clouds)
 			if(c.isVisible() && c.countPoints() != 0) {
-				point = c.getXMin();
+				materialPoint = c.getXMin();
 				break;
 			}
 		
-		if(point == null)
+		if(materialPoint == null)
 			xMin = null;
 		
 		for (PointCloud c : clouds) {
 			if(!c.isVisible() || c.getXMin() == null)
 				continue;
 			
-			if (c.getXMin().getX() < point.getX())
-				point = c.getXMin();
+			if (c.getXMin().getX() < materialPoint.getX())
+				materialPoint = c.getXMin();
 		}
 		
-		xMin = point;		
+		xMin = materialPoint;		
 	}
 
 	@Override
-	public Point getYMin() {
+	public MaterialPoint getYMin() {
 		return yMin;
 	}
 	
 	protected void checkYMin () {
-		Point point = null;
+		MaterialPoint materialPoint = null;
 		for (PointCloud c : clouds)
 			if(c.isVisible() && c.countPoints() != 0) {
-				point = c.getYMin();
+				materialPoint = c.getYMin();
 				break;
 			}
 		
-		if(point == null)
+		if(materialPoint == null)
 			yMin = null;
 		
 		for (PointCloud c : clouds) {
 			if(!c.isVisible() || c.getYMin() == null)
 				continue;
 			
-			if (c.getYMin().getY() < point.getY())
-				point = c.getYMin();
+			if (c.getYMin().getY() < materialPoint.getY())
+				materialPoint = c.getYMin();
 		}
-		yMin = point;
+		yMin = materialPoint;
 	}
 	
 	/**
@@ -346,22 +356,22 @@ public class DefaultLineChartModel extends AbstractChartData implements LineChar
 	
 	@Override
 	protected synchronized void emitOnChange () {
-		for (LineChartModelListener ls : listeners) {
+		for (CloudChartModelListener ls : listeners) {
 			ls.onChange(this);
 		}
 	}
 	
 	protected synchronized void emitOnInserted (int index) {
 		checkMinMax();
-		for (LineChartModelListener ls : listeners) {
-			ls.onInsertCloud(this, index);
+		for (CloudChartModelListener ls : listeners) {
+			ls.onInsertChart(this, index);
 		}
 	}
 	
 	protected synchronized void emitOnRemove (int index) {
 		checkMinMax();
-		for (LineChartModelListener ls : listeners) {
-			ls.onRemoveCloud(this, index);
+		for (CloudChartModelListener ls : listeners) {
+			ls.onRemoveChart(this, index);
 		}
 	}
 
