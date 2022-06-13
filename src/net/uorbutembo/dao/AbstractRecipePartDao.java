@@ -481,6 +481,38 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 		}
 		return sum;
 	}
+	
+	@Override
+	public double getSoldBySpendAtDate(AnnualSpend spend, Date date) throws DAOException {
+		final String SQL  = String.format("SELECT SUM(part) AS amount FROM %s WHERE spend = %d AND (recordDate BETWEEN %d AND %d)", 
+				getViewName(), spend.getId(), toMinTimestampOfDay(date).getTime(), toMaxTimestampOfDay(date).getTime());
+		double sum = 0;
+		try ( Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if (result.next()) 
+				sum = result.getDouble("amount");
+		} catch (Exception e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
+	
+	@Override
+	public double getSoldBySpendBeforDate(AnnualSpend spend, Date date) throws DAOException {
+		final String SQL  = String.format("SELECT SUM(part) AS amount FROM %s WHERE spend = %d AND recordDate <= %d", 
+				getViewName(), spend.getId(), toMaxTimestampOfDay(date).getTime());
+		double sum = 0;
+		try ( Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if (result.next()) 
+				sum = result.getDouble("amount");
+		} catch (Exception e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
 
 	@Override
 	public List<RecipePart<S>> findBySpend(AnnualSpend spend, PaymentLocation location, int limit, int offset) throws DAOException {

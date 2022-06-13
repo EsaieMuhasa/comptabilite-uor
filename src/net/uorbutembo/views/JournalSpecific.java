@@ -19,6 +19,7 @@ import java.awt.event.MouseEvent;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.Box;
@@ -65,12 +66,17 @@ import net.uorbutembo.swing.DefaultCardModel.CardType;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
-import net.uorbutembo.swing.charts.CloudChartRender;
+import net.uorbutembo.swing.charts.ChartPanel;
+import net.uorbutembo.swing.charts.DateAxis;
+import net.uorbutembo.swing.charts.DefaultAxis;
 import net.uorbutembo.swing.charts.DefaultCloudChartModel;
+import net.uorbutembo.swing.charts.DefaultMaterialPoint;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
+import net.uorbutembo.swing.charts.DefaultPointCloud;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
+import net.uorbutembo.swing.charts.PointCloud.CloudType;
 import net.uorbutembo.views.components.JournalMenuItem;
 import net.uorbutembo.views.components.JournalMenuItemListener;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
@@ -726,8 +732,13 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		private final DefaultPieModel pieModel = new DefaultPieModel();
 		private final PiePanel piePanel = new PiePanel(pieModel, FormUtil.BKG_END_2);
 		
-		private final DefaultCloudChartModel lineChartModel = new DefaultCloudChartModel();
-		private final CloudChartRender lineChartRender = new CloudChartRender(lineChartModel);
+		private final DefaultAxis yAxis = new DefaultAxis("Y", "Montant", FormUtil.UNIT_MONEY);
+		private final DateAxis xAxis = new DateAxis("X", "Date", "");
+		private final DefaultCloudChartModel chartModel = new DefaultCloudChartModel(xAxis, yAxis);
+		private final ChartPanel chartPanel = new ChartPanel(chartModel);
+		private final DefaultPointCloud cloudRecipe = new DefaultPointCloud("Recettes", FormUtil.COLORS_ALPHA[9], Color.WHITE, FormUtil.COLORS[9]);
+		private final DefaultPointCloud cloudSold = new DefaultPointCloud("Solde", FormUtil.COLORS_ALPHA[0], Color.WHITE, FormUtil.COLORS[0]);
+		private final DefaultPointCloud cloudOutlay = new DefaultPointCloud("Dépenses", FormUtil.COLORS_ALPHA[1], Color.WHITE, FormUtil.COLORS[1]);
 		
 		private final DefaultCardModel<Double> cardSoldModel = new DefaultCardModel<>(CardType.DARK, R.getIcon("caisse"), "$");
 		private final DefaultCardModel<Double> cardOutlayModel = new DefaultCardModel<>(CardType.DARK, R.getIcon("btn-cancel"), "$");
@@ -748,6 +759,10 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			
 			pieModel.setRealMaxPriority(true);
 			pieModel.setSuffix("$");
+			
+			chartModel.addChart(cloudOutlay);
+			chartModel.addChart(cloudRecipe);
+			chartModel.addChart(cloudSold);
 		}
 		
 		private final Card cardSold = new Card(cardSoldModel);
@@ -814,14 +829,14 @@ public class JournalSpecific extends Panel  implements ActionListener{
 				bottom = new Panel(new GridLayout(1, 3, 10, 0));
 			
 			final Panel 
-				lineContainer = new Panel(new BorderLayout()),
+				chartContainer = new Panel(new BorderLayout()),
 				pieContainer = new Panel(new  BorderLayout());
 			
 			pieContainer.add(piePanel, BorderLayout.CENTER);
-			lineContainer.add(lineChartRender, BorderLayout.CENTER);
+			chartContainer.add(chartPanel, BorderLayout.CENTER);
 			
 			tabbedPane.addTab("", new ImageIcon(R.getIcon("pie")), pieContainer, "Soldes par emplacement");
-			tabbedPane.addTab("", new ImageIcon(R.getIcon("chart")), lineContainer, "Ligne de temps");
+			tabbedPane.addTab("", new ImageIcon(R.getIcon("chart")), chartContainer, "Ligne de temps");
 			
 			center.add(tabbedPane, BorderLayout.CENTER);
 			center.setBorder(new EmptyBorder(0, 0, 10, 0));
@@ -904,6 +919,54 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		 * pour le compte sectionner
 		 */
 		public void reloadLine () {
+			cloudOutlay.removePoints();
+			cloudSold.removePoints();
+			cloudRecipe.removePoints();
+			
+			int min = -18;
+			int max = 1;
+
+			long time = 0, now = System.currentTimeMillis();
+			
+			for(int day = min; day <= max; day++) {
+				time = now + (day * 60 * 60 * 1000 * 24);
+				Date date = new Date(time);
+				
+				double y = 0;
+				//recettes
+				y = otherRecipePartDao.getSoldBySpendAtDate(account.getAccount(), date);
+				y += paymentFeePartDao.getSoldBySpendAtDate(account.getAccount(), date);
+
+				DefaultMaterialPoint pointIn = new DefaultMaterialPoint(day, y);
+				pointIn.setLabelX(DateAxis.DEFAULT_DATE_FORMAT.format(date));
+				pointIn.setLabelY(y+" USD");
+				cloudRecipe.addPoint(pointIn);
+				//==
+				
+				//depense
+				y = outlayDao.getSoldByAccountAtDate(account.getAccount(), date);
+				
+				DefaultMaterialPoint pointOut = new DefaultMaterialPoint(day, -y);
+				pointOut.setLabelX(DateAxis.DEFAULT_DATE_FORMAT.format(date));
+				pointOut.setLabelY(y+" USD");
+				cloudOutlay.addPoint(pointOut);
+				//==
+				
+				//solde
+				y = otherRecipePartDao.getSoldBySpendBeforDate(account.getAccount(), date);
+				y += paymentFeePartDao.getSoldBySpendBeforDate(account.getAccount(), date);
+				y -= outlayDao.getSoldByAccountBeforDate(account.getAccount(), date);
+				
+				DefaultMaterialPoint pointSold = new DefaultMaterialPoint(day, y, 10f);
+				pointSold.setLabelX(DateAxis.DEFAULT_DATE_FORMAT.format(date));
+				pointSold.setLabelY(y+" USD");
+				pointSold.setBorderColor(cloudSold.getBorderColor().darker());
+				cloudSold.addPoint(pointSold);
+				//==
+			}
+			
+			cloudRecipe.setType(CloudType.STICK_CHART);
+			cloudOutlay.setType(CloudType.STICK_CHART);
 		}
 
 		/**

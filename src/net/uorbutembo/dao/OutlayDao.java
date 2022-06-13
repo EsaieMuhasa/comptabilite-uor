@@ -284,6 +284,30 @@ public interface OutlayDao extends DAOInterface<Outlay>, BaseStatistic<Outlay> {
 	}
 	
 	/**
+	 * Renvoie le total des depense sur un compte en une date
+	 * @param account
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAccountAtDate (long account, Date date) throws DAOException;
+	default double getSoldByAccountAtDate (AnnualSpend account, Date date) throws DAOException {
+		return getSoldByAccountAtDate(account.getId(), date);
+	}
+	
+	/**
+	 * renvoie le solde des tout les operations avant la date en deuxeme parametre
+	 * @param account
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAccountBeforDate (long account, Date date) throws DAOException;
+	default double getSoldByAccountBeforDate (AnnualSpend account, Date date) throws DAOException {
+		return getSoldByAccountBeforDate(account.getId(), date);
+	}
+	
+	/**
 	 * Renvoie le sold du montant deja retirer pour tout ces comptes en un lieux de payement
 	 * @param accounts
 	 * @param location

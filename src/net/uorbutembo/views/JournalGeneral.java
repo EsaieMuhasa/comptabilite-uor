@@ -20,7 +20,6 @@ import java.util.List;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
-import javax.swing.JCheckBox;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
@@ -44,7 +43,7 @@ import net.uorbutembo.dao.PaymentLocationDao;
 import net.uorbutembo.swing.Card;
 import net.uorbutembo.swing.DefaultCardModel;
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.swing.charts.CloudChartRender;
+import net.uorbutembo.swing.charts.ChartPanel;
 import net.uorbutembo.swing.charts.DateAxis;
 import net.uorbutembo.swing.charts.DefaultAxis;
 import net.uorbutembo.swing.charts.DefaultCloudChartModel;
@@ -352,22 +351,15 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 	private class LineChartPanel extends Panel{
 		private static final long serialVersionUID = 2734887735495665253L;
 		
-		private Panel panelChart = new Panel(new BorderLayout());//panel contenant la visualisation graphique
-		
+
 		private final DefaultAxis yAxis = new DefaultAxis("Montant", "", "$");
 		private final DateAxis xAxis = new DateAxis("Temps", "t", "");
 		
 		private final DefaultCloudChartModel chartModel = new DefaultCloudChartModel(xAxis, yAxis);
-		private final CloudChartRender chartRender = new CloudChartRender(chartModel);
 		private final DefaultPointCloud cloudRecipes = new DefaultPointCloud("Recette", FormUtil.COLORS_ALPHA[0], FormUtil.COLORS[0], FormUtil.COLORS[0]);
 		private final DefaultPointCloud cloudOutlays = new DefaultPointCloud("Dépense", FormUtil.COLORS_ALPHA[1], FormUtil.COLORS[1], FormUtil.COLORS[1]);
 		private final DefaultPointCloud cloudSold = new DefaultPointCloud("Solde", FormUtil.COLORS_ALPHA[2], FormUtil.COLORS[2], FormUtil.COLORS[2]);
-		
-		private final JCheckBox checkBoxGridChart = new JCheckBox("Grille", true);
-		
-		private final JCheckBox checkBoxIn = new JCheckBox("Recettes", true);
-		private final JCheckBox checkBoxOut = new JCheckBox("Dépenses", true);
-		private final JCheckBox checkBoxSold = new JCheckBox("Solde", true);
+		private final ChartPanel chartPanel = new ChartPanel(chartModel);
 		
 		{
 			chartModel.addChart(cloudRecipes);
@@ -380,44 +372,8 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		}
 		
 		public LineChartPanel() {
-			super(new BorderLayout());
-			
-			final Panel 
-					panelTools = new  Panel(new BorderLayout()),
-					panelCharts = new Panel();
-			final Box boxOthers = Box.createHorizontalBox(); 
-			
-			panelChart.add(chartRender, BorderLayout.CENTER);
-			
-			checkBoxGridChart.setForeground(FormUtil.BORDER_COLOR);
-			checkBoxGridChart.addChangeListener(event -> {
-				
-			});
-			
-			checkBoxIn.setForeground(FormUtil.COLORS[0]);
-			checkBoxOut.setForeground(FormUtil.COLORS[1]);
-			checkBoxSold.setForeground(FormUtil.COLORS[2]);
-			panelCharts.add(checkBoxIn);
-			panelCharts.add(checkBoxOut);
-			panelCharts.add(checkBoxSold);
-			checkBoxIn.addChangeListener(event -> {
-				cloudRecipes.setVisible(checkBoxIn.isSelected());
-			});
-			checkBoxOut.addChangeListener(event -> {
-				cloudOutlays.setVisible(checkBoxOut.isSelected());
-			});
-			checkBoxSold.addChangeListener(event -> {
-				cloudSold.setVisible(checkBoxSold.isSelected());
-			});
-
-			boxOthers.add(checkBoxGridChart);
-			
-			panelTools.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-			panelTools.add(panelCharts, BorderLayout.EAST);
-			panelTools.add(boxOthers, BorderLayout.WEST);
-			
-			add(panelChart, BorderLayout.CENTER);
-			add(panelTools, BorderLayout.NORTH);
+			super(new BorderLayout());			
+			add(chartPanel, BorderLayout.CENTER);
 		}
 		
 		private void wait (boolean status) {
@@ -427,11 +383,6 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			} else {
 				setCursor(Cursor.getDefaultCursor());
 			}
-			
-			checkBoxIn.setEnabled(!status);
-			checkBoxOut.setEnabled(!status);
-			checkBoxSold.setEnabled(!status);
-			checkBoxGridChart.setEnabled(!status);
 		}
 		
 		private synchronized void reloadChart() {
@@ -502,9 +453,10 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 						y += p.getAmount();
 					}
 				}
-				DefaultMaterialPoint pointSold = new DefaultMaterialPoint(day, y - pointOut.getY());
+				DefaultMaterialPoint pointSold = new DefaultMaterialPoint(day, y - pointOut.getY(), 10f);
 				pointSold.setLabelX(DateAxis.DEFAULT_DATE_FORMAT.format(date));
 				pointSold.setLabelY(y+" USD");
+				pointSold.setBorderColor(cloudSold.getBorderColor().darker());
 				cloudSold.addPoint(pointSold);
 				//==
 			}

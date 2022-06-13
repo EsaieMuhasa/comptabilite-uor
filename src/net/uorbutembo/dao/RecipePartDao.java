@@ -170,6 +170,24 @@ public interface RecipePartDao <T extends RecipePart<S>, H extends DefaultRecipe
 	double getSoldBySpend (AnnualSpend spend, PaymentLocation location) throws DAOException;
 	
 	/**
+	 * renvoie le montant total qui aurait entrer dans un compte en une date
+	 * @param spend
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldBySpendAtDate (AnnualSpend spend, Date date) throws DAOException;
+	
+	/**
+	 * Renvoie le solde d'un compte avant la date en deuxieme parametre (inclue la date en deuxieme parametre)
+	 * @param spend
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldBySpendBeforDate (AnnualSpend spend, Date date) throws DAOException;
+	
+	/**
 	 * Renvoie la collection des operations qui ont ete faite sur un compte dans un lieux.
 	 * (7x6 avec intervale de selection)
 	 * @param spend

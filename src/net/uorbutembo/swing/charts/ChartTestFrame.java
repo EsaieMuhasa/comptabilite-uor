@@ -3,6 +3,7 @@
  */
 package net.uorbutembo.swing.charts;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.HeadlessException;
@@ -132,15 +133,10 @@ public class ChartTestFrame extends JFrame {
 		DefaultCloudChartModel model6 = new DefaultCloudChartModel();
 		
 		model.addChart(cloud);
+		model.addChart(cloud2);
 		model.addChart(cloud3);
 		model.addChart(cloud4);
-		model.addChart(cloud2);
-		
-		model2.addChart(cloud);
-		model3.addChart(cloud2);
-		model4.addChart(cloud3);
-		model5.addChart(cloud4);
-		model5.addChart(cloud5);
+		model.addChart(cloud5);
 		
 		for (DefaultPointCloud c : listCos) {
 			model6.addChart(c);
@@ -183,20 +179,13 @@ public class ChartTestFrame extends JFrame {
 		c.addChart(custom2);
 		c.addChart(custom3);
 		c.addChart(custom4);
-//		c.addChart(listSin.get(0));
-//		c.addChart(listCos.get(0));
 		//==
 		
-		JPanel content = new JPanel(new GridLayout(3, 2, 10, 10));
+		JPanel content = new JPanel(new BorderLayout());
 		JPanel content2 = new JPanel(new GridLayout(3, 2, 10, 10));
 		
 		content.setBorder(new EmptyBorder(10, 10, 10, 10));
-		content.add(new CloudChartRender(model));
-		content.add(new CloudChartRender(c));
-		content.add(new CloudChartRender(model3));
-		content.add(new CloudChartRender(model4));
-		content.add(new CloudChartRender(model5));
-		content.add(new CloudChartRender(model6));
+		content.add(new ChartPanel(model), BorderLayout.CENTER);
 		
 		content2.setBorder(new EmptyBorder(10, 10, 10, 10));
 		content2.add(new CloudChartRender(model));
@@ -207,8 +196,8 @@ public class ChartTestFrame extends JFrame {
 		content2.add(new CloudChartRender(model6));
 		
 		JDesktopPane desk = new JDesktopPane();
-		JInternalFrame version1 = new JInternalFrame("Graphiques de type polylines, vesion 1.0", true, false, true);
-		JInternalFrame version2 = new JInternalFrame("Graphiques de type polylines, vesion 2.0", true , false, true);
+		JInternalFrame version1 = new JInternalFrame("ChartPanel", true, false, true);
+		JInternalFrame version2 = new JInternalFrame("CloudChartRender", true , false, true);
 		
 		version1.setClosable(false);
 		version2.setClosable(false);
@@ -217,7 +206,7 @@ public class ChartTestFrame extends JFrame {
 		version2.setSize(550, 400);
 		version2.setLocation(getWidth()/4, 100);
 		
-//		version1.setContentPane(content);
+		version1.setContentPane(content);
 		version2.setContentPane(content2);
 		version1.setVisible(true);
 		version2.setVisible(true);

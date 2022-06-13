@@ -49,7 +49,7 @@ public interface MaterialPoint extends ChartData{
 	 * Taille du point
 	 * @return
 	 */
-	int getSize();
+	float getSize();
 	
 	/**
 	 * Renvoie le label du point materiel sur l'axe des X

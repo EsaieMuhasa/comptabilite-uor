@@ -17,7 +17,7 @@ public class DefaultMaterialPoint extends AbstractChartData implements MaterialP
 	
 	private double x;
 	private double y;
-	private int size = 1;
+	private float size = 1;
 	private String labelX;
 	private String labelY;
 	
@@ -83,7 +83,7 @@ public class DefaultMaterialPoint extends AbstractChartData implements MaterialP
 	 * @param y
 	 * @param size
 	 */
-	public DefaultMaterialPoint(double x, double y, int size) {
+	public DefaultMaterialPoint(double x, double y, float size) {
 		super();
 		this.x = x;
 		this.y = y;
@@ -125,7 +125,7 @@ public class DefaultMaterialPoint extends AbstractChartData implements MaterialP
 	/**
 	 * @param size the size to set
 	 */
-	public synchronized void setSize(int size) {
+	public synchronized void setSize(float size) {
 		if(this.size == size)
 			return;
 		
@@ -149,7 +149,7 @@ public class DefaultMaterialPoint extends AbstractChartData implements MaterialP
 	}
 
 	@Override
-	public int getSize() {
+	public float getSize() {
 		return size;
 	}
 

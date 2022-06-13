@@ -45,7 +45,7 @@ public interface OtherRecipeDao extends DAOInterface<OtherRecipe>, BaseStatistic
 	default boolean checkByAccount (AnnualRecipe account) throws DAOException {
 		return checkByAccount(account.getId());
 	}
-	
+
 	/**
 	 * Comptage des operations convernat un compte
 	 * @param accountId

@@ -105,6 +105,7 @@ public class CloudChartRender extends JComponent {
 		addMouseListener(mouseListener);
 		addMouseMotionListener(mouseListener);
 		setOpaque(false);
+		setFont(new Font("Arial", Font.PLAIN, 12));
 		if (model != null) 
 			model.addListener(modelListener);
 	}
@@ -129,12 +130,170 @@ public class CloudChartRender extends JComponent {
 		repaint();
 	}
 	
+	/**
+	 * @return the mouseLineColor
+	 */
+	public Color getMouseLineColor() {
+		return mouseLineColor;
+	}
+
+	/**
+	 * @param mouseLineColor the mouseLineColor to set
+	 */
+	public void setMouseLineColor(Color mouseLineColor) {
+		if(mouseLineColor.getRGB() == this.mouseLineColor.getRGB())
+			return;
+		
+		this.mouseLineColor = mouseLineColor;
+		repaint();
+	}
+	
+	public void setLineAxisColor (Color lineAxisColor) {
+		if(this.lineAxisColor.getRGB() == lineAxisColor.getRGB())
+			return;
+		
+		this.lineAxisColor = lineAxisColor;
+		repaint();
+	}
+
+	/**
+	 * @return the mouseLineVisible
+	 */
+	public boolean isMouseLineVisible() {
+		return mouseLineVisible;
+	}
+
+	/**
+	 * @param mouseLineVisible the mouseLineVisible to set
+	 */
+	public void setMouseLineVisible(boolean mouseLineVisible) {
+		this.mouseLineVisible = mouseLineVisible;
+	}
+
 	@Override
 	public void doLayout() {
 		super.doLayout();
 		prepareRender();
 	}
 	
+	/**
+	 * @return the gridColor
+	 */
+	public Color getGridColor() {
+		return gridColor;
+	}
+
+	/**
+	 * @param gridColor the gridColor to set
+	 */
+	public void setGridColor (Color gridColor) {
+		if(this.gridColor.getRGB() == gridColor.getRGB())
+			return;
+		
+		this.gridColor = gridColor;
+		repaint();
+	}
+
+	/**
+	 * @return the gridXstep
+	 */
+	public double getGridXstep() {
+		return gridXstep;
+	}
+
+	/**
+	 * @param gridXstep the gridXstep to set
+	 */
+	public void setGridXstep(double gridXstep) {
+		if(gridXstep == this.gridXstep)
+			return;
+		
+		this.gridXstep = gridXstep;
+		repaint();
+	}
+
+	/**
+	 * @return the gridYstep
+	 */
+	public double getGridYstep() {
+		return gridYstep;
+	}
+
+	/**
+	 * @param gridYstep the gridYstep to set
+	 */
+	public void setGridYstep(double gridYstep) {
+		if(gridYstep == this.gridYstep)
+			return;
+		
+		this.gridYstep = gridYstep;
+		repaint();
+	}
+
+	/**
+	 * @return the gridXvisible
+	 */
+	public boolean isGridXvisible() {
+		return gridXvisible;
+	}
+
+	/**
+	 * @param gridXvisible the gridXvisible to set
+	 */
+	public void setGridXvisible(boolean gridXvisible) {
+		if(this.gridXvisible == gridXvisible)
+			return;
+		
+		this.gridXvisible = gridXvisible;
+		repaint();
+	}
+
+	/**
+	 * @return the gridYvisible
+	 */
+	public boolean isGridYvisible() {
+		return gridYvisible;
+	}
+
+	/**
+	 * @param gridYvisible the gridYvisible to set
+	 */
+	public void setGridYvisible(boolean gridYvisible) {
+		if(this.gridYvisible == gridYvisible)
+			return;
+		
+		this.gridYvisible = gridYvisible;
+		repaint();
+	}
+
+	/**
+	 * @return the xRation
+	 */
+	public double getxRation() {
+		return xRation;
+	}
+
+	/**
+	 * @return the yRation
+	 */
+	public double getyRation() {
+		return yRation;
+	}
+
+	/**
+	 * @return the widhtRender
+	 */
+	public double getWidhtRender() {
+		return widhtRender;
+	}
+
+	/**
+	 * @return the heightRender
+	 */
+	public double getHeightRender() {
+		return heightRender;
+	}
+
 	@Override
 	protected void paintBorder(Graphics g) {
 		super.paintBorder(g);
@@ -287,7 +446,6 @@ public class CloudChartRender extends JComponent {
 		
     	final float labelPadding = 4f;
 
-        
         //h1: titre de niveau 1
         //h2: titre de niveau 2
         String h2 = chart.getCloud().getTitle();
@@ -302,7 +460,7 @@ public class CloudChartRender extends JComponent {
         		widthH1 = r1.getWidth() + (labelPadding * 2);
         double width = Math.max(widthH1, widthH2);
         
-        double height = r1.getHeight() + r2.getHeight() + labelPadding * 2;
+        double height = r1.getHeight() + r2.getHeight() + labelPadding;
         double recY = (y + height) <= (getHeight() - paddingBottom)?  y : y - height;
         double recX = (x + width) <= (getWidth() - padding)?  x : x - width;
         
@@ -315,13 +473,13 @@ public class CloudChartRender extends JComponent {
         g2.setColor(Color.WHITE);
         g2.draw(rec);
         g2.setFont(getFont().deriveFont(Font.PLAIN, g2.getFont().getSize2D()));
-        g2.drawString(h1, (float)recX + labelPadding, (float) (recY + fmH1.getAscent()));
+        g2.drawString(h2, (float)recX + labelPadding, (float) (recY + fmH1.getAscent() + labelPadding));
         g2.setFont(getFont().deriveFont(Font.BOLD, g2.getFont().getSize2D()));
-        g2.drawString(h2, (float)recX + labelPadding, (float) (recY + height - r2.getHeight() + fmH2.getAscent()));
+        g2.drawString(h1, (float)recX + labelPadding, (float) (recY + height - r2.getHeight() + fmH2.getAscent() - + labelPadding/2f));
     }
 	
 	private void paintGrid (Graphics2D g) {
-		if((!gridXvisible && !gridYvisible) || model.getXMax() == null || model.getYMax() == null)
+		if(model.getXMax() == null || model.getYMax() == null)
 			return;
 		
 		g.setStroke(gridStroke);
@@ -329,136 +487,145 @@ public class CloudChartRender extends JComponent {
 		Font font = g.getFont();
 		FontMetrics metrics = g.getFontMetrics(font);
 		
-		if(gridYvisible) {
-			if(xlineAxis != null) {//pour le cas où l'axe est visible
-				int y = 0;
-				double percentAxis = (100f / heightRender) * (xlineAxis.getY1() - padding);
-				for (double i = xlineAxis.getY1(); i > 0; i -= gridYstep) {
-					y = (int) i;
-					double percent = (100f / heightRender) * (i - padding);
-					double real = Math.abs(percent - percentAxis) * (model.getYMax().getY() / percentAxis);
-					if(real == 0 || y < padding)
-						continue;
-					
-					String txt = model.getYAxis().getLabelOf(real);
+		if(xlineAxis != null) {//pour le cas où l'axe est visible
+			int y = 0;
+			double percentAxis = (100f / heightRender) * (xlineAxis.getY1() - padding);
+			for (double i = xlineAxis.getY1(); i > 0; i -= gridYstep) {
+				y = (int) i;
+				double percent = (100f / heightRender) * (i - padding);
+				double real = Math.abs(percent - percentAxis) * (model.getYMax().getY() / percentAxis);
+				if(real == 0 || y < padding)
+					continue;
+				
+				String txt = model.getYAxis().getLabelOf(real);
+				if(gridYvisible) {			
 					g.setColor(gridColor);
 					g.drawLine((int)(paddingLeft - padding/2), y, (int)(getWidth() - (padding/2)), y);
-					g.setColor(model.getBorderColor());
-					g.drawString(txt, 0f, y + metrics.getHeight() / 4);
 				}
+				g.setColor(lineAxisColor);
+				g.drawString(txt, 0f, y + metrics.getHeight() / 4);
+			}
+			
+			y = 0;
+			for (double i = xlineAxis.getY1(); y <= getHeight(); i += gridYstep) {
+				y =  (int) i;
+				double percent = (100f / heightRender) * (i - padding);
+				double real = -Math.abs(percent - percentAxis) * (model.getYMax().getY() / percentAxis);
+				if(real == 0 || y > (getHeight() - paddingBottom))
+					continue;
 				
-				y = 0;
-				for (double i = xlineAxis.getY1(); y <= getHeight(); i += gridYstep) {
-					y =  (int) i;
-					double percent = (100f / heightRender) * (i - padding);
-					double real = -Math.abs(percent - percentAxis) * (model.getYMax().getY() / percentAxis);
-					if(real == 0 || y > (getHeight() - paddingBottom))
-						continue;
-					
-					String txt = model.getYAxis().getLabelOf(real);
+				String txt = model.getYAxis().getLabelOf(real);
+				if(gridYvisible) {			
 					g.setColor(gridColor);
 					g.drawLine((int)(paddingLeft - padding/2), y, (int)(getWidth() - (padding/2)), y);
-					g.setColor(model.getBorderColor());
-					g.drawString(txt, 0f, y + metrics.getHeight() / 4);
 				}
+				g.setColor(lineAxisColor);
+				g.drawString(txt, 0f, y + metrics.getHeight() / 4);
+			}
+			
+			if (mouseLocation != null) {//lors du survol de la sourie
+				double percent = (100f / heightRender) * (mouseLocation.getY() - padding);
+				mouseYvalue = Math.abs(percent - percentAxis) * (model.getYMax().getY() / percentAxis);
+				if(mouseLocation.getY() > xlineAxis.getY1()) {
+					mouseYvalue *= -1;
+				} 
+			}
+		} else {//dans le cas où l'axe n'est pas visible
+			for (double i = heightRender + padding; i >= 0; i -= gridYstep) {
+				int y = (int)(i);
 				
-				if (mouseLocation != null) {//lors du survol de la sourie
-					double percent = (100f / heightRender) * (mouseLocation.getY() - padding);
-					mouseYvalue = Math.abs(percent - percentAxis) * (model.getYMax().getY() / percentAxis);
-					if(mouseLocation.getY() > xlineAxis.getY1()) {
-						mouseYvalue *= -1;
-					} 
-				}
-			} else {//dans le cas où l'axe n'est pas visible
-				for (double i = heightRender + padding; i >= 0; i -= gridYstep) {
-					int y = (int)(i);
-					
-					if (y < padding)
-						continue;
-					
-					double percent = (100f / heightRender) * (i - padding);
-					double real = Math.abs(percent - 100f) * ((model.getYMax().getY() - model.getYMin().getY()) / 100f);
-					real += model.getYMin().getY();
-					
-					String txt = model.getYAxis().getLabelOf(real);
+				if (y < padding)
+					continue;
+				
+				double percent = (100f / heightRender) * (i - padding);
+				double real = Math.abs(percent - 100f) * ((model.getYMax().getY() - model.getYMin().getY()) / 100f);
+				real += model.getYMin().getY();
+				
+				String txt = model.getYAxis().getLabelOf(real);
+				if(gridYvisible) {			
 					g.setColor(gridColor);
 					g.drawLine((int)(paddingLeft - padding/2), y, (int)(getWidth() - (padding/2)), y);
-					g.setColor(model.getBorderColor());
-					g.drawString(txt, 0f, y + metrics.getHeight() / 4);
 				}
-				
-				if (mouseLocation != null) {//lors du survol de la sourie
-					double percent = (100f / heightRender) * (mouseLocation.getY() - padding);
-					mouseYvalue = Math.abs(percent - 100f) * ((model.getYMax().getY() - model.getYMin().getY()) / 100f);
-					mouseYvalue += model.getYMin().getY();
-				}
+				g.setColor(lineAxisColor);
+				g.drawString(txt, 0f, y + metrics.getHeight() / 4);
+			}
+			
+			if (mouseLocation != null) {//lors du survol de la sourie
+				double percent = (100f / heightRender) * (mouseLocation.getY() - padding);
+				mouseYvalue = Math.abs(percent - 100f) * ((model.getYMax().getY() - model.getYMin().getY()) / 100f);
+				mouseYvalue += model.getYMin().getY();
 			}
 		}
 		
-		if(gridXvisible) {			
-			if(ylineAxis != null) {	
-				double percentAxis = (100f / widhtRender) * (ylineAxis.getX1() - padding);
-				for (double i = ylineAxis.getX1(); i > 0; i -= gridXstep) {
-					int x = (int)i;
-					double percent = (100f / widhtRender) * (i - padding);
-					double real = -Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
-					
-					if(real == 0 || x < paddingLeft)
-						continue;
-					String txt = model.getXAxis().getLabelOf(real);
+		if(ylineAxis != null) {	
+			double percentAxis = (100f / widhtRender) * (ylineAxis.getX1() - padding);
+			for (double i = ylineAxis.getX1(); i > 0; i -= gridXstep) {
+				int x = (int)i;
+				double percent = (100f / widhtRender) * (i - padding);
+				double real = -Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
+				
+				if(real == 0 || x < paddingLeft)
+					continue;
+				String txt = model.getXAxis().getLabelOf(real);
+				if(gridXvisible) {			
 					g.setColor(gridColor);
 					g.drawLine(x, (int)padding/2, x, (int) (getHeight() - paddingBottom + padding/2));
-					g.setColor(model.getBorderColor());
-					g.drawString(txt, x - metrics.stringWidth(txt) / 2, getHeight() - padding/2f);
 				}
+				g.setColor(lineAxisColor);
+				g.drawString(txt, x - metrics.stringWidth(txt) / 2, getHeight() - padding/2f);
+			}
+			
+			for (double i = ylineAxis.getX1(); i < getWidth(); i += gridXstep) {
+				int x = (int)i;
+				double percent = (100f / widhtRender) * (i - padding);
+				double real = Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
 				
-				for (double i = ylineAxis.getX1(); i < getWidth(); i += gridXstep) {
-					int x = (int)i;
-					double percent = (100f / widhtRender) * (i - padding);
-					double real = Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
-					
-					if(real == 0 || x > (getWidth() - padding))
-						continue;
-					
-					String txt = model.getXAxis().getLabelOf(real);
+				if(real == 0 || x > (getWidth() - padding))
+					continue;
+				
+				String txt = model.getXAxis().getLabelOf(real);
+				if(gridXvisible) {			
 					g.setColor(gridColor);
 					g.drawLine(x, (int)padding/2, x, (int) (getHeight() - paddingBottom + padding/2));
-					g.setColor(model.getBorderColor());
-					g.drawString(txt, x - metrics.stringWidth(txt) / 2, getHeight() - padding/2f);
 				}
+				g.setColor(lineAxisColor);
+				g.drawString(txt, x - metrics.stringWidth(txt) / 2, getHeight() - padding/2f);
+			}
+			
+			if (mouseLocation != null) {//lors du survol de la sourie
+				double percent = (100f / widhtRender) * (mouseLocation.getX() - padding);
+				mouseXvalue = Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
+				if(mouseLocation.getX() < ylineAxis.getX1()) {
+					mouseXvalue *= -1;
+				} 
+			}
+		} else {
+			for (double i = widhtRender + padding; i >= 0 ; i -= gridXstep) {
+				int x = (int)i;
 				
-				if (mouseLocation != null) {//lors du survol de la sourie
-					double percent = (100f / widhtRender) * (mouseLocation.getX() - padding);
-					mouseXvalue = Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
-					if(mouseLocation.getX() < ylineAxis.getX1()) {
-						mouseXvalue *= -1;
-					} 
-				}
-			} else {
-				for (double i = widhtRender + padding; i >= 0 ; i -= gridXstep) {
-					int x = (int)i;
-					
-					if (x < paddingLeft)
-						continue;
-					
-					double percent = (100f / widhtRender) * (i - padding);
-					double real = Math.abs(percent) * ((model.getXMax().getX() - model.getXMin().getX()) / 100f);
-					real += model.getXMin().getX();
-					
-					String txt = model.getXAxis().getLabelOf(real);
+				if (x < paddingLeft)
+					continue;
+				
+				double percent = (100f / widhtRender) * (i - padding);
+				double real = Math.abs(percent) * ((model.getXMax().getX() - model.getXMin().getX()) / 100f);
+				real += model.getXMin().getX();
+				
+				String txt = model.getXAxis().getLabelOf(real);
+				if(gridXvisible) {			
 					g.setColor(gridColor);
 					g.drawLine(x, (int)padding/2, x, (int) (getHeight() - paddingBottom + padding/2));
-					g.setColor(model.getBorderColor());
-					g.drawString(txt, x - metrics.stringWidth(txt) / 2, getHeight() - padding/2f);
 				}
-				
-				if (mouseLocation != null) {//lors du survol de la sourie
-					double percent = (100f / widhtRender) * (mouseLocation.getX() - padding);
-					mouseXvalue = Math.abs(percent) * ((model.getXMax().getX() - model.getXMin().getX()) / 100f);
-					mouseYvalue += model.getXMin().getX();
-				}
+				g.setColor(lineAxisColor);
+				g.drawString(txt, x - metrics.stringWidth(txt) / 2, getHeight() - padding/2f);
+			}
+			
+			if (mouseLocation != null) {//lors du survol de la sourie
+				double percent = (100f / widhtRender) * (mouseLocation.getX() - padding);
+				mouseXvalue = Math.abs(percent) * ((model.getXMax().getX() - model.getXMin().getX()) / 100f);
+				mouseXvalue += model.getXMin().getX();
 			}
 		}
+		
 	}
 	
 	/**
@@ -466,12 +633,6 @@ public class CloudChartRender extends JComponent {
 	 */
 	private synchronized void prepareRender () {
 		chartMetadatas.clear();
-		
-		widhtRender = getWidth() - (padding + paddingLeft);
-		heightRender = getHeight() - (padding + paddingBottom);
-		
-//		gridXstep = widhtRender / 10;
-//		gridYstep = heightRender / 10;
 		
 		double xMax = model.hasVisibleChart()? model.getXMax().getX() : 10;
 		double yMax = model.hasVisibleChart()? model.getYMax().getY() : 10;
@@ -483,6 +644,16 @@ public class CloudChartRender extends JComponent {
 		final double absYmax = Math.abs(yMax);
 		final double absXmin = Math.abs(xMin);
 		final double absYmin = Math.abs(yMin);
+		
+		final String labelYMax = DefaultAxis.DECIMAL_FORMAT.format(String.valueOf(yMax).length() < String.valueOf(yMin).length()? yMin : yMax);
+		FontMetrics metrics = getFontMetrics(getFont());
+		paddingLeft = metrics.stringWidth(labelYMax) + padding * 2f;
+		
+		widhtRender = getWidth() - (padding + paddingLeft);
+		heightRender = getHeight() - (padding + paddingBottom);
+		
+//		gridXstep = widhtRender / 10;
+//		gridYstep = heightRender / 10;
 		
 		xRation = widhtRender / Math.max(absXmin, absXmax);
 		yRation = heightRender / Math.max(absYmin, absYmax);
@@ -501,7 +672,7 @@ public class CloudChartRender extends JComponent {
 			maxX = Math.max(xMin + translateX, xMax + translateX);
 		} else {//pour R*
 			translateX = absXmin;
-			maxX = Math.max(absXmin, absXmax) * 2;
+			maxX = absXmin + absXmax;
 			xYline = (widhtRender / maxX) * translateX + paddingLeft; // xRation...
 		}
 		xRation = widhtRender / maxX;
@@ -860,13 +1031,12 @@ public class CloudChartRender extends JComponent {
 		@Override
 		public void mouseExited(MouseEvent e) {
 			mouseLocation = null;
-			
 			repaint();
 		}
 		
 		@Override
 		public void mouseMoved (MouseEvent e) {
-			if (borderRect.contains(e.getPoint()) && model.getSize() != 0) {				
+			if (borderRect.contains(e.getPoint()) && model.getXMax() != null) {				
 				mouseLocation = e.getPoint();
 				boolean match = false;
 				hoverChart = -1;

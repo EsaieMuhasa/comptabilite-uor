@@ -242,6 +242,40 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 	}
 	
 	@Override
+	public double getSoldByAccountAtDate(long account, Date date) throws DAOException {
+		final String SQL = String.format("SELECT SUM(amount) AS sold FROM %s WHERE account = %d AND (recordDate BETWEEN %d AND %d)", 
+				getTableName(), account, toMinTimestampOfDay(date).getTime(), toMaxTimestampOfDay(date).getTime());
+		double sum = 0;
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if (result.next())
+				sum = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
+	
+	@Override
+	public double getSoldByAccountBeforDate(long account, Date date) throws DAOException {
+		final String SQL = String.format("SELECT SUM(amount) AS sold FROM %s WHERE account = %d AND recordDate <= %d", 
+				getTableName(), account, toMaxTimestampOfDay(date).getTime());
+		double sum = 0;
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if (result.next())
+				sum = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
+	
+	@Override
 	public double getSoldByAccount (long account, long location) throws DAOException {
 		final String SQL = String.format("SELECT SUM(amount) AS sold FROM %s WHERE account = %d AND location = %d", getTableName(), account, location);
 		double sum = 0;
