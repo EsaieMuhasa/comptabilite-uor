@@ -23,10 +23,10 @@ import net.uorbutembo.swing.Dialog;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.forms.FormStudyClass;
-import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.StudyClassTableModel;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

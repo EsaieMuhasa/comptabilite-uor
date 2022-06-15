@@ -11,7 +11,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
 
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA

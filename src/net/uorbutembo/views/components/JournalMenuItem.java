@@ -3,7 +3,7 @@
  */
 package net.uorbutembo.views.components;
 
-import static net.uorbutembo.views.forms.FormUtil.BKG_END;
+import static net.uorbutembo.tools.FormUtil.BKG_END;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -35,7 +35,7 @@ import net.uorbutembo.dao.OutlayDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.charts.PieRender;
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA
@@ -65,7 +65,7 @@ public class JournalMenuItem extends Panel {
 
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			if(actionListeners.isEmpty())
+			if(actionListeners.isEmpty() || !isEnabled())
 				return;
 			
 			ActionEvent event = new ActionEvent(JournalMenuItem.this, e.getID(), "click");
@@ -162,11 +162,9 @@ public class JournalMenuItem extends Panel {
 
 		@Override
 		public synchronized void onUpdate(Outlay e, int requestId) {
-			if(e.getAccount().getId() == account.getId()){
-				annualSpendDao.reload(account);
-				repaint();
-				emitOnReload();
-			}
+			annualSpendDao.reload(account);
+			repaint();
+			emitOnReload();
 		}
 
 		@Override
@@ -277,6 +275,13 @@ public class JournalMenuItem extends Panel {
 	public AnnualSpend getAccount() {
 		return account;
 	}
+	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		setCursor(enabled? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		repaint();
+	}
 
 	@Override
 	protected void paintComponent(Graphics g) {
@@ -321,7 +326,7 @@ public class JournalMenuItem extends Panel {
         if (active) 
         	g2.setColor(FormUtil.ACTIVE_COLOR);
         else {        	
-        	if (hover)
+        	if (hover && isEnabled())
         		g2.setColor(BKG_2);
         	else
         		g2.setColor(BKG_END);

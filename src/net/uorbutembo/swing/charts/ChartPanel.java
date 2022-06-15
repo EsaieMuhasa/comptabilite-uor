@@ -16,7 +16,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeListener;
 
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA

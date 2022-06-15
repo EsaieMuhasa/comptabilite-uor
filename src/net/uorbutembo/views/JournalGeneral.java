@@ -20,7 +20,6 @@ import java.util.List;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
-import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
 import javax.swing.border.EmptyBorder;
@@ -53,9 +52,9 @@ import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.DefaultPointCloud;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PointCloud.CloudType;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
-import net.uorbutembo.views.forms.FormUtil;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
@@ -66,8 +65,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 	
 	private final CenterContainer container;	
 	private final CardsPanel cards;
-	private final JProgressBar progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
-
+	
 	private final AnnualRecipeDao annualRecipeDao;
 	private final AnnualSpendDao annualSpendDao;
 	private final OutlayDao outlayDao;
@@ -94,35 +92,17 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		
 		container = new CenterContainer();
 		cards = new CardsPanel();
-		
-		final Panel content = new Panel(new BorderLayout()),
-				bottom = new Panel(new BorderLayout(5, 0));
-		
-		progressBar.setStringPainted(true);
-		progressBar.setVisible(false);
 
-		bottom.add(progressBar, BorderLayout.CENTER);
-		bottom.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-		bottom.setOpaque(true);
-		bottom.setBackground(FormUtil.BKG_END);
-		
-		content.add(container, BorderLayout.CENTER);
-//		content.add(bottom, BorderLayout.SOUTH);
-		
-		add(content, BorderLayout.CENTER);
+		add(container, BorderLayout.CENTER);
 		add(cards, BorderLayout.SOUTH);
 	}
 	
 	private void wait (boolean status) {
-		
 		if (status) {
 			setCursor(FormUtil.WAIT_CURSOR);
 		} else {
 			setCursor(Cursor.getDefaultCursor());
 		}
-		
-		progressBar.setVisible(status);
-		progressBar.setIndeterminate(status);
 	}
 	
 	@Override
@@ -163,89 +143,6 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		private final Card cardSold = new Card(mainWindow.getWorkspace().getDashboard().getGlobalModel().getCardModelCaisse());
 		private final Card cardOut = new Card(cardOutModel);
 		private final Card cardIn = new Card(cardInModel);
-		
-		private final DAOAdapter<PaymentFee> feeAdapter = new DAOAdapter<PaymentFee>() {
-
-			@Override
-			public synchronized void onCreate(PaymentFee e, int requestId) {
-				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
-					return;
-				
-				cardInModel.setValue(cardInModel.getValue() + e.getAmount());
-			}
-
-			@Override
-			public synchronized void onUpdate(PaymentFee e, int requestId) {
-				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
-					return;
-				updateCards();
-			}
-
-			@Override
-			public synchronized void onDelete(PaymentFee e, int requestId) {
-				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
-					return;
-				
-				cardInModel.setValue(cardInModel.getValue() - e.getAmount());
-			}
-			
-		};
-		
-		private final DAOAdapter<OtherRecipe> otherAdapter = new DAOAdapter<OtherRecipe>() {
-
-			@Override
-			public synchronized void onCreate(OtherRecipe e, int requestId) {
-				if(e.getAccount().getAcademicYear().getId() != year.getId())
-					return;
-				
-				cardInModel.setValue(cardInModel.getValue() + e.getAmount());
-			}
-
-			@Override
-			public synchronized void onUpdate(OtherRecipe e, int requestId) {
-				if(e.getAccount().getAcademicYear().getId() != year.getId())
-					return;
-				
-				updateCards();
-			}
-
-			@Override
-			public synchronized void onDelete(OtherRecipe e, int requestId) {
-				if(e.getAccount().getAcademicYear().getId() != year.getId())
-					return;
-				
-				cardInModel.setValue(cardInModel.getValue() - e.getAmount());
-			}
-			
-		};
-		
-		private final DAOAdapter<Outlay> outlayAdaapter = new  DAOAdapter<Outlay>() {
-
-			@Override
-			public synchronized void onCreate(Outlay e, int requestId) {
-				if (e.getAccount().getAcademicYear().getId() != year.getId())
-					return;
-				
-				cardOutModel.setValue(cardOutModel.getValue() + e.getAmount());
-			}
-
-			@Override
-			public synchronized void onUpdate(Outlay e, int requestId) {
-				if (e.getAccount().getAcademicYear().getId() != year.getId())
-					return;
-				
-				updateCards();
-			}
-
-			@Override
-			public synchronized void onDelete(Outlay e, int requestId) {
-				if (e.getAccount().getAcademicYear().getId() != year.getId())
-					return;
-				
-				cardOutModel.setValue(cardOutModel.getValue() - e.getAmount());
-			}
-			
-		};
 
 		public CardsPanel() {
 			super(new BorderLayout());
@@ -257,9 +154,6 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			add(container, BorderLayout.CENTER);
 			setBorder(new EmptyBorder(10, 10, 10, 10));
 			
-			otherRecipeDao.addListener(otherAdapter);
-			paymentFeeDao.addListener(feeAdapter);
-			outlayDao.addListener(outlayAdaapter);
 		}
 		
 		/**
@@ -268,18 +162,13 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		public void updateCards () {
 			
 			double recipe = 0, used = 0;
-			progressBar.setValue(0);
 			
 			if(annualSpendDao.checkByAcademicYear(year.getId())) {
 				List<AnnualSpend> spends = annualSpendDao.findByAcademicYear(year);
 				
-				progressBar.setIndeterminate(false);
-				progressBar.setMaximum(spends.size());
-				
 				for (AnnualSpend sp : spends) {
 					recipe += sp.getCollectedCost() + sp.getCollectedRecipe();
 					used += sp.getUsed();
-					progressBar.setValue(progressBar.getValue() + 1);
 				}
 				
 				BigDecimal bigRecipe = new BigDecimal(recipe).setScale(2, RoundingMode.HALF_UP);
@@ -321,6 +210,107 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		private final RecipePanel recipePanel = new RecipePanel();
 		private final OutlayPanel outlayPanel = new OutlayPanel();
 		
+		private final DAOAdapter<PaymentFee> feeAdapter = new DAOAdapter<PaymentFee>() {
+
+			@Override
+			public synchronized void onCreate(PaymentFee e, int requestId) {
+				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cards.cardInModel.setValue(cards.cardInModel.getValue() + e.getAmount());
+				linePanel.reloadChart();
+				piePanel.reloadChart();
+			}
+
+			@Override
+			public synchronized void onUpdate(PaymentFee e, int requestId) {
+				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
+					return;
+				cards.updateCards();
+				linePanel.reloadChart();
+				piePanel.reloadChart();
+			}
+
+			@Override
+			public synchronized void onDelete(PaymentFee e, int requestId) {
+				if(e.getInscription().getPromotion().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cards.cardInModel.setValue(cards.cardInModel.getValue() - e.getAmount());
+				linePanel.reloadChart();
+				piePanel.reloadChart();
+			}
+			
+		};
+		
+		private final DAOAdapter<OtherRecipe> otherAdapter = new DAOAdapter<OtherRecipe>() {
+
+			@Override
+			public synchronized void onCreate(OtherRecipe e, int requestId) {
+				if(e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cards.cardInModel.setValue(cards.cardInModel.getValue() + e.getAmount());
+				linePanel.reloadChart();
+				piePanel.reloadChart();
+			}
+
+			@Override
+			public synchronized void onUpdate(OtherRecipe e, int requestId) {
+				if(e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cards.updateCards();
+				linePanel.reloadChart();
+				piePanel.reloadChart();
+			}
+
+			@Override
+			public synchronized void onDelete(OtherRecipe e, int requestId) {
+				if(e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cards.cardInModel.setValue(cards.cardInModel.getValue() - e.getAmount());
+				linePanel.reloadChart();
+				piePanel.reloadChart();
+			}
+			
+		};
+		
+		private final DAOAdapter<Outlay> outlayAdaapter = new  DAOAdapter<Outlay>() {
+
+			@Override
+			public synchronized void onCreate(Outlay e, int requestId) {
+				if (e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cards.cardOutModel.setValue(cards.cardOutModel.getValue() + e.getAmount());
+				linePanel.reloadChart();
+				piePanel.reloadChart();
+			}
+
+			@Override
+			public synchronized void onUpdate(Outlay e, int requestId) {
+				if (e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cards.updateCards();
+				linePanel.reloadChart();
+				piePanel.reloadChart();
+			}
+
+			@Override
+			public synchronized void onDelete(Outlay e, int requestId) {
+				if (e.getAccount().getAcademicYear().getId() != year.getId())
+					return;
+				
+				cards.cardOutModel.setValue(cards.cardOutModel.getValue() - e.getAmount());
+				linePanel.reloadChart();
+				piePanel.reloadChart();
+			}
+			
+		};
+		
 		public CenterContainer() {
 			super (new BorderLayout());
 			final JTabbedPane tabbed = new JTabbedPane(JTabbedPane.BOTTOM);
@@ -332,6 +322,10 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			
 			add(tabbed, BorderLayout.CENTER);
 			setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			
+			otherRecipeDao.addListener(otherAdapter);
+			paymentFeeDao.addListener(feeAdapter);
+			outlayDao.addListener(outlayAdaapter);
 		}
 		
 		/**
@@ -387,8 +381,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		
 		private synchronized void reloadChart() {
 			wait(true);
-			progressBar.setValue(0);
-			progressBar.setIndeterminate(true);
+			chartPanel.getChartRender().setVisible(false);
 			
 			int min = -20;
 			int max = 1;
@@ -461,12 +454,10 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 				//==
 			}
 			
-//			cloudRecipes.toSquareSignal();
-//			cloudOutlays.toSquareSignal();
-//			cloudSold.toSquareSignal();
-			
 			cloudRecipes.setType(CloudType.STICK_CHART);
 			cloudOutlays.setType(CloudType.STICK_CHART);
+			chartPanel.getChartRender().setVisible(true);
+			
 			wait(false);
 		}
 		

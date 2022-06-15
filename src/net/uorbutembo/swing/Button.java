@@ -3,7 +3,7 @@
  */
 package net.uorbutembo.swing;
 
-import static net.uorbutembo.views.forms.FormUtil.BKG_START;
+import static net.uorbutembo.tools.FormUtil.BKG_START;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -13,8 +13,8 @@ import javax.swing.Icon;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
+import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.views.components.MenuItemButton;
-import net.uorbutembo.views.forms.FormUtil;
 
 /**
  * @author Esaie MUHASA

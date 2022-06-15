@@ -3,7 +3,7 @@
  */
 package net.uorbutembo.views.models;
 
-import static net.uorbutembo.views.forms.FormUtil.COLORS;
+import static net.uorbutembo.tools.FormUtil.COLORS;
 
 import java.awt.Color;
 import java.math.BigDecimal;
@@ -42,8 +42,8 @@ import net.uorbutembo.swing.DefaultCardModel;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.PiePart;
-import net.uorbutembo.views.forms.FormUtil;
-import resources.net.uorbutembo.R;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 
 /**
  * @author Esaie MUHASA

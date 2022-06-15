@@ -3,10 +3,10 @@
  */
 package net.uorbutembo.views;
 
-import static net.uorbutembo.views.forms.FormUtil.DEFAULT_EMPTY_BORDER;
-import static net.uorbutembo.views.forms.FormUtil.DEFAULT_H_GAP;
-import static net.uorbutembo.views.forms.FormUtil.DEFAULT_V_GAP;
-import static net.uorbutembo.views.forms.FormUtil.createScrollPane;
+import static net.uorbutembo.tools.FormUtil.DEFAULT_EMPTY_BORDER;
+import static net.uorbutembo.tools.FormUtil.DEFAULT_H_GAP;
+import static net.uorbutembo.tools.FormUtil.DEFAULT_V_GAP;
+import static net.uorbutembo.tools.FormUtil.createScrollPane;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -46,12 +46,12 @@ import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.forms.FormAcademicFee;
 import net.uorbutembo.views.forms.FormFeePromotion;
 import net.uorbutembo.views.forms.FormGroupAllocationCost;
-import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.PromotionTableModel;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

@@ -9,7 +9,7 @@ import java.awt.Frame;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA

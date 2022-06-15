@@ -1,7 +1,7 @@
 /**
  * 
  */
-package net.uorbutembo.views.forms;
+package net.uorbutembo.tools;
 
 
 import java.awt.Color;

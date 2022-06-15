@@ -46,14 +46,17 @@ public class OutlayTableModel extends TableModel<Outlay> {
 	@Override
 	public synchronized void reload () {
 		data.clear();
-		if(this.account != null) {
-			if(outlayDao.checkByAccount(account)) {
-				List<Outlay> outs = outlayDao.findByAccount(account);
-				for (Outlay out : outs)
-					data.add(out);
-			}
+		if(account != null && outlayDao.checkByAccount(account)) {
+			List<Outlay> outs = outlayDao.findByAccount(account);
+			for (Outlay out : outs)
+				data.add(out);
 		}
 		fireTableDataChanged();
+	}
+	
+	@Override
+	public void onUpdate(Outlay e, int requestId) {
+		reload();
 	}
 
 	@Override

@@ -27,6 +27,7 @@ import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 

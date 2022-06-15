@@ -6,7 +6,9 @@ package net.uorbutembo;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
+import net.uorbutembo.dao.DAOBaseListener;
 import net.uorbutembo.dao.DAOConfigException;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.views.MainWindow;
 
@@ -15,7 +17,7 @@ import net.uorbutembo.views.MainWindow;
  * @author Esaie MUHASA
  *
  */
-public class Launcher {
+public class Launcher implements DAOBaseListener{
 
 	/**
 	 * @param args
@@ -41,14 +43,15 @@ public class Launcher {
 			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Une erreur est survenue lors du chargement du look-end-feel\n"+e.getMessage(), "Error look and feel", JOptionPane.ERROR_MESSAGE);
-			//Logger.getLogger(Launcher.class.getName()).log( Level.SEVERE, null, e);
 		}
 		
 		//TestDAO.test(System.out);
 		
+		Launcher launcher = new Launcher();
+		
 		try {
 			DAOFactory factory = DAOFactory.getInstance();
-			
+			factory.addListener(launcher);
 			StartWindow st = new StartWindow();
 			st.setVisible(true);
 			
@@ -56,20 +59,20 @@ public class Launcher {
 			factory.reload();
 			st.setVisible(false);
 			frame.setVisible(true);
-//			Thread t = new Thread(() -> {
-//				try {
-//				} catch (Exception e) {
-//					JOptionPane.showMessageDialog(null, "Une erreur est survenue lors du chargement des données\n"+e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
-//					System.exit(0);
-//				}
-//			});
-//			t.start();
+			factory.removeListener(launcher);
 		} catch (DAOConfigException e) {
-			//Logger.getLogger(Launcher.class.getName()).log( Level.SEVERE, null, e);
 			JOptionPane.showMessageDialog(null, "Une erreur est survenue lors de la connexion à la base de données\n"+e.getMessage(), "Erreur connexion a la BDD", JOptionPane.ERROR_MESSAGE);
 		}
 		
-		
+	}
+
+	@Override
+	public void onEvent(DAOEvent event) {
+		if(event.getType() == EventType.ERROR) {
+			DAOException e = (DAOException) event.getData();
+			JOptionPane.showMessageDialog(null, "Une erreur est survenue lors du chargemet de l'application\n"+e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+			System.exit(0);
+		}
 	}
 
 }

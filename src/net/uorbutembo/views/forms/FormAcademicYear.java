@@ -3,7 +3,7 @@
  */
 package net.uorbutembo.views.forms;
 
-import static net.uorbutembo.views.forms.FormUtil.DEFAULT_FROMATER;
+import static net.uorbutembo.tools.FormUtil.DEFAULT_FROMATER;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -20,9 +20,10 @@ import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.FormGroup;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

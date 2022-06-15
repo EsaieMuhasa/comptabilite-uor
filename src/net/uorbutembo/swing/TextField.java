@@ -25,7 +25,7 @@ import org.jdesktop.animation.timing.Animator;
 import org.jdesktop.animation.timing.TimingTarget;
 import org.jdesktop.animation.timing.TimingTargetAdapter;
 
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA

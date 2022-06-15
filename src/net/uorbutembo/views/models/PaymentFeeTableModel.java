@@ -7,7 +7,7 @@ import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.swing.TableModel;
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.views.models.PromotionPaymentTableModel.InscriptionDataRow;
 
 /**

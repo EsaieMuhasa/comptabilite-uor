@@ -3,10 +3,10 @@
  */
 package net.uorbutembo.views.forms;
 
-import static net.uorbutembo.views.forms.FormUtil.COLORS;
-import static net.uorbutembo.views.forms.FormUtil.DEFAULT_H_GAP;
-import static net.uorbutembo.views.forms.FormUtil.DEFAULT_V_GAP;
-import static net.uorbutembo.views.forms.FormUtil.UNIT_MONEY;
+import static net.uorbutembo.tools.FormUtil.COLORS;
+import static net.uorbutembo.tools.FormUtil.DEFAULT_H_GAP;
+import static net.uorbutembo.tools.FormUtil.DEFAULT_V_GAP;
+import static net.uorbutembo.tools.FormUtil.UNIT_MONEY;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -52,7 +52,8 @@ import net.uorbutembo.swing.charts.PieModel;
 import net.uorbutembo.swing.charts.PieModelListener;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
-import resources.net.uorbutembo.R;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 
 /**
  * @author Esaie MUHASA

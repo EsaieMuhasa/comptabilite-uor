@@ -1,7 +1,7 @@
 /**
  * 
  */
-package resources.net.uorbutembo;
+package net.uorbutembo.tools;
 
 import java.io.IOException;
 import java.io.InputStream;

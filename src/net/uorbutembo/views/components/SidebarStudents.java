@@ -36,9 +36,9 @@ import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.TreeCellRender;
+import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
-import net.uorbutembo.views.forms.FormUtil;
 
 /**
  * @author Esaie MUHASA

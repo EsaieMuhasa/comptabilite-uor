@@ -3,9 +3,9 @@
  */
 package net.uorbutembo.views.components;
 
-import static net.uorbutembo.views.forms.FormUtil.BKG_END;
-import static net.uorbutembo.views.forms.FormUtil.BORDER_COLOR;
-import static net.uorbutembo.views.forms.FormUtil.DEFAULT_EMPTY_BORDER;
+import static net.uorbutembo.tools.FormUtil.BKG_END;
+import static net.uorbutembo.tools.FormUtil.BORDER_COLOR;
+import static net.uorbutembo.tools.FormUtil.DEFAULT_EMPTY_BORDER;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionListener;
@@ -19,9 +19,9 @@ import javax.swing.border.LineBorder;
 
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
-import net.uorbutembo.views.forms.FormUtil;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

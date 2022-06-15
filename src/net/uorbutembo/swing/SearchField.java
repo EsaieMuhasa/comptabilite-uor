@@ -7,7 +7,7 @@ import java.awt.Graphics2D;
 
 import javax.swing.border.EmptyBorder;
 
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA

@@ -3,8 +3,8 @@
  */
 package net.uorbutembo.views.forms;
 
-import static net.uorbutembo.views.forms.FormUtil.DEFAULT_H_GAP;
-import static net.uorbutembo.views.forms.FormUtil.DEFAULT_V_GAP;
+import static net.uorbutembo.tools.FormUtil.DEFAULT_H_GAP;
+import static net.uorbutembo.tools.FormUtil.DEFAULT_V_GAP;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
@@ -35,9 +35,10 @@ import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.StudyClassDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

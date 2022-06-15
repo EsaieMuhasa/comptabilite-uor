@@ -29,9 +29,10 @@ import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

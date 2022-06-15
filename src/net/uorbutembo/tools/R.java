@@ -1,4 +1,4 @@
-package resources.net.uorbutembo;
+package net.uorbutembo.tools;
 
 public class R {
 	
@@ -9,18 +9,13 @@ public class R {
 	 * @return
 	 */
 	public static final String getIcon (String name) {
-		String icon = R.class.getResource("/resources/net/uorbutembo/icons/"+name+".png").getFile();
+		String icon = "icon/"+name+".png";
 		return icon;
 	}
 	
 	public static final String getIcon (String name, String ext) {
-		String icon = R.class.getResource("/resources/net/uorbutembo/icons/"+name+"."+ext).getFile();
+		String icon = "icon/"+name+"."+ext;
 		return icon;
-	}
-	
-	public static final String getHelp (String name) {
-		String file = R.class.getResource("/resources/net/uorbutembo/helps/"+name+".html").getFile();
-		return file;
 	}
 	
 	/**

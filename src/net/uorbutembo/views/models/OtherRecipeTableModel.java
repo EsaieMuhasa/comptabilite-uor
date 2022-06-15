@@ -9,7 +9,7 @@ import net.uorbutembo.beans.OtherRecipe;
 import net.uorbutembo.dao.AnnualRecipeDao;
 import net.uorbutembo.dao.OtherRecipeDao;
 import net.uorbutembo.swing.TableModel;
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA

@@ -3,8 +3,8 @@
  */
 package net.uorbutembo.views.components;
 
-import static net.uorbutembo.views.forms.FormUtil.BKG_END;
-import static net.uorbutembo.views.forms.FormUtil.BKG_START;
+import static net.uorbutembo.tools.FormUtil.BKG_END;
+import static net.uorbutembo.tools.FormUtil.BKG_START;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
@@ -53,11 +53,11 @@ import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.forms.FormAcademicYear;
-import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.AcademicYearTableModel;
-import resources.net.uorbutembo.R;
 /**
  * @author Esaie MUHASA
  *

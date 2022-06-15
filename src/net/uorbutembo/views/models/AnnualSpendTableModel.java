@@ -17,7 +17,7 @@ import net.uorbutembo.dao.OtherRecipeDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.TableModel;
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA

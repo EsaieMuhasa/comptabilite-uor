@@ -5,7 +5,7 @@ package net.uorbutembo.dao;
 
 import java.lang.reflect.Constructor;
 
-import resources.net.uorbutembo.Config;
+import net.uorbutembo.tools.Config;
 
 /**
  * @author Esaie MUHASA

@@ -1,7 +1,7 @@
 package net.uorbutembo.views.components;
 
-import static net.uorbutembo.views.forms.FormUtil.BKG_END;
-import static net.uorbutembo.views.forms.FormUtil.BKG_END_2;
+import static net.uorbutembo.tools.FormUtil.BKG_END;
+import static net.uorbutembo.tools.FormUtil.BKG_END_2;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
@@ -13,7 +13,7 @@ import javax.swing.GroupLayout;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * 

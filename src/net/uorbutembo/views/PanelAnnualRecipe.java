@@ -30,8 +30,8 @@ import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.UniversityRecipeDao;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.views.forms.FormGroupAllocationRecipe;
-import net.uorbutembo.views.forms.FormUtil;
 
 /**
  * @author Esaie MUHASA

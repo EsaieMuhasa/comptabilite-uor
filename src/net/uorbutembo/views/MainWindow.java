@@ -19,8 +19,8 @@ import javax.swing.JOptionPane;
 import net.uorbutembo.dao.DAOBaseListener;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOFactory;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.Sidebar;
-import resources.net.uorbutembo.R;
 
 
 /**
@@ -40,8 +40,7 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 
 		@Override
 		public void windowClosing(WindowEvent e) {
-			// TODO Auto-generated method stub
-			super.windowClosing(e);
+			doClose();
 		}
 		
 	};
@@ -59,7 +58,7 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 		int w = (int) (screenSize.getWidth() - screenSize.getWidth()/10);
 		int h = (int) (screenSize.getHeight() - screenSize.getHeight()/10); 
 		
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setSize(w, h);
 		setMinimumSize(new Dimension(880, 400));
 		setLocationRelativeTo(null);
@@ -75,7 +74,7 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 		getLayeredPane().setOpaque(false);		
 		
 		try {
-			this.setIconImage(ImageIO.read(new File(R.getIcon("logo"))));
+			this.setIconImage(ImageIO.read(new File("logo.png")));
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(null, "Une erreur est survenue \nlors de la lecture de l'icone \n"+e.getMessage(), "Erreur icone", JOptionPane.ERROR_MESSAGE);
 		}

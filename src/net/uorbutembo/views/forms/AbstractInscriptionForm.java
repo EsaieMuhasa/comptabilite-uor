@@ -3,8 +3,8 @@
  */
 package net.uorbutembo.views.forms;
 
-import static net.uorbutembo.views.forms.FormUtil.DEFAULT_H_GAP;
-import static net.uorbutembo.views.forms.FormUtil.DEFAULT_V_GAP;
+import static net.uorbutembo.tools.FormUtil.DEFAULT_H_GAP;
+import static net.uorbutembo.tools.FormUtil.DEFAULT_V_GAP;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;

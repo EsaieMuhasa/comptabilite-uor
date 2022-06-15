@@ -17,7 +17,7 @@ import java.util.Set;
 import net.uorbutembo.beans.DBEntity;
 import net.uorbutembo.dao.DAOBaseListener.DAOEvent;
 import net.uorbutembo.dao.DAOBaseListener.EventType;
-import resources.net.uorbutembo.Config;
+import net.uorbutembo.tools.Config;
 
 /**
  * @author Esaie MUHASA

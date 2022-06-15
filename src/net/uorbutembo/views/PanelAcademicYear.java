@@ -11,12 +11,12 @@ import javax.swing.JScrollPane;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.Navbar;
 import net.uorbutembo.views.components.NavbarButtonModel;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
-import net.uorbutembo.views.forms.FormUtil;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

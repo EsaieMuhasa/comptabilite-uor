@@ -3,8 +3,8 @@
  */
 package net.uorbutembo.views.components;
 
-import static net.uorbutembo.views.forms.FormUtil.ACTIVE_COLOR;
-import static net.uorbutembo.views.forms.FormUtil.BORDER_COLOR;
+import static net.uorbutembo.tools.FormUtil.ACTIVE_COLOR;
+import static net.uorbutembo.tools.FormUtil.BORDER_COLOR;
 
 import java.awt.Dimension;
 import java.awt.Graphics;

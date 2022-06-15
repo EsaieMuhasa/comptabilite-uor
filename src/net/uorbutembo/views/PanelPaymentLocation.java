@@ -13,10 +13,10 @@ import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.forms.FormPaymentLocation;
-import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.PaymentLocationTableModel;
-import resources.net.uorbutembo.R;
 
 /**
  * panel de configuration des lieux de payement

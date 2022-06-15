@@ -3,7 +3,7 @@
  */
 package net.uorbutembo.views.forms;
 
-import static net.uorbutembo.views.forms.FormUtil.COLORS;
+import static net.uorbutembo.tools.FormUtil.COLORS;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -42,6 +42,7 @@ import net.uorbutembo.swing.charts.PieModel;
 import net.uorbutembo.swing.charts.PieModelListener;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
+import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 

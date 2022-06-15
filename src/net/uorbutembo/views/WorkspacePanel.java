@@ -3,8 +3,8 @@
  */
 package net.uorbutembo.views;
 
-import static net.uorbutembo.views.forms.FormUtil.BKG_DARK;
-import static net.uorbutembo.views.forms.FormUtil.BORDER_COLOR;
+import static net.uorbutembo.tools.FormUtil.BKG_DARK;
+import static net.uorbutembo.tools.FormUtil.BORDER_COLOR;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -22,6 +22,8 @@ import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.DefaultMenuItemModel;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.MenuItem;
@@ -30,8 +32,6 @@ import net.uorbutembo.views.components.MenuItemListener;
 import net.uorbutembo.views.components.MenuItemModel;
 import net.uorbutembo.views.components.Navbar;
 import net.uorbutembo.views.components.Sidebar;
-import net.uorbutembo.views.forms.FormUtil;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

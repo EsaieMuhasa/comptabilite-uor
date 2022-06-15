@@ -3,7 +3,7 @@
  */
 package net.uorbutembo;
 
-import static net.uorbutembo.views.forms.FormUtil.BKG_DARK;
+import static net.uorbutembo.tools.FormUtil.BKG_DARK;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -20,7 +20,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.JWindow;
 
-import resources.net.uorbutembo.R;
+import net.uorbutembo.tools.R;
 
 /**
  * @author Esaie MUHASA

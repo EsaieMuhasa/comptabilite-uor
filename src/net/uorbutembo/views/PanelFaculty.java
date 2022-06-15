@@ -32,11 +32,11 @@ import net.uorbutembo.swing.Dialog;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.forms.FormDepartment;
 import net.uorbutembo.views.forms.FormFaculty;
-import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.DepartmentTableModel;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

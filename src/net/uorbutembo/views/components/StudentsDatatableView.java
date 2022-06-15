@@ -66,17 +66,17 @@ import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.swing.charts.PieModel;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DialogStudentExportConfig.ExportConfig;
 import net.uorbutembo.views.components.SidebarStudents.DepartmentFilter;
 import net.uorbutembo.views.components.SidebarStudents.FacultyFilter;
 import net.uorbutembo.views.forms.FormReRegister;
 import net.uorbutembo.views.forms.FormStudent;
-import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.PromotionPaymentTableModel;
 import net.uorbutembo.views.models.PromotionPaymentTableModel.InscriptionDataRow;
 import net.uorbutembo.views.models.PromotionPaymentTableModel.InscriptionDataRowListener;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

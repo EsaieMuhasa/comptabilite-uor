@@ -16,8 +16,9 @@ import net.uorbutembo.beans.User.Kind;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
-import resources.net.uorbutembo.R;
 
 /**
  * 

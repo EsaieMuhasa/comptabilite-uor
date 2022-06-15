@@ -22,8 +22,8 @@ import javax.swing.event.ChangeListener;
 
 import net.uorbutembo.swing.Dialog;
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.views.forms.FormUtil;
-import resources.net.uorbutembo.R;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 
 /**
  * @author Esaie MUHASA

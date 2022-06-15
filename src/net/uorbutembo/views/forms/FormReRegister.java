@@ -20,8 +20,8 @@ import net.uorbutembo.beans.Student;
 import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.swing.Button;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

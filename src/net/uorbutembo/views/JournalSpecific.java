@@ -7,6 +7,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -77,14 +78,14 @@ import net.uorbutembo.swing.charts.DefaultPointCloud;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.swing.charts.PointCloud.CloudType;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.JournalMenuItem;
 import net.uorbutembo.views.components.JournalMenuItemListener;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
 import net.uorbutembo.views.forms.FormOtherRecipe;
 import net.uorbutembo.views.forms.FormOutlay;
-import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.OutlayTableModel;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA
@@ -298,8 +299,19 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			menu.setActive(false);
 		
 		JournalMenuItem item = (JournalMenuItem) e.getSource();
+		if(item == containerPanel.getAccount())
+			return;
+		
+		listAccount.setEnabled(false);
 		item.setActive(true);
-		containerPanel.setAccount(item);
+		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		EventQueue.invokeLater(() -> {});
+		Thread t = new Thread(() -> {			
+			containerPanel.setAccount(item);
+			setCursor(Cursor.getDefaultCursor());
+			listAccount.setEnabled(true);
+		});
+		t.start();		
 	}
 	
 	/**
@@ -339,7 +351,14 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			containerPanel.wait(false);
 		}
 		
-		
+		@Override
+		public void setEnabled(boolean enabled) {
+			super.setEnabled(enabled);
+			for (JournalMenuItem item : items)
+				item.setEnabled(enabled);
+			
+			repaint();
+		}
 		
 		@Override
 		protected void paintComponent(Graphics g) {
@@ -348,7 +367,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 			g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 			
-			g2.setColor(FormUtil.BORDER_COLOR);
+			g2.setColor(isEnabled() ? FormUtil.BORDER_COLOR : Color.RED);
 			g2.drawRoundRect(5, 5, getWidth()-10, getHeight()- 10, 10, 10);
 			
 			g2.drawLine(6, getHeight() - 48, getWidth()-6, getHeight() - 48);
@@ -618,6 +637,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			
 			final JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, panelList, panelChart);
 			split.setOneTouchExpandable(true);
+			split.setDividerLocation(350);
 			
 			add(split, BorderLayout.CENTER);
 			add(panelTop, BorderLayout.NORTH);
@@ -749,7 +769,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			cardSoldModel.setInfo("Montant disponible");
 			cardSoldModel.setValue(0d);
 			
-			cardOutlayModel.setTitle("Depenses");
+			cardOutlayModel.setTitle("Dépenses");
 			cardOutlayModel.setInfo("Déjà utiliser");
 			cardOutlayModel.setValue(0d);
 			
@@ -758,7 +778,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			cardRecipeModel.setValue(0d);
 			
 			pieModel.setRealMaxPriority(true);
-			pieModel.setSuffix("$");
+			pieModel.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
 			
 			chartModel.addChart(cloudOutlay);
 			chartModel.addChart(cloudRecipe);
@@ -869,7 +889,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		 * Rechargement du graphique sous forme tarte
 		 * et des cards
 		 */
-		public void reloadPie () {
+		public synchronized void reloadPie () {
 			pieModel.removeAll();
 			
 			if (locations == null && paymentLocationDao.countAll() != 0) 
@@ -918,7 +938,8 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		 * Rechargement du graphique lineaire qui visualise les entrees et les sorties
 		 * pour le compte sectionner
 		 */
-		public void reloadLine () {
+		public synchronized void reloadLine () {
+			chartPanel.getChartRender().setVisible(false);
 			cloudOutlay.removePoints();
 			cloudSold.removePoints();
 			cloudRecipe.removePoints();
@@ -931,7 +952,6 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			for(int day = min; day <= max; day++) {
 				time = now + (day * 60 * 60 * 1000 * 24);
 				Date date = new Date(time);
-				
 				double y = 0;
 				//recettes
 				y = otherRecipePartDao.getSoldBySpendAtDate(account.getAccount(), date);
@@ -967,6 +987,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			
 			cloudRecipe.setType(CloudType.STICK_CHART);
 			cloudOutlay.setType(CloudType.STICK_CHART);
+			chartPanel.getChartRender().setVisible(true);
 		}
 
 		/**
@@ -1018,7 +1039,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		/**
 		 * @param account the account to set
 		 */
-		public void setAccount (JournalMenuItem account) {
+		public synchronized void setAccount (JournalMenuItem account) {
 			
 			if (this.account != null && account!=null && this.account.getAccount().getId() == account.getAccount().getId())
 				return;
@@ -1035,6 +1056,13 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		}
 
 		
+		/**
+		 * @return the account
+		 */
+		public JournalMenuItem getAccount() {
+			return account;
+		}
+
 		/**
 		 * pour signaler le panel qu'il y a un traitement lourd encours
 		 * @param wait

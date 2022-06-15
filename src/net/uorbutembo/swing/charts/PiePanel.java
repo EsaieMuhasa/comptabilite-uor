@@ -15,7 +15,7 @@ import javax.swing.JScrollPane;
 
 import net.uorbutembo.swing.Card;
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA
@@ -107,9 +107,10 @@ public class PiePanel extends Panel {
 		
 		if (model != null) {
 			model.addListener(modelListener);
-			if (getHeight()-10 <= caption.getPreferredSize().getHeight())
-				scroll.getVerticalScrollBar();
-		}
+			title.setText(model.getTitle());
+			setBorderColor(borderColor);
+		} else 
+			title.setText("");
 	}
 	
 	/**
@@ -182,6 +183,7 @@ public class PiePanel extends Panel {
 		
 		center.add(render);
 		center.add(scroll);
+		setBorderColor(borderColor);
 	}
 
 	/**

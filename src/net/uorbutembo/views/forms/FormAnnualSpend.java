@@ -20,6 +20,7 @@ import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.CheckBox;
+import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 

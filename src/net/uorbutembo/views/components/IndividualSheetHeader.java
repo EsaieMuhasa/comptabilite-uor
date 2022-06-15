@@ -16,7 +16,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 
 import net.uorbutembo.beans.Inscription;
-import resources.net.uorbutembo.R;
+import net.uorbutembo.tools.R;
 
 /**
  * @author Esaie MUHASA

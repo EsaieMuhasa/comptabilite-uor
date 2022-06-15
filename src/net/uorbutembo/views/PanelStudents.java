@@ -3,8 +3,8 @@
  */
 package net.uorbutembo.views;
 
-import static net.uorbutembo.views.forms.FormUtil.COLORS;
-import static net.uorbutembo.views.forms.FormUtil.createTitle;
+import static net.uorbutembo.tools.FormUtil.COLORS;
+import static net.uorbutembo.tools.FormUtil.createTitle;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -57,6 +57,8 @@ import net.uorbutembo.swing.charts.PieModel;
 import net.uorbutembo.swing.charts.PieModelListener;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.DialogStudentExportConfig;
 import net.uorbutembo.views.components.DialogStudentExportConfig.ExportConfig;
@@ -72,9 +74,7 @@ import net.uorbutembo.views.components.StudentsDatatableView;
 import net.uorbutembo.views.components.StudentsDatatableView.DatatableViewListener;
 import net.uorbutembo.views.forms.FormInscription;
 import net.uorbutembo.views.forms.FormReRegister;
-import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.PromotionPaymentTableModel.InscriptionDataRow;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

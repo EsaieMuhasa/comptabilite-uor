@@ -40,10 +40,11 @@ import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 import net.uorbutembo.views.models.OtherRecipeTableModel;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

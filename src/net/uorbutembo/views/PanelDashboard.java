@@ -3,7 +3,7 @@
  */
 package net.uorbutembo.views;
 
-import static net.uorbutembo.views.forms.FormUtil.COLORS;
+import static net.uorbutembo.tools.FormUtil.COLORS;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -31,11 +31,11 @@ import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
+import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
-import net.uorbutembo.views.forms.FormUtil;
 import net.uorbutembo.views.models.GeneralBudgetPieModel;
-import resources.net.uorbutembo.R;
 
 /**
  * @author Esaie MUHASA

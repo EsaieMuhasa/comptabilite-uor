@@ -3,7 +3,7 @@
  */
 package net.uorbutembo.views.components;
 
-import static net.uorbutembo.views.forms.FormUtil.*;
+import static net.uorbutembo.tools.FormUtil.*;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

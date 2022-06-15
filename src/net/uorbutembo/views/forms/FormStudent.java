@@ -3,7 +3,7 @@
  */
 package net.uorbutembo.views.forms;
 
-import static net.uorbutembo.views.forms.FormUtil.*;
+import static net.uorbutembo.tools.FormUtil.*;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
@@ -20,6 +20,7 @@ import net.uorbutembo.dao.StudentDao;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 

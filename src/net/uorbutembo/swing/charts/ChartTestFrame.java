@@ -18,7 +18,7 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.swing.charts.PointCloud.CloudType;
-import net.uorbutembo.views.forms.FormUtil;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA

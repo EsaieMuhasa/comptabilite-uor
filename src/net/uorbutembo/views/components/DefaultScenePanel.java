@@ -16,8 +16,8 @@ import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.views.MainWindow;
-import net.uorbutembo.views.forms.FormUtil;
 
 /**
  * @author Esaie MUHASA
