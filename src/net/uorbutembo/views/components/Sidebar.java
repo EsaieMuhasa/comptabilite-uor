@@ -107,11 +107,11 @@ public class Sidebar extends Panel implements ItemListener{
 		@Override
 		public synchronized void onUpdate (AcademicYear e, int requestId) {
 			comboBox.removeItemListener(Sidebar.this);
-			for (int i = 0, count  = comboModel.getSize(); i < count; i++) {
-				if(comboModel.getElementAt(i).getId() ==e.getId()) {
-					
-				}
-			}
+			comboModel.removeAllElements();
+			onCurrentYear(e);
+			for (YearChooserListener listener : yearChooserListeners)
+				listener.onChange(e);
+			comboBox.addItemListener(Sidebar.this);
 		}
 
 		@Override

@@ -9,19 +9,38 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.event.ActionListener;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.io.File;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
+import javax.swing.Box;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
+import javax.swing.border.EmptyBorder;
 
+import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Card;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 
 /**
  * @author Esaie MUHASA
  *
  */
-public class PiePanel extends Panel {
+public class PiePanel extends Panel implements Printable{
 	private static final long serialVersionUID = 8834575442903333237L;
 	
 	private PieRender render;
@@ -33,6 +52,7 @@ public class PiePanel extends Panel {
 	private final GridLayout layout = new GridLayout(1, 2);
 	private final BorderLayout borderLayout = new BorderLayout();
 	private final Panel center = new Panel(layout);
+	private final Panel tools = new Panel(new BorderLayout());
 	private PieModel model;
 	
 	private PieModelListener modelListener = new PieModelListener() {
@@ -53,6 +73,78 @@ public class PiePanel extends Panel {
 		@Override
 		public void onTitleChange(PieModel  model, String text) {
 			title.setText(text);
+		}
+	};
+	
+	private final JButton btnPrint = new Button(new ImageIcon(R.getIcon("print")), "Imprimer");
+	private final JButton btnImg = new Button(new ImageIcon(R.getIcon("saveimg")), "Exporter");
+	{
+		btnImg.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		btnPrint.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+	}
+	
+	private final ActionListener btnPrintListener = event -> {
+		PrinterJob job = PrinterJob.getPrinterJob();
+		
+		if(job.printDialog() && job.pageDialog(job.defaultPage()) != null) {
+
+			job.setPrintable(this);
+			
+			try {
+				job.print();
+			} catch (PrinterException e) {
+				JOptionPane.showMessageDialog(this, e.getMessage(), "Erreur d'impression", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+	};
+	
+	private final ActionListener btnImgListener = event -> {
+		
+		int status = ChartPanel.FILE_CHOOSER.showSaveDialog(this);
+		if(status == JFileChooser.APPROVE_OPTION) {
+			String fileName = ChartPanel.FILE_CHOOSER.getSelectedFile().getAbsolutePath();
+			if(!fileName.matches("^(.+)(\\.)(png|jpeg|jpg)$"))
+				fileName += ".png";
+			
+			String type = fileName.substring(fileName.lastIndexOf(".")+1);
+			
+			Color old = getBackground();
+			Toolkit tool = Toolkit.getDefaultToolkit();
+			int width = (int)(tool.getScreenSize().getWidth() * 1.2f);
+			int height = (int)(tool.getScreenSize().getHeight() * 1.2f);
+			
+			if (height < caption.getHeight())
+				height = caption.getHeight() + 200;
+			
+			boolean isPng = type.equals("png");
+			BufferedImage buffer = new BufferedImage(width, height, isPng? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
+			Graphics2D g = (Graphics2D) buffer.getGraphics();
+			Rectangle2D rect = new Rectangle2D.Double(0, 0, width-2, height-2);
+			
+			render.setBackground(Color.WHITE);
+			caption.setBackground(Color.WHITE);
+			
+			if(!isPng) {
+				g.setColor(Color.WHITE);
+				g.fill(rect);
+			}
+			
+			render.paint(g, width/2, height);
+			caption.paint(g, width/2, 0, width/2, height);
+			
+			g.setColor(Color.BLACK);
+			g.drawString(title.getText(), 10f, height - 20f);
+			g.draw(rect);
+			
+			render.setBackground(old);
+			caption.setBackground(old);
+			
+			File file = new File(fileName);
+			try {
+				ImageIO.write(buffer, type, file);
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(this, e.getMessage(), "Erreur d'exportation", JOptionPane.ERROR_MESSAGE);
+			}
 		}
 	};
 	
@@ -142,9 +234,39 @@ public class PiePanel extends Panel {
 		this(model);
 		this.setBorderColor(borderColor);
 	}
-
-
-
+	
+	@Override
+	public int print (Graphics graphics, PageFormat page, int pageIndex) throws PrinterException {
+		if(pageIndex > 0)
+			return NO_SUCH_PAGE;
+		
+		Color old = getBackground();
+		render.setBackground(Color.WHITE);
+		caption.setBackground(Color.WHITE);
+		
+		Graphics2D g2 = (Graphics2D) graphics;
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+		g2.translate(page.getImageableX(), page.getImageableY());
+		
+		if (page.getOrientation() == PageFormat.LANDSCAPE) {
+			render.paint(g2, page.getImageableWidth()/2, page.getImageableHeight());
+			caption.paint(g2, page.getImageableWidth()/2, 0, (int)page.getImageableWidth()/2, (int)page.getImageableHeight());
+		} else {
+			render.paint(g2, page.getImageableWidth(), page.getImageableHeight()/2);
+			caption.paint(g2, 0, page.getImageableHeight()/2, (int)page.getImageableWidth(), (int) page.getImageableHeight()/2);
+		}
+		
+		g2.setColor(borderColor);
+		Rectangle2D b = new Rectangle2D.Double(page.getImageableX(), page.getImageableY(), page.getImageableWidth(), page.getImageableHeight());
+		g2.draw(b);
+		
+		render.setBackground(old);
+		caption.setBackground(old);
+		
+		return PAGE_EXISTS;
+	}
+	
 	/**
 	 * @return the borderColor
 	 */
@@ -158,12 +280,10 @@ public class PiePanel extends Panel {
 	public void setBorderColor(Color borderColor) {
 		this.borderColor = borderColor;
 		
-		if(title.getText() != null && !title.getText().trim().isEmpty()) {
-			this.title.setOpaque(true);
-			if(borderColor != null) {
-				this.title.setBackground(borderColor.darker());
-				this.caption.setBorderColor(borderColor);
-			}
+		tools.setOpaque(true);
+		if(borderColor != null) {
+			tools.setBackground(borderColor.darker());
+			this.caption.setBorderColor(borderColor);
 		}
 		
 	}
@@ -173,10 +293,22 @@ public class PiePanel extends Panel {
 		this.setLayout(new BorderLayout());
 		final Panel panel = new Panel(new BorderLayout());
 		panel.add(caption, BorderLayout.CENTER);
+		panel.setBorder(new EmptyBorder(5, 0, 5, 0));
 		scroll = FormUtil.createVerticalScrollPane(panel);
 		
 		add(center, BorderLayout.CENTER);
-		add(title, BorderLayout.SOUTH);
+		add(tools, BorderLayout.SOUTH);
+		
+		//tools
+		final Box box = Box.createHorizontalBox();
+		tools.add(title, BorderLayout.CENTER);
+		tools.add(box, BorderLayout.EAST);
+		tools.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		box.add(btnPrint);
+		box.add(btnImg);
+		btnPrint.addActionListener(btnPrintListener);
+		btnImg.addActionListener(btnImgListener);
+		//==
 		
 		setBackground(FormUtil.BKG_DARK);
 		title.setFont(Card.FONT_INFO);
@@ -204,7 +336,7 @@ public class PiePanel extends Panel {
 	}
 	
 	@Override
-	protected void paintComponent(Graphics g) {
+	protected void paintBorder(Graphics g) {
 		super.paintComponent(g);
 		
 		if(this.borderColor != null) {	

@@ -5,17 +5,13 @@ package net.uorbutembo.swing.charts;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.GridLayout;
 import java.awt.HeadlessException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JDesktopPane;
 import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
-import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
-import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.swing.charts.PointCloud.CloudType;
 import net.uorbutembo.tools.FormUtil;
@@ -40,49 +36,16 @@ public class ChartTestFrame extends JFrame {
 		DefaultAxis xAxis = new DateAxis("Abs", "X", "");
 		DefaultAxis yAxis = new DefaultAxis("Ord", "Y", "");
 		
-		DefaultPointCloud cloud = new DefaultPointCloud("Cloud 1");
-		DefaultPointCloud cloud2 = new DefaultPointCloud("Cloud 2");
-		DefaultPointCloud cloud3 = new DefaultPointCloud("Cloud 3");
-		DefaultPointCloud cloud4 = new DefaultPointCloud("Cloud 4");
-		DefaultPointCloud cloud5 = new DefaultPointCloud("Cloud 5");
-		
-		cloud.setBorderColor(FormUtil.COLORS[0]);
-		cloud2.setBorderColor(FormUtil.COLORS[1]);
-		cloud3.setBorderColor(FormUtil.COLORS[2]);
-		cloud4.setBorderColor(FormUtil.COLORS[3]);
-		cloud5.setBorderColor(FormUtil.COLORS[4]);
-		
-		cloud.setBackgroundColor(FormUtil.COLORS_ALPHA[0]);
-		cloud2.setBackgroundColor(FormUtil.COLORS_ALPHA[1]);
-		cloud3.setBackgroundColor(FormUtil.COLORS_ALPHA[2]);
-		cloud4.setBackgroundColor(FormUtil.COLORS_ALPHA[3]);
-		cloud5.setBackgroundColor(FormUtil.COLORS_ALPHA[4]);
-		
-		cloud.setFill(true);
-		cloud2.setFill(true);
-		cloud3.setFill(true);
-		cloud4.setFill(true);
-		cloud5.setBorderWidth(1f);
-		cloud5.setType(CloudType.STICK_CHART);
-		
-		cloud.addPoint(new DefaultMaterialPoint(-50, -5));
-		cloud.addPoint(new DefaultMaterialPoint(-40, 10));
-		cloud.addPoint(new DefaultMaterialPoint(-30, -5));
-		cloud.addPoint(new DefaultMaterialPoint(-20, 10));
-		for (int i = 0; i < 10; i++) {
-			cloud.addPoint(randPoint(0, 10, i*20));
-		}
-		
 		List<DefaultPointCloud> listCos = new ArrayList<>();
 		List<DefaultPointCloud> listSin = new ArrayList<>();
-		int nombreCourbes = 2;
+		int nombreCourbes = 2, dephasage = -30;
 		for (int i = 0; i < nombreCourbes; i++) {
-			DefaultPointCloud c = new DefaultPointCloud("Cos "+i);
-			DefaultPointCloud s = new DefaultPointCloud("Sin "+i);
-			c.setBorderColor(FormUtil.COLORS[0]);
-			s.setBorderColor(FormUtil.COLORS[1]);
-			c.setBackgroundColor(FormUtil.COLORS_ALPHA[0]);
-			s.setBackgroundColor(FormUtil.COLORS_ALPHA[1]);
+			DefaultPointCloud c = new DefaultPointCloud("Cos: deph = "+(dephasage*i)+"°");
+			DefaultPointCloud s = new DefaultPointCloud("Sin: deph =  "+(dephasage*i)+"°");
+			c.setBorderColor(Color.BLACK);
+			s.setBorderColor(Color.RED);
+			c.setBackgroundColor(new Color(0x55000000, true));
+			s.setBackgroundColor(new Color(0x55FF0000, true));
 			s.setBorderWidth(2f);
 			c.setBorderWidth(2f);
 			listCos.add(c);
@@ -96,7 +59,7 @@ public class ChartTestFrame extends JFrame {
 		double amplitude = 1000, angle, sin, cos;
 		for (int i = -360; i <= 360; i+=10) {
 			for (int j = 0; j < nombreCourbes; j++) {
-				angle = (i+(j*-30)) * (Math.PI / 180);
+				angle = (i+(j*dephasage)) * (Math.PI / 180);
 				sin = amplitude * Math.sin(angle);
 				cos = amplitude * Math.cos(angle);
 				listCos.get(j).addPoint(new DefaultMaterialPoint(i, cos, 0));
@@ -104,45 +67,15 @@ public class ChartTestFrame extends JFrame {
 			}
 		}
 		
-		cloud2.addPoint(new DefaultMaterialPoint(10, -5));
-		cloud2.addPoint(new DefaultMaterialPoint(20, 8));
-		cloud2.addPoint(new DefaultMaterialPoint(30, -5));
-		cloud2.addPoint(new DefaultMaterialPoint(40, 5));
-		cloud2.addPoint(new DefaultMaterialPoint(50, 0));
-		for (int i = 6; i < 10; i++) {
-			cloud2.addPoint(randPoint(-15, 15, i*20));
-		}
-		
-		for (int i = -10; i < 10; i++) {
-			cloud3.addPoint(randPoint(2, 10, i*20));
-		}
-		
-		for (int i = -10; i < 10; i++) {
-			MaterialPoint p = randPoint(-8, -5, i*20);
-			MaterialPoint p2 = new DefaultMaterialPoint(p);
-			p2.translateXY(p.getX(), -p.getY());
-			cloud4.addPoint(p);
-			cloud5.addPoint(p2);
-		}
 		
 		DefaultCloudChartModel model = new DefaultCloudChartModel(xAxis, yAxis);
-		DefaultCloudChartModel model2 = new DefaultCloudChartModel();
-		DefaultCloudChartModel model3 = new DefaultCloudChartModel();
-		DefaultCloudChartModel model4 = new DefaultCloudChartModel();
-		DefaultCloudChartModel model5 = new DefaultCloudChartModel();
-		DefaultCloudChartModel model6 = new DefaultCloudChartModel();
 		
-		model.addChart(cloud);
-		model.addChart(cloud2);
-		model.addChart(cloud3);
-		model.addChart(cloud4);
-		model.addChart(cloud5);
+		model.setBorderColor(Color.BLACK);
+		model.setBackgroundColor(Color.BLACK);
 		
-		for (DefaultPointCloud c : listCos) {
-			model6.addChart(c);
-		}
-		for (DefaultPointCloud c : listSin) {
-			model6.addChart(c);
+		for (int j = 0; j < nombreCourbes; j++){
+			model.addChart(listCos.get(j));
+			model.addChart(listSin.get(j));
 		}
 		
 		//custom
@@ -181,40 +114,32 @@ public class ChartTestFrame extends JFrame {
 		c.addChart(custom4);
 		//==
 		
-		JPanel content = new JPanel(new BorderLayout());
-		JPanel content2 = new JPanel(new GridLayout(3, 2, 10, 10));
+		DefaultPieModel pie = new DefaultPieModel();
+		pie.setTitle("Repartition du frick");
+		pie.setSuffix("USD");
+		int index = 0;
+		for (double i = 0; i <= 1.1; i += 0.1) {
+			double val = rand(0.01, 0.9);
+			DefaultPiePart part = new DefaultPiePart(FormUtil.COLORS[index % (FormUtil.COLORS.length-1)], val, "Titre du part "+index);
+			pie.addPart(part);
+			index++;
+		}
 		
-		content.setBorder(new EmptyBorder(10, 10, 10, 10));
-		content.add(new ChartPanel(model), BorderLayout.CENTER);
+		pie.setRealMaxPriority(true);
+		PiePanel piePanel = new PiePanel(pie, FormUtil.BORDER_COLOR);
+		piePanel.setBackground(getContentPane().getBackground());
 		
-		content2.setBorder(new EmptyBorder(10, 10, 10, 10));
-		content2.add(new CloudChartRender(model));
-		content2.add(new CloudChartRender(c));
-		content2.add(new CloudChartRender(model3));
-		content2.add(new CloudChartRender(model4));
-		content2.add(new CloudChartRender(model5));
-		content2.add(new CloudChartRender(model6));
 		
-		JDesktopPane desk = new JDesktopPane();
-		JInternalFrame version1 = new JInternalFrame("ChartPanel", true, false, true);
-		JInternalFrame version2 = new JInternalFrame("CloudChartRender", true , false, true);
+		ChartPanel chart = new ChartPanel(c);
+		chart.getChartRender().setMouseLineColor(Color.BLACK);
+		chart.getChartRender().setLineAxisColor(Color.BLACK);
 		
-		version1.setClosable(false);
-		version2.setClosable(false);
+		JTabbedPane tabbed = new JTabbedPane();
+		tabbed.addTab("Pie Chart", piePanel);
+		tabbed.addTab("Custom Chart", chart);
+		tabbed.addTab("Sin et Cos",	 new ChartPanel(model));
 		
-		version1.setSize(100, 200);
-		version2.setSize(550, 400);
-		version2.setLocation(getWidth()/4, 100);
-		
-		version1.setContentPane(content);
-		version2.setContentPane(content2);
-		version1.setVisible(true);
-		version2.setVisible(true);
-		
-		desk.add(version1);
-		desk.add(version2);
-		
-		setContentPane(desk);
+		getContentPane().add(tabbed, BorderLayout.CENTER);
 	}
 	
 	public static void main (String[] args) throws Exception {

@@ -143,8 +143,7 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 		if(year == null)
 			return;
 		
-		if(year != null) 
-			labelTitle.setText(year.getLabel());
+		labelTitle.setText(year.getLabel());
 		load();
 	}
 	

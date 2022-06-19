@@ -185,6 +185,35 @@ public class PieRender extends JComponent implements PieModelListener{
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 
+		doPaint(g2);
+		
+		if (model.getSelectedIndex() != -1) {
+			PiePartInfo info = parts.get(model.getSelectedIndex());
+			g2.setColor(info.getPart().getBackgroundColor());
+			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+			g2.fill(createArc(info, 0.01f));
+		}
+		
+		if (hoverIndex != -1) {
+			PiePartInfo info = parts.get(hoverIndex);
+			g2.setColor(info.getPart().getBackgroundColor());
+			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
+			g2.fill(createArc(info, 0.02f));
+			
+			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+			g2.setFont(getFont().deriveFont(fontSize));
+			drawPopupLabel(info, g2);
+			
+		}
+		
+	}
+	
+	/**
+	 * dessine le figure elementaire du graphique
+	 * @param g2
+	 */
+	private void doPaint (Graphics2D g2) {
+		
 		for (PiePartInfo info : parts) {
 			if (info.getArea() == null)
 				continue;
@@ -209,27 +238,23 @@ public class PieRender extends JComponent implements PieModelListener{
 	            g2.drawString(percentTxt, (float) textX, (float) textY);
 			}
 		}
+
+	}
+	
+	/**
+	 * exportation du graphique dans un canvas externe
+	 * @param g
+	 * @param width
+	 * @param height
+	 */
+	public void paint (Graphics2D g, double width, double height) {
 		
+		setVisible(false);
+		prepareRender(width, height);
+		doPaint(g);
 		
-		if (model.getSelectedIndex() != -1) {
-			PiePartInfo info = parts.get(model.getSelectedIndex());
-			g2.setColor(info.getPart().getBackgroundColor());
-			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
-			g2.fill(createArc(info, 0.01f));
-		}
-		
-		if (hoverIndex != -1) {
-			PiePartInfo info = parts.get(hoverIndex);
-			g2.setColor(info.getPart().getBackgroundColor());
-			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
-			g2.fill(createArc(info, 0.02f));
-			
-			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
-			g2.setFont(getFont().deriveFont(fontSize));
-			drawPopupLabel(info, g2);
-			
-		}
-		
+		prepareRender();
+		setVisible(true);
 	}
 	
 	/**
@@ -298,7 +323,7 @@ public class PieRender extends JComponent implements PieModelListener{
 			width = Math.max(r1.getWidth() + (paceH * 2), r2.getWidth() + (paceH * 2));
 		} while ((width + x) > maxW && h1.length() > 1 && widthH2 < width);
         
-        if (h1.length() != info.getPart().getLabel().length() ) { 
+        if (h1.length() != info.getPart().getLabel().length()) { 
         	if (h1.length() > 3) {        		
         		h1 = h1.substring(0, h1.length()-2);
         	} else {
@@ -337,7 +362,6 @@ public class PieRender extends JComponent implements PieModelListener{
         g2.setColor(c);
         RoundRectangle2D rec = new RoundRectangle2D.Double(recX, recY, width, height, 5, 5);
         
-        
         g2.fill(rec);
         g2.setColor(Color.WHITE);
         g2.draw(rec);
@@ -369,17 +393,26 @@ public class PieRender extends JComponent implements PieModelListener{
 		}
 	}
 	
+	
 	/**
 	 * utilitaire de preparation du rendu du graphique
 	 */
-	private synchronized void prepareRender () {
+	private void prepareRender() {		
+		final double width = getWidth();
+		final double height = getHeight();
+		prepareRender(width, height);
+	}
+	
+	/**
+	 * utilitaire de preparation du rendu graphique
+	 * @param width
+	 * @param height
+	 */
+	private synchronized void prepareRender (double width, double height) {
 		for (int i = 0; i < parts.size(); i++)
 			parts.get(i).dispose();
 		
 		parts.clear();
-		
-		final double width = getWidth();
-		final double height = getHeight();
 		
 		//on prend la plus petie valeur entre la hauteur et la largeur de la vue
 		diameter = Math.min(width, height);

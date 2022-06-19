@@ -73,7 +73,7 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	
 	@Override
 	public String getLabelOf (final double value) {
-		return DECIMAL_FORMAT.format(value);
+		return DECIMAL_FORMAT.format(value)+" "+getMeasureUnit();
 	}
 
 	@Override

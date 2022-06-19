@@ -114,6 +114,7 @@ public abstract class FormUtil {
 		final JScrollPane scroll = new JScrollPane(view);
 		scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);	
 		scroll.getViewport().setOpaque(false);
+		scroll.setOpaque(false);
 		scroll.setViewportBorder(null);
 		scroll.setBorder(null);		
 		return scroll;

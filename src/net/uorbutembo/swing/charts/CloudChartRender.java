@@ -21,6 +21,9 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +36,7 @@ import net.uorbutembo.swing.charts.PointCloud.CloudType;
  * @author Esaie MUHASA
  *
  */
-public class CloudChartRender extends JComponent {
+public class CloudChartRender extends JComponent implements Printable{
 	private static final long serialVersionUID = -8580414807783085550L;
 	
 	private static final EmptyBorder DEFAULT_PADDING = new EmptyBorder(10, 10, 10, 10);
@@ -50,7 +53,7 @@ public class CloudChartRender extends JComponent {
 	
 	private double xRation;
 	private double yRation;
-	private double widhtRender;
+	private double widthRender;
 	private double heightRender;
 	private float padding = 15;
 	private float paddingLeft = 60f;
@@ -126,7 +129,7 @@ public class CloudChartRender extends JComponent {
 		if(model != null)
 			model.addListener(modelListener);
 		
-		prepareRender();
+		prepareRender(getWidth(), getHeight());
 		repaint();
 	}
 	
@@ -157,6 +160,13 @@ public class CloudChartRender extends JComponent {
 	}
 
 	/**
+	 * @return the lineAxisColor
+	 */
+	public Color getLineAxisColor() {
+		return lineAxisColor;
+	}
+
+	/**
 	 * @return the mouseLineVisible
 	 */
 	public boolean isMouseLineVisible() {
@@ -173,7 +183,7 @@ public class CloudChartRender extends JComponent {
 	@Override
 	public void doLayout() {
 		super.doLayout();
-		prepareRender();
+		prepareRender(getWidth(), getHeight());
 	}
 	
 	/**
@@ -281,10 +291,10 @@ public class CloudChartRender extends JComponent {
 	}
 
 	/**
-	 * @return the widhtRender
+	 * @return the widthRender
 	 */
-	public double getWidhtRender() {
-		return widhtRender;
+	public double getWidthRender() {
+		return widthRender;
 	}
 
 	/**
@@ -317,9 +327,35 @@ public class CloudChartRender extends JComponent {
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 		
-		g2.drawString("W: "+widhtRender+"px", paddingLeft + padding/3, 20f);
-		g2.drawString("H: "+heightRender+"px", paddingLeft + padding/3, 35f);
+		doPaint(g2, getWidth(), getHeight());
 		
+		if (mouseLocation != null ) {
+			if (mouseLineVisible) {
+				g2.setStroke(mouseLineWidth);
+				g2.setColor(mouseLineColor);
+				int x = (int) mouseLocation.getX(), y = (int) mouseLocation.getY();
+				g2.drawLine(0, y, getWidth(), y);
+				g2.drawLine(x, 0, x, getHeight());
+				showAxisLabel(mouseLocation, g2);
+			}
+			
+			if (hoverChart != -1 && hoverPoint != -1) {
+				PreparedPointCloud c = chartMetadatas.get(hoverChart);
+				PreparedMaterialPoint p = chartMetadatas.get(hoverChart).getPoints()[hoverPoint];
+				g2.setColor(c.getCloud().getBorderColor());
+				g2.fill(p.getShape());
+				drawPopupLabel(c, p, mouseLocation, g2);
+			}
+		}
+	}
+	
+	/** 
+	 * utilitaire qui dessine les graphiques
+	 * @param g2
+	 * @param width
+	 * @param height
+	 */
+	private void doPaint(Graphics2D g2, double width, double height) {
 		for (int i = 0, count = chartMetadatas.size(); i < count; i++) {
 			PreparedPointCloud  cloud = chartMetadatas.get(i);
 			PointCloud chart = cloud.getCloud();
@@ -357,7 +393,7 @@ public class CloudChartRender extends JComponent {
 			g2.setColor(cloud.getCloud().getBorderColor());
 			g2.drawPolyline(cloud.getX(), cloud.getY(), cloud.getCloud().countPoints());
 		}
-		paintGrid(g2);
+		paintGrid(g2, width, height);
 		
 		if(xlineAxis != null || ylineAxis != null)
 			g2.setColor(lineAxisColor);
@@ -371,25 +407,66 @@ public class CloudChartRender extends JComponent {
 			g2.draw(ylineAxis);
 			g2.fillPolygon(fleshYlineAxis[0], fleshYlineAxis[1], 3);
 		}
+	}
+	
+	/** 
+	 * utilitaire qui dessine le graphique dans un canvas expterne
+	 * @param g
+	 * @param bkg, la couleur d'arriere plan (est nullable)
+	 * @param width
+	 * @param height
+	 */
+	public void paint (Graphics2D g, Color bkg, int width, int height) {
+		setVisible(false);
 		
-		if (mouseLocation != null ) {
-			if (mouseLineVisible) {
-				g2.setStroke(mouseLineWidth);
-				g2.setColor(mouseLineColor);
-				int x = (int) mouseLocation.getX(), y = (int) mouseLocation.getY();
-				g2.drawLine(0, y, getWidth(), y);
-				g2.drawLine(x, 0, x, getHeight());
-				showAxisLabel(mouseLocation, g2);
-			}
-			
-			if (hoverChart != -1 && hoverPoint != -1) {
-				PreparedPointCloud c = chartMetadatas.get(hoverChart);
-				PreparedMaterialPoint p = chartMetadatas.get(hoverChart).getPoints()[hoverPoint];
-				g2.setColor(c.getCloud().getBorderColor());
-				g2.fill(p.getShape());
-				drawPopupLabel(c, p, mouseLocation, g2);
-			}
+		prepareRender(width, height);
+		if(bkg != null){
+			g.setColor(bkg);
+			g.fillRect(0, 0, width, height);
 		}
+		
+		doPaint(g, width, height);
+		//border
+		g.setStroke(borderStroke);
+		g.setColor(model.getBorderColor());
+		g.draw(borderRect);
+		g.drawRect(0, 0, width-1, height-1);
+		//==
+		
+		prepareRender(getWidth(), getHeight());
+		setVisible(true);
+	}
+	
+	@Override
+	public int print (Graphics graphics, PageFormat page, int pageIndex) throws PrinterException {
+		if (pageIndex > 0)
+			return NO_SUCH_PAGE;
+		
+		setVisible(false);
+		Graphics2D g2 = (Graphics2D) graphics;
+		
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+		g2.translate(page.getImageableX(), page.getImageableY());
+		
+		double width = page.getImageableWidth();
+		double height = page.getImageableHeight();
+		
+		if(page.getOrientation() == PageFormat.PORTRAIT)
+			height /= 2;
+		
+		prepareRender(width, height);
+		doPaint(g2, width, height);//paint charts
+		
+		//border
+		g2.setStroke(borderStroke);
+		g2.setColor(model.getBorderColor());
+		g2.draw(borderRect);
+		//==
+		
+		prepareRender(getWidth(), getHeight());
+		setVisible(true);
+		return PAGE_EXISTS;
 	}
 	
 	/**
@@ -478,7 +555,13 @@ public class CloudChartRender extends JComponent {
         g2.drawString(h1, (float)recX + labelPadding, (float) (recY + height - r2.getHeight() + fmH2.getAscent() - + labelPadding/2f));
     }
 	
-	private void paintGrid (Graphics2D g) {
+    /**
+     * dessinage de la grille
+     * @param g
+     * @param width : largeur max disponible
+     * @param height : hauteur max disponible
+     */
+	private void paintGrid (Graphics2D g, double width, double height) {
 		if(model.getXMax() == null || model.getYMax() == null)
 			return;
 		
@@ -500,24 +583,24 @@ public class CloudChartRender extends JComponent {
 				String txt = model.getYAxis().getLabelOf(real);
 				if(gridYvisible) {			
 					g.setColor(gridColor);
-					g.drawLine((int)(paddingLeft - padding/2), y, (int)(getWidth() - (padding/2)), y);
+					g.drawLine((int)(paddingLeft - padding/2), y, (int)(width - (padding/2)), y);
 				}
 				g.setColor(lineAxisColor);
 				g.drawString(txt, 0f, y + metrics.getHeight() / 4);
 			}
 			
 			y = 0;
-			for (double i = xlineAxis.getY1(); y <= getHeight(); i += gridYstep) {
+			for (double i = xlineAxis.getY1(); y <= height; i += gridYstep) {
 				y =  (int) i;
 				double percent = (100f / heightRender) * (i - padding);
 				double real = -Math.abs(percent - percentAxis) * (model.getYMax().getY() / percentAxis);
-				if(real == 0 || y > (getHeight() - paddingBottom))
+				if(real == 0 || y > (height - paddingBottom))
 					continue;
 				
 				String txt = model.getYAxis().getLabelOf(real);
 				if(gridYvisible) {			
 					g.setColor(gridColor);
-					g.drawLine((int)(paddingLeft - padding/2), y, (int)(getWidth() - (padding/2)), y);
+					g.drawLine((int)(paddingLeft - padding/2), y, (int)(width - (padding/2)), y);
 				}
 				g.setColor(lineAxisColor);
 				g.drawString(txt, 0f, y + metrics.getHeight() / 4);
@@ -544,7 +627,7 @@ public class CloudChartRender extends JComponent {
 				String txt = model.getYAxis().getLabelOf(real);
 				if(gridYvisible) {			
 					g.setColor(gridColor);
-					g.drawLine((int)(paddingLeft - padding/2), y, (int)(getWidth() - (padding/2)), y);
+					g.drawLine((int)(paddingLeft - padding/2), y, (int)(width - (padding/2)), y);
 				}
 				g.setColor(lineAxisColor);
 				g.drawString(txt, 0f, y + metrics.getHeight() / 4);
@@ -558,10 +641,10 @@ public class CloudChartRender extends JComponent {
 		}
 		
 		if(ylineAxis != null) {	
-			double percentAxis = (100f / widhtRender) * (ylineAxis.getX1() - padding);
+			double percentAxis = (100f / widthRender) * (ylineAxis.getX1() - padding);
 			for (double i = ylineAxis.getX1(); i > 0; i -= gridXstep) {
 				int x = (int)i;
-				double percent = (100f / widhtRender) * (i - padding);
+				double percent = (100f / widthRender) * (i - padding);
 				double real = -Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
 				
 				if(real == 0 || x < paddingLeft)
@@ -569,58 +652,58 @@ public class CloudChartRender extends JComponent {
 				String txt = model.getXAxis().getLabelOf(real);
 				if(gridXvisible) {			
 					g.setColor(gridColor);
-					g.drawLine(x, (int)padding/2, x, (int) (getHeight() - paddingBottom + padding/2));
+					g.drawLine(x, (int)padding/2, x, (int) (height - paddingBottom + padding/2));
 				}
 				g.setColor(lineAxisColor);
-				g.drawString(txt, x - metrics.stringWidth(txt) / 2, getHeight() - padding/2f);
+				g.drawString(txt, 2 + x - metrics.stringWidth(txt) / 2, (float)(height - padding/2f));
 			}
 			
-			for (double i = ylineAxis.getX1(); i < getWidth(); i += gridXstep) {
+			for (double i = ylineAxis.getX1(); i < width; i += gridXstep) {
 				int x = (int)i;
-				double percent = (100f / widhtRender) * (i - padding);
+				double percent = (100f / widthRender) * (i - padding);
 				double real = Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
 				
-				if(real == 0 || x > (getWidth() - padding))
+				if(real == 0 || x > (width - padding))
 					continue;
 				
 				String txt = model.getXAxis().getLabelOf(real);
 				if(gridXvisible) {			
 					g.setColor(gridColor);
-					g.drawLine(x, (int)padding/2, x, (int) (getHeight() - paddingBottom + padding/2));
+					g.drawLine(x, (int)padding/2, x, (int) (height - paddingBottom + padding/2));
 				}
 				g.setColor(lineAxisColor);
-				g.drawString(txt, x - metrics.stringWidth(txt) / 2, getHeight() - padding/2f);
+				g.drawString(txt, 2 + x - metrics.stringWidth(txt) / 2, (float)(height - padding/2f));
 			}
 			
 			if (mouseLocation != null) {//lors du survol de la sourie
-				double percent = (100f / widhtRender) * (mouseLocation.getX() - padding);
+				double percent = (100f / widthRender) * (mouseLocation.getX() - padding);
 				mouseXvalue = Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
 				if(mouseLocation.getX() < ylineAxis.getX1()) {
 					mouseXvalue *= -1;
 				} 
 			}
 		} else {
-			for (double i = widhtRender + padding; i >= 0 ; i -= gridXstep) {
+			for (double i = widthRender + padding; i >= 0 ; i -= gridXstep) {
 				int x = (int)i;
 				
 				if (x < paddingLeft)
 					continue;
 				
-				double percent = (100f / widhtRender) * (i - padding);
+				double percent = (100f / widthRender) * (i - padding);
 				double real = Math.abs(percent) * ((model.getXMax().getX() - model.getXMin().getX()) / 100f);
 				real += model.getXMin().getX();
 				
 				String txt = model.getXAxis().getLabelOf(real);
 				if(gridXvisible) {			
 					g.setColor(gridColor);
-					g.drawLine(x, (int)padding/2, x, (int) (getHeight() - paddingBottom + padding/2));
+					g.drawLine(x, (int)padding/2, x, (int) (height - paddingBottom + padding/2));
 				}
 				g.setColor(lineAxisColor);
-				g.drawString(txt, x - metrics.stringWidth(txt) / 2, getHeight() - padding/2f);
+				g.drawString(txt, 2 + x - metrics.stringWidth(txt) / 2, (float)(height - padding/2f));
 			}
 			
 			if (mouseLocation != null) {//lors du survol de la sourie
-				double percent = (100f / widhtRender) * (mouseLocation.getX() - padding);
+				double percent = (100f / widthRender) * (mouseLocation.getX() - padding);
 				mouseXvalue = Math.abs(percent) * ((model.getXMax().getX() - model.getXMin().getX()) / 100f);
 				mouseXvalue += model.getXMin().getX();
 			}
@@ -629,9 +712,11 @@ public class CloudChartRender extends JComponent {
 	}
 	
 	/**
-	 * utilitaire de preparation du rendu du graphique
+	 * utilitaire de preparation du rendu du graphique (Soit pour l'impression, soit pour dessiner la vue)
+	 * @param width : largeur max disponible
+	 * @param height : hauteur max disponile
 	 */
-	private synchronized void prepareRender () {
+	private synchronized void prepareRender (double width, double height) {
 		chartMetadatas.clear();
 		
 		double xMax = model.hasVisibleChart()? model.getXMax().getX() : 10;
@@ -645,17 +730,14 @@ public class CloudChartRender extends JComponent {
 		final double absXmin = Math.abs(xMin);
 		final double absYmin = Math.abs(yMin);
 		
-		final String labelYMax = DefaultAxis.DECIMAL_FORMAT.format(String.valueOf(yMax).length() < String.valueOf(yMin).length()? yMin : yMax);
+		final String labelYMax = model.getYAxis().getLabelOf(yMax+0.01f).length() > model.getYAxis().getLabelOf(yMin-0.01f).length()? model.getYAxis().getLabelOf(yMin+0.01f) : model.getYAxis().getLabelOf(yMin-0.01f);
 		FontMetrics metrics = getFontMetrics(getFont());
 		paddingLeft = metrics.stringWidth(labelYMax) + padding * 2f;
 		
-		widhtRender = getWidth() - (padding + paddingLeft);
-		heightRender = getHeight() - (padding + paddingBottom);
+		widthRender = width - (padding + paddingLeft);
+		heightRender = height - (padding + paddingBottom);
 		
-//		gridXstep = widhtRender / 10;
-//		gridYstep = heightRender / 10;
-		
-		xRation = widhtRender / Math.max(absXmin, absXmax);
+		xRation = widthRender / Math.max(absXmin, absXmax);
 		yRation = heightRender / Math.max(absYmin, absYmax);
 		
 		double yXline = -1;// le y de l'axe des X
@@ -673,9 +755,9 @@ public class CloudChartRender extends JComponent {
 		} else {//pour R*
 			translateX = absXmin;
 			maxX = absXmin + absXmax;
-			xYline = (widhtRender / maxX) * translateX + paddingLeft; // xRation...
+			xYline = (widthRender / maxX) * translateX + paddingLeft; // xRation...
 		}
-		xRation = widhtRender / maxX;
+		xRation = widthRender / maxX;
 		//==
 		
 		//recherche de la valeur a translater sur Y
@@ -694,18 +776,18 @@ public class CloudChartRender extends JComponent {
 		//
 		
 		if (yXline != -1) {//l'axe des X est visible
-			xlineAxis = new Line2D.Double(0, yXline, getWidth(), yXline);
+			xlineAxis = new Line2D.Double(0, yXline, width, yXline);
 			int h = (int) (padding/4f), w = (int) (padding/2f);
-			fleshXlineAxis[0][0] = getWidth() - w;
-			fleshXlineAxis[0][1] = getWidth();
-			fleshXlineAxis[0][2] = getWidth() - w;
+			fleshXlineAxis[0][0] = (int)width - w;
+			fleshXlineAxis[0][1] = (int)width;
+			fleshXlineAxis[0][2] = (int)width - w;
 			fleshXlineAxis[1][0] = (int)(xlineAxis.getP1().getY() - h);
 			fleshXlineAxis[1][1] = (int)(xlineAxis.getP1().getY());
 			fleshXlineAxis[1][2] = (int)(xlineAxis.getP1().getY() + h);
 		} else xlineAxis = null;
 		
 		if (xYline != -1) {//l'axe des Y est visible
-			ylineAxis = new Line2D.Double(xYline, 0, xYline, getHeight());
+			ylineAxis = new Line2D.Double(xYline, 0, xYline, height);
 			int w = (int) (padding/4f), h = (int) (padding/2f);
 			fleshYlineAxis[0][0] = (int)(ylineAxis.getP1().getX() - w);
 			fleshYlineAxis[0][1] = (int)(ylineAxis.getP1().getX());
@@ -729,7 +811,7 @@ public class CloudChartRender extends JComponent {
 		}
 		
 		//determination du bordure
-		borderRect.setRect(paddingLeft - padding/2, padding/2, widhtRender + padding, heightRender + padding);
+		borderRect.setRect(paddingLeft - padding/2, padding/2, widthRender + padding, heightRender + padding);
 	}
 	
 	/**
@@ -989,7 +1071,7 @@ public class CloudChartRender extends JComponent {
 
 		@Override
 		public void onChange(CloudChartModel model) {
-			prepareRender();
+			prepareRender(getWidth(), getHeight());
 			repaint();
 		}
 

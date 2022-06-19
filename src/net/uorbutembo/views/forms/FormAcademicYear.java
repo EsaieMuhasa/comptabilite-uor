@@ -139,9 +139,10 @@ public class FormAcademicYear extends DefaultFormPanel {
 				} else {
 					year.setLastUpdate(now);
 					year.setRecordDate(academicYear.getRecordDate());
-					this.academicYearDao.update(year, academicYear.getId());
+					year.setId(academicYear.getId());
+					academicYearDao.update(year, academicYear.getId());
 				}
-				academicYear = null;
+				setAcademicYear(null);
 				showMessageDialog("Information", "Année académique enregistrer avec success", JOptionPane.INFORMATION_MESSAGE);
 			} catch (DAOException e) {
 				showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);

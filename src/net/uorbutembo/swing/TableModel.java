@@ -154,6 +154,11 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	
 	@Override
 	public void onUpdate(T e, int requestId) {
+		if(data.size() == 1) {
+			reload();
+			return;
+		}
+		
 		for (int i=0; i < data.size(); i++) {
 			T t = data.get(i);
 			if(t.getId() == e.getId()) {

@@ -6,17 +6,33 @@ package net.uorbutembo.swing.charts;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Graphics2D;
+import java.awt.Toolkit;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.Box;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileFilter;
 
+import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 
 /**
  * @author Esaie MUHASA
@@ -24,6 +40,11 @@ import net.uorbutembo.tools.FormUtil;
  */
 public class ChartPanel extends Panel {
 	private static final long serialVersionUID = -4145881145979100410L;
+	static final JFileChooser FILE_CHOOSER = new JFileChooser();
+	static {		
+		FILE_CHOOSER.setFileFilter(new ImageExportFilter());
+		FILE_CHOOSER.setFileSelectionMode(JFileChooser.FILES_ONLY);
+	}
 	
 	private CloudChartModel model;
 	private CloudChartRender chartRender;
@@ -36,6 +57,13 @@ public class ChartPanel extends Panel {
 	private final Box checkBox = Box.createHorizontalBox();
 	private final Panel checkChart = new Panel(new FlowLayout(FlowLayout.RIGHT));
 	private final Panel chartContainer = new Panel(new BorderLayout());
+	
+	private final JButton btnPrint = new Button(new ImageIcon(R.getIcon("print")), "Imprimer");
+	private final JButton btnImg = new Button(new ImageIcon(R.getIcon("saveimg")), "Exporter");
+	{
+		btnImg.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		btnPrint.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+	}
 	
 	private final List<JCheckBox> chartItems = new ArrayList<>();
 	private final ChangeListener chartItemListener = event -> {
@@ -54,6 +82,58 @@ public class ChartPanel extends Panel {
 	
 	private final ChangeListener mouseLineListener = event -> {
 		chartRender.setMouseLineVisible(mouseLine.isSelected());
+	};
+	
+	private final ActionListener btnPrintListener = event -> {
+		PrinterJob job = PrinterJob.getPrinterJob();
+		
+		if(job.printDialog() && job.pageDialog(job.defaultPage()) != null) {
+			Color color = chartRender.getLineAxisColor();
+			
+			chartRender.setVisible(false);
+			chartRender.setLineAxisColor(Color.BLACK);
+			job.setPrintable(chartRender);
+			
+			try {
+				job.print();
+			} catch (PrinterException e) {
+				JOptionPane.showMessageDialog(this, e.getMessage(), "Erreur d'impression", JOptionPane.ERROR_MESSAGE);
+			}
+			
+			chartRender.setLineAxisColor(color);
+			chartRender.setVisible(true);
+		}
+	};
+	
+	private final ActionListener btnImgListener = event -> {
+		
+		int status = FILE_CHOOSER.showSaveDialog(this);
+		if(status == JFileChooser.APPROVE_OPTION) {
+			String fileName = FILE_CHOOSER.getSelectedFile().getAbsolutePath();
+			if(!fileName.matches("^(.+)(\\.)(png|jpeg|jpg)$"))
+				fileName += ".png";
+			
+			String type = fileName.substring(fileName.lastIndexOf(".")+1);
+			
+			Toolkit tool = Toolkit.getDefaultToolkit();
+			int width = (int)(tool.getScreenSize().getWidth() * 1.5f);
+			int height = (int)(tool.getScreenSize().getHeight() * 1.5f);
+			
+			BufferedImage buffer = new BufferedImage(width, height, type.equals("png")? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
+			Graphics2D g = (Graphics2D) buffer.getGraphics();
+			Color color = chartRender.getLineAxisColor();
+			Color bkg = type.equals("png")? null : Color.WHITE;
+			chartRender.setLineAxisColor(Color.BLACK);
+			chartRender.paint(g, bkg, width, height);
+			chartRender.setLineAxisColor(color);
+			
+			File file = new File(fileName);
+			try {
+				ImageIO.write(buffer, type, file);
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(this, e.getMessage(), "Erreur d'exportation", JOptionPane.ERROR_MESSAGE);
+			}
+		}
 	};
 
 	/**
@@ -158,6 +238,12 @@ public class ChartPanel extends Panel {
 		checkBox.add(yLine);
 		checkBox.add(Box.createHorizontalStrut(10));
 		checkBox.add(mouseLine);
+		checkBox.add(Box.createHorizontalStrut(20));
+		checkBox.add(btnPrint);
+		checkBox.add(btnImg);
+		
+		btnPrint.addActionListener(btnPrintListener);
+		btnImg.addActionListener(btnImgListener);
 		
 		xLine.setForeground(Color.WHITE);
 		yLine.setForeground(xLine.getForeground());
@@ -204,6 +290,32 @@ public class ChartPanel extends Panel {
 
 		@Override
 		public void onRemovePoint(CloudChartModel model, int chartIndex, int pointIndex, MaterialPoint materialPoint) {}
+		
+	}
+	
+	
+	/**
+	 * @author Esaie MUHASA
+	 * Filtrage lors de la selection d'une image
+	 */
+	static class ImageExportFilter extends FileFilter {
+		public static final String [] EXT = {"png", "jpg", "jpeg"};
+		@Override
+		public boolean accept(File f) {
+			if(f.isDirectory())
+				return true;
+			
+			for (String e : EXT)
+				if(f.getAbsoluteFile().getName().toLowerCase().matches(".+\\."+e))
+					return true;
+			
+			return false;
+		}
+
+		@Override
+		public String getDescription() {
+			return "Enregistrer l'image au format (.png, .jpg et .jpeg)";
+		}
 		
 	}
 
