@@ -176,6 +176,16 @@ public interface OutlayDao extends DAOInterface<Outlay>, BaseStatistic<Outlay> {
 	}
 	
 	/**
+	 * verifie s'il y a aumoin une occurence qui fait refference au location en parametre
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	default boolean checkByLocation (PaymentLocation location) throws DAOException {
+		return check("location", location.getId());
+	}
+	
+	/**
 	 * renvie le solde des sorties pour le compte en premier paramtre dans le lieux en deuxieme paramtre
 	 * @param account
 	 * @param location

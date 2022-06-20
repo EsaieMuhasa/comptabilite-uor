@@ -40,12 +40,11 @@ public class FormUniversityRecipe extends DefaultFormPanel {
 	public FormUniversityRecipe (MainWindow mainWindow) {
 		super(mainWindow);
 		universityRecipeDao = mainWindow.factory.findDao(UniversityRecipeDao.class);
-		setTitle("Formultaire d'enregistrement");
 		Box box = Box.createVerticalBox();
 		box.add(this.titleGroup);
 		box.add(this.descriptionGroup);
 		
-		this.getBody().add(box, BorderLayout.CENTER);
+		getBody().add(box, BorderLayout.CENTER);
 		title.addCaretListener(event -> {
 			validateFields();
 		});
@@ -66,7 +65,9 @@ public class FormUniversityRecipe extends DefaultFormPanel {
 		if (recipe != null) {
 			title.setValue(recipe.getTitle());
 			description.setValue(recipe.getDescription());
+			setTitle(TITLE_2);
 		} else {
+			setTitle(TITLE_1);
 			title.setValue("");
 			description.setValue("");
 		}

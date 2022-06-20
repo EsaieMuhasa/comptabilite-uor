@@ -7,6 +7,7 @@ import java.util.List;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualRecipe;
+import net.uorbutembo.beans.UniversityRecipe;
 
 /**
  * @author Esaie MUHASA
@@ -15,7 +16,17 @@ import net.uorbutembo.beans.AnnualRecipe;
 public interface AnnualRecipeDao extends DAOInterface<AnnualRecipe> {
 	
 	/**
-	 * verification d'unicite des clee
+	 * Verifie d'il a aumoin une occurence qui fait reference au recette en prametre
+	 * @param recipe
+	 * @return
+	 * @throws DAOException
+	 */
+	default boolean checkByRecipe (UniversityRecipe recipe) throws DAOException {
+		return check("universityRecipe", recipe.getId());
+	}
+	
+	/**
+	 * verification de l'unicite des clee
 	 * @param yearId
 	 * @param recipeId
 	 * @return

@@ -101,6 +101,16 @@ public interface PaymentFeeDao extends DAOInterface <PaymentFee>, OverallStatist
 	}
 	
 	/**
+	 * verifie s'il y a aumoin une occurence qui fait refference au location en parametre
+	 * @param location
+	 * @return
+	 * @throws DAOException
+	 */
+	default boolean checkByLocation (PaymentLocation location) throws DAOException {
+		return check("location", location.getId());
+	}
+	
+	/**
 	 * verification des operations faite dans un lieux, en faisant un saut dans les resultat.
 	 * @param location
 	 * @param year

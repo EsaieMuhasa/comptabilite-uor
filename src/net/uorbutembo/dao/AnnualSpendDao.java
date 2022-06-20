@@ -16,6 +16,16 @@ import net.uorbutembo.beans.UniversitySpend;
 public interface AnnualSpendDao extends DAOInterface<AnnualSpend> {
 	
 	/**
+	 * veriie s'il y a une reference versi le spend en parametre
+	 * @param spend
+	 * @return
+	 * @throws DAOException
+	 */
+	default boolean checkBySpend (UniversitySpend spend) throws DAOException {
+		return check("universitySpend", spend.getId());
+	}
+	
+	/**
 	 * verfication de l'existance de l'unicite des clee
 	 * @param yearId identifiant de l'annee academique 
 	 * @param spendId identifiant du dep

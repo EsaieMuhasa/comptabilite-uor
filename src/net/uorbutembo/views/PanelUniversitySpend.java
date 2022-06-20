@@ -4,13 +4,21 @@
 package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 
 import net.uorbutembo.beans.UniversitySpend;
+import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
@@ -38,6 +46,15 @@ public class PanelUniversitySpend extends Panel{
 	private final Table table;
 	private final UniversitySpendTableModel tableModel;
 	
+	private final JPopupMenu popup = new JPopupMenu();
+	private final JMenuItem itemDelete = new JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
+	private final JMenuItem itemUpdate = new JMenuItem("Modifier", new ImageIcon(R.getIcon("edit")));
+	{
+		popup.add(itemDelete);
+		popup.add(itemUpdate);
+	}
+	
+	private final AnnualSpendDao annualSpendDao;
 	private final UniversitySpendDao universitySpendDao;
 	private final DAOAdapter<UniversitySpend> spendAdapter = new DAOAdapter<UniversitySpend>() {
 
@@ -55,6 +72,22 @@ public class PanelUniversitySpend extends Panel{
 		
 	};
 	
+	private final MouseListener mouseListener = new MouseAdapter() {
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
+				UniversitySpend spend = tableModel.getRow(table.getSelectedRow());
+				try {
+					boolean delete = !annualSpendDao.checkBySpend(spend);
+					itemDelete.setEnabled(delete);
+					popup.show(table, e.getX(), e.getY());
+				} catch (DAOException ex) {
+					JOptionPane.showMessageDialog(mainWindow, ex.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		}
+	};
+	
 	private final MainWindow mainWindow;
 	
 	public PanelUniversitySpend(MainWindow mainWindow) {
@@ -62,9 +95,11 @@ public class PanelUniversitySpend extends Panel{
 		this.mainWindow = mainWindow;
 		
 		universitySpendDao = mainWindow.factory.findDao(UniversitySpendDao.class);
+		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
 		tableModel = new UniversitySpendTableModel(universitySpendDao);
 		table = new Table(tableModel);
 		table.setShowVerticalLines(true);
+		table.addMouseListener(mouseListener);
 		final int w = 140;
 		for (int i = 1; i <= 2; i++) {			
 			table.getColumnModel().getColumn(i).setWidth(w);
@@ -79,11 +114,23 @@ public class PanelUniversitySpend extends Panel{
 		final Panel container = new Panel(new BorderLayout());
 		
 		btnNew.addActionListener(event -> {
-			if (dialogForm == null)
-				createDialog();
-			
-			dialogForm.setLocationRelativeTo(mainWindow);
-			dialogForm.setVisible(true);
+			createSpend();
+		});
+		itemDelete.addActionListener(event -> {
+			UniversitySpend spend = tableModel.getRow(table.getSelectedRow());
+			int rps = JOptionPane.showConfirmDialog(mainWindow, "Voulez-vous vraiment supprimer\n"+spend.toString(), "Suppression d'une rubrique", JOptionPane.OK_CANCEL_OPTION);
+			if(rps == JOptionPane.OK_OPTION) {
+				try {
+					universitySpendDao.delete(spend.getId());
+				} catch (DAOException e) {
+					JOptionPane.showMessageDialog(mainWindow, e.getMessage(), "Echec de suppression", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});
+		
+		itemUpdate.addActionListener(event -> {
+			UniversitySpend spend = tableModel.getRow(table.getSelectedRow());
+			updateSpend(spend);
 		});
 		
 		JScrollPane scroll = FormUtil.createVerticalScrollPane(container);
@@ -94,6 +141,29 @@ public class PanelUniversitySpend extends Panel{
 		container.add(tablePanel, BorderLayout.CENTER);
 		
 		add(scroll, BorderLayout.CENTER);
+	}
+	
+	/**
+	 * inersion de la description d'une depense
+	 */
+	private void createSpend() {
+		createDialog();
+		
+		form.setSpend(null);
+		dialogForm.setLocationRelativeTo(mainWindow);
+		dialogForm.setVisible(true);
+	}
+	
+	/**
+	 * Mis en jours de la description d'une depense
+	 * @param spend
+	 */
+	private void updateSpend(UniversitySpend spend) {
+		createDialog();
+		
+		form.setSpend(spend);
+		dialogForm.setLocationRelativeTo(mainWindow);
+		dialogForm.setVisible(true);
 	}
 	
 	/**
@@ -115,5 +185,4 @@ public class PanelUniversitySpend extends Panel{
 		padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		dialogForm.pack();
 	}
-
 }
