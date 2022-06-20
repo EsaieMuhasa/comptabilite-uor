@@ -9,10 +9,10 @@ import net.uorbutembo.beans.AnnualSpend;
 import net.uorbutembo.beans.Outlay;
 import net.uorbutembo.dao.OutlayDao;
 import net.uorbutembo.swing.TableModel;
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA
- *
  */
 public class OutlayTableModel extends TableModel<Outlay> {
 	private static final long serialVersionUID = -90393497836126101L;
@@ -22,6 +22,7 @@ public class OutlayTableModel extends TableModel<Outlay> {
 
 	public OutlayTableModel(OutlayDao daoInterface) {
 		super(daoInterface);
+		limit = 20;
 		outlayDao = daoInterface;
 	}
 
@@ -38,7 +39,7 @@ public class OutlayTableModel extends TableModel<Outlay> {
 	public void setAccount(AnnualSpend account) {
 		if(this.account != null && account != null && account.getId() == this.account.getId())
 			return;
-		
+		offset = 0;
 		this.account = account;
 		reload();
 	}
@@ -80,7 +81,7 @@ public class OutlayTableModel extends TableModel<Outlay> {
 		switch (columnIndex) {
 			case 0: return DEFAULT_DATE_FORMAT.format(data.get(rowIndex).getDeliveryDate());
 			case 1: return data.get(rowIndex).getWording();
-			case 2: return data.get(rowIndex).getAmount();
+			case 2: return data.get(rowIndex).getAmount()+" "+FormUtil.UNIT_MONEY;
 		}
 		return null;
 	}

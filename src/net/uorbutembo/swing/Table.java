@@ -7,6 +7,7 @@ import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
@@ -57,6 +58,7 @@ public class Table extends JTable {
         getTableHeader().setReorderingAllowed(false);
         getTableHeader().setBackground(FormUtil.BKG_END_2);
         setForeground(Color.WHITE);
+        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         setSelectionBackground(FormUtil.BKG_END);
         setBackground(FormUtil.BKG_DARK);

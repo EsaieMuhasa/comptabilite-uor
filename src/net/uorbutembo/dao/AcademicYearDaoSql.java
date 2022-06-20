@@ -127,6 +127,13 @@ class AcademicYearDaoSql extends UtilSql<AcademicYear> implements AcademicYearDa
 			throw new DAOException(e.getMessage(), e);
 		}
 	}
+	
+	@Override
+	public AcademicYear findById(long id) throws DAOException {
+		if(currentYear != null && currentYear.getId() == id)
+			return currentYear;
+		return super.findById(id);
+	}
 
 	@Override
 	public AcademicYear findCurrent() throws DAOException {

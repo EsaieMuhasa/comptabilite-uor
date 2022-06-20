@@ -86,21 +86,19 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d ", Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), academicYearId);
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN(%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) LIMIT %d OFFSET %d", getTableName(), sqlInscrits, limit, offset);
-		
 		List<PaymentFee> data = new ArrayList<>();
 		try (
 				Connection connection = this.factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(sql)) {
 			while (result.next())
-				data.add(mapping(result));
-			
-			if(data.isEmpty())
-				throw new DAOException("Aucun payement pour l'annee academique indexer par  "+academicYearId);
+				data.add(fullMapping(result));			
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
 		
+		if(data.isEmpty())
+			throw new DAOException("Aucun payement pour l'annee academique indexer par  "+academicYearId);
 		return data;
 	}
 
@@ -156,6 +154,22 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d ", Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year);
 		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN (%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
 		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) LIMIT 1 OFFSET 0", getTableName(), sqlInscrits);
+		
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			return (result.next());
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+	
+	@Override
+	public boolean checkByAcademicYear(AcademicYear year, int offset) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d ", Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year.getId());
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE promotion IN (%s)", Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT * FROM %s WHERE inscription IN(%s) LIMIT 1 OFFSET %d", getTableName(), sqlInscrits, offset);
 		
 		try (
 				Connection connection = this.factory.getConnection();
@@ -694,6 +708,14 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	protected PaymentFee mapping(ResultSet result) throws SQLException, DAOException {
 		PaymentFee fee = baseMapping(result);
 		fee.setInscription(new Inscription(result.getLong("inscription")));
+		fee.setLocation(factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")));
+		return fee;
+	}
+	
+	@Override
+	protected PaymentFee fullMapping(ResultSet result) throws SQLException, DAOException {
+		PaymentFee fee = baseMapping(result);
+		fee.setInscription(factory.findDao(InscriptionDao.class).findById(result.getLong("inscription")));
 		fee.setLocation(factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")));
 		return fee;
 	}

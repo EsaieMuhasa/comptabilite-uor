@@ -6,11 +6,16 @@ package net.uorbutembo.views;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.RenderingHints;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -20,8 +25,16 @@ import java.util.List;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeListener;
 
@@ -35,13 +48,18 @@ import net.uorbutembo.beans.PaymentLocation;
 import net.uorbutembo.dao.AnnualRecipeDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.OtherRecipeDao;
 import net.uorbutembo.dao.OutlayDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.PaymentLocationDao;
+import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Card;
 import net.uorbutembo.swing.DefaultCardModel;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.swing.Table;
+import net.uorbutembo.swing.TableModel;
+import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.swing.charts.ChartPanel;
 import net.uorbutembo.swing.charts.DateAxis;
 import net.uorbutembo.swing.charts.DefaultAxis;
@@ -51,10 +69,14 @@ import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.DefaultPointCloud;
 import net.uorbutembo.swing.charts.PiePanel;
+import net.uorbutembo.swing.charts.PieRender;
 import net.uorbutembo.swing.charts.PointCloud.CloudType;
 import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
+import net.uorbutembo.views.forms.FormOtherRecipe;
+import net.uorbutembo.views.forms.FormOutlay;
+import net.uorbutembo.views.models.OtherRecipeTableModel;
 
 /**
  * @author Esaie MUHASA
@@ -329,11 +351,14 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		}
 		
 		/**
-		 * echargement des donnees des modeles des graphiques
+		 * echargement des donnees des modeles
+		 * Cette methode doit etre executer unquemet lors du changement de l'annee academique
 		 */
 		public void reload () {
 			linePanel.reloadChart();
 			piePanel.reloadChart();
+			recipePanel.reload(year);
+			outlayPanel.reload(year);
 		}
 		
 	}
@@ -719,11 +744,569 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 	private class RecipePanel extends Panel {
 		private static final long serialVersionUID = 1744540939252963612L;
 		
+		private JDialog dialogRecipe;
+		private FormOtherRecipe formRecipe;
+		private DAOAdapter<OtherRecipe> recipeAdapter;
+		private final PaymentFeeTableModel tableModelFees = new PaymentFeeTableModel();
+		private final OtherRecipeTableModel tableModelOther = new OtherRecipeTableModel(otherRecipeDao);
+		private final Table table = new Table(tableModelFees);
+		private final TablePanel tablePanel = new TablePanel(table, "Payements des frais academiques");
+		
+		private final MouseListener  tableMouseListener = new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
+					initPopup();
+					popupRecipe.show(table, e.getX(), e.getY());
+				}
+			}
+		};
+		
+		private final JLabel labelCount = FormUtil.createSubTitle("");
+		private final JButton btnToExcel = new Button(new ImageIcon(R.getIcon("export")), "Excel");
+		private final Button btnNext = new Button(new ImageIcon(R.getIcon("next")));
+		private final Button btnPrev = new Button(new ImageIcon(R.getIcon("prev")));
+		private final Button btnRecipe = new Button(new ImageIcon(R.getIcon("new")), "Nouvelle recette");
+		private final Box boxRadios = Box.createHorizontalBox();
+		private final JRadioButton [] radioModels = {
+				new JRadioButton("Frais academique", true),
+				new JRadioButton("Autres recettes")
+		}; 
+		
+		private final TableModel<?> [] models = { tableModelFees, tableModelOther};
+		private final ChangeListener radionListener = event -> {
+			JRadioButton radio = (JRadioButton) event.getSource();
+			if(!radio.isSelected())
+				return;
+			
+			int index = Integer.parseInt(radio.getName());
+			if (index == 0) {
+				table.removeMouseListener(tableMouseListener);
+				tablePanel.setTitle("Payements des frais academiques");
+			} else {
+				table.addMouseListener(tableMouseListener);
+				tablePanel.setTitle("Autres recettes");
+			}
+			models[index].setOffset(0);
+			table.setModel(models[index]);
+			btnNext.setEnabled(models[index].hasNext());
+			btnPrev.setEnabled(models[index].hasPrevious());
+			labelCount.setText(models[index].getCount()+" opérations");
+		};
+		
+		private final ActionListener navigationListener = event -> {
+			JButton btn = (JButton) event.getSource();
+			boolean next = btn == btnNext;
+			TableModel<?> model = (TableModel<?>) table.getModel();
+			if (next && model.hasNext()) 
+				model.next();
+			else if(!next && model.hasPrevious()) 
+				model.previous();
+			
+			btnPrev.setEnabled(model.hasPrevious());
+			btnNext.setEnabled(model.hasNext());
+		};
+		
+		{
+			final ButtonGroup group = new ButtonGroup();
+			btnRecipe.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			boxRadios.add(labelCount);
+			boxRadios.add(Box.createHorizontalGlue());
+			for (int i = 0; i < radioModels.length; i++) {
+				boxRadios.add(radioModels[i]);
+				radioModels[i].setName(i+"");
+				radioModels[i].addChangeListener(radionListener);
+				radioModels[i].setForeground(Color.WHITE);
+				group.add(radioModels[i]);
+			}
+			boxRadios.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			tablePanel.getScroll().setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+			btnNext.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			btnPrev.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			btnToExcel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			btnPrev.setEnabled(false);
+			btnNext.addActionListener(navigationListener);
+			btnPrev.addActionListener(navigationListener);
+		}
+		
+		private final Box tools = Box.createHorizontalBox();
+		private JPopupMenu popupRecipe;
+		private JMenuItem itemDeleteRecipe;
+		private JMenuItem itemUpdateRecipe;
+		
+		public RecipePanel() {
+			super(new BorderLayout());
+
+			table.setShowVerticalLines(true);
+			table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			
+			tools.add(btnPrev);
+			tools.add(Box.createHorizontalStrut(5));
+			tools.add(btnNext);
+			
+			tools.add(Box.createHorizontalGlue());
+			tools.add(btnToExcel);
+			tools.add(Box.createHorizontalStrut(5));
+			tools.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			tools.setBackground(FormUtil.BKG_END);
+			tools.setOpaque(true);
+			tools.add(btnRecipe);
+			
+			add(tablePanel, BorderLayout.CENTER);
+			add(tools, BorderLayout.SOUTH);
+			add(boxRadios, BorderLayout.NORTH);
+			btnRecipe.addActionListener(event -> {
+				createRecipe();
+			});
+		}
+		
+		/**
+		 * rechargement des donnees pour l'annees enn parametre
+		 * @param currentYear
+		 */
+		public void reload (AcademicYear currentYear) {
+			tableModelOther.setCurrentYear(currentYear);
+			tableModelFees.setCurrentYear(currentYear);
+			
+			TableModel<?> model = (TableModel<?>) table.getModel();
+			labelCount.setText(model.getCount()+" opérations");
+		}
+		
+		/**
+		 * creation du popup menu permetant de modifier/supprimer recette (autres, que les frais academique)
+		 */
+		private void initPopup() {
+			if (popupRecipe != null)
+				return;
+			
+			popupRecipe = new JPopupMenu();
+			
+			itemDeleteRecipe = new JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
+			itemUpdateRecipe = new JMenuItem("Modifier", new ImageIcon(R.getIcon("edit")));
+			popupRecipe.add(itemDeleteRecipe);
+			popupRecipe.add(itemUpdateRecipe);
+			
+			itemDeleteRecipe.addActionListener(event -> {
+				OtherRecipe recipe = tableModelOther.getRow(table.getSelectedRow());
+				int status = JOptionPane.showConfirmDialog(this, "Voulez-vous vraiment supprimer \nla dite recette??", "Suppression", JOptionPane.OK_CANCEL_OPTION);
+				if(status == JOptionPane.OK_OPTION) {
+					try {					
+						otherRecipeDao.delete(recipe.getId());
+					} catch (DAOException e) {
+						JOptionPane.showMessageDialog(this, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			});
+			
+			itemUpdateRecipe.addActionListener(event -> {
+				OtherRecipe recipe = tableModelOther.getRow(table.getSelectedRow());
+				updateRecipe(recipe);
+			});
+		}
+		
+		/**
+		 * Ajout d'une nouvelle recette (autre que les frais acadmique)
+		 */
+		public void createRecipe () {		
+			createRecipeDialog();
+			
+			dialogRecipe.setLocationRelativeTo(mainWindow);
+			dialogRecipe.setVisible(true);
+		}
+		
+		/**
+		 * mis en jours d'une recette
+		 * @param recipe
+		 */
+		public void updateRecipe (OtherRecipe recipe) {		
+			createRecipeDialog();
+			
+			formRecipe.setOtherRecipe(recipe);
+			dialogRecipe.setLocationRelativeTo(mainWindow);
+			dialogRecipe.setVisible(true);
+		}
+		
+		/**
+		 * creation du boite de dialogue d'ajout d'une recete
+		 */
+		private void createRecipeDialog () {
+			if(dialogRecipe != null)
+				return;
+			
+			formRecipe = new FormOtherRecipe(mainWindow);
+			dialogRecipe = new JDialog(mainWindow, "Entrée", true);
+			dialogRecipe.setIconImage(mainWindow.getIconImage());
+			
+			dialogRecipe.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+			dialogRecipe.getContentPane().add(formRecipe, BorderLayout.CENTER);
+			dialogRecipe.getContentPane().setBackground(FormUtil.BKG_DARK);
+			dialogRecipe.pack();
+			Dimension size = new Dimension(dialogRecipe.getWidth() < 800? 800 : dialogRecipe.getWidth() , dialogRecipe.getHeight());
+			dialogRecipe.setSize(size);
+			dialogRecipe.setMinimumSize(size);
+			
+			recipeAdapter = new DAOAdapter<OtherRecipe>() {
+
+				@Override
+				public synchronized void onCreate(OtherRecipe e, int requestId) {
+					dialogRecipe.setVisible(false);
+				}
+
+				@Override
+				public synchronized void onUpdate(OtherRecipe e, int requestId) {
+					dialogRecipe.setVisible(false);
+				}
+				
+			};
+			
+			otherRecipeDao.addListener(recipeAdapter);
+		}
+	}
+	
+	public class PaymentFeeTableModel extends TableModel<PaymentFee> {
+		private static final long serialVersionUID = 7032190897666231971L;
+
+		private AcademicYear currentYear;
+		
+		public PaymentFeeTableModel() {
+			super(paymentFeeDao);
+		}
+		
+		@Override
+		public synchronized void reload() {
+			data.clear();
+			if(currentYear != null && paymentFeeDao.checkByAcademicYear(currentYear, offset)) {
+				data = paymentFeeDao.findByAcademicYear(currentYear, limit, offset);
+			}
+			fireTableDataChanged();
+		};
+		
+		/**
+		 * @param currentYear the currentYear to set
+		 */
+		public void setCurrentYear(AcademicYear currentYear) {
+			this.currentYear = currentYear;
+			offset = 0;
+			reload();
+		}
+
+		@Override
+		public void onCreate (PaymentFee e, int requestId) {
+			if(e.getInscription().getPromotion().getAcademicFee().getId() == currentYear.getId())
+				reload();
+		}
+
+		@Override
+		public int getColumnCount() {
+			return 9;
+		}
+
+		@Override
+		public Object getValueAt(int rowIndex, int columnIndex) {
+			switch (columnIndex) {
+				case 0:
+					return FormUtil.DEFAULT_FROMATER.format(data.get(rowIndex).getReceivedDate());
+				case 1:
+					return FormUtil.DEFAULT_FROMATER.format(data.get(rowIndex).getSlipDate());
+				case 2:
+					return data.get(rowIndex).getInscription().getStudent().getFullName();
+				case 3:
+					return data.get(rowIndex).getInscription().getPromotion();
+				case 4:
+					return data.get(rowIndex).getSlipNumber();
+				case 5:
+					return data.get(rowIndex).getReceiptNumber();
+				case 6:
+					return data.get(rowIndex).getWording();
+				case 7:
+					return data.get(rowIndex).getLocation();
+				case 8:
+					return data.get(rowIndex).getAmount()+" "+FormUtil.UNIT_MONEY;
+			}
+			return null;
+		}
+		
+
+		@Override
+		public String getColumnName(int column) {
+			switch (column) {
+				case 0:
+					return "Date reçu";
+				case 1:
+					return "Date du bordereau";
+				case 2:
+					return "Nom, Port-nom et prénom";
+				case 3:
+					return "Promotion";
+				case 4:
+					return "N° du borderau";
+				case 5:
+					return "N° reçu";
+				case 6:
+					return "Libele";
+				case 7:
+					return "Lieux de payment";
+				case 8:
+					return "Montant";
+			}
+			return super.getColumnName(column);
+		}
+
+		@Override
+		public int getCount() {
+			return paymentFeeDao.countByAcademicYear(currentYear);
+		}
+		
 	}
 	
 	private class OutlayPanel extends Panel {
 		private static final long serialVersionUID = -2786706226334778839L;
 		
+		private final OutlayTableModel tableModel = new OutlayTableModel();
+		private final Table table = new Table(tableModel);
+		private final TablePanel tablePanel = new TablePanel(table, "Liste des opérations de sortie");
+		private final JButton btnOutlay = new Button(new ImageIcon(R.getIcon("drop")), "Nouveau dépense");
+		private final JButton btnNext = new Button( new ImageIcon(R.getIcon("next")));
+		private final JButton btnPrev = new Button( new ImageIcon(R.getIcon("prev")));
+		private final JLabel labelCount = FormUtil.createSubTitle("");//afiche le nombre doperation
+		
+		private final JButton btnToExcel = new Button(new ImageIcon(R.getIcon("export")), "Excel");
+		private final ActionListener navigationListener = event -> {
+			JButton btn = (JButton) event.getSource();
+			boolean next = btn == btnNext;
+			if (next && tableModel.hasNext()) 
+				tableModel.next();
+			else if(!next && tableModel.hasPrevious()) 
+				tableModel.previous();
+			int opt = tableModel.getCount();
+			labelCount.setText(opt+" opération"+(opt > 1? "s":""));
+			btnPrev.setEnabled(tableModel.hasPrevious());
+			btnNext.setEnabled(tableModel.hasNext());
+		};
+		{
+			btnNext.addActionListener(navigationListener);
+			btnPrev.addActionListener(navigationListener);
+			btnNext.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			btnPrev.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			btnToExcel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			btnOutlay.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		}
+		
+		private FormOutlay formOutlay;
+		private JDialog dialogOutlay;
+		
+		private JPopupMenu popupOutlay;
+		private JMenuItem itemDeleteOutlay;
+		private JMenuItem itemUpdateOutlay;
+		private DAOAdapter<Outlay> outlayAdapter;
+		
+		private final Box tools = Box.createHorizontalBox();
+		private final MouseListener mouseListener = new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if(e.isPopupTrigger()) {
+					createPopupOutlay();
+					popupOutlay.show(tablePanel, e.getX(), e.getY());
+				}
+			}
+		};
+		
+		public OutlayPanel() {
+			super(new BorderLayout());
+			
+			tools.add(labelCount);
+			tools.add(Box.createHorizontalGlue());
+			tools.setBackground(FormUtil.BKG_END);
+			tools.setOpaque(true);
+			
+			tools.add(btnNext);
+			tools.add(Box.createHorizontalStrut(5));
+			tools.add(btnPrev);
+			tools.add(Box.createHorizontalStrut(20));
+			tools.add(btnToExcel);
+			tools.add(Box.createHorizontalStrut(5));
+			tools.add(btnOutlay);
+			tools.add(Box.createHorizontalStrut(5));
+			
+			add(tablePanel, BorderLayout.CENTER);
+			add(tools, BorderLayout.SOUTH);
+			
+			btnOutlay.addActionListener(event -> {
+				createOutlay();
+			});
+			
+			table.addMouseListener(mouseListener);
+		}
+		
+		public void reload (AcademicYear currentYear) {
+			tableModel.setCurrentYear(currentYear);
+			
+			int opt = tableModel.getCount();
+			labelCount.setText(opt+" opération"+(opt > 1? "s":""));
+			btnPrev.setEnabled(tableModel.hasPrevious());
+			btnNext.setEnabled(tableModel.hasNext());
+		}
+		
+		/**
+		 * Ouverture de la boiter de dialogue d'enregistrement d'une sortie
+		 */
+		public void createOutlay () {
+			createOutlayDialog();
+			
+			dialogOutlay.setLocationRelativeTo(mainWindow);
+			dialogOutlay.setVisible(true);
+		}
+		
+		/**
+		 * mis enn jour d'un operation sortie dans un compte
+		 * @param outlay
+		 */
+		public void updateOutlay (Outlay outlay) {
+			createOutlayDialog();
+			
+			formOutlay.setOutlay(outlay);
+			dialogOutlay.setLocationRelativeTo(mainWindow);
+			dialogOutlay.setVisible(true);
+		}
+
+		/**
+		 * creation de la boite de dialogue de d'enregistrement/modification des depences
+		 */
+		private void createOutlayDialog () {
+			if(dialogOutlay != null)
+				return;
+			
+			formOutlay = new FormOutlay(mainWindow);
+			dialogOutlay = new JDialog(mainWindow, "Sortie", true);
+			dialogOutlay.setIconImage(mainWindow.getIconImage());
+			
+			dialogOutlay.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+			dialogOutlay.getContentPane().add(formOutlay, BorderLayout.CENTER);
+			dialogOutlay.getContentPane().setBackground(FormUtil.BKG_DARK);
+			dialogOutlay.pack();
+			final Dimension size = new Dimension(dialogOutlay.getWidth() < 650? 650 : dialogOutlay.getWidth(), dialogOutlay.getHeight());
+			dialogOutlay.setSize(size);
+			dialogOutlay.setMinimumSize(size);
+			outlayAdapter = new DAOAdapter<Outlay>() {
+
+				@Override
+				public synchronized void onCreate(Outlay e, int requestId) {
+					dialogOutlay.setVisible(false);
+				}
+
+				@Override
+				public synchronized void onUpdate(Outlay e, int requestId) {
+					dialogOutlay.setVisible(false);
+				}			
+			};
+			
+			outlayDao.addListener(outlayAdapter);
+		}
+		
+		/**
+		 * creation du popup menu qui permet de modifier/supprimer une sortie
+		 */
+		private void createPopupOutlay() {
+			if (popupOutlay != null)
+				return;
+			popupOutlay = new JPopupMenu();
+			
+			itemDeleteOutlay = new JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
+			itemUpdateOutlay = new JMenuItem("Modifier", new ImageIcon(R.getIcon("edit")));
+			popupOutlay.add(itemDeleteOutlay);
+			popupOutlay.add(itemUpdateOutlay);
+			
+			itemDeleteOutlay.addActionListener(event -> {
+				Outlay out = tableModel.getRow(table.getSelectedRow());
+				int status = JOptionPane.showConfirmDialog(dialogOutlay, "Voulez-vous vraiment supprimer ce dépense??", "Suppression", JOptionPane.OK_CANCEL_OPTION);
+				if(status == JOptionPane.OK_OPTION) {
+					try {					
+						outlayDao.delete(out.getId());
+					} catch (DAOException e) {
+						JOptionPane.showMessageDialog(dialogOutlay, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			});
+			
+			itemUpdateOutlay.addActionListener (event -> {
+				Outlay out = tableModel.getRow(table.getSelectedRow());
+				updateOutlay(out);
+			});
+		}
+		
+	}
+	
+	/**
+	 * @author Esaie MUHASA
+	 */
+	public class OutlayTableModel extends TableModel<Outlay> {
+		private static final long serialVersionUID = -90393497836126101L;
+		
+		private AcademicYear currentYear;
+
+		public OutlayTableModel() {
+			super(outlayDao);
+			limit = 20;
+		}
+
+		/**
+		 * @param currentYear
+		 */
+		public void setCurrentYear(AcademicYear currentYear) {
+			this.currentYear = currentYear;
+			offset = 0;
+			reload();
+		}
+		
+		@Override
+		public synchronized void reload () {
+			data.clear();
+			if(currentYear != null && outlayDao.checkByAcademicYear(currentYear, offset))
+				data = outlayDao.findByAcademicYear(currentYear, limit, offset);
+			fireTableDataChanged();
+		}
+		
+		@Override
+		public void onUpdate(Outlay e, int requestId) {
+			reload();
+		}
+
+		@Override
+		public int getColumnCount() {
+			return 5;
+		}
+		
+		@Override
+		public String getColumnName(int column) {
+			switch (column) {
+				case 0 : return "Date";
+				case 1 : return "Compte";
+				case 2 : return "Lieux de livraison";
+				case 3 : return "libelé";
+				case 4 : return "Montant";
+			}
+			return super.getColumnName(column);
+		}
+
+
+		@Override
+		public Object getValueAt(int rowIndex, int columnIndex) {
+			switch (columnIndex) {
+				case 0: return DEFAULT_DATE_FORMAT.format(data.get(rowIndex).getDeliveryDate());
+				case 1: return data.get(rowIndex).getAccount();
+				case 2 : return data.get(rowIndex).getLocation();
+				case 3: return data.get(rowIndex).getWording();
+				case 4: return PieRender.DECIMAL_FORMAT.format(data.get(rowIndex).getAmount())+" "+FormUtil.UNIT_MONEY;
+			}
+			return null;
+		}
+		
+		@Override
+		public void onCreate(Outlay e, int requestId) {
+			if(currentYear != null && e.getAcademicYear().getId() == currentYear.getId())
+				super.onCreate(e, requestId);
+		}
+
 	}
 	
 }

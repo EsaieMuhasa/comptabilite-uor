@@ -6,8 +6,6 @@ package net.uorbutembo.views.forms;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,11 +15,7 @@ import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.ImageIcon;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicYear;
@@ -38,13 +32,9 @@ import net.uorbutembo.dao.PaymentLocationDao;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.swing.Panel;
-import net.uorbutembo.swing.Table;
-import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.tools.FormUtil;
-import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
-import net.uorbutembo.views.models.OtherRecipeTableModel;
 
 /**
  * @author Esaie MUHASA
@@ -71,13 +61,6 @@ public class FormOtherRecipe extends DefaultFormPanel {
 	private final AcademicYearDao academicYearDao;
 	private final OtherRecipeDao otherRecipeDao;
 	private final PaymentLocationDao paymentLocationDao;
-	
-	private final OtherRecipeTableModel tableModel;
-	private final Table table;
-	
-	private JPopupMenu popupRecipe;
-	private JMenuItem itemDeleteRecipe;
-	private JMenuItem itemUpdateRecipe;
 	
 	private OtherRecipe otherRecipe;
 
@@ -141,74 +124,15 @@ public class FormOtherRecipe extends DefaultFormPanel {
 		
 		init();
 		
-		tableModel = new OtherRecipeTableModel(otherRecipeDao);
-		table = new Table(tableModel);
-		table.setShowVerticalLines(true);
-		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		table.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
-					initPopup();
-					popupRecipe.show(table, e.getX(), e.getY());
-				}
-			}
-		});
-		
 		otherRecipeDao.addListener(daoListener);
 		paymentLocationDao.addListener(locationAdapter);
 		
 		final Panel panel = new Panel(new BorderLayout());
 		
-		//table columns width
-		final int [] cols = {0, 4};
-		final int w = 100;
-		for(int i = 0; i < cols.length; i ++) {				
-			table.getColumnModel().getColumn(cols[i]).setMinWidth(w);
-			table.getColumnModel().getColumn(cols[i]).setMaxWidth(w);
-			table.getColumnModel().getColumn(cols[i]).setWidth(w);
-			table.getColumnModel().getColumn(cols[i]).setResizable(false);
-		}
-		//==
-		
-		panel.add(new TablePanel(table, "Liste des recetes"), BorderLayout.CENTER);
 		panel.setBorder(new EmptyBorder(10, 0, 0, 0));
 		add(panel, BorderLayout.CENTER);
 		setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		load();
-	}
-	
-	
-	/**
-	 * creation du popup menu permetant de modifier/supprimer recette (autres, que les frais academique)
-	 */
-	private void initPopup() {
-		if (popupRecipe != null)
-			return;
-		
-		popupRecipe = new JPopupMenu();
-		
-		itemDeleteRecipe = new JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
-		itemUpdateRecipe = new JMenuItem("Modifier", new ImageIcon(R.getIcon("edit")));
-		popupRecipe.add(itemDeleteRecipe);
-		popupRecipe.add(itemUpdateRecipe);
-		
-		itemDeleteRecipe.addActionListener(event -> {
-			OtherRecipe recipe = tableModel.getRow(table.getSelectedRow());
-			int status = JOptionPane.showConfirmDialog(this, "Voulez-vous vraiment supprimer \nla dite recette??", "Suppression", JOptionPane.OK_CANCEL_OPTION);
-			if(status == JOptionPane.OK_OPTION) {
-				try {					
-					otherRecipeDao.delete(recipe.getId());
-				} catch (DAOException e) {
-					JOptionPane.showMessageDialog(this, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
-				}
-			}
-		});
-		
-		itemUpdateRecipe.addActionListener(event -> {
-			OtherRecipe recipe = tableModel.getRow(table.getSelectedRow());
-			setOtherRecipe(recipe);
-		});
 	}
 	
 	/**
@@ -233,7 +157,6 @@ public class FormOtherRecipe extends DefaultFormPanel {
 			btnSave.setEnabled(false);
 		
 		groupDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(new Date()));
-		tableModel.reload();
 	}
 	
 	/**

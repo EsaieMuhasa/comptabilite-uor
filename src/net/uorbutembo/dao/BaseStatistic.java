@@ -65,6 +65,17 @@ public interface BaseStatistic <T extends DBEntity> {
 	}
 	
 	/**
+	 * Verification de l'existance des donnees pour une annee academique
+	 * @param year
+	 * @param offset, nombre d'occurrence a n'est pas prendre en compte lors de la verification
+	 * @return
+	 * @throws DAOException
+	 */
+	default boolean checkByAcademicYear (AcademicYear year, int offset) throws DAOException {
+		throw new DAOException("Veuiller re-definir la methode checkByAcademicYear(AcademicYear year, int offset) dans la classe "+getClass().getName());
+	}
+	
+	/**
 	 * Comptage des operations au comptpe d'une anne academique
 	 * @param academicYearId
 	 * @return
@@ -94,7 +105,6 @@ public interface BaseStatistic <T extends DBEntity> {
 		return this.countByAcademicYear(academicYear.getId(), min, max);
 	}
 	//== year
-	
 	
 	/**
 	 * Verification de tout les operations qui ont ete enregister avant la date en 2em param

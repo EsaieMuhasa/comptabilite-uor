@@ -39,7 +39,7 @@ public class PaymentFeeTableModel extends TableModel<PaymentFee> {
 		for (PaymentFee paymentFee : inscription.getPayments()) {
 			data.add(paymentFee);
 		}
-		this.fireTableDataChanged();
+		fireTableDataChanged();
 	}
 	
 	@Override

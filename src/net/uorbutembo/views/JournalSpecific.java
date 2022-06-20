@@ -15,8 +15,6 @@ import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -29,9 +27,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
+import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -39,11 +35,11 @@ import javax.swing.JTabbedPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeListener;
-import javax.swing.table.AbstractTableModel;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AllocationRecipe;
 import net.uorbutembo.beans.AnnualSpend;
+import net.uorbutembo.beans.DefaultRecipePart;
 import net.uorbutembo.beans.OtherRecipe;
 import net.uorbutembo.beans.Outlay;
 import net.uorbutembo.beans.PaymentFee;
@@ -53,7 +49,6 @@ import net.uorbutembo.dao.AllocationCostDao;
 import net.uorbutembo.dao.AllocationRecipeDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
-import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.OtherRecipeDao;
 import net.uorbutembo.dao.OtherRecipePartDao;
@@ -61,11 +56,13 @@ import net.uorbutembo.dao.OutlayDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.PaymentFeePartDao;
 import net.uorbutembo.dao.PaymentLocationDao;
+import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Card;
 import net.uorbutembo.swing.DefaultCardModel;
 import net.uorbutembo.swing.DefaultCardModel.CardType;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
+import net.uorbutembo.swing.TableModel;
 import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.swing.charts.ChartPanel;
 import net.uorbutembo.swing.charts.DateAxis;
@@ -83,7 +80,6 @@ import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.JournalMenuItem;
 import net.uorbutembo.views.components.JournalMenuItemListener;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
-import net.uorbutembo.views.forms.FormOtherRecipe;
 import net.uorbutembo.views.forms.FormOutlay;
 import net.uorbutembo.views.models.OutlayTableModel;
 
@@ -107,23 +103,13 @@ public class JournalSpecific extends Panel  implements ActionListener{
 	private final ListAccount listAccount;
 	private final ContainerPanel containerPanel;
 	
-	private final JButton btnRecipe = new JButton("Nouvelle recette", new ImageIcon(R.getIcon("plus")));
-	private final JButton btnSpend = new JButton("Nouveau dépense", new ImageIcon(R.getIcon("moin")));
-	
 	private FormOutlay formOutlay;
-	private FormOtherRecipe formRecipe;
 	private JDialog dialogOutlay;
-	private JDialog dialogRecipe;
 	
 	private final DAOFactory factory;
 	private final MainWindow mainWindow;
 	
-	private JPopupMenu popupOutlay;
-	private JMenuItem itemDeleteOutlay;
-	private JMenuItem itemUpdateOutlay;
-	
 	private DAOAdapter<Outlay> outlayAdapter;
-	private DAOAdapter<OtherRecipe> recipeAdapter;
 
 	public JournalSpecific(MainWindow mainWindow) {
 		super(new BorderLayout());
@@ -149,15 +135,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		
 		mainWindow.getSidebar().addYearChooserListener(listAccount);
 		
-		btnRecipe.addActionListener(event -> {
-			createRecipe();
-		});
-		
-		btnSpend.addActionListener(event -> {
-			createOutlay();
-		});
 	}
-	
 	
 	/**
 	 * Ouverture de la boiter de dialogue d'enregistrement d'une sortie
@@ -180,54 +158,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		dialogOutlay.setLocationRelativeTo(mainWindow);
 		dialogOutlay.setVisible(true);
 	}
-	
-	/**
-	 * Ajout d'une nouvelle recette (autre que les frais acadmique)
-	 */
-	public void createRecipe () {		
-		createRecipeDialog();
-		
-		dialogRecipe.setLocationRelativeTo(mainWindow);
-		dialogRecipe.setVisible(true);
-	}
-	
-	/**
-	 * creation du boite de dialogue d'ajout d'une recete
-	 */
-	private void createRecipeDialog () {
-		if(dialogRecipe != null)
-			return;
-		
-		formRecipe = new FormOtherRecipe(mainWindow);
-		dialogRecipe = new JDialog(mainWindow, "Entrée", true);
-		dialogRecipe.setIconImage(mainWindow.getIconImage());		
-		
-		
-		dialogRecipe.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		dialogRecipe.getContentPane().add(formRecipe, BorderLayout.CENTER);
-		dialogRecipe.getContentPane().setBackground(FormUtil.BKG_DARK);
-		dialogRecipe.pack();
-		Dimension size = new Dimension(dialogRecipe.getWidth() < 800? 800 : dialogRecipe.getWidth() , dialogRecipe.getHeight() < 550 ? 550 : 600);
-		dialogRecipe.setSize(size);
-		dialogRecipe.setMinimumSize(size);
-		
-		recipeAdapter = new DAOAdapter<OtherRecipe>() {
 
-			@Override
-			public synchronized void onCreate(OtherRecipe e, int requestId) {
-				dialogRecipe.setVisible(false);
-			}
-
-			@Override
-			public synchronized void onUpdate(OtherRecipe e, int requestId) {
-				dialogRecipe.setVisible(false);
-			}
-			
-		};
-		
-		otherRecipeDao.addListener(recipeAdapter);
-	}
-	
 	/**
 	 * creation de la boite de dialogue de d'enregistrement/modification des depences
 	 */
@@ -260,37 +191,6 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		};
 		
 		outlayDao.addListener(outlayAdapter);
-	}
-	
-	/**
-	 * creation du popup menu qui permet de modifier/supprimer une sortie
-	 */
-	private void createPopupOutlay() {
-		if (popupOutlay != null)
-			return;
-		popupOutlay = new JPopupMenu();
-		
-		itemDeleteOutlay = new JMenuItem("Supprimer", new ImageIcon(R.getIcon("close")));
-		itemUpdateOutlay = new JMenuItem("Modifier", new ImageIcon(R.getIcon("edit")));
-		popupOutlay.add(itemDeleteOutlay);
-		popupOutlay.add(itemUpdateOutlay);
-		
-		itemDeleteOutlay.addActionListener(event -> {
-			Outlay out = containerPanel.panelOutlays.tableModel.getRow(containerPanel.panelOutlays.table.getSelectedRow());
-			int status = JOptionPane.showConfirmDialog(dialogRecipe, "Voulez-vous vraiment supprimer ce dépense??", "Suppression", JOptionPane.OK_CANCEL_OPTION);
-			if(status == JOptionPane.OK_OPTION) {
-				try {					
-					outlayDao.delete(out.getId());
-				} catch (DAOException e) {
-					JOptionPane.showMessageDialog(dialogRecipe, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
-				}
-			}
-		});
-		
-		itemUpdateOutlay.addActionListener (event -> {
-			Outlay out = containerPanel.panelOutlays.tableModel.getRow(containerPanel.panelOutlays.table.getSelectedRow());
-			updateOutlay(out);
-		});
 	}
 	
 	@Override
@@ -331,13 +231,8 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			super(new BorderLayout());
 			
 			setPreferredSize(new Dimension(340, 600));
-			final Panel bottom = new Panel();
 			final JScrollPane scroll = FormUtil.createVerticalScrollPane(container);
-			
-			bottom.add(btnRecipe);
-			bottom.add(btnSpend);
-			
-			add(bottom, BorderLayout.SOUTH);
+
 			add(scroll, BorderLayout.CENTER);
 			setBorder(new EmptyBorder(10, 10, 10, 10));
 		}
@@ -369,8 +264,6 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			
 			g2.setColor(isEnabled() ? FormUtil.BORDER_COLOR : Color.RED);
 			g2.drawRoundRect(5, 5, getWidth()-10, getHeight()- 10, 10, 10);
-			
-			g2.drawLine(6, getHeight() - 48, getWidth()-6, getHeight() - 48);
 			
 			super.paintComponent(g);
 		}
@@ -420,42 +313,48 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		
 		private AnnualSpend account;
 		
-		private final Panel panelBottom = new  Panel(new BorderLayout());
+		private final JPanel panelBottom = new  JPanel(new BorderLayout());
 		private final JLabel labelCount = FormUtil.createSubTitle("");//afiche le nombre doperation
-		private final JButton btnNext = new JButton( new ImageIcon(R.getIcon("next")));
-		private final JButton btnPrev = new JButton( new ImageIcon(R.getIcon("prev")));
+		private final JButton btnNext = new Button( new ImageIcon(R.getIcon("next")));
+		private final JButton btnPrev = new Button( new ImageIcon(R.getIcon("prev")));
 		
-		private final JButton btnToExcel = new JButton("Excel", new ImageIcon(R.getIcon("export")));
-		private final JButton btnToPdf = new JButton("PDF", new ImageIcon(R.getIcon("pdf")));
-		private final JButton btnToPrint = new JButton("Imprimer", new ImageIcon(R.getIcon("print")));
-		
-		private final MouseAdapter mouseAdapter = new MouseAdapter() {
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
-					createPopupOutlay();
-					popupOutlay.show(table, e.getX(), e.getY());
-					
-				}
-			}
+		private final JButton btnToExcel = new Button(new ImageIcon(R.getIcon("export")), "Excel");
+		private final ActionListener navigationListener = event -> {
+			JButton btn = (JButton) event.getSource();
+			boolean next = btn == btnNext;
+			if (next && tableModel.hasNext()) 
+				tableModel.next();
+			else if(!next && tableModel.hasPrevious()) 
+				tableModel.previous();
+			int opt = tableModel.getCount();
+			labelCount.setText(opt+" opération"+(opt > 1? "s":""));
+			btnPrev.setEnabled(tableModel.hasPrevious());
+			btnNext.setEnabled(tableModel.hasNext());
 		};
+		{
+			btnNext.addActionListener(navigationListener);
+			btnPrev.addActionListener(navigationListener);
+			btnNext.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			btnPrev.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			btnToExcel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		}
 		
 		public PanelOutlays () {
 			super(new BorderLayout());
 			table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-			table.addMouseListener(mouseAdapter);
 			
 			Box box = Box.createHorizontalBox();
 			box.add(btnPrev);
+			box.add(Box.createHorizontalStrut(5));
 			box.add(btnNext);
-			box.add(Box.createHorizontalStrut(20));
+			box.add(Box.createHorizontalStrut(10));
 			box.add(btnToExcel);
-			box.add(btnToPdf);
-			box.add(btnToPrint);
+			box.add(Box.createHorizontalStrut(5));
 			
-			panelBottom.add(box, BorderLayout.WEST);
+			panelBottom.add(box, BorderLayout.EAST);
 			panelBottom.add(labelCount, BorderLayout.CENTER);
-			labelCount.setHorizontalAlignment(JLabel.RIGHT);
+			panelBottom.setBackground(FormUtil.BKG_END);
+			labelCount.setHorizontalAlignment(JLabel.LEFT);
 			
 			add(tablePanel, BorderLayout.CENTER);
 			add(panelBottom, BorderLayout.SOUTH);
@@ -468,7 +367,9 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			this.account = account;
 			
 			tableModel.setAccount(this.account);
-			labelCount.setText(tableModel.getRowCount()+" Opération"+(tableModel.getRowCount() > 1? "s":""));
+			labelCount.setText(tableModel.getRowCount()+" opération"+(tableModel.getRowCount() > 1? "s":""));
+			btnPrev.setEnabled(tableModel.hasPrevious());
+			btnNext.setEnabled(tableModel.hasNext());
 		}
 	}
 	
@@ -480,7 +381,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		
 		private final RecipeTableModel tableModel = new RecipeTableModel();
 		private final Table table = new Table(tableModel);
-		private final TablePanel tablePanel = new TablePanel(table, "Liste des opérations d'entrées");
+		private final TablePanel tablePanel = new TablePanel(table, "Opérations d'entrées, payements des frais acadédemiques");
 		
 		private List<PaymentLocation> locations = null;
 		private final DefaultPieModel pieModelSource = new DefaultPieModel();
@@ -489,18 +390,50 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		private JournalMenuItem account;
 		
 		private final JLabel labelCount = FormUtil.createSubTitle("");//afiche le nombre doperation
-		private final JButton btnNext = new JButton( new ImageIcon(R.getIcon("next")));
-		private final JButton btnPrev = new JButton( new ImageIcon(R.getIcon("prev")));
+		private final JButton btnNext = new Button( new ImageIcon(R.getIcon("next")));
+		private final JButton btnPrev = new Button( new ImageIcon(R.getIcon("prev")));
+		private final JButton btnToExcel = new Button(new ImageIcon(R.getIcon("export")), "Excel");
+		private final Box boxRadios = Box.createHorizontalBox();
 		private final JRadioButton [] radiosChart = { new JRadioButton("Sources", true), new JRadioButton("Localisation")};
-		private final JButton btnFilter = new JButton("Filtrer", new ImageIcon(R.getIcon("normalize")));
+		private final JRadioButton [] radioModels = {
+				new JRadioButton("Frais academique", true),
+				new JRadioButton("Autres recettes")
+		};
+		
+		private final ChangeListener radionListener = event -> {//ecoute bouton radio permetant de choisir les sorces des donneer a afficher
+			JRadioButton radio = (JRadioButton) event.getSource();
+			if(!radio.isSelected())
+				return;
+			
+			int index = Integer.parseInt(radio.getName());
+			if (index == 0) {
+				tablePanel.setTitle("Opérations d'entrées, payements des frais acadédemiques");
+			} else {
+				tablePanel.setTitle("Opérations d'entrées, autres recettes");
+			}
+			
+			tableModel.setFees(index == 0);
+			btnNext.setEnabled(tableModel.hasNext());
+			btnPrev.setEnabled(tableModel.hasPrevious());
+			labelCount.setText(tableModel.getCount()+" opérations");
+		};
+		
+		{
+			final ButtonGroup group = new ButtonGroup();
+			boxRadios.add(labelCount);
+			boxRadios.add(Box.createHorizontalGlue());
+			for (int i = 0; i < radioModels.length; i++) {
+				boxRadios.add(radioModels[i]);
+				radioModels[i].setName(i+"");
+				radioModels[i].addChangeListener(radionListener);
+				radioModels[i].setForeground(Color.WHITE);
+				group.add(radioModels[i]);
+			}
+			boxRadios.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		}
 		
 		private final Panel panelCommand = new  Panel(new BorderLayout());//conteneur des elements de navigation dans les donnees
-		private final Box boxRadiosChart = Box.createHorizontalBox();//filtrage graphique
-		private final Box boxFilter = Box.createHorizontalBox();
-		
-		private final JButton btnToExcel = new JButton("Excel", new ImageIcon(R.getIcon("export")));
-		private final JButton btnToPdf = new JButton("PDF", new ImageIcon(R.getIcon("pdf")));
-		private final JButton btnToPrint = new JButton("Imprimer", new ImageIcon(R.getIcon("print")));
+		private final Box boxRadiosChart = Box.createHorizontalBox();//filtrage graphique		
 		
 		private final ChangeListener radioChartListener = (event) ->  {
 			JRadioButton radio = (JRadioButton) event.getSource();
@@ -558,22 +491,23 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			
 		};
 		
-		private final ActionListener btnNavigationListener = event -> {
-			int offset = tableModel.getOffset(), step = 0;
-			if (event.getSource() == btnNext)
-				step = 15;
-			else 
-				step = -15;
-			tableModel.setOffset(offset + step);
-			
-			int opt = tableModel.getCountAll();
-			labelCount.setText(opt+" Opération"+(opt > 1? "s":"")+"/ page "+(tableModel.getOffset()/tableModel.getLimit()));
-			btnPrev.setEnabled(tableModel.getOffset() != 0);
-			btnNext.setEnabled((tableModel.getOffset()+tableModel.getLimit()) < opt);
+		private final ActionListener navigationListener = event -> {
+			JButton btn = (JButton) event.getSource();
+			boolean next = btn == btnNext;
+			TableModel<?> model = (TableModel<?>) table.getModel();
+			if (next && model.hasNext()) 
+				model.next();
+			else if(!next && model.hasPrevious()) 
+				model.previous();
+			btn.setEnabled(next? model.hasNext() : model.hasPrevious());
+			int opt = tableModel.getCount();
+			labelCount.setText(opt+" opération"+(opt > 1? "s":"")+"/ page "+(tableModel.getOffset()/tableModel.getLimit()));
+			btnPrev.setEnabled(tableModel.hasPrevious());
+			btnNext.setEnabled(tableModel.hasNext());
 		};
 		
-		{
-			tableModel.setInterval(15, 0);
+		{//panel bottom (toolbar du table, avec btn nex, prev, ...). personnalisatio du model du pieChart
+			tableModel.setInterval(20, 0);
 			
 			//chart
 			pieModelSource.setRealMaxPriority(true);
@@ -582,7 +516,6 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			pieModelLocation.setSuffix(" $");
 			pieModelSource.setTitle("Répartition sélon les sources d'alimentation du compte");
 			pieModelLocation.setTitle("Répartition sélon les emplassements");
-			piePanel.getRender().setHovable(false);
 			piePanel.setBorderColor(FormUtil.BKG_END_2);
 			final ButtonGroup groupChart = new ButtonGroup();
 			for (int i = 0; i < radiosChart.length; i++) {
@@ -595,20 +528,24 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			}
 			boxRadiosChart.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			//==
-
-			boxFilter.add(btnFilter);
 			 
 			final Box box = Box.createHorizontalBox();
 			box.add(btnPrev);
+			box.add(Box.createHorizontalStrut(5));
 			box.add(btnNext);
-			btnPrev.addActionListener(btnNavigationListener);
-			btnNext.addActionListener(btnNavigationListener);
+			btnPrev.addActionListener(navigationListener);
+			btnNext.addActionListener(navigationListener);
+			btnNext.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			btnPrev.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			btnToExcel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			 
 			labelCount.setFont(new Font("Arial", Font.BOLD, 15));
 			labelCount.setHorizontalAlignment(JLabel.LEFT);
 			 
 			panelCommand.add(box, BorderLayout.EAST);
-			panelCommand.add(boxFilter, BorderLayout.WEST);
+			panelCommand.add(btnToExcel, BorderLayout.WEST);
+			panelCommand.setBackground(FormUtil.BKG_END);
+			panelCommand.setOpaque(true);
 			 
 			panelCommand.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		}
@@ -620,14 +557,9 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			final Panel panelChart =new Panel(new BorderLayout());
 			final Panel panelList = new Panel(new BorderLayout());
 			final Panel panelTop = new Panel(new BorderLayout());
-			final Box box = Box.createHorizontalBox();
-			
-			box.add(btnToExcel);
-			box.add(btnToPdf);
-			box.add(btnToPrint);
 			
 			panelTop.add(labelCount, BorderLayout.CENTER);
-			panelTop.add(box, BorderLayout.EAST);
+			panelTop.add(boxRadios, BorderLayout.EAST);
 			
 			panelList.add(tablePanel, BorderLayout.CENTER);
 			panelList.add(panelCommand, BorderLayout.SOUTH);
@@ -660,10 +592,10 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		public void onReload(JournalMenuItem item) {
 			updatePie();
 			tableModel.reload();
-			int opt = tableModel.getCountAll();
-			labelCount.setText(opt+" Opération"+(opt > 1? "s":"")+"/ page "+(tableModel.getOffset()/tableModel.getLimit()));
-			btnPrev.setEnabled(tableModel.getOffset() != 0);
-			btnNext.setEnabled((tableModel.getOffset()+tableModel.getLimit()) < opt);
+			int opt = tableModel.getCount();
+			labelCount.setText(opt+" opération"+(opt > 1? "s":"")+"/ page "+(tableModel.getOffset()/tableModel.getLimit()));
+			btnPrev.setEnabled(tableModel.hasPrevious());
+			btnNext.setEnabled(tableModel.hasNext());
 		};
 
 
@@ -678,10 +610,10 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			if(account != null) {
 				account.addItemListener(this);
 				tableModel.reload(account.getAccount());
-				int opt = tableModel.getCountAll();
+				int opt = tableModel.getCount();
 				labelCount.setText(opt+" Opération"+(opt > 1? "s":"")+"/ page "+(tableModel.getOffset()/tableModel.getLimit()));
-				btnPrev.setEnabled(tableModel.getOffset() != 0);
-				btnNext.setEnabled((tableModel.getOffset()+tableModel.getLimit()) < opt);
+				btnPrev.setEnabled(tableModel.hasPrevious());
+				btnNext.setEnabled(tableModel.hasNext());
 			}
 			
 			updatePie();
@@ -1080,39 +1012,35 @@ public class JournalSpecific extends Panel  implements ActionListener{
 	 * @author Esaie MUHASA
 	 *
 	 */
-	private class RecipeTableModel extends AbstractTableModel{
+	private class RecipeTableModel extends TableModel<DefaultRecipePart<?>>{
 		private static final long serialVersionUID = 5961836886953247067L;
 		
-		private List<RecipePart<?>> data = new ArrayList<>();
 		private AnnualSpend account;
-		
-		private int limit;
-		private int offset;
-		private int countAll;
+		private boolean fees = true; // faut-il charger les parts pour les frais academique??
 		
 		private final DAOAdapter<PaymentFee> feeAdapter = new DAOAdapter<PaymentFee>() {
 
 			@Override
 			public synchronized void onCreate(PaymentFee e, int requestId) {
-				if(account  == null || e.getInscription().getPromotion().getAcademicFee() == null 
+				if(!fees || account  == null || e.getInscription().getPromotion().getAcademicFee() == null 
 						|| !allocationCostDao.check(account.getId(), e.getInscription().getPromotion().getAcademicFee().getId()))
 					return;
-				requireReload();
+				reload();
 			}
 
 			@Override
 			public synchronized void onUpdate(PaymentFee e, int requestId) {
-				if(account  == null)
+				if(!fees || account  == null)
 					return;
 				
-				requireReload();
+				reload();
 			}
 
 			@Override
 			public synchronized void onDelete(PaymentFee e, int requestId) {
-				if(account  == null)
+				if(!fees || account  == null)
 					return;
-				requireReload();
+				reload();
 			}
 			
 		};
@@ -1121,34 +1049,29 @@ public class JournalSpecific extends Panel  implements ActionListener{
 
 			@Override
 			public synchronized void onCreate(OtherRecipe e, int requestId) {
-				if(account == null || !allocationRecipeDao.check(e.getAccount().getId(), account.getId()))
+				if(fees || account == null || !allocationRecipeDao.check(e.getAccount().getId(), account.getId()))
 					return;
-				requireReload();
+				reload();
 			}
 
 			@Override
 			public synchronized void onUpdate(OtherRecipe e, int requestId) {
-				if(account == null)
+				if(fees || account == null)
 					return;
-				requireReload();
+				reload();
 			}
 
 			@Override
 			public synchronized void onDelete(OtherRecipe e, int requestId) {
-				if(account == null)
+				if(fees || account == null)
 					return;
-				requireReload();
+				reload();
 			}
 			
-			
 		};
-		
-		private void requireReload() {
-			countAll = paymentFeePartDao.countBySpend(account) + otherRecipePartDao.countBySpend(account);
-			reload();
-		}
 
 		public RecipeTableModel() {
+			super(null);
 			paymentFeeDao.addListener(feeAdapter);
 			otherRecipeDao.addListener(recipeAdapter);
 		}
@@ -1159,32 +1082,50 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		 */
 		public void reload (AnnualSpend account) {
 			this.account = account;
-			if (account != null)
-				countAll = paymentFeePartDao.countBySpend(account) + otherRecipePartDao.countBySpend(account);
-			else 
-				countAll = 0;
+			offset = 0;
 			reload();
 		}
 		
 		public void reload () {
 			data.clear();
 			if(account != null) {
-				if(paymentFeePartDao.checkBySpend(account, offset)){
-					List<RecipePart<PaymentFee>>  parts = paymentFeePartDao.findBySpend(account, limit, offset);
-					for (RecipePart<PaymentFee> part : parts) {
-						data.add(part);
+				if(fees) {					
+					if(paymentFeePartDao.checkBySpend(account, offset)){
+						List<RecipePart<PaymentFee>>  parts = paymentFeePartDao.findBySpend(account, limit, offset);
+						for (RecipePart<PaymentFee> part : parts)
+							data.add((DefaultRecipePart<?>)part);
 					}
+				} else {
+					if(otherRecipePartDao.checkBySpend(account, offset)){
+						List<RecipePart<OtherRecipe>>  parts = otherRecipePartDao.findBySpend(account, limit, offset);
+						for (RecipePart<OtherRecipe> part : parts)
+							data.add((DefaultRecipePart<?>)part);
+					}					
 				}
 				
-				if(otherRecipePartDao.checkBySpend(account, offset)){
-					List<RecipePart<OtherRecipe>>  parts = otherRecipePartDao.findBySpend(account, limit, offset);
-					for (RecipePart<OtherRecipe> part : parts) {
-						data.add(part);
-					}
-				}
 			}
 			
 			fireTableDataChanged();			
+		}
+
+		@Override
+		public int getCount() {
+			if(fees)
+				return paymentFeePartDao.countBySpend(account);
+			else
+				return otherRecipePartDao.countBySpend(account);
+		}
+		
+		/**
+		 * @param fees
+		 */
+		public void setFees(boolean fees) {
+			if(this.fees == fees)
+				return;
+			
+			this.fees = fees;
+			offset = 0;
+			reload();
 		}
 
 		@Override
@@ -1214,48 +1155,5 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			}
 			return null;
 		}
-
-		@Override
-		public int getRowCount() {
-			return data.size();
-		}
-		
-		/**
-		 * renvoie le compte total d'occurence dans la base de donnees
-		 * @return
-		 */
-		public int getCountAll () {
-			return countAll;
-		}
-
-		/**
-		 * @return the limit
-		 */
-		public int getLimit() {
-			return limit;
-		}
-		
-		public void setInterval (int limit, int offset) {
-			this.limit = limit;
-			this.offset = offset;
-			
-			reload();
-		}
-
-		/**
-		 * @return the offset
-		 */
-		public int getOffset() {
-			return offset;
-		}
-
-		/**
-		 * @param offset the offset to set
-		 */
-		public void setOffset(int offset) {
-			this.offset = offset;
-			reload();
-		}
-		
 	}
 }

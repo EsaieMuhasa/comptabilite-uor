@@ -5,6 +5,7 @@ package net.uorbutembo.views.models;
 
 import java.util.List;
 
+import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.OtherRecipe;
 import net.uorbutembo.dao.AnnualRecipeDao;
 import net.uorbutembo.dao.OtherRecipeDao;
@@ -20,6 +21,7 @@ public class OtherRecipeTableModel extends TableModel<OtherRecipe> {
 	
 	private final OtherRecipeDao otherRecipeDao;
 	private final AnnualRecipeDao annualRecipeDao;
+	private AcademicYear currentYear;
 
 	/**
 	 * @param daoInterface
@@ -28,19 +30,48 @@ public class OtherRecipeTableModel extends TableModel<OtherRecipe> {
 		super(daoInterface);
 		otherRecipeDao = daoInterface;
 		annualRecipeDao = daoInterface.getFactory().findDao(AnnualRecipeDao.class);
+		limit = 50;
+		offset = 0;
 	}
 	
 	@Override
 	public synchronized void reload() {
 		data.clear();
-		if(otherRecipeDao.countAll() != 0) {
-			List<OtherRecipe> recipes = otherRecipeDao.findAll(50);
-			for (OtherRecipe r : recipes){
-				r.setAccount(annualRecipeDao.findById(r.getAccount().getId()));
-				data.add(r);
-			}
+		
+		if (currentYear != null) {
+			if(otherRecipeDao.checkByAcademicYear(currentYear, offset)) {
+				List<OtherRecipe> recipes = otherRecipeDao.findByAcademicYear(currentYear, limit, offset);
+				for (OtherRecipe r : recipes){
+					r.setAccount(annualRecipeDao.findById(r.getAccount().getId()));
+					data.add(r);
+				}
+			}			
 		}
+		
 		fireTableDataChanged();
+	}
+	
+	@Override
+	public int getCount() {
+		return otherRecipeDao.countByAcademicYear(currentYear);
+	}
+
+	/**
+	 * @return the currentYear
+	 */
+	public AcademicYear getCurrentYear() {
+		return currentYear;
+	}
+
+	/**
+	 * @param currentYear the currentYear to set
+	 */
+	public void setCurrentYear (AcademicYear currentYear) {
+		if(this.currentYear  == currentYear || (this.currentYear != null  && currentYear != null && currentYear.getId() == this.currentYear.getId()) )
+			return;
+		
+		this.currentYear = currentYear;
+		reload();
 	}
 
 	@Override

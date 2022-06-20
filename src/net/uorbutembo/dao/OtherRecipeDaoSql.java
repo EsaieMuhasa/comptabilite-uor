@@ -202,6 +202,20 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		
 		return data;
 	}
+	
+	@Override
+	public boolean checkByAcademicYear(AcademicYear year, int offset) throws DAOException {
+		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), year.getId());
+		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) LIMIT 1 OFFSET %d", getTableName(), sqlAccount, offset);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			return result.next();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
 
 	@Override
 	public List<OtherRecipe> findByAcademicYear (long academicYearId, Date min, Date max) throws DAOException {

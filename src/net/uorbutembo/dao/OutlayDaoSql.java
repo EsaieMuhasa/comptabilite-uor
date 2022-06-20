@@ -82,6 +82,19 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 			throw new DAOException(e.getMessage(), e);
 		}
 	}
+	
+	@Override
+	public boolean checkByAcademicYear(AcademicYear year, int offset) throws DAOException {
+		final String SQL = String.format("SELECT id FROM %s WHERE academicYear = %d LIMIT 1 OFFSET %d", getTableName(), year.getId(), offset);
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			return result.next();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
 
 	@Override
 	public boolean checkByAcademicYear(long yearId, Date min, Date max) throws DAOException {
@@ -161,13 +174,14 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL)) {
 			while (result.next())
-				data.add(mapping(result));
+				data.add(fullMapping(result));
 			
-			if(data.isEmpty())
-				throw new DAOException("Aucune opération pour l'année academique indexer par: "+yearId);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
+		
+		if(data.isEmpty())
+			throw new DAOException("Aucune opération pour l'année academique indexer par: "+yearId);
 		return data;
 	}
 
@@ -483,6 +497,15 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 		Outlay out = baseMapping(result);
 		out.setAccount(result.getLong("account"));
 		out.setAcademicYear(new AcademicYear(result.getLong("academicYear")));
+		out.setLocation(factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")));
+		return out;
+	}
+	
+	@Override
+	protected Outlay fullMapping(ResultSet result) throws SQLException, DAOException {
+		Outlay out = baseMapping(result);
+		out.setAccount(factory.findDao(AnnualSpendDao.class).findById(result.getLong("account")));
+		out.setAcademicYear(factory.findDao(AcademicYearDao.class).findById(result.getLong("academicYear")));
 		out.setLocation(factory.findDao(PaymentLocationDao.class).findById(result.getLong("location")));
 		return out;
 	}

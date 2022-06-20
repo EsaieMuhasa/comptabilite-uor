@@ -17,15 +17,6 @@ import net.uorbutembo.beans.PaymentLocation;
  */
 public interface OutlayDao extends DAOInterface<Outlay>, BaseStatistic<Outlay> {
 	
-	
-	/**
-	 * Verification de l'existance des operations pour l'annee academique en parametre 
-	 * @param yearId
-	 * @return
-	 * @throws DAOException
-	 */
-	boolean checkByAcademicYear (long yearId) throws DAOException;
-	
 	/**
 	 * Verification de l'existance des operations de sorties pour une annee academique 
 	 * pour l'intervale de date en parmatre
@@ -47,85 +38,9 @@ public interface OutlayDao extends DAOInterface<Outlay>, BaseStatistic<Outlay> {
 	default boolean checkByAcademicYear (long yearId, Date date) throws DAOException {
 		return checkByAcademicYear(yearId, date, date) ;
 	}
-	
-	/**
-	 * comptage des operations faite pendant une annee academique
-	 * @param yearId
-	 * @return
-	 * @throws DAOException
-	 */
-	int countByAcademicYear (long yearId) throws DAOException;
-	
-	/**
-	 * Comptage des operations faite pour une date d'une annee academique
-	 * @param yearId
-	 * @param date
-	 * @return
-	 * @throws DAOException
-	 */
-	default int countByAcademicYear (long yearId, Date date) throws DAOException {
-		return countByAcademicYear(yearId, date, date);
-	}
-	
-	/**
-	 * Comptage des operations faite pendant une annee academique pour une intervale de date en parametre
-	 * @param yearId
-	 * @param min
-	 * @param max
-	 * @return
-	 * @throws DAOException
-	 */
-	int countByAcademicYear (long yearId, Date min, Date max)  throws DAOException;
-	
-	/**
-	 * recuperationd es operations faite pendant une annee acadmique
-	 * @param yearId
-	 * @return
-	 * @throws DAOException
-	 */
-	List<Outlay> findByAcademicYear (long yearId) throws DAOException;
-	default List<Outlay> findByAcademicYear (AcademicYear year) throws DAOException{
-		return findByAcademicYear(year.getId());
-	}
-	
-	/**
-	 * Recuperation d'une partie des operations faite pendant une annee academique
-	 * @param yearId
-	 * @param limit
-	 * @param offset
-	 * @return
-	 * @throws DAOException
-	 */
-	List<Outlay> findByAcademicYear (long yearId, int limit, int offset) throws DAOException;
-	default List<Outlay> findByAcademicYear (AcademicYear year, int limit, int offset) throws DAOException{
-		return findByAcademicYear(year.getId(), limit, offset);
-	}
-	
-	/**
-	 * renvoie la collection des operations en une date d'une annee academique
-	 * @param yearId
-	 * @param date
-	 * @return
-	 * @throws DAOException
-	 */
-	default List<Outlay> findByAcademicYear (long yearId, Date date) throws DAOException{
-		return findByAcademicYear(yearId, date, date);
-	}
+
 	default List<Outlay> findByAcademicYear (AcademicYear year, Date date) throws DAOException{
 		return findByAcademicYear(year.getId(), date, date);
-	}
-	
-	/**
-	 * renvoie la collection des operations en une intervale de date pour une annee academique
-	 * @param yearId
-	 * @param min
-	 * @param max
-	 * @return
-	 * @throws DAOException
-	 */
-	List<Outlay> findByAcademicYear (long yearId, Date min, Date max) throws DAOException;
-	default List<Outlay> findByAcademicYear (AcademicYear year, Date min, Date max) throws DAOException{
-		return findByAcademicYear(year.getId(), min, max);
 	}
 	
 	/**

@@ -26,12 +26,15 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	public static final DateFormat DEFAULT_DATE_TIME_FORMAT = new SimpleDateFormat("dd/MM/yyyy 'à' hh:mm:ss");
 	
 	protected List<T> data = new ArrayList<>();
+	protected int limit;
+	protected int offset;
 
 	/**
 	 * 
 	 */
 	public TableModel(DAOInterface<T> daoInterface) {
 		super();
+		limit = 50;
 		if(daoInterface != null)
 			daoInterface.addListener(this);
 	}
@@ -41,8 +44,92 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	 */
 	public synchronized void reload() {}
 	
+	/**
+	 * @return the limit
+	 */
+	public int getLimit() {
+		return limit;
+	}
+
+	/**
+	 * @param limit the limit to set
+	 */
+	public void setLimit (int limit) {
+		if(limit == this.limit)
+			return;
+		
+		this.limit = limit;
+		reload();
+	}
+
+	/**
+	 * @return the offset
+	 */
+	public int getOffset() {
+		return offset;
+	}
+
+	/**
+	 * @param offset the offset to set
+	 */
+	public void setOffset(int offset) {
+		if(offset == this.offset)
+			return;
+		
+		this.offset = offset;
+		reload();
+	}
+	
+	public void setInterval (int limit, int offset) {
+		if(this.limit == limit && this.offset == offset )
+			return;
+		
+		this.limit = limit;
+		this.offset = offset;
+		
+		reload();
+	}
+	
+	/**
+	 * renvoie les comptes tottal des donnees
+	 * @return
+	 */
+	public int getCount () {
+		return getRowCount();
+	}
+	
+	/**
+	 * Charger la liste suivante des donnees
+	 */
+	public void next () {
+		setOffset(offset + limit);
+	}
+	
+	/**
+	 * Charger la liste precedante des donnees
+	 */
+	public void previous () {
+		setOffset(offset - limit);
+	}
+	
+	/**
+	 * est-il possible de charger la  liste des donnees suivant???
+	 * @return
+	 */
+	public boolean hasNext() {
+		return (getCount() > (offset + limit ));
+	}
+	
+	/**
+	 * Est-il possible de lire les donnees precedant
+	 * @return
+	 */
+	public boolean hasPrevious() {
+		return (0 <= (offset - limit ));
+	}
+
 	@Override
-	public boolean isCellEditable(int rowIndex, int columnIndex) {
+	public boolean isCellEditable (int rowIndex, int columnIndex) {
 		return false;
 	}
 	
@@ -68,6 +155,7 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 		this.data.add(row);
 		fireTableRowsInserted(data.size()-1, data.size()-1);	
 	}
+	
 	/**
 	 * Ajout d'une suite d'elemenets dans le tableau
 	 * @param rows

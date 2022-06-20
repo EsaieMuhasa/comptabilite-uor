@@ -25,6 +25,7 @@ public class TablePanel extends Panel {
 	private Table table;
 	private JLabel title;
 	private final Panel header = new Panel(new BorderLayout());
+	private JScrollPane scroll;
 	
 	public TablePanel(Table table, String title, boolean scrollable) {
 		super(new BorderLayout());
@@ -39,7 +40,7 @@ public class TablePanel extends Panel {
 	public TablePanel(Table table, String title) {
 		super(new BorderLayout());
 		this.table = table;
-		this.title = FormUtil.createTitle(title);
+		this.title = FormUtil.createSubTitle(title);
 		this.init(true);
 	}
 	
@@ -79,11 +80,11 @@ public class TablePanel extends Panel {
 	private void init(boolean scrollable) {
 		Panel body = new Panel(new BorderLayout());
 		header.setOpaque(true);
-		header.setBackground(FormUtil.BORDER_COLOR);
+		header.setBackground(FormUtil.BKG_END);
 		header.add(this.title, BorderLayout.CENTER);
 		
 		if (scrollable) {			
-			JScrollPane scroll = FormUtil.createVerticalScrollPane(table);
+			scroll = FormUtil.createVerticalScrollPane(table);
 			body.add(scroll, BorderLayout.CENTER);
 		} else {
 			JTableHeader tHeader = table.getTableHeader();
@@ -92,9 +93,16 @@ public class TablePanel extends Panel {
 			body.add(table, BorderLayout.CENTER);
 		}
 		
-		this.add(header, BorderLayout.NORTH);
-		this.add(body, BorderLayout.CENTER);
+		add(header, BorderLayout.NORTH);
+		add(body, BorderLayout.CENTER);
 		setBorder(new EmptyBorder(1, 1, 0, 0));
+	}
+
+	/**
+	 * @return the scroll
+	 */
+	public JScrollPane getScroll() {
+		return scroll;
 	}
 
 }
