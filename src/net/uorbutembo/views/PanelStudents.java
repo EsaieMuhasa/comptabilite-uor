@@ -49,6 +49,7 @@ import net.uorbutembo.dao.DAOFactory;
 import net.uorbutembo.dao.InscriptionDao;
 import net.uorbutembo.dao.PaymentFeeDao;
 import net.uorbutembo.dao.PromotionDao;
+import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.SearchField;
 import net.uorbutembo.swing.charts.DefaultPieModel;
@@ -98,9 +99,10 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	
 	private final DialogStudentExportConfig exportConfig;
 	//btn d'exportation
-	private final JButton btnToExcel = new JButton("Excel", new ImageIcon(R.getIcon("export")));
-	private final JButton btnToPdf = new JButton("PDF", new ImageIcon(R.getIcon("pdf")));
-	private final JButton btnToPrint = new JButton("Imprimer", new ImageIcon(R.getIcon("print")));
+	private final JButton btnToExcel = new Button(new ImageIcon(R.getIcon("export")), "Excel");
+	{
+		btnToExcel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+	}
 	//==
 	
 	private final JProgressBar progress = new JProgressBar();
@@ -272,8 +274,6 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		box.add(progress);
 		box.add(Box.createHorizontalGlue());
 		box.add(btnToExcel);
-		box.add(btnToPdf);
-		box.add(btnToPrint);
 		box.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		center.add(box, BorderLayout.SOUTH);
 		
@@ -287,13 +287,6 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 				
 		btnToExcel.addActionListener(event -> {
 			exportConfig.show(exportExcelListener);
-		});
-		
-		btnToPdf.addActionListener(event -> {
-			JOptionPane.showMessageDialog(mainWindow, "Aucune implémentation d'exportation\n des données au format PDF", "Information", JOptionPane.WARNING_MESSAGE);
-		});
-		btnToPrint.addActionListener(event -> {
-			JOptionPane.showMessageDialog(mainWindow, "Aucune implémentation d'envoie \ndu flux des données vers une imprimante", "Information", JOptionPane.WARNING_MESSAGE);
 		});
 	}
 	
@@ -369,8 +362,6 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	 */
 	private synchronized void statusButtonsExport (boolean enable) {
 		btnToExcel.setEnabled(enable);
-		btnToPdf.setEnabled(enable);
-		btnToPrint.setEnabled(enable);
 	}
 
 	/**

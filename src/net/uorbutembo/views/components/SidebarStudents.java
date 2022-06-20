@@ -7,11 +7,11 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JScrollPane;
@@ -34,9 +34,11 @@ import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.FacultyDao;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.dao.StudyClassDao;
+import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.TreeCellRender;
 import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
 
@@ -54,8 +56,12 @@ public class SidebarStudents extends Panel implements YearChooserListener{
 	private final DefaultTreeSelectionModel treeSelection = new DefaultTreeSelectionModel();
 	private final JCheckBox checkFilter = new JCheckBox("Filtrage", false);
 	
-	private final JButton btnInscription = new JButton("Inscription");
-	private final JButton btnReinscription = new JButton("Ré-inscription");
+	private final JButton btnInscription = new Button(new ImageIcon(R.getIcon("usradd")), "Inscription");
+	private final JButton btnReinscription = new Button(new ImageIcon(R.getIcon("usredit")), "Ré-inscription");
+	{
+		btnInscription.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		btnReinscription.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+	}
 	
 	private final List<NavigationListener> listeners = new ArrayList<>();
 	private final List<FacultyFilter> lastPathFilter = new ArrayList<>();//la derniere collection des chemains filtrer
@@ -193,7 +199,7 @@ public class SidebarStudents extends Panel implements YearChooserListener{
 	private void init() {
 		final JScrollPane scroll = new JScrollPane(tree);
 		final Panel top = new Panel(new FlowLayout(FlowLayout.LEFT));
-		final Panel bottom = new Panel(new GridLayout(1,2, 5, 5));
+		final Panel bottom = new Panel();
 		final Panel center = new Panel(new BorderLayout());
 		
 		scroll.setBorder(null);
