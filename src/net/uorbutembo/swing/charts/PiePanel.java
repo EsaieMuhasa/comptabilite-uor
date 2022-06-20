@@ -253,13 +253,15 @@ public class PiePanel extends Panel implements Printable{
 			render.paint(g2, page.getImageableWidth()/2, page.getImageableHeight());
 			caption.paint(g2, page.getImageableWidth()/2, 0, (int)page.getImageableWidth()/2, (int)page.getImageableHeight());
 		} else {
-			render.paint(g2, page.getImageableWidth(), page.getImageableHeight()/2);
-			caption.paint(g2, 0, page.getImageableHeight()/2, (int)page.getImageableWidth(), (int) page.getImageableHeight()/2);
+			render.paint(g2, page.getImageableWidth(), page.getImageableHeight()/3);
+			caption.paint(g2, 5, page.getImageableHeight()/3, (int)page.getImageableWidth(), (int) (page.getImageableHeight() * (2f/3f)));
 		}
 		
 		g2.setColor(borderColor);
-		Rectangle2D b = new Rectangle2D.Double(page.getImageableX(), page.getImageableY(), page.getImageableWidth(), page.getImageableHeight());
+		Rectangle2D b = new Rectangle2D.Double(0, 0, page.getImageableWidth(), page.getImageableHeight());
 		g2.draw(b);
+		g2.setFont(title.getFont());
+		g2.drawString(title.getText(), 10f, g2.getFontMetrics().getAscent());
 		
 		render.setBackground(old);
 		caption.setBackground(old);
