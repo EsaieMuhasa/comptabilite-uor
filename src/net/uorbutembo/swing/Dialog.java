@@ -53,10 +53,10 @@ public class Dialog extends JDialog {
 	 * @param owner
 	 */
 	private void init (Frame owner) {
-		this.getContentPane().setBackground(FormUtil.BKG_DARK);
-		this.setLocationRelativeTo(owner);
-		this.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
-		this.setModal(true);
+		getContentPane().setBackground(FormUtil.BKG_DARK);
+		setLocationRelativeTo(owner);
+		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		setModal(true);
 
 	}
 

@@ -23,13 +23,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -150,7 +150,7 @@ public class FormGroupAllocationCost extends Panel {
 		this.annualSpendDao= allocationCostDao.getFactory().findDao(AnnualSpendDao.class);
 		this.academicYearDao = allocationCostDao.getFactory().findDao(AcademicYearDao.class);
 		this.initViews();
-		this.setBorder(new EmptyBorder(0, 0, DEFAULT_V_GAP*2, 0));
+		setBorder(BorderFactory.createLineBorder(FormUtil.BORDER_COLOR));
 		
 		piePanel.getModel().addListener(pieListener);
 		piePanel.getRender().setHovable(false);
@@ -169,8 +169,6 @@ public class FormGroupAllocationCost extends Panel {
 			bar.setValue(value - bar.getModel().getExtent()/4);
 		});
 		
-//		piePanel.getScroll().setVerticalScrollBarPolicy(ScrollPaneConstanttants.VERTICAL_SCROLLBAR_NEVER);
-//		piePanel.getScroll().getVerticalScrollBar().setVisible(false);
 	}
 	
 	/**
@@ -188,10 +186,11 @@ public class FormGroupAllocationCost extends Panel {
 			center.removeAll();
 		}
 		
-		this.pieModel.setMax(academicFee.getAmount());
-		this.title.setText("Répartition du "+academicFee.getAmount()+" "+UNIT_MONEY);
+		pieModel.setMax(academicFee.getAmount());
+		title.setText("Répartition du "+academicFee.getAmount()+" "+UNIT_MONEY);
+		pieModel.setTitle(title.getText());
 		
-		this.updateViews();
+		updateViews();
 		
 		//la repartiton est modificable uniquement pour l'annee courante
 		//les archives ne sont plus modifiable
@@ -219,7 +218,7 @@ public class FormGroupAllocationCost extends Panel {
 	 * initialisation de l'interface graphique
 	 */
 	private void initViews() {
-		title.setBackground(FormUtil.BKG_START);
+		title.setBackground(FormUtil.BKG_END);
 		title.setOpaque(true);
 		title.setHorizontalAlignment(JLabel.CENTER);
 
@@ -318,6 +317,7 @@ public class FormGroupAllocationCost extends Panel {
 		left.add(padding, BorderLayout.CENTER);
 		
 		piePanel.setBackground(FormUtil.BKG_DARK);
+		piePanel.setBorderColor(FormUtil.BKG_END);
 		
 		add(title, BorderLayout.NORTH);
 		add(bottom, BorderLayout.SOUTH);
@@ -583,9 +583,12 @@ public class FormGroupAllocationCost extends Panel {
 		public void setCost(AllocationCost cost) {
 			this.cost = cost;
 			if(cost != null) {				
-				this.amount.setValue(cost.getAmount()+"");
-				BigDecimal number = new BigDecimal((100.0 / academicFee.getAmount()) * cost.getAmount()).setScale(2, RoundingMode.HALF_UP);
-				double percent = number.doubleValue();
+				amount.setValue(cost.getAmount()+"");
+				double percent = 0;
+				if ((academicFee.getAmount() * cost.getAmount()) != 0) {
+					BigDecimal number = new BigDecimal((100.0 / academicFee.getAmount()) * cost.getAmount()).setScale(2, RoundingMode.HALF_UP);
+					percent = number.doubleValue();
+				} 
 				this.percent.setValue(percent+"");
 				part = pieModel.getPartByName(cost.getAnnualSpend().getUniversitySpend().getTitle());
 				

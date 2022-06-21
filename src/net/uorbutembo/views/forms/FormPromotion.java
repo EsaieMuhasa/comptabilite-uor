@@ -7,6 +7,7 @@ import static net.uorbutembo.tools.FormUtil.DEFAULT_H_GAP;
 import static net.uorbutembo.tools.FormUtil.DEFAULT_V_GAP;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
@@ -233,6 +234,7 @@ public class FormPromotion extends DefaultFormPanel {
 		JLabel labelDepartment = new JLabel("Départements");
 		
 		labelDepartment.setHorizontalAlignment(JLabel.CENTER);
+		labelDepartment.setForeground(Color.WHITE);
 		
 		this.btnRemoveDepartments.setPreferredSize(FormUtil.createDimensionSmCare());
 		this.btnAddDepartments.setPreferredSize(FormUtil.createDimensionSmCare());
@@ -287,6 +289,7 @@ public class FormPromotion extends DefaultFormPanel {
 		JLabel labelStudyClass = new JLabel("Classe d'études");
 		
 		labelStudyClass.setHorizontalAlignment(JLabel.CENTER);
+		labelStudyClass.setForeground(Color.WHITE);
 		
 		this.btnRemoveStudyClass.setPreferredSize(FormUtil.createDimensionSmCare());
 		this.btnAddStudyClass.setPreferredSize(FormUtil.createDimensionSmCare());
@@ -377,7 +380,7 @@ public class FormPromotion extends DefaultFormPanel {
 		
 		try {
 			this.promotionDao.create(t);
-			this.showMessageDialog("Information", "Success d'enregistrement d"+(t.length==1? "e la":"es")+" promotion"+(t.length!=1? "s":""), JOptionPane.INFORMATION_MESSAGE);
+			this.showMessageDialog("Information", "Succèss d'enregistrement d"+(t.length==1? "e la":"es")+" promotion"+(t.length!=1? "s":""), JOptionPane.INFORMATION_MESSAGE);
 		} catch (DAOException e) {
 			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}

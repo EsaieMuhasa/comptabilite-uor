@@ -129,7 +129,7 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
 		
 		academicFeeDao.addListener(feeAdapter);
-
+		container.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		setTitle("Formulaire d'enregistrement");
 		getBody().add(container, BorderLayout.CENTER);
 		

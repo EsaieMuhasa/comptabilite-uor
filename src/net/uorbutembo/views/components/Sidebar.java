@@ -53,6 +53,7 @@ import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.tools.Config;
 import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
@@ -69,8 +70,8 @@ public class Sidebar extends Panel implements ItemListener{
 	private static final ImageIcon ICON_CLOSE_FULL_SCREEN = new ImageIcon(R.getIcon("exitFullscreen"));
 	
 
-	private final JLabel logo = new JLabel(new ImageIcon(R.getIcon("x32")));
-	private final JLabel title = new JLabel("U.O.R");
+	private final JLabel logo = new JLabel(new ImageIcon(Config.find("appMainIcon")));
+	private final JLabel title = new JLabel(Config.find("appShortName"));
 	
 	public final MigLayout layout = new MigLayout("wrap, fillx, insets 0", "[fill]", "[]0[]");
 	private final Panel header = new Panel(new BorderLayout());

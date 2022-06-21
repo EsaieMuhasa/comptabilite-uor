@@ -5,6 +5,7 @@ package net.uorbutembo;
 
 import static net.uorbutembo.tools.FormUtil.BKG_DARK;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
@@ -18,15 +19,15 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
-import javax.swing.JWindow;
+import javax.swing.JFrame;
 
-import net.uorbutembo.tools.R;
+import net.uorbutembo.tools.Config;
 
 /**
  * @author Esaie MUHASA
  *
  */
-public class StartWindow extends JWindow {
+public class StartWindow extends JFrame {
 	private static final long serialVersionUID = -3192714715826250151L;
 	private static final Font FONT = new Font("Arial", Font.BOLD, 30);
 	private static final Cursor WAIT = new Cursor(Cursor.WAIT_CURSOR);
@@ -36,21 +37,23 @@ public class StartWindow extends JWindow {
 	
 	public StartWindow() {
 		super();
-		this.setSize(500, 250);
-		this.setLocationRelativeTo(null);
-		this.setAlwaysOnTop(true);
-		this.setBackground(BKG_DARK.darker().darker());
-		this.setOpacity(0.95f);
+		
+		setSize(500, 250);
+		setUndecorated(true);
+		setLocationRelativeTo(null);
+		setBackground(new Color(0xAA000000, true));
+		setAlwaysOnTop(true);
+		setOpacity(0.90f);
 		
 		try {
-			logo = ImageIO.read(new File(R.getIcon("logo")));
+			logo = ImageIO.read(new File(Config.find("appLaucherIcon")));
+			setIconImage(logo);
 		} catch (IOException e) {}
 		
 		render = new ConntentRender();
 		render.setCursor(WAIT);
-		this.setCursor(WAIT);
-		this.setContentPane(render);
-		
+		setCursor(WAIT);
+		setContentPane(render);
 	}
 	
 	private class ConntentRender extends JComponent {
@@ -69,22 +72,25 @@ public class StartWindow extends JWindow {
 			Graphics2D g2 = (Graphics2D) g;
 	        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
-	        g2.setColor(BKG_DARK);
 	        
+	        g2.setColor(BKG_DARK);
 	        g2.fillRoundRect(2, 2, getWidth()-4, getHeight()-4, 5, 5);
 	        
-	        g2.setColor(BKG_DARK.darker().darker().darker().darker());
+	        g2.setColor(Color.WHITE.darker());
+	        g2.drawRect(0, 0, getWidth()-1, getHeight()-1);
+	        g2.setStroke(new BasicStroke(3f));
+	        g2.drawRect(50, 50, getWidth()-100, getHeight()-100);
+	        
 	        int wid = getWidth(), heig = getHeight();
 	        g2.fillOval(-wid/2, -heig/2, wid, heig);
 	        g2.fillOval(wid/2, heig/2, wid, heig);
-	        
 	        
 	        FontMetrics metrics = g2.getFontMetrics(FONT);
 	        g2.setColor(Color.LIGHT_GRAY);
 	        g2.setFont(FONT);
 	        String message = getMessage();
 	        int w = metrics.stringWidth(message), x = getWidth()/2 - w/2, y = getHeight()/2 + metrics.getHeight()/3;
-	        g2.drawImage(logo, x-50, y - 35, 50, 50, null);
+	        g2.drawImage(logo, x-50, y - 35, 45, 45, null);
 	        g2.drawString(message, x, y);
 		}
 	}

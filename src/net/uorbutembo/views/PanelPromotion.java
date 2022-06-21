@@ -127,7 +127,7 @@ public class PanelPromotion extends Panel {
 		padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		padding.add(form, BorderLayout.CENTER);
 		
-		dialogForm = new JDialog(mainWindow, "Creation des promotions", true);
+		dialogForm = new JDialog(mainWindow, "Création des promotions", true);
 		dialogForm.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
 		dialogForm.getContentPane().setBackground(FormUtil.BKG_DARK);
 		dialogForm.getContentPane().add(padding, BorderLayout.CENTER);

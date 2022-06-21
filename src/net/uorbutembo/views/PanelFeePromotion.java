@@ -41,9 +41,11 @@ import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.PromotionDao;
+import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Dialog;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
+import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.tools.FormUtil;
@@ -60,7 +62,8 @@ import net.uorbutembo.views.models.PromotionTableModel;
 public class PanelFeePromotion extends Panel {
 	private static final long serialVersionUID = 5400969854848116850L;
 	
-	private JButton btnNewFee = new JButton("Nouveau montant");
+	private final JButton btnNewFee = new Button(new ImageIcon(R.getIcon("new")), "Nouveau montant");
+	{btnNewFee.setBorder(DEFAULT_EMPTY_BORDER);}
 	
 	private AllocationCostDao allocationCostDao;
 	private AcademicFeeDao academicFeeDao;
@@ -78,6 +81,7 @@ public class PanelFeePromotion extends Panel {
 	private JList<AcademicFee> feeList = new JList<>(listModel);
 	private PromotionTableModel tableModel;
 	private Table table;
+	private TablePanel tablePanel;
 	
 	private DefaultPieModel pieModel = new DefaultPieModel();
 	private FormGroupAllocationCost formCost;
@@ -103,7 +107,7 @@ public class PanelFeePromotion extends Panel {
 		tableModel.clear();
 		waiting(true);
 		Thread t = new Thread(()-> {				
-			updateConfig();
+			updateConfig(false);
 			waiting(false);
 		});
 		
@@ -159,12 +163,14 @@ public class PanelFeePromotion extends Panel {
 		
 		tableModel = new PromotionTableModel(promotionDao);
 		table =  new Table(tableModel);
+		tablePanel = new TablePanel(table, "");
 		formFeePromotion = new FormFeePromotion(mainWindow);
 		
 		formCost = new FormGroupAllocationCost(allocationCostDao);
 		
 		Panel panelForm = new Panel(new BorderLayout());
 		panelForm.add(formFeePromotion, BorderLayout.CENTER);
+		panelForm.setBorder(DEFAULT_EMPTY_BORDER);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.addTab("Détailles des répartitions", panelShowConfig);
@@ -195,7 +201,11 @@ public class PanelFeePromotion extends Panel {
 	private void buildAcademicFeeDialog () {		
 		if(dialogAcademicFee == null) {
 			formAcademicFee = new FormAcademicFee(mainWindow);
-			dialogAcademicFee = new Dialog(mainWindow, formAcademicFee);
+			final Panel padding = new Panel(new BorderLayout());
+			padding.add(formAcademicFee, BorderLayout.CENTER);
+			padding.setBorder(DEFAULT_EMPTY_BORDER);
+			dialogAcademicFee = new Dialog(mainWindow, padding);
+			dialogAcademicFee.setResizable(false);
 		}
 		dialogAcademicFee.setLocationRelativeTo(mainWindow);
 	}
@@ -263,10 +273,11 @@ public class PanelFeePromotion extends Panel {
 		Panel westPanel = new Panel(new BorderLayout(DEFAULT_H_GAP, DEFAULT_V_GAP)),
 				westBorder = new Panel(new BorderLayout());
 		Panel centerPanel = new  Panel(new BorderLayout());
+		Panel paddingFormCost = new Panel(new BorderLayout());
 		
 		JTabbedPane tabbed = new JTabbedPane(JTabbedPane.BOTTOM);
-		tabbed.addTab("Promotions", createScrollPane(centerPanel));
-		tabbed.addTab("Répartition", formCost);
+		tabbed.addTab("Promotions", new ImageIcon(R.getIcon("list")), createScrollPane(centerPanel));
+		tabbed.addTab("Répartition", new ImageIcon(R.getIcon("pie")), paddingFormCost);
 		
 		westPanel.add(createScrollPane(feeList), BorderLayout.CENTER);
 		westPanel.add(btnNewFee, BorderLayout.SOUTH);
@@ -275,8 +286,11 @@ public class PanelFeePromotion extends Panel {
 		westBorder.setBorder(BorderFactory.createLineBorder(FormUtil.BORDER_COLOR));
 		westBorder.add(westPanel, BorderLayout.CENTER);
 
-		centerPanel.setBorder(DEFAULT_EMPTY_BORDER);
-		centerPanel.add(table, BorderLayout.NORTH);
+		centerPanel.setBorder(new EmptyBorder(0, 0, 0, 5));
+		centerPanel.add(tablePanel, BorderLayout.CENTER);
+		
+		paddingFormCost.add(formCost, BorderLayout.CENTER);
+		paddingFormCost.setBorder(centerPanel.getBorder());
 		
 		panelShowConfig.add(tabbed, BorderLayout.CENTER);
 		panelShowConfig.add(westBorder, BorderLayout.EAST);
@@ -286,13 +300,15 @@ public class PanelFeePromotion extends Panel {
 		feeList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	}
 	
-	private void updateConfig() {
+	private void updateConfig(boolean loadFees) {
 		int index = feeList.getSelectedIndex();
+		tablePanel.setTitle("");
 		
 		if(index == -1)
 			return;
 		
 		AcademicFee fee = listModel.get(index);
+		tablePanel.setTitle("Liste des promotions qui doivent payer "+fee.getAmount()+FormUtil.UNIT_MONEY);
 		if(promotionDao.checkByAcademicFee(fee.getId())) {				
 			List<Promotion> promotions = promotionDao.findByAcademicFee(fee);
 			for (Promotion p : promotions) {
@@ -310,10 +326,13 @@ public class PanelFeePromotion extends Panel {
 				pieModel.addPart(part);
 			}
 		}
-		
-		List<AnnualSpend> spends = annualSpendDao.checkByAcademicYear(currentYear.getId())? annualSpendDao.findByAcademicYear(currentYear) : new ArrayList<>();
-		
-		formCost.init(fee, spends);
+		formCost.setVisible(false);
+		if (loadFees) {			
+			List<AnnualSpend> spends = annualSpendDao.checkByAcademicYear(currentYear.getId())? annualSpendDao.findByAcademicYear(currentYear) : new ArrayList<>();
+			formCost.init(fee, spends);
+		} else 
+			formCost.init(fee);
+		formCost.setVisible(true);
 	}
 
 	/**
@@ -349,7 +368,7 @@ public class PanelFeePromotion extends Panel {
 		
 		if (!listListenerInited){
 			listListenerInited = true;
-			updateConfig();
+			updateConfig(true);
 			feeList.addListSelectionListener(listListener);
 		}
 	}

@@ -3,6 +3,7 @@
  */
 package net.uorbutembo;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
@@ -48,6 +49,7 @@ public class Launcher implements DAOBaseListener{
 		//TestDAO.test(System.out);
 		
 		Launcher launcher = new Launcher();
+		JFrame.setDefaultLookAndFeelDecorated(true);
 		
 		try {
 			DAOFactory factory = DAOFactory.getInstance();
@@ -57,6 +59,7 @@ public class Launcher implements DAOBaseListener{
 			
 			MainWindow frame = new MainWindow(factory);
 			factory.reload();
+			st.dispose();
 			st.setVisible(false);
 			frame.setVisible(true);
 			factory.removeListener(launcher);

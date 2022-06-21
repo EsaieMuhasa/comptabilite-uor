@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -167,12 +168,14 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 		left.add(labelMaxTop, BorderLayout.NORTH);
 		left.add(piePanel, BorderLayout.CENTER);
 		left.add(labelMaxBottom, BorderLayout.SOUTH);
+		left.setBorder(BorderFactory.createLineBorder(FormUtil.BORDER_COLOR));
 		
 		container.add(left);
 		container.add(parentOfBox);
 		piePanel.setCaptionVisibility(false);
 		piePanel.setBackground(getBody().getBackground());
-		this.getBody().add(container, BorderLayout.CENTER);
+		piePanel.setBorderColor(FormUtil.BKG_END);
+		getBody().add(container, BorderLayout.CENTER);
 		pieModel.addListener(pieListener);
 		btnSave.setEnabled(false);
 	}
@@ -199,6 +202,7 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 		}
 		
 		setTitle(recipe.toString());
+		pieModel.setTitle(recipe.toString());
 	}
 	
 	/**
@@ -384,6 +388,7 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 			
 			allocation.setRecipe(recipe);
 			part.setValue(allocation.getPercent());
+			part.setLabel(allocation.getSpend().toString());
 			field.setText(allocation.getPercent()+"");
 		}
 		

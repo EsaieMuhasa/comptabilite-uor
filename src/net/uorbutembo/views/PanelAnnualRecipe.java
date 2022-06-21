@@ -17,7 +17,6 @@ import javax.swing.JDialog;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JSplitPane;
-import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualRecipe;
@@ -29,8 +28,10 @@ import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.UniversityRecipeDao;
+import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.tools.R;
 import net.uorbutembo.views.forms.FormGroupAllocationRecipe;
 
 /**
@@ -50,7 +51,8 @@ public class PanelAnnualRecipe extends Panel {
 	
 	private DefaultListModel<AnnualRecipe> modelRecipe = new DefaultListModel<>();
 	private JList<AnnualRecipe> listRecipe = new JList<>(modelRecipe);
-	private JButton btnAdd = new JButton("Nouvelle source");
+	private JButton btnAdd = new Button(new ImageIcon(R.getIcon("new")), "Nouvelle source");
+	{btnAdd.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);}
 	private DialogChooseRecipe dialog;
 	
 	private final Panel panelRight = new  Panel(new BorderLayout());
@@ -158,8 +160,6 @@ public class PanelAnnualRecipe extends Panel {
 	 */
 	private void init () {
 		final Panel panelBottom = new Panel();
-		
-		panelBottom.setBorder(new EmptyBorder(5, 0, 0, 0));
 		panelBottom.add(btnAdd);
 		//left
 		listRecipe.setBackground(FormUtil.BKG_END);
