@@ -3,6 +3,8 @@
  */
 package net.uorbutembo.views.models;
 
+import java.util.List;
+
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.PaymentFee;
 import net.uorbutembo.dao.PaymentFeeDao;
@@ -43,6 +45,11 @@ public class PaymentFeeTableModel extends TableModel<PaymentFee> {
 	}
 	
 	@Override
+	protected List<PaymentFee> getExportableData() {
+		return data;
+	}
+
+	@Override
 	public void onCreate(PaymentFee e, int requestId) {
 		if(e.getInscription().getId() == inscription.getId())
 			super.onCreate(e, requestId);
@@ -51,6 +58,33 @@ public class PaymentFeeTableModel extends TableModel<PaymentFee> {
 	@Override
 	public int getColumnCount() {
 		return 8;
+	}
+	
+	@Override
+	protected Object getCellValue(List<PaymentFee> exportables, int rowIndex, int columnIndex) {
+		double debit = calculDebit(rowIndex),
+				credit = exportables.get(rowIndex).getAmount();
+		switch (columnIndex) {
+			case 0:
+				return FormUtil.DEFAULT_FROMATER.format(exportables.get(rowIndex).getSlipDate());
+			case 1:
+				return exportables.get(rowIndex).getSlipNumber();
+			case 2:
+				return FormUtil.DEFAULT_FROMATER.format(exportables.get(rowIndex).getReceivedDate());
+			case 3:
+				return exportables.get(rowIndex).getReceiptNumber();
+			case 4:
+				return exportables.get(rowIndex).getWording();
+			case 5:
+				return debit;
+			case 6:
+				return credit;
+			case 7:
+				return (debit-credit);
+			default:
+				break;
+		}
+		return null;
 	}
 
 	@Override

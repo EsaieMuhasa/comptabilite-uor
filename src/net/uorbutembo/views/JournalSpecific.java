@@ -26,6 +26,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -63,6 +64,7 @@ import net.uorbutembo.swing.DefaultCardModel.CardType;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TableModel;
+import net.uorbutembo.swing.TableModel.ExportationProgressListener;
 import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.swing.charts.ChartPanel;
 import net.uorbutembo.swing.charts.DateAxis;
@@ -215,6 +217,15 @@ public class JournalSpecific extends Panel  implements ActionListener{
 	}
 	
 	/**
+	 * Injection du listener d'exportation des donnees au format XLSX
+	 * @param exportationListener
+	 */
+	public void setExportationListener(ExportationProgressListener exportationListener) {
+		containerPanel.getPanelRecipes().getTableModel().addExportationProgressListener(exportationListener);
+		containerPanel.getPanelOutlays().getTableModel().addExportationProgressListener(exportationListener);
+	}
+
+	/**
 	 * consultation de la liste des compte et des operations effectuer sur ces comptes
 	 * @author Esaie MUHASA
 	 */
@@ -331,9 +342,19 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			btnPrev.setEnabled(tableModel.hasPrevious());
 			btnNext.setEnabled(tableModel.hasNext());
 		};
+		private final ActionListener btnExportListener = event -> {
+			int rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
+			if(rps == JFileChooser.APPROVE_OPTION) {
+				Thread t = new Thread(() -> {
+					tableModel.exportToExcel(Table.XLSX_FILE_CHOOSER.getSelectedFile());
+				});
+				t.start();
+			}
+		};
 		{
 			btnNext.addActionListener(navigationListener);
 			btnPrev.addActionListener(navigationListener);
+			btnToExcel.addActionListener(btnExportListener);
 			btnNext.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			btnPrev.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			btnToExcel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
@@ -370,6 +391,13 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			labelCount.setText(tableModel.getRowCount()+" opération"+(tableModel.getRowCount() > 1? "s":""));
 			btnPrev.setEnabled(tableModel.hasPrevious());
 			btnNext.setEnabled(tableModel.hasNext());
+		}
+
+		/**
+		 * @return the tableModel
+		 */
+		public OutlayTableModel getTableModel() {
+			return tableModel;
 		}
 	}
 	
@@ -416,6 +444,16 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			btnNext.setEnabled(tableModel.hasNext());
 			btnPrev.setEnabled(tableModel.hasPrevious());
 			labelCount.setText(tableModel.getCount()+" opérations");
+		};
+		
+		private final ActionListener btnExportListener = event -> {
+			int rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
+			if(rps == JFileChooser.APPROVE_OPTION) {
+				Thread t = new Thread(() -> {
+					tableModel.exportToExcel(Table.XLSX_FILE_CHOOSER.getSelectedFile());
+				});
+				t.start();
+			}
 		};
 		
 		{
@@ -538,6 +576,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			btnNext.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			btnPrev.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			btnToExcel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			btnToExcel.addActionListener(btnExportListener);
 			 
 			labelCount.setFont(new Font("Arial", Font.BOLD, 15));
 			labelCount.setHorizontalAlignment(JLabel.LEFT);
@@ -674,6 +713,13 @@ public class JournalSpecific extends Panel  implements ActionListener{
 				
 			}
 			
+		}
+
+		/**
+		 * @return the tableModel
+		 */
+		public RecipeTableModel getTableModel() {
+			return tableModel;
 		}
 		
 	}
@@ -1003,6 +1049,20 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			//tableOutlays.setEnabled(!wait);
 			//tableRecipes.setEnabled(!wait);
 			setCursor(wait? Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR) : Cursor.getDefaultCursor());
+		}
+
+		/**
+		 * @return the panelOutlays
+		 */
+		public PanelOutlays getPanelOutlays() {
+			return panelOutlays;
+		}
+
+		/**
+		 * @return the panelRecipes
+		 */
+		public PanelRecipes getPanelRecipes() {
+			return panelRecipes;
 		}
 		
 	}

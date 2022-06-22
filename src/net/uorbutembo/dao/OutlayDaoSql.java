@@ -146,15 +146,14 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 
 	@Override
 	public List<Outlay> findByAcademicYear(long yearId) throws DAOException {
-		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d",
-				getTableName(), yearId);
+		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d", getTableName(), yearId);
 		List<Outlay> data = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL)) {
 			while (result.next())
-				data.add(mapping(result));
+				data.add(fullMapping(result));
 			
 			if(data.isEmpty())
 				throw new DAOException("Aucune operation pour l'annee academique indexer par: "+yearId);
@@ -166,8 +165,7 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 
 	@Override
 	public List<Outlay> findByAcademicYear (long yearId, int limit, int offset) throws DAOException {
-		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d LIMIT %d OFFSET %d",
-				getTableName(), yearId, limit, offset);
+		final String SQL = String.format("SELECT * FROM %s WHERE academicYear = %d LIMIT %d OFFSET %d", getTableName(), yearId, limit, offset);
 		List<Outlay> data = new ArrayList<>();
 		try (
 				Connection connection = factory.getConnection();

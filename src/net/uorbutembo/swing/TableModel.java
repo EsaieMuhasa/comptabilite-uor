@@ -3,6 +3,8 @@
  */
 package net.uorbutembo.swing;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -10,10 +12,17 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import net.uorbutembo.beans.DBEntity;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOInterface;
 import net.uorbutembo.dao.DAOListener;
+import net.uorbutembo.tools.Config;
 
 /**
  * @author Esaie MUHASA
@@ -24,6 +33,7 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	
 	public static final DateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
 	public static final DateFormat DEFAULT_DATE_TIME_FORMAT = new SimpleDateFormat("dd/MM/yyyy 'à' hh:mm:ss");
+	private final List<ExportationProgressListener> exportationProgressListeners = new ArrayList<>();
 	
 	protected List<T> data = new ArrayList<>();
 	protected int limit;
@@ -80,8 +90,13 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 		reload();
 	}
 	
+	/**
+	 * modification de l'intervale de selection
+	 * @param limit
+	 * @param offset
+	 */
 	public void setInterval (int limit, int offset) {
-		if(this.limit == limit && this.offset == offset )
+		if (this.limit == limit && this.offset == offset )
 			return;
 		
 		this.limit = limit;
@@ -234,6 +249,154 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 		this.data.clear();
 		this.fireTableDataChanged();
 	}
+	
+	/**
+	 * exportation des donnees au format Excell
+	 * @param file
+	 */
+	public synchronized void exportToExcel (File file) {
+		
+		if(file.isDirectory()){
+			fireExportationError(new RuntimeException("Impossible d'effectuer cette operation car le type de fichier n'est pas pris en charge \n"+file.getAbsolutePath()+" est un dossier."));
+			return;
+		}
+		
+		List<T> exportables = getExportableData();
+		String fileName = file.getAbsolutePath();
+		File reel = file;
+		if(!fileName.matches("^(.+)(\\.xlsx)$")){
+			fileName += ".xlsx";
+			reel = new File(fileName);
+		}
+		
+		fireExportationStart();
+		try (
+				XSSFWorkbook book = new XSSFWorkbook();
+				FileOutputStream out = new FileOutputStream(fileName);
+			){
+			XSSFSheet sheet = book.createSheet(Config.find("appShortName").toLowerCase().replaceAll("(\\.)|([^a-z0-9])", "-")+"-sheet");
+			XSSFRow titles = sheet.createRow(0);
+			for (int i = 0, count = getExportableColumnCount(); i < count; i++) {
+				XSSFCell title = titles.createCell(i);
+				title.setCellValue(getExportableColumnName(i));
+			}
+			for (int i = 0, count = exportables.size(); i < count; i++) {
+				XSSFRow row = sheet.createRow(i+1);
+				for (int j = 0; j < getExportableColumnCount(); j++) {
+					XSSFCell cell = row.createCell(j, getColumnType(j));
+					Object o = getCellValue(exportables, i, j);
+					cell.setCellValue(o == null? "" : o.toString());
+				}
+				fireExportationProgress(i, count);
+			}
+			
+			for (int i = 0; i < getExportableColumnCount(); i++)
+				sheet.autoSizeColumn(i);
+			
+			book.write(out);
+			fireExportationFinish(reel);
+		} catch (Exception e) {
+			fireExportationError(e);
+		}
+	}
+	
+	/**
+	 * Renvoie la collection des donnees qui doivent etre exporter
+	 * @return
+	 */
+	protected List<T> getExportableData() {
+		return data;
+	}
+	
+	/**
+	 * renvoie le nombre des colons exportable
+	 * @return
+	 */
+	protected int getExportableColumnCount () {
+		return getColumnCount();
+	}
+	
+	/**
+	 * renvoie le nom de la collone lors de l'exportation des donnees
+	 * @param column
+	 * @return
+	 */
+	protected String getExportableColumnName (int column) {
+		return getColumnName(column);
+	}
+	
+	/**
+	 * renvoie la valeur d'une cellule
+	 * @param exportables
+	 * @param rowIndex
+	 * @param columnIndex
+	 * @return
+	 */
+	protected Object getCellValue (List<T> exportables, int rowIndex, int columnIndex) {
+		return getValueAt(rowIndex, columnIndex);
+	}
+	
+	/**
+	 * renvoie le type de la collonne
+	 * @param columnIndex
+	 * @return
+	 */
+	protected CellType getColumnType (int columnIndex) {
+		return CellType.STRING;
+	}
+	
+	/**
+	 * informe tout les ecouteurs de la preogression d'exportation des donnees
+	 * @param current
+	 * @param max
+	 */
+	protected void fireExportationProgress (int current, int max) {
+		for (ExportationProgressListener ls : exportationProgressListeners)
+			ls.onProgress(this, current, max);
+	}
+	
+	/**
+	 * Informe les ecouteurs que l'exportation des donnees viens de commancer
+	 */
+	protected void fireExportationStart () {
+		for (ExportationProgressListener ls : exportationProgressListeners)
+			ls.onStart(this);
+	}
+	
+	/**
+	 * informe le ecouteur qu'il y a eux erreur lors de l'exportation des donnees
+	 * @param e
+	 */
+	protected void fireExportationError (Exception e) {
+		for (ExportationProgressListener ls : exportationProgressListeners)
+			ls.onError(this, e);
+	}
+	
+	/**
+	 * informe les ecouteurs que l'exportation viens de prendre fin
+	 * @param file
+	 */
+	protected void fireExportationFinish (File file) {
+		for (ExportationProgressListener ls : exportationProgressListeners)
+			ls.onFinish(this, file);
+	}
+	
+	/**
+	 * Ajout d'un ecoiuteur de la progression d'exportation des donnees
+	 * @param ls
+	 */
+	public void addExportationProgressListener (ExportationProgressListener ls) {
+		if(!exportationProgressListeners.contains(ls))
+			exportationProgressListeners.add(ls);
+	}
+	
+	/**
+	 * desabonnement d'un ecouteur de progression d'exportation des donnees
+	 * @param ls
+	 */
+	public void removeExportationProgressListener (ExportationProgressListener ls) {
+		exportationProgressListeners.remove(ls);
+	}
 
 	@Override
 	public void onCreate(T e, int requestId) {
@@ -299,4 +462,39 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 
 	@Override
 	public void onCheck(boolean check, int requestId) {}
+	
+	/**
+	 * Listener d'exportation des donnees
+	 * @author Esaie MUHASA
+	 */
+	public static interface ExportationProgressListener {
+		/**
+		 * lors du debut d'exportation des donnees
+		 * @param model
+		 */
+		void onStart(TableModel<?> model);
+		
+		/**
+		 * A chaque fois qu'il y a progression d'exportation des donnees
+		 * @param model
+		 * @param current
+		 * @param max
+		 */
+		void onProgress(TableModel<?> model, int current, int max);
+		
+		/**
+		 * s'il y a erreur lors de l'exportation des donnees
+		 * @param model
+		 * @param e
+		 */
+		void onError(TableModel<?> model, Exception e);
+		
+		/**
+		 * fin d'exportation des donnees
+		 * 
+		 * @param model
+		 * @param file
+		 */
+		void onFinish(TableModel<?> model, File file);
+	}
 }

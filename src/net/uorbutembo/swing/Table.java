@@ -5,10 +5,14 @@ package net.uorbutembo.swing;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.io.File;
+import java.util.Date;
 
+import javax.swing.JFileChooser;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
 
@@ -21,11 +25,17 @@ import net.uorbutembo.tools.FormUtil;
 public class Table extends JTable {
 	private static final long serialVersionUID = 1086643646477646234L;
 	
+	public static final JFileChooser XLSX_FILE_CHOOSER = new JFileChooser();
+	static {
+		XLSX_FILE_CHOOSER.setFileFilter(new FileFilterExcel());
+		XLSX_FILE_CHOOSER.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		File file = XLSX_FILE_CHOOSER.getCurrentDirectory();
+		File reel = new File(file.getAbsolutePath()+"/exportation-"+FormUtil.DEFAULT_FROMATER.format(new Date())+"-data.xlsx");
+		XLSX_FILE_CHOOSER.setSelectedFile(reel);;
+	}
+	
 	private EmptyBorder padding = FormUtil.DEFAULT_EMPTY_BORDER;
 
-	/**
-	 * 
-	 */
 	public Table() {
 		this.init();
 	}
@@ -88,6 +98,26 @@ public class Table extends JTable {
 	public void setPadding (int padding) {
 		this.padding = new EmptyBorder(padding, padding, padding, padding);
 		this.repaint();
+	}
+	
+	/**
+	 * filtr d'exportation des donnees au format excel
+	 * @author Esaie MUHASA
+	 */
+	public static class FileFilterExcel extends FileFilter {
+
+		@Override
+		public boolean accept(File f) {
+			if(f.isDirectory())
+				return true;
+			return f.getName().matches("^(.+)(\\.xlsx)$");
+		}
+
+		@Override
+		public String getDescription() {
+			return "Format excel 2010 ou plus";
+		}
+		
 	}
 
 }

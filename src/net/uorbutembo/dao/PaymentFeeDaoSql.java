@@ -114,7 +114,7 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(sql)) {
 			while (result.next())
-				data.add(mapping(result));
+				data.add(fullMapping(result));
 			
 			if(data.isEmpty())
 				throw new DAOException("Aucun payement pour l'annee academique indexer par  "+academicYearId);

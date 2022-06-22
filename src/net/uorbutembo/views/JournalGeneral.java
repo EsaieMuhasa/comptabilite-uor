@@ -27,6 +27,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -59,6 +60,7 @@ import net.uorbutembo.swing.DefaultCardModel;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TableModel;
+import net.uorbutembo.swing.TableModel.ExportationProgressListener;
 import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.swing.charts.ChartPanel;
 import net.uorbutembo.swing.charts.DateAxis;
@@ -98,6 +100,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 	private AcademicYear year;//annee actuelement selectionner dans le combo du sidebar
 	private final MainWindow mainWindow;
 	
+	
 	public JournalGeneral(MainWindow mainWindow) {
 		super(new BorderLayout());
 		
@@ -126,7 +129,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			setCursor(Cursor.getDefaultCursor());
 		}
 	}
-	
+
 	@Override
 	public void onChange(AcademicYear year) {	
 		this.year = year;
@@ -134,6 +137,16 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		cards.updateCards();
 		container.reload();
 		wait(false);
+	}
+	
+	/**
+	 * Injection du listener d'exportation des donnees au format XLSX
+	 * @param exportationListener
+	 */
+	public void setExportationListener(ExportationProgressListener exportationListener) {
+		container.getRecipePanel().getTableModelFees().addExportationProgressListener(exportationListener);
+		container.getRecipePanel().getTableModelOther().addExportationProgressListener(exportationListener);
+		container.getOutlayPanel().getTableModel().addExportationProgressListener(exportationListener);
 	}
 	
 	/**
@@ -360,6 +373,21 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			recipePanel.reload(year);
 			outlayPanel.reload(year);
 		}
+
+		/**
+		 * @return the recipePanel
+		 */
+		public RecipePanel getRecipePanel() {
+			return recipePanel;
+		}
+
+		/**
+		 * @return the outlayPanel
+		 */
+		public OutlayPanel getOutlayPanel() {
+			return outlayPanel;
+		}
+		
 		
 	}
 	
@@ -741,16 +769,16 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		
 	}
 	
-	private class RecipePanel extends Panel {
+	private final class RecipePanel extends Panel {
 		private static final long serialVersionUID = 1744540939252963612L;
 		
 		private JDialog dialogRecipe;
 		private FormOtherRecipe formRecipe;
 		private DAOAdapter<OtherRecipe> recipeAdapter;
-		private final PaymentFeeTableModel tableModelFees = new PaymentFeeTableModel();
+		private final JournalPaymentFeeTableModel tableModelFees = new JournalPaymentFeeTableModel();
 		private final OtherRecipeTableModel tableModelOther = new OtherRecipeTableModel(otherRecipeDao);
 		private final Table table = new Table(tableModelFees);
-		private final TablePanel tablePanel = new TablePanel(table, "Payements des frais academiques");
+		private final TablePanel tablePanel = new TablePanel(table, "Payements des frais académiques");
 		
 		private final MouseListener  tableMouseListener = new MouseAdapter() {
 			@Override
@@ -807,6 +835,17 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			btnNext.setEnabled(model.hasNext());
 		};
 		
+		private final ActionListener btnExportListener = event -> {
+			TableModel<?> model = (TableModel<?>) table.getModel();
+			int rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
+			if(rps == JFileChooser.APPROVE_OPTION) {
+				Thread t = new Thread(() -> {
+					model.exportToExcel(Table.XLSX_FILE_CHOOSER.getSelectedFile());
+				});
+				t.start();
+			}
+		};
+		
 		{
 			final ButtonGroup group = new ButtonGroup();
 			btnRecipe.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
@@ -827,6 +866,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			btnPrev.setEnabled(false);
 			btnNext.addActionListener(navigationListener);
 			btnPrev.addActionListener(navigationListener);
+			btnToExcel.addActionListener(btnExportListener);
 		}
 		
 		private final Box tools = Box.createHorizontalBox();
@@ -836,7 +876,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		
 		public RecipePanel() {
 			super(new BorderLayout());
-
+			
 			table.setShowVerticalLines(true);
 			table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			
@@ -858,8 +898,25 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			btnRecipe.addActionListener(event -> {
 				createRecipe();
 			});
+			
 		}
 		
+		/**
+		 * @return the tableModelFees
+		 */
+		public JournalPaymentFeeTableModel getTableModelFees() {
+			return tableModelFees;
+		}
+
+
+		/**
+		 * @return the tableModelOther
+		 */
+		public OtherRecipeTableModel getTableModelOther() {
+			return tableModelOther;
+		}
+
+
 		/**
 		 * rechargement des donnees pour l'annees enn parametre
 		 * @param currentYear
@@ -946,12 +1003,12 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			dialogRecipe.setMinimumSize(size);
 			
 			recipeAdapter = new DAOAdapter<OtherRecipe>() {
-
+				
 				@Override
 				public synchronized void onCreate(OtherRecipe e, int requestId) {
 					dialogRecipe.setVisible(false);
 				}
-
+				
 				@Override
 				public synchronized void onUpdate(OtherRecipe e, int requestId) {
 					dialogRecipe.setVisible(false);
@@ -963,12 +1020,12 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		}
 	}
 	
-	public class PaymentFeeTableModel extends TableModel<PaymentFee> {
+	private class JournalPaymentFeeTableModel extends TableModel<PaymentFee> {
 		private static final long serialVersionUID = 7032190897666231971L;
 
 		private AcademicYear currentYear;
 		
-		public PaymentFeeTableModel() {
+		public JournalPaymentFeeTableModel() {
 			super(paymentFeeDao);
 		}
 		
@@ -988,6 +1045,36 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			this.currentYear = currentYear;
 			offset = 0;
 			reload();
+		}
+
+		@Override
+		protected List<PaymentFee> getExportableData() {
+			return paymentFeeDao.findByAcademicYear(currentYear);
+		}
+
+		@Override
+		protected Object getCellValue(List<PaymentFee> exportables, int rowIndex, int columnIndex) {
+			switch (columnIndex) {
+				case 0:
+					return FormUtil.DEFAULT_FROMATER.format(exportables.get(rowIndex).getReceivedDate());
+				case 1:
+					return FormUtil.DEFAULT_FROMATER.format(exportables.get(rowIndex).getSlipDate());
+				case 2:
+					return exportables.get(rowIndex).getInscription().getStudent().getFullName();
+				case 3:
+					return exportables.get(rowIndex).getInscription().getPromotion();
+				case 4:
+					return exportables.get(rowIndex).getSlipNumber();
+				case 5:
+					return exportables.get(rowIndex).getReceiptNumber();
+				case 6:
+					return exportables.get(rowIndex).getWording();
+				case 7:
+					return exportables.get(rowIndex).getLocation();
+				case 8:
+					return exportables.get(rowIndex).getAmount();
+			}
+			return null;
 		}
 
 		@Override
@@ -1062,7 +1149,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 	private class OutlayPanel extends Panel {
 		private static final long serialVersionUID = -2786706226334778839L;
 		
-		private final OutlayTableModel tableModel = new OutlayTableModel();
+		private final JournalOutlayTableModel tableModel = new JournalOutlayTableModel();
 		private final Table table = new Table(tableModel);
 		private final TablePanel tablePanel = new TablePanel(table, "Liste des opérations de sortie");
 		private final JButton btnOutlay = new Button(new ImageIcon(R.getIcon("drop")), "Nouveau dépense");
@@ -1083,9 +1170,19 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			btnPrev.setEnabled(tableModel.hasPrevious());
 			btnNext.setEnabled(tableModel.hasNext());
 		};
+		private final ActionListener btnExportListener = event -> {
+			int rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
+			if(rps == JFileChooser.APPROVE_OPTION) {
+				Thread t = new Thread(() -> {
+					tableModel.exportToExcel(Table.XLSX_FILE_CHOOSER.getSelectedFile());
+				});
+				t.start();
+			}
+		};
 		{
 			btnNext.addActionListener(navigationListener);
 			btnPrev.addActionListener(navigationListener);
+			btnToExcel.addActionListener(btnExportListener);
 			btnNext.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			btnPrev.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			btnToExcel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
@@ -1137,7 +1234,14 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			
 			table.addMouseListener(mouseListener);
 		}
-		
+
+		/**
+		 * @return the tableModel
+		 */
+		public JournalOutlayTableModel getTableModel() {
+			return tableModel;
+		}
+
 		public void reload (AcademicYear currentYear) {
 			tableModel.setCurrentYear(currentYear);
 			
@@ -1239,12 +1343,12 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 	/**
 	 * @author Esaie MUHASA
 	 */
-	public class OutlayTableModel extends TableModel<Outlay> {
+	private class JournalOutlayTableModel extends TableModel<Outlay> {
 		private static final long serialVersionUID = -90393497836126101L;
 		
 		private AcademicYear currentYear;
 
-		public OutlayTableModel() {
+		public JournalOutlayTableModel() {
 			super(outlayDao);
 			limit = 20;
 		}
@@ -1288,6 +1392,23 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			return super.getColumnName(column);
 		}
 
+
+		@Override
+		protected List<Outlay> getExportableData() {
+			return outlayDao.findByAcademicYear(currentYear);
+		}
+
+		@Override
+		protected Object getCellValue(List<Outlay> exportables, int rowIndex, int columnIndex) {
+			switch (columnIndex) {
+				case 0: return DEFAULT_DATE_FORMAT.format(exportables.get(rowIndex).getDeliveryDate());
+				case 1: return exportables.get(rowIndex).getAccount();
+				case 2 : return exportables.get(rowIndex).getLocation();
+				case 3: return exportables.get(rowIndex).getWording();
+				case 4: return PieRender.DECIMAL_FORMAT.format(exportables.get(rowIndex).getAmount());
+			}
+			return null;
+		}
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {

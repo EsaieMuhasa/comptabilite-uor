@@ -351,6 +351,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	@Override
 	public void onAction(InscriptionDataRow row) {
 		createDialogIndiviualSheet();
+		dialogSheet.setTitle("Fiche induviduelle de payment - "+row.getInscription().getStudent().getFullName());
 		sheet.setInscription(row);
 		dialogSheet.setLocationRelativeTo(mainWindow);
 		dialogSheet.setVisible(true);
