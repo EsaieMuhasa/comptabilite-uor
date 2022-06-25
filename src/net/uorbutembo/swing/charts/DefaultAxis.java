@@ -73,6 +73,8 @@ public class DefaultAxis extends AbstractChartData implements Axis {
 	
 	@Override
 	public String getLabelOf (final double value) {
+		if(Double.isNaN(value) || value == Double.NaN)
+			return "";
 		return DECIMAL_FORMAT.format(value)+" "+getMeasureUnit();
 	}
 

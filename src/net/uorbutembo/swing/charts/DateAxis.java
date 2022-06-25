@@ -5,6 +5,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import net.uorbutembo.tools.FormUtil;
+
 public class DateAxis extends DefaultAxis{
 	
 	public static final DateFormat DEFAULT_DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
@@ -65,9 +67,11 @@ public class DateAxis extends DefaultAxis{
 	}
 	
 	@Override
-	public String getLabelOf(double value) {
-		long date = System.currentTimeMillis() + (((long) value) * 1000 * 60 * 60 * 24 );
-		return formater.format(new Date(date));
+	public String getLabelOf (double value) {
+		long millis = System.currentTimeMillis() + (((long) value) * 1000l * 60l * 60l * 24l );
+		Date date = new Date(millis);
+		Date max = FormUtil.toMiddleTimestampOfDay(date);
+		return formater.format(max);
 	}
 
 	/**

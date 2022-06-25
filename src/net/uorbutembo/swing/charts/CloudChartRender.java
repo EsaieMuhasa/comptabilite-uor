@@ -5,6 +5,7 @@ package net.uorbutembo.swing.charts;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -42,6 +43,7 @@ public class CloudChartRender extends JComponent implements Printable{
 	private static final EmptyBorder DEFAULT_PADDING = new EmptyBorder(10, 10, 10, 10);
 	private final ModelListener modelListener = new  ModelListener();
 	private final MouseListener mouseListener = new  MouseListener();
+	private final List<ChartRenderTranslationListener> translationListener = new ArrayList<>();
 	private CloudChartModel model;
 	
 	private BasicStroke borderStroke = new BasicStroke(1.5f);
@@ -66,8 +68,8 @@ public class CloudChartRender extends JComponent implements Printable{
 	//grid
 	private BasicStroke gridStroke = new BasicStroke(0.8f);
 	private Color gridColor = new Color(0x559F6666, true);
-	private double gridXstep = 80;
-	private double gridYstep = 30;
+	private double gridXstep = 75;
+	private double gridYstep = 35;
 	private boolean gridXvisible = true;
 	private boolean gridYvisible = true;
 	private Line2D xlineAxis;
@@ -87,6 +89,11 @@ public class CloudChartRender extends JComponent implements Printable{
 	private Color mouseLineColor = new Color(0xBB550055, true);
 	private BasicStroke mouseLineWidth = new BasicStroke(1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 	private boolean mouseLineVisible = true;
+	//==
+	
+	//translatable
+	private boolean horizontalTranslate = true;
+	private boolean verticalTranslate = false;
 	//==
 
 	public CloudChartRender() {
@@ -133,6 +140,51 @@ public class CloudChartRender extends JComponent implements Printable{
 		repaint();
 	}
 	
+	/**
+	 * @return the verticalTranslate
+	 */
+	public boolean isVerticalTranslate() {
+		return verticalTranslate;
+	}
+
+	/**
+	 * @param verticalTranslate the verticalTranslate to set
+	 */
+	public void setVerticalTranslate (boolean verticalTranslate) {
+		this.verticalTranslate = verticalTranslate;
+	}
+
+	/**
+	 * @return the horizontalTranslate
+	 */
+	public boolean isHorizontalTranslate() {
+		return horizontalTranslate;
+	}
+
+	/**
+	 * @param horizontalTranslate the horizontalTranslate to set
+	 */
+	public void setHorizontalTranslate(boolean horizontalTranslate) {
+		this.horizontalTranslate = horizontalTranslate;
+	}
+	
+	/**
+	 * abonnement d'un ecouteur des translation
+	 * @param listener
+	 */
+	public void addTranslationListener (ChartRenderTranslationListener listener) {
+		if(!translationListener.contains(listener))
+			translationListener.add(listener);
+	}
+	
+	/**
+	 * desabonnement d'un ecouteur de translation
+	 * @param listener
+	 */
+	public void removeTranslationListener (ChartRenderTranslationListener listener) {
+		translationListener.remove(listener);
+	}
+
 	/**
 	 * @return the mouseLineColor
 	 */
@@ -562,8 +614,26 @@ public class CloudChartRender extends JComponent implements Printable{
      * @param height : hauteur max disponible
      */
 	private void paintGrid (Graphics2D g, double width, double height) {
-		if(model.getXMax() == null || model.getYMax() == null)
-			return;
+		
+		double xMax = model.hasVisibleChart()? model.getXMax().getX() : 10;
+		double yMax = model.hasVisibleChart()? model.getYMax().getY() : 10;
+		
+		double xMin = model.hasVisibleChart()? model.getXMin().getX() : - xMax;
+		double yMin = model.hasVisibleChart()? model.getYMin().getY() : - yMax;
+		
+		if(yMax == 0 && yMin == 0) {
+			yMax = 5;
+			yMin = -yMax;
+		} else if (yMax == yMin) {
+			yMin = yMax / 4f;
+		}
+		
+		if(xMax == 0 && xMin == 0) {
+			xMax = 5;
+			xMin = -xMax;
+		} else if (xMax == xMin) {
+			xMin = xMax / 4f;
+		}
 		
 		g.setStroke(gridStroke);
 		g.setColor(gridColor);
@@ -572,11 +642,11 @@ public class CloudChartRender extends JComponent implements Printable{
 		
 		if(xlineAxis != null) {//pour le cas où l'axe est visible
 			int y = 0;
-			double percentAxis = (100f / heightRender) * (xlineAxis.getY1() - padding);
+			final double percentAxis = (100f / heightRender) * (xlineAxis.getY1() - padding);//pourcentage de la position de l'axe
 			for (double i = xlineAxis.getY1(); i > 0; i -= gridYstep) {
 				y = (int) i;
 				double percent = (100f / heightRender) * (i - padding);
-				double real = Math.abs(percent - percentAxis) * (model.getYMax().getY() / percentAxis);
+				double real = Math.abs(percent - percentAxis) * (yMax / percentAxis);
 				if(real == 0 || y < padding)
 					continue;
 				
@@ -590,11 +660,15 @@ public class CloudChartRender extends JComponent implements Printable{
 			}
 			
 			y = 0;
+			//das le cas ou Y max != zero, pour eviter d'avoir valeur / zero = infinity
+			//cas où le max possible sur y = 0
+			final double ration = (yMax != 0) ? yMax / percentAxis : Math.abs(yMin) / 100f;
 			for (double i = xlineAxis.getY1(); y <= height; i += gridYstep) {
+
 				y =  (int) i;
 				double percent = (100f / heightRender) * (i - padding);
-				double real = -Math.abs(percent - percentAxis) * (model.getYMax().getY() / percentAxis);
-				if(real == 0 || y > (height - paddingBottom))
+				double real = -Math.abs(percent - percentAxis) * ration;
+				if(real == 0f || y > (height - paddingBottom))
 					continue;
 				
 				String txt = model.getYAxis().getLabelOf(real);
@@ -608,12 +682,13 @@ public class CloudChartRender extends JComponent implements Printable{
 			
 			if (mouseLocation != null) {//lors du survol de la sourie
 				double percent = (100f / heightRender) * (mouseLocation.getY() - padding);
-				mouseYvalue = Math.abs(percent - percentAxis) * (model.getYMax().getY() / percentAxis);
+				mouseYvalue = Math.abs(percent - percentAxis) * ration;
 				if(mouseLocation.getY() > xlineAxis.getY1()) {
 					mouseYvalue *= -1;
 				} 
 			}
 		} else {//dans le cas où l'axe n'est pas visible
+			final double ration = (yMax - yMin) / 100f;
 			for (double i = heightRender + padding; i >= 0; i -= gridYstep) {
 				int y = (int)(i);
 				
@@ -621,11 +696,11 @@ public class CloudChartRender extends JComponent implements Printable{
 					continue;
 				
 				double percent = (100f / heightRender) * (i - padding);
-				double real = Math.abs(percent - 100f) * ((model.getYMax().getY() - model.getYMin().getY()) / 100f);
-				real += model.getYMin().getY();
+				double real = Math.abs(percent - 100f) * ration;
+				real += yMin;
 				
 				String txt = model.getYAxis().getLabelOf(real);
-				if(gridYvisible) {			
+				if(gridYvisible) {	
 					g.setColor(gridColor);
 					g.drawLine((int)(paddingLeft - padding/2), y, (int)(width - (padding/2)), y);
 				}
@@ -635,22 +710,23 @@ public class CloudChartRender extends JComponent implements Printable{
 			
 			if (mouseLocation != null) {//lors du survol de la sourie
 				double percent = (100f / heightRender) * (mouseLocation.getY() - padding);
-				mouseYvalue = Math.abs(percent - 100f) * ((model.getYMax().getY() - model.getYMin().getY()) / 100f);
+				mouseYvalue = Math.abs(percent - 100f) * ((yMax - yMin) / 100f);
 				mouseYvalue += model.getYMin().getY();
 			}
 		}
 		
 		if(ylineAxis != null) {	
-			double percentAxis = (100f / widthRender) * (ylineAxis.getX1() - padding);
+			double percentAxis = (100f / widthRender) * (ylineAxis.getX1() - paddingLeft + padding);
+			double ration = Math.abs(xMin) / percentAxis;
 			for (double i = ylineAxis.getX1(); i > 0; i -= gridXstep) {
 				int x = (int)i;
-				double percent = (100f / widthRender) * (i - padding);
-				double real = -Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
+				double percent = (100f / widthRender) * (i - paddingLeft);
+				double real = -Math.abs(percent - percentAxis) * ration;
 				
 				if(real == 0 || x < paddingLeft)
 					continue;
 				String txt = model.getXAxis().getLabelOf(real);
-				if(gridXvisible) {			
+				if (gridXvisible) {		
 					g.setColor(gridColor);
 					g.drawLine(x, (int)padding/2, x, (int) (height - paddingBottom + padding/2));
 				}
@@ -658,10 +734,11 @@ public class CloudChartRender extends JComponent implements Printable{
 				g.drawString(txt, 2 + x - metrics.stringWidth(txt) / 2, (float)(height - padding/2f));
 			}
 			
+			ration = Math.abs(xMax) / percentAxis;
 			for (double i = ylineAxis.getX1(); i < width; i += gridXstep) {
 				int x = (int)i;
-				double percent = (100f / widthRender) * (i - padding);
-				double real = Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
+				double percent = (100f / widthRender) * (i - paddingLeft);
+				double real = Math.abs(percent - percentAxis) * ration;
 				
 				if(real == 0 || x > (width - padding))
 					continue;
@@ -676,22 +753,23 @@ public class CloudChartRender extends JComponent implements Printable{
 			}
 			
 			if (mouseLocation != null) {//lors du survol de la sourie
-				double percent = (100f / widthRender) * (mouseLocation.getX() - padding);
-				mouseXvalue = Math.abs(percent - percentAxis) * (model.getXMax().getX() / percentAxis);
+				ration = mouseLocation.getX() > ylineAxis.getX1()? Math.abs(xMax) / percentAxis : Math.abs(xMin) / percentAxis;
+				double percent = (100f / widthRender) * (mouseLocation.getX() - paddingLeft);
+				mouseXvalue = Math.abs(percent - percentAxis) * ration;
 				if(mouseLocation.getX() < ylineAxis.getX1()) {
 					mouseXvalue *= -1;
 				} 
 			}
 		} else {
-			for (double i = widthRender + padding; i >= 0 ; i -= gridXstep) {
+			for (double i = widthRender + paddingLeft; i >= 0 ; i -= gridXstep) {
 				int x = (int)i;
 				
 				if (x < paddingLeft)
 					continue;
 				
-				double percent = (100f / widthRender) * (i - padding);
-				double real = Math.abs(percent) * ((model.getXMax().getX() - model.getXMin().getX()) / 100f);
-				real += model.getXMin().getX();
+				double percent = (100f / widthRender) * (i - paddingLeft);
+				double real = Math.abs(percent) * ((xMax - xMin) / 100f);
+				real += xMin;
 				
 				String txt = model.getXAxis().getLabelOf(real);
 				if(gridXvisible) {			
@@ -703,9 +781,9 @@ public class CloudChartRender extends JComponent implements Printable{
 			}
 			
 			if (mouseLocation != null) {//lors du survol de la sourie
-				double percent = (100f / widthRender) * (mouseLocation.getX() - padding);
-				mouseXvalue = Math.abs(percent) * ((model.getXMax().getX() - model.getXMin().getX()) / 100f);
-				mouseXvalue += model.getXMin().getX();
+				double percent = (100f / widthRender) * (mouseLocation.getX() - paddingLeft);
+				mouseXvalue = Math.abs(percent) * ((xMax - xMin) / 100f);
+				mouseXvalue += xMin;
 			}
 		}
 		
@@ -724,6 +802,20 @@ public class CloudChartRender extends JComponent implements Printable{
 		
 		double xMin = model.hasVisibleChart()? model.getXMin().getX() : - xMax;
 		double yMin = model.hasVisibleChart()? model.getYMin().getY() : - yMax;
+		
+		if(yMax == 0 && yMin == 0) {
+			yMax = 5;
+			yMin = -5;
+		} else if (yMax == yMin) {
+			yMin = yMax / 4f;
+		}
+		
+		if(xMax == 0 && xMin == 0) {
+			xMax = 5;
+			xMin = -5;
+		} else if (xMax == xMin) {
+			xMin = xMax / 4f;
+		}
 		
 		final double absXmax = Math.abs(xMax);
 		final double absYmax = Math.abs(yMax);
@@ -830,6 +922,55 @@ public class CloudChartRender extends JComponent implements Printable{
 		double y = (-yRation * (point.getY() + translateY)) + heightRender + padding;
 		p.translateXY(x, y);
 		return p;
+	}
+	
+	/**
+	 * transpose un point appartement au plan du rendu dans un plan le l'espace reel 
+	 * des donnees du graphique.
+	 * En realite les cordonnées  du point en parametre sont translater
+	 * @param point
+	 * @return
+	 */
+	protected Point2D transpose (Point2D point) {
+		double x = 0, y = 0;
+		
+		if(model.getXMin() == null || model.getXMin() == null) {
+			point.setLocation(x, y);
+			return point;
+		}
+		
+		//transposing of Y
+		if (xlineAxis != null) {//pour le cas où l'axe est visible
+			final double percentAxis = (100f / heightRender) * (xlineAxis.getY1() - padding);//pourcentage de la position de l'axe
+			final double ration = (model.getYMax().getY() != 0) ? model.getYMax().getY() / percentAxis : Math.abs(model.getYMin().getY()) / 100f;
+			final double percent = (100f / heightRender) * (point.getY() - padding);
+			y = Math.abs(percent - percentAxis) * ration;
+			if(point.getY() > xlineAxis.getY1())
+				y *= -1;
+		} else {
+			final double percent = (100f / heightRender) * (point.getY() - padding);
+			y = Math.abs(percent - 100f) * ((model.getYMax().getY() - model.getYMin().getY()) / 100f);
+			y += model.getYMin().getY();
+		}
+		//==
+		
+		//transposing of X
+		if(ylineAxis != null) {
+			final double percentAxis = (100f / widthRender) * (ylineAxis.getX1() - padding);
+			final double ration = point.getX() > ylineAxis.getX1()? Math.abs(model.getXMax().getX()) / percentAxis : Math.abs(model.getXMin().getX()) / percentAxis;
+			final double percent = (100f / widthRender) * (point.getX() - padding);
+			x = Math.abs(percent - percentAxis) * ration;
+			if (point.getX() < ylineAxis.getX1())
+				x *= -1;
+		} else {
+			final double percent = (100f / widthRender) * (point.getX() - padding);
+			x = Math.abs(percent) * ((model.getXMax().getX() - model.getXMin().getX()) / 100f);
+			x += model.getXMin().getX();
+		}
+		//==
+		
+		point.setLocation(x, y);
+		return point;
 	}
 	
 	/**
@@ -1110,10 +1251,16 @@ public class CloudChartRender extends JComponent implements Printable{
 	
 	protected class MouseListener extends MouseAdapter {
 		
+		private Point2D A;//debut du drag de la souri
+		private Point2D B;//fin du drag de la souri 
+		
 		@Override
 		public void mouseExited(MouseEvent e) {
 			mouseLocation = null;
+			A = null;
+			B = null;
 			repaint();
+			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
 		
 		@Override
@@ -1144,6 +1291,165 @@ public class CloudChartRender extends JComponent implements Printable{
 			} else 
 				mouseExited(e);
 		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			if(!verticalTranslate && !horizontalTranslate)
+				return;
+			
+			setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+			A = e.getPoint();
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			if(!verticalTranslate && !horizontalTranslate)
+				return;
+			
+			setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			B = e.getPoint();
+			translate();
+		}
+
+		@Override
+		public void mouseDragged(MouseEvent e) {
+			mouseMoved(e);
+			B = e.getPoint();
+		}
+		
+		/**
+		 * traitement de la valeur a translater
+		 * Nous avons 3 points: A, B et C. trois points forment un triangle dont l'angle au moint C est de 90°
+		 * la distance d(AC) est la variation sur l'axe des X
+		 * la distance d(BC) est la variation sur l'axe des Y
+		 */
+		private void translate () {
+			if(A != null && B != null && (verticalTranslate || horizontalTranslate)) {
+				
+				A = transpose(A);
+				B = transpose(B);
+				final double dAC = A.distance(B.getX(), A.getY());
+				final double dBC = B.distance(B.getX(), A.getY());
+				
+				final boolean translateToX = dAC != 0 && horizontalTranslate;
+				final boolean translateToY = dBC != 0 && verticalTranslate;
+
+				double stepsX = (A.getX() < B.getX()? -1f : 1f) * dAC;
+				double stepsY = (A.getY() > B.getY()? -1f : 1f) * dBC;
+				
+				if (translateToX && translateToY) {//translation sur les deux axe
+					Interval xInterval = new Interval(model.getXMin().getX() + stepsX, model.getXMax().getX() + stepsX);
+					Interval yInterval = new Interval(model.getYMin().getY() + stepsY, model.getYMax().getY() + stepsY);
+
+					for (ChartRenderTranslationListener ls : translationListener)
+						ls.onRequireTranslation(CloudChartRender.this, xInterval, yInterval);
+
+				} else if (translateToX) {//translation du sur l'axe des X
+					Interval interval = new Interval(model.getXMin().getX() + stepsX, model.getXMax().getX() + stepsX);
+					
+					for (ChartRenderTranslationListener ls : translationListener)
+						ls.onRequireTranslation(CloudChartRender.this, model.getXAxis(), interval);
+				} else if (translateToY) {//triansaltion sur l'axe des Y
+					Interval interval = new Interval(model.getYMin().getY() + stepsY, model.getYMax().getY() + stepsY);
+					
+					for (ChartRenderTranslationListener ls : translationListener)
+						ls.onRequireTranslation(CloudChartRender.this, model.getYAxis(), interval);
+				}
+			}
+			
+			A = null;
+			B = null;
+		}
+
+	}
+	
+	/**
+	 * intervale de translation sur l'une des Axes
+	 * @author Esaie MUHASA
+	 */
+	public static class Interval {
+		private double min;//la plus petite valeur de l'intervale
+		private double max;//la plus grande valeur de l'intervale
+
+		/**
+		 * @param min
+		 * @param max
+		 */
+		public Interval(double min, double max) {
+			super();
+			this.min = min;
+			this.max = max;
+		}
+
+		/**
+		 * @return the min
+		 */
+		public double getMin() {
+			return min;
+		}
+
+		/**
+		 * @return the max
+		 */
+		public double getMax() {
+			return max;
+		}
+		
+		/**
+		 * midification de l'intervale
+		 * @param min
+		 * @param max
+		 */
+		public void setInterval (double min, double max) {
+			this.min = min;
+			this.max = max;
+		}
+		
+		/**
+		 * Modification de l'intervale
+		 * @param interval
+		 */
+		public void setInterval (Interval interval) {
+			min = interval.min;
+			max = interval.max;
+		}
+
+		@Override
+		public boolean equals (Object obj) {
+			if (obj instanceof Interval) {
+				Interval i = (Interval) obj;
+				return (i.min == min && i.max == max);
+			}
+			return super.equals(obj);
+		}
+
+		@Override
+		public String toString() {
+			return "Interval [min=" + min + ", max=" + max + "]";
+		}
+	}
+	
+	/**
+	 * evenement de demande de transaltion
+	 * @author Esaie MUHASA
+	 */
+	public static interface ChartRenderTranslationListener {
+
+		/**
+		 * demande de translation sur l'axe en deuxieme parametre
+		 * @param source la source de l'evenement
+		 * @param axis
+		 * @param interval
+		 */
+		void onRequireTranslation (CloudChartRender source, Axis axis, Interval interval);
+
+		/**
+		 * require translation on all axis
+		 * @param source
+		 * @param xInterval
+		 * @param yInterval
+		 */
+		void onRequireTranslation (CloudChartRender source, Interval xInterval, Interval yInterval);
 	}
 
 }
