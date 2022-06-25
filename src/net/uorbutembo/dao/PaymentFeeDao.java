@@ -338,6 +338,35 @@ public interface PaymentFeeDao extends DAOInterface <PaymentFee>, OverallStatist
 	}
 	
 	/**
+	 * renvoie le solde de payment des fais academique en une date
+	 * @param year
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	default double getSoldByAcademicYear (AcademicYear year, Date date) throws DAOException {
+		return getSoldByAcademicYear(year.getId(), date);
+	}
+	
+	/**
+	 * revoie le sold des recettes de payment des frais academique en une date
+	 * @param year
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAcademicYear (long year, Date date ) throws DAOException;
+	
+	/**
+	 * renvoie le solde de payement frais academique pour une annee, avant la date en parametre
+	 * @param year
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAcademicYearBeforDate (AcademicYear year, Date date) throws DAOException;
+	
+	/**
 	 * renvoie le solde deja payer en un lieux (prevue pour la preception des frais universitaire)
 	 * pour une annee academique
 	 * @param location

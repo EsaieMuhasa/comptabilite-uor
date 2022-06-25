@@ -223,6 +223,40 @@ class OutlayDaoSql extends UtilSql<Outlay> implements OutlayDao {
 		}
 		return data;
 	}
+	
+	@Override
+	public double getSoldByAcademicYear(AcademicYear year, Date date) throws DAOException {
+		final String SQL = String.format("SELECT SUM(amount) AS sold FROM %s WHERE academicYear = %d AND (deliveryDate BETWEEN %d AND %d)",
+				getTableName(), year.getId(), toMinTimestampOfDay(date).getTime(), toMaxTimestampOfDay(date).getTime());
+		double sum = 0;
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if (result.next())
+				sum = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
+	
+	@Override
+	public double getSoldByAcademicYearBeforDate(AcademicYear year, Date date) throws DAOException {
+		final String SQL = String.format("SELECT SUM(amount) AS sold FROM %s WHERE academicYear = %d AND deliveryDate <= %d",
+				getTableName(), year.getId(), toMaxTimestampOfDay(date).getTime());
+		double sum = 0;
+		try (
+				Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL)) {
+			if (result.next())
+				sum = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
 
 	@Override
 	public boolean checkByAccount(long accountId) throws DAOException {

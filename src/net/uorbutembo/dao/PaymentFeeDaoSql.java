@@ -963,6 +963,51 @@ class PaymentFeeDaoSql extends UtilSql<PaymentFee> implements PaymentFeeDao {
 	}
 	
 	@Override
+	public double getSoldByAcademicYear(long year, Date date) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year);
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT SUM(amount) AS sold FROM %s WHERE inscription IN(%s) AND (receivedDate BETWEEN %d AND %d)", 
+				getTableName(), sqlInscrits, toMinTimestampOfDay(date).getTime(), toMaxTimestampOfDay(date).getTime());
+		
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		
+		return sold;
+	}
+	
+	@Override
+	public double getSoldByAcademicYearBeforDate(AcademicYear year, Date date) throws DAOException {
+		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
+				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year.getId());
+		final String sqlInscrits = String.format("SELECT %s.id FROM %s WHERE %s.promotion IN(%s)", 
+				Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), Inscription.class.getSimpleName(), sqlPromotion);
+		final String sql = String.format("SELECT SUM(amount) AS sold FROM %s WHERE inscription IN(%s) AND receivedDate <= %d", 
+				getTableName(), sqlInscrits, toMaxTimestampOfDay(date).getTime());
+		
+		double sold = 0;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if (result.next()) 
+				sold  = result.getDouble("sold");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sold;
+	}
+	
+	@Override
 	public double getSoldByLocation(long location, long year) throws DAOException {
 		final String sqlPromotion = String.format("SELECT %s.id FROM %s WHERE %s.academicYear = %d",
 				Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), Promotion.class.getSimpleName(), year);

@@ -66,7 +66,9 @@ import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TableModel;
 import net.uorbutembo.swing.TableModel.ExportationProgressListener;
 import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.swing.charts.Axis;
 import net.uorbutembo.swing.charts.ChartPanel;
+import net.uorbutembo.swing.charts.CloudChartRender;
 import net.uorbutembo.swing.charts.DateAxis;
 import net.uorbutembo.swing.charts.DefaultAxis;
 import net.uorbutembo.swing.charts.DefaultCloudChartModel;
@@ -76,6 +78,8 @@ import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.DefaultPointCloud;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
+import net.uorbutembo.swing.charts.CloudChartRender.ChartRenderTranslationListener;
+import net.uorbutembo.swing.charts.CloudChartRender.Interval;
 import net.uorbutembo.swing.charts.PointCloud.CloudType;
 import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.tools.R;
@@ -724,19 +728,20 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		
 	}
 	
-	private final class PanelTabDashboard extends Panel implements JournalMenuItemListener {
+	private final class PanelTabDashboard extends Panel implements JournalMenuItemListener, ChartRenderTranslationListener {
 		private static final long serialVersionUID = 484389202609625039L;
 		
 		private final DefaultPieModel pieModel = new DefaultPieModel();
 		private final PiePanel piePanel = new PiePanel(pieModel, FormUtil.BKG_END_2);
 		
+		private final Interval interval = new Interval(-25, 0);
 		private final DefaultAxis yAxis = new DefaultAxis("Y", "Montant", FormUtil.UNIT_MONEY);
 		private final DateAxis xAxis = new DateAxis("X", "Date", "");
 		private final DefaultCloudChartModel chartModel = new DefaultCloudChartModel(xAxis, yAxis);
 		private final ChartPanel chartPanel = new ChartPanel(chartModel);
-		private final DefaultPointCloud cloudRecipe = new DefaultPointCloud("Recettes", FormUtil.COLORS_ALPHA[9], Color.WHITE, FormUtil.COLORS[9]);
-		private final DefaultPointCloud cloudSold = new DefaultPointCloud("Solde", FormUtil.COLORS_ALPHA[0], Color.WHITE, FormUtil.COLORS[0]);
+		private final DefaultPointCloud cloudRecipe = new DefaultPointCloud("Recettes", FormUtil.COLORS_ALPHA[0], Color.WHITE, FormUtil.COLORS[0]);
 		private final DefaultPointCloud cloudOutlay = new DefaultPointCloud("Dépenses", FormUtil.COLORS_ALPHA[1], Color.WHITE, FormUtil.COLORS[1]);
+		private final DefaultPointCloud cloudSold = new DefaultPointCloud("Solde", FormUtil.COLORS_ALPHA[2], Color.WHITE, FormUtil.COLORS[2]);
 		
 		private final DefaultCardModel<Double> cardSoldModel = new DefaultCardModel<>(CardType.DARK, R.getIcon("caisse"), "$");
 		private final DefaultCardModel<Double> cardOutlayModel = new DefaultCardModel<>(CardType.DARK, R.getIcon("btn-cancel"), "$");
@@ -757,6 +762,8 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			
 			pieModel.setRealMaxPriority(true);
 			pieModel.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
+			
+			cloudSold.setFill(true);
 			
 			chartModel.addChart(cloudOutlay);
 			chartModel.addChart(cloudRecipe);
@@ -847,6 +854,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			add(bottom, BorderLayout.SOUTH);
 			
 			paymentLocationDao.addListener(locationAdapter);
+			chartPanel.getChartRender().addTranslationListener(this);
 		}
 		
 		@Override
@@ -859,8 +867,19 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		 * et contenue de cards
 		 */
 		public void reload () {
+			wait(true);
 			reloadLine();
 			reloadPie();
+			wait(false);
+		}
+		
+		private void wait (boolean status) {
+			
+			if (status) {
+				setCursor(FormUtil.WAIT_CURSOR);
+			} else {
+				setCursor(Cursor.getDefaultCursor());
+			}
 		}
 		
 		/**
@@ -912,6 +931,29 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			cardSoldModel.setValue(bigSold.doubleValue());
 		}
 		
+		@Override
+		public void onRequireTranslation(CloudChartRender source, Axis axis, Interval interval) {
+			double min = interval.getMin(), max = interval.getMax();
+			
+			if(max > 0) {
+				max = 0;
+				min = - 20;
+			}
+			
+			if(this.interval.getMin() == min && this.interval.getMax() == max)
+				return;
+			
+			this.interval.setInterval(min, max);
+			wait(true);
+			reloadLine();
+			wait(false);
+		}
+
+		@Override
+		public void onRequireTranslation(CloudChartRender source, Interval xInterval, Interval yInterval) {
+			onRequireTranslation(source, xAxis, xInterval);
+		}
+		
 		/**
 		 * Rechargement du graphique lineaire qui visualise les entrees et les sorties
 		 * pour le compte sectionner
@@ -922,13 +964,13 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			cloudSold.removePoints();
 			cloudRecipe.removePoints();
 			
-			int min = -18;
-			int max = 1;
+			long min = (long) interval.getMin();
+			long max = (long) interval.getMax();
 
 			long time = 0, now = System.currentTimeMillis();
 			
-			for(int day = min; day <= max; day++) {
-				time = now + (day * 60 * 60 * 1000 * 24);
+			for(long day = min; day <= max; day += 1l) {
+				time = now + (day * 60l * 60l * 1000l * 24l);
 				Date date = new Date(time);
 				double y = 0;
 				//recettes

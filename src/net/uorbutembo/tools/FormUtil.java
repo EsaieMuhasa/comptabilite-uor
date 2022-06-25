@@ -8,7 +8,9 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -18,8 +20,8 @@ import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
 
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.swing.CheckBox;
-import net.uorbutembo.swing.RadioButton;
 
 /**
  * @author Esaie MUHASA
@@ -47,6 +49,8 @@ public abstract class FormUtil {
 	
 	
 	public static SimpleDateFormat DEFAULT_FROMATER = new SimpleDateFormat("dd-MM-yyyy");
+	public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy");
+	public static SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("dd-MM-yyyy");
 	
 	//les curseur les plus utiliser
 	public static final Cursor DEFAULT_CURSOR = new Cursor(Cursor.DEFAULT_CURSOR);
@@ -97,14 +101,6 @@ public abstract class FormUtil {
 		return c;
 	}
 	
-	public static final <T> RadioButton<T> createRadioButon (String label, T data) {
-		RadioButton<T> c = new RadioButton<>(label, data);
-		c.setForeground(Color.LIGHT_GRAY);
-		c.setFont(new Font("Arial", Font.PLAIN, 14));
-		c.setBorder(DEFAULT_EMPTY_BORDER);
-		return c;
-	}
-	
 	/**
 	 * Utilitaire de creation d'un scrollpane, scrollable vericallement
 	 * @param view
@@ -135,6 +131,53 @@ public abstract class FormUtil {
 	 */
 	public static final Dimension createDimensionSmCare () {
 		return new Dimension(30, 30);
+	}
+	
+	
+	/**
+	 * Renvoie une instance de date corresponant au dernier timestemp de la journee du date en parametre
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	public static Date toMaxTimestampOfDay (Date date) throws DAOException{
+		String date2str = DATE_FORMAT.format(date);
+		Date maxDate = null;
+		try {
+			maxDate = DATE_TIME_FORMAT.parse(date2str+" 23:59:59");
+		} catch (ParseException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return maxDate;
+	}
+	
+	public static Date toMiddleTimestampOfDay (Date date) throws DAOException{
+		String date2str = DATE_FORMAT.format(date);
+		Date maxDate = null;
+		try {
+			maxDate = DATE_TIME_FORMAT.parse(date2str+" 12:00:00");
+		} catch (ParseException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return maxDate;
+	}
+	
+	/**
+	 * Renvoie une instance de date correspondant au premier timetemps de la journee dont la 
+	 * date en parametre 
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	public static Date toMinTimestampOfDay (Date date) throws DAOException{
+		String date2str = DATE_FORMAT.format(date);
+		Date minDate = null;
+		try {
+			minDate = DATE_TIME_FORMAT.parse(date2str+" 00:00:00");
+		} catch (ParseException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return minDate;
 	}
 	
 	//couleurs

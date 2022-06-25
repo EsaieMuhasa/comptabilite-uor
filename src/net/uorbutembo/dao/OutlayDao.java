@@ -186,6 +186,24 @@ public interface OutlayDao extends DAOInterface<Outlay>, BaseStatistic<Outlay> {
 	}
 	
 	/**
+	 * Renvoie le solde de tout les depense pour une annee academique en une date
+	 * @param year
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAcademicYear (AcademicYear year, Date date) throws DAOException;
+	
+	/**
+	 * renvoie le solde des depense deja faite pour l'annee academique avant la date
+	 * @param year
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAcademicYearBeforDate (AcademicYear year, Date date) throws DAOException;
+	
+	/**
 	 * renvie le solde des sorties pour le compte en premier paramtre dans le lieux en deuxieme paramtre
 	 * @param account
 	 * @param location

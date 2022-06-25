@@ -101,6 +101,40 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 		}
 		return sum;
 	}
+	
+	@Override
+	public double getSoldByAcademicYear(AcademicYear year, Date date) throws DAOException {
+		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), year.getId());
+		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) AND (collectionDate BETWEEN %d AND %d)", 
+				getTableName(), sqlAccount, toMinTimestampOfDay(date).getTime(), toMaxTimestampOfDay(date).getTime());
+		double sum = 0;
+		try (Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if(result.next())
+				sum = result.getDouble("amount");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
+	
+	@Override
+	public double getSoldByAcademicYearBeforDate(AcademicYear year, Date date) throws DAOException {
+		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), year.getId());
+		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) AND collectionDate <= %d", 
+				getTableName(), sqlAccount, toMaxTimestampOfDay(date).getTime());
+		double sum = 0;
+		try (Connection connection = factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(sql)) {
+			if(result.next())
+				sum = result.getDouble("amount");
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return sum;
+	}
 
 	@Override
 	public int countByAccount(long accountId, Date min, Date max) throws DAOException {

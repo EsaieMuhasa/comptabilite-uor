@@ -156,6 +156,25 @@ public interface OtherRecipeDao extends DAOInterface<OtherRecipe>, BaseStatistic
 	double getSoldByAccounts (long [] accounts, long location) throws DAOException;
 	
 	/**
+	 * renvoie le solde des autres recette en une date
+	 * @param year
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAcademicYear (AcademicYear year, Date date) throws DAOException;
+	
+	/**
+	 * envoie le solde l'annee academique en une pour l'annee en premier parametre, avant la date 
+	 * en deuxieme parametre
+	 * @param year
+	 * @param date
+	 * @return
+	 * @throws DAOException
+	 */
+	double getSoldByAcademicYearBeforDate (AcademicYear year, Date date) throws DAOException;
+	
+	/**
 	 * selection des operations faite sur un compte en un leux en une intervale de date
 	 * @param account
 	 * @param location

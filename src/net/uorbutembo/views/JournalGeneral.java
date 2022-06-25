@@ -62,7 +62,11 @@ import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TableModel;
 import net.uorbutembo.swing.TableModel.ExportationProgressListener;
 import net.uorbutembo.swing.TablePanel;
+import net.uorbutembo.swing.charts.Axis;
 import net.uorbutembo.swing.charts.ChartPanel;
+import net.uorbutembo.swing.charts.CloudChartRender;
+import net.uorbutembo.swing.charts.CloudChartRender.ChartRenderTranslationListener;
+import net.uorbutembo.swing.charts.CloudChartRender.Interval;
 import net.uorbutembo.swing.charts.DateAxis;
 import net.uorbutembo.swing.charts.DefaultAxis;
 import net.uorbutembo.swing.charts.DefaultCloudChartModel;
@@ -395,12 +399,13 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 	 * panel de visualisation des operations d'entree sotie en caissse
 	 * @author Esaie MUHASA
 	 */
-	private class LineChartPanel extends Panel{
+	private class LineChartPanel extends Panel implements ChartRenderTranslationListener{
 		private static final long serialVersionUID = 2734887735495665253L;
 		
 
 		private final DefaultAxis yAxis = new DefaultAxis("Montant", "", "$");
 		private final DateAxis xAxis = new DateAxis("Temps", "t", "");
+		private final Interval interval = new Interval(-25, 0);
 		
 		private final DefaultCloudChartModel chartModel = new DefaultCloudChartModel(xAxis, yAxis);
 		private final DefaultPointCloud cloudRecipes = new DefaultPointCloud("Recette", FormUtil.COLORS_ALPHA[0], FormUtil.COLORS[0], FormUtil.COLORS[0]);
@@ -413,14 +418,14 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			chartModel.addChart(cloudSold);
 			chartModel.addChart(cloudOutlays);
 			
-			//cloudRecipes.setFill(true);
-			//cloudOutlays.setFill(true);
 			cloudSold.setFill(true);
 		}
 		
 		public LineChartPanel() {
 			super(new BorderLayout());			
 			add(chartPanel, BorderLayout.CENTER);
+			chartPanel.getChartRender().setVerticalTranslate(false);
+			chartPanel.getChartRender().addTranslationListener(this);
 		}
 		
 		private void wait (boolean status) {
@@ -432,76 +437,71 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			}
 		}
 		
+		@Override
+		public void onRequireTranslation(CloudChartRender source, Axis axis, Interval interval) {
+			double min = interval.getMin(), max = interval.getMax();
+			
+			if(max > 0) {
+				max = 0;
+				min = - 20;
+			}
+			
+			if(this.interval.getMin() == min && this.interval.getMax() == max)
+				return;
+			
+			this.interval.setInterval(min, max);
+			reloadChart();
+		}
+
+		@Override
+		public void onRequireTranslation(CloudChartRender source, Interval xInterval, Interval yInterval) {
+			onRequireTranslation(source, xAxis, xInterval);
+		}
+
 		private synchronized void reloadChart() {
 			wait(true);
 			chartPanel.getChartRender().setVisible(false);
-			
-			int min = -20;
-			int max = 1;
 			
 			cloudRecipes.removePoints();
 			cloudOutlays.removePoints();
 			cloudSold.removePoints();
 			
+			long min = (long)interval.getMin();
+			long max = (long)interval.getMax();
 			
 			long time = 0, now = System.currentTimeMillis();
 			
-			for(int day = min; day <= max; day++) {
-				time = now + (day * 60 * 60 * 1000 * 24);
+			for(long day = min; day <= max; day += 1l) {
+				time = now + (day * 60l * 60l * 1000l * 24l);
 				Date date = new Date(time);
 				
 				double y = 0;
 				//recettes
-				if (otherRecipeDao.countByAcademicYear(year.getId(), date) != 0) {
-					List<OtherRecipe> recipes = otherRecipeDao.findByAcademicYear(year.getId(), date);
-					for (OtherRecipe r : recipes) {
-						y += r.getAmount();
-					}
-				}
-				
-				if(paymentFeeDao.countByAcademicYear(year.getId(), date) != 0) {
-					List<PaymentFee> fees = paymentFeeDao.findByAcademicYear(year.getId(), date);
-					for (PaymentFee p : fees) {
-						y += p.getAmount();
-					}
-				}
+				y = otherRecipeDao.getSoldByAcademicYear(year, date);
+				y += paymentFeeDao.getSoldByAcademicYear(year, date);
+
 				DefaultMaterialPoint pointIn = new DefaultMaterialPoint(day, y);
 				pointIn.setLabelX(DateAxis.DEFAULT_DATE_FORMAT.format(date));
-				pointIn.setLabelY(y+" USD");
+				pointIn.setLabelY(y+" "+FormUtil.UNIT_MONEY);
 				cloudRecipes.addPoint(pointIn);
 				
 				//depense
-				y = 0;
-				if(outlayDao.checkByAcademicYear(year.getId(), date)) {
-					List<Outlay> outlays = outlayDao.findByAcademicYear(year.getId(), date);
-					for (Outlay o : outlays) {
-						y += o.getAmount();
-					}
-				}
+				y = outlayDao.getSoldByAcademicYear(year, date);
 				
 				DefaultMaterialPoint pointOut = new DefaultMaterialPoint(day, -y);
 				pointOut.setLabelX(DateAxis.DEFAULT_DATE_FORMAT.format(date));
-				pointOut.setLabelY(y+" USD");
+				pointOut.setLabelY(y+" "+FormUtil.UNIT_MONEY);
 				cloudOutlays.addPoint(pointOut);
 				//==
 				
-				y = 0;
-				if (otherRecipeDao.checkByAcademicYearBeforDate(year, date)) {
-					List<OtherRecipe> recipes = otherRecipeDao.findByAcademicYearBeforDate(year, date);
-					for (OtherRecipe r : recipes) {
-						y += r.getAmount();
-					}
-				}
-				
-				if(paymentFeeDao.checkByAcademicYearBeforDate(year.getId(), date)) {
-					List<PaymentFee> fees = paymentFeeDao.findByAcademicYearBeforDate(year.getId(), date);
-					for (PaymentFee p : fees) {
-						y += p.getAmount();
-					}
-				}
-				DefaultMaterialPoint pointSold = new DefaultMaterialPoint(day, y - pointOut.getY(), 10f);
+				//sold
+				y = otherRecipeDao.getSoldByAcademicYearBeforDate(year, date);
+				y += paymentFeeDao.getSoldByAcademicYearBeforDate(year, date);
+				y -= outlayDao.getSoldByAcademicYearBeforDate(year, date);
+
+				DefaultMaterialPoint pointSold = new DefaultMaterialPoint(day, y, 10f);
 				pointSold.setLabelX(DateAxis.DEFAULT_DATE_FORMAT.format(date));
-				pointSold.setLabelY(y+" USD");
+				pointSold.setLabelY(y+" "+FormUtil.UNIT_MONEY);
 				pointSold.setBorderColor(cloudSold.getBorderColor().darker());
 				cloudSold.addPoint(pointSold);
 				//==
