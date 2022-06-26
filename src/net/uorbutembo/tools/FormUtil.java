@@ -39,7 +39,7 @@ public abstract class FormUtil {
 	
 	public static final Color 
 							BORDER_COLOR = new Color(70, 70, 70),
-							ACTIVE_COLOR = new Color(90, 120, 240);
+							ACTIVE_COLOR = new Color(0x5050FF);
 	
 	public static final String UNIT_MONEY = "USD";
 	public static final String UNIT_MONEY_SYMBOL = "$";

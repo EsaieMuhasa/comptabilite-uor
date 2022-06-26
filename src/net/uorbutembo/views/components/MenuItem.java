@@ -8,12 +8,16 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.GroupLayout;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
 import net.uorbutembo.tools.FormUtil;
+import net.uorbutembo.views.components.MenuItemModel.MenuItemModelListener;
 
 /**
  * 
@@ -29,6 +33,42 @@ public class MenuItem extends JPanel{
 	private MenuItemModel<?>  model;
 	private MenuItemAnimation animation=null;
 	
+	private final List<MenuItemButton> buttons = new ArrayList<>();
+	private final List<ActionListener> buttonActions = new ArrayList<>();
+	
+	private MenuItemButton firstItem;
+	private MenuItemListener listener;
+	
+	private final MenuItemModelListener modelListener = new MenuItemModelListener() {
+		
+		@Override
+		public void onChange(MenuItemModel<?> model, int index) {
+			MenuItemButton btn = buttons.get(index);
+			btn.setText(model.getItem(index).toString());
+			if(model.getCurrentItem() == index)
+				btn.setActive(true);
+			else
+				btn.setActive(false);
+		}
+		
+		@Override
+		public void onChange(MenuItemModel<?> model) {
+			
+			for(int i = 0; i < buttons.size(); i++)
+				buttons.get(i).removeActionListener(buttonActions.get(i));
+			
+			removeAll();
+			buttonActions.clear();
+			buttons.clear();
+			
+			add(firstItem);
+			generateSubMenu();
+			
+			revalidate();
+			repaint();
+		}
+	};
+	
 	/**
 	 * @param side
 	 * @param model
@@ -36,18 +76,18 @@ public class MenuItem extends JPanel{
 	 */
 	public MenuItem(Sidebar side, MenuItemModel<?> model, MenuItemListener listener) {
 		super();
+		this.listener = listener;
 		this.initComponents();
         this.model = model;
         setOpaque(false);
         setLayout(new MigLayout("wrap, fillx, insets 0", "[fill]", "[fill, 40!]0[fill, 35!]"));
-        MenuItemButton firstItem = new MenuItemButton(model.getIcon(), model.getLabel(), model.getName());
+        firstItem = new MenuItemButton(model.getIcon(), model.getLabel(), model.getName());
         
-        if(model.getItems().size() != 0) {        	
+        if(model.countItems() != 0) {        	
         	animation = new MenuItemAnimation(side.layout, this);
         }
         firstItem.addActionListener(event -> {
-        	side.onItemClicked(this);
-            if (model.getItems().size() != 0) {
+            if (model.countItems() != 0) {
             	open = !open;
             	listener.onAction(this);            	
             	if (open) {
@@ -61,19 +101,28 @@ public class MenuItem extends JPanel{
             }
         });
         
-        this.add(firstItem);//on ajoute le premier item-menu
+        add(firstItem);//on ajoute le premier item-menu
+        generateSubMenu();
         
-        if(model.getItems().size() != 0) {//pour des menus qui ont des sous-menus  	
-        	for (int index = 0, max = model.getItems().size(); index < max; index++) {
-        		MenuItemButton itemMenu = new MenuItemButton(model.getItems().get(index).toString());
-        		itemMenu.setIndex(index);
-        		itemMenu.addActionListener(event -> {
-        			listener.onAction(this, itemMenu.getIndex(), itemMenu);
-        		});
-        		
-        		this.add(itemMenu);
-        	}
-        }
+        model.addModelListener(modelListener);
+	}
+	
+	/**
+	 * generation du sous menu
+	 */
+	private void generateSubMenu () {
+		if(model.countItems() != 0) {//pour des menus qui ont des sous-menus  	
+			for (int index = 0, max = model.countItems(); index < max; index++) {
+				MenuItemButton itemMenu = new MenuItemButton(model.getItem(index).toString());
+				ActionListener  action = (event) -> {
+					listener.onAction(this, itemMenu.getIndex(), itemMenu);        			
+				};
+				itemMenu.setIndex(index);
+				itemMenu.addActionListener(action);
+				buttons.add(itemMenu);
+				add(itemMenu);
+			}
+		}
 	}
 	
 	public boolean isCurrent() {
@@ -81,8 +130,11 @@ public class MenuItem extends JPanel{
 	}
 
 	public void setCurrent(boolean current) {
-		this.repaint();
 		this.current = current;
+		if (!current)
+			model.setSelectedItem(-1);
+		
+		repaint();
 	}
 
 	public float getAlpha() {

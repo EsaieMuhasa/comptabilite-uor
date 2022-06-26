@@ -5,10 +5,7 @@ package net.uorbutembo.views.models;
 
 import java.util.List;
 
-import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.UniversitySpend;
-import net.uorbutembo.dao.AcademicYearDao;
-import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.dao.UniversitySpendDao;
 import net.uorbutembo.swing.TableModel;
 
@@ -16,24 +13,14 @@ import net.uorbutembo.swing.TableModel;
  * @author Esaie MUHASA
  *
  */
-public class UniversitySpendTableModel extends TableModel <UniversitySpend> implements AcademicYearDaoListener{
+public class UniversitySpendTableModel extends TableModel <UniversitySpend>{
 	private static final long serialVersionUID = -3715461019742870626L;
 
 	private UniversitySpendDao universitySpendDao;
-	private boolean firstLoad = true;
 	
 	public UniversitySpendTableModel (UniversitySpendDao daoInterface) {
 		super(daoInterface);
-		daoInterface.getFactory().findDao(AcademicYearDao.class).addYearListener(this);
 		this.universitySpendDao = daoInterface;
-	}
-	
-	@Override
-	public void onCurrentYear(AcademicYear year) {
-		if (firstLoad){
-			reload();
-			firstLoad = false;
-		}
 	}
 
 	@Override

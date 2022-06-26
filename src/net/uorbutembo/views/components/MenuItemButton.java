@@ -2,18 +2,23 @@ package net.uorbutembo.views.components;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.border.EmptyBorder;
+
 import org.jdesktop.animation.timing.Animator;
 import org.jdesktop.animation.timing.TimingTarget;
 import org.jdesktop.animation.timing.TimingTargetAdapter;
+
+import net.uorbutembo.tools.FormUtil;
 
 /**
  * @author Esaie MUHASA
@@ -33,6 +38,7 @@ public class MenuItemButton extends JButton {
 	protected Point pressedPoint;//le point où l'on a cliquer avec la souris
 	private float alpha;
 	private final Color effectColor = new Color(255, 255, 255, 150);
+	private boolean active;
 
     /**
      * uniliser pour initialiser un item de menu ayant une icone
@@ -67,6 +73,25 @@ public class MenuItemButton extends JButton {
     }
     
     /**
+	 * @return the active
+	 */
+	public boolean isActive() {
+		return active;
+	}
+
+	/**
+	 * @param active the active to set
+	 */
+	public void setActive(boolean active) {
+		if(active  == this.active)
+			return;
+		
+		this.active = active;
+		setFont(active? getFont().deriveFont(Font.BOLD) : getFont().deriveFont(Font.PLAIN));
+		setForeground(active? FormUtil.ACTIVE_COLOR : Color.WHITE);
+	}
+
+	/**
      * renvoie l'index du menu, -1 dans le cas où l'initialisation de l'inde n'a pas eu lieux
      * @return
      */
@@ -121,7 +146,6 @@ public class MenuItemButton extends JButton {
 
     @Override
     protected void paintComponent(Graphics grphcs) {
-//    	System.out.println("\t["+this.getText()+": H = "+this.getHeight()+"px ]");
         Graphics2D g2 = (Graphics2D) grphcs;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         if (pressedPoint != null) {
@@ -130,6 +154,12 @@ public class MenuItemButton extends JButton {
             g2.fillOval((int) (pressedPoint.x - animatSize / 2), (int) (pressedPoint.y - animatSize / 2), (int) animatSize, (int) animatSize);
         }
         g2.setComposite(AlphaComposite.SrcOver);
+        if(active) {        	
+        	g2.setColor(FormUtil.BKG_DARK);
+        	g2.fillOval(10, 8, 20, 20);
+        	g2.setColor(FormUtil.BORDER_COLOR);
+        	g2.drawOval(10, 8, 20, 20);
+        }
         super.paintComponent(grphcs);
     }
 }

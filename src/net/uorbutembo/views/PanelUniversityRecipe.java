@@ -142,6 +142,13 @@ public class PanelUniversityRecipe extends Panel{
 	}
 	
 	/**
+	 * relectutre de
+	 */
+	public void reload () {
+		tableModel.reload();
+	}
+	
+	/**
 	 * insersion du lable et de la description d'une nouvelle recette
 	 */
 	private void createRecipe() {

@@ -77,6 +77,7 @@ import net.uorbutembo.swing.charts.DefaultPointCloud;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PieRender;
 import net.uorbutembo.swing.charts.PointCloud.CloudType;
+import net.uorbutembo.tools.Config;
 import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
@@ -405,7 +406,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 
 		private final DefaultAxis yAxis = new DefaultAxis("Montant", "", "$");
 		private final DateAxis xAxis = new DateAxis("Temps", "t", "");
-		private final Interval interval = new Interval(-25, 0);
+		private final Interval interval = new Interval(Integer.parseInt(Config.find("defaultDateMin")), 0);
 		
 		private final DefaultCloudChartModel chartModel = new DefaultCloudChartModel(xAxis, yAxis);
 		private final DefaultPointCloud cloudRecipes = new DefaultPointCloud("Recette", FormUtil.COLORS_ALPHA[0], FormUtil.COLORS[0], FormUtil.COLORS[0]);
@@ -443,7 +444,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			
 			if(max > 0) {
 				max = 0;
-				min = - 20;
+				min = Integer.parseInt(Config.find("defaultDateMin"));
 			}
 			
 			if(this.interval.getMin() == min && this.interval.getMax() == max)

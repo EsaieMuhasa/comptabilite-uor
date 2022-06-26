@@ -16,13 +16,12 @@ import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.Navbar;
 import net.uorbutembo.views.components.NavbarButtonModel;
-import net.uorbutembo.views.components.Sidebar.YearChooserListener;
 
 /**
  * @author Esaie MUHASA
  *
  */
-public class PanelAcademicYear extends Panel implements YearChooserListener{
+public class PanelAcademicYear extends Panel{
 	private static final long serialVersionUID = -119042779710985760L;
 	
 	
@@ -32,7 +31,6 @@ public class PanelAcademicYear extends Panel implements YearChooserListener{
 	public PanelAcademicYear(MainWindow mainWindow) {
 		super(new BorderLayout());
 		
-		mainWindow.getSidebar().addYearChooserListener(this);
 
 		config = new WorkspaceConfigYear(mainWindow);
 		
@@ -48,8 +46,7 @@ public class PanelAcademicYear extends Panel implements YearChooserListener{
 		add(container, BorderLayout.CENTER);		
 	}
 
-	@Override
-	public void onChange(AcademicYear year) {
+	public void reload (AcademicYear year) {
 		setCursor(FormUtil.WAIT_CURSOR);
 		config.setCursor(FormUtil.WAIT_CURSOR); 
 		config.setCurrentYear(year);

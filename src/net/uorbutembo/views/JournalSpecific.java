@@ -81,6 +81,7 @@ import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.swing.charts.CloudChartRender.ChartRenderTranslationListener;
 import net.uorbutembo.swing.charts.CloudChartRender.Interval;
 import net.uorbutembo.swing.charts.PointCloud.CloudType;
+import net.uorbutembo.tools.Config;
 import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.JournalMenuItem;
@@ -734,7 +735,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		private final DefaultPieModel pieModel = new DefaultPieModel();
 		private final PiePanel piePanel = new PiePanel(pieModel, FormUtil.BKG_END_2);
 		
-		private final Interval interval = new Interval(-25, 0);
+		private final Interval interval = new Interval(Integer.parseInt(Config.find("defaultDateMin")), 0);
 		private final DefaultAxis yAxis = new DefaultAxis("Y", "Montant", FormUtil.UNIT_MONEY);
 		private final DateAxis xAxis = new DateAxis("X", "Date", "");
 		private final DefaultCloudChartModel chartModel = new DefaultCloudChartModel(xAxis, yAxis);
@@ -937,7 +938,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			
 			if(max > 0) {
 				max = 0;
-				min = - 20;
+				min = Integer.parseInt(Config.find("defaultDateMin"));
 			}
 			
 			if(this.interval.getMin() == min && this.interval.getMax() == max)

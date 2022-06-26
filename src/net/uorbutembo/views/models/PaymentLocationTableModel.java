@@ -3,10 +3,7 @@
  */
 package net.uorbutembo.views.models;
 
-import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.PaymentLocation;
-import net.uorbutembo.dao.AcademicYearDao;
-import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.dao.PaymentLocationDao;
 import net.uorbutembo.swing.TableModel;
 
@@ -14,11 +11,10 @@ import net.uorbutembo.swing.TableModel;
  * @author Esaie MUHASA
  *
  */
-public class PaymentLocationTableModel extends TableModel<PaymentLocation> implements AcademicYearDaoListener{
+public class PaymentLocationTableModel extends TableModel<PaymentLocation>{
 	private static final long serialVersionUID = -2604306950655339577L;
 	
 	private final PaymentLocationDao paymentLocationDao;
-	private boolean firstLoad = true;
 
 	/**
 	 * @param daoInterface
@@ -26,15 +22,6 @@ public class PaymentLocationTableModel extends TableModel<PaymentLocation> imple
 	public PaymentLocationTableModel(PaymentLocationDao daoInterface) {
 		super(daoInterface);
 		paymentLocationDao = daoInterface;
-		daoInterface.getFactory().findDao(AcademicYearDao.class).addYearListener(this);
-	}
-	
-	@Override
-	public void onCurrentYear(AcademicYear year) {
-		if(firstLoad) {
-			reload();
-			firstLoad = false;
-		}
 	}
 	
 	@Override

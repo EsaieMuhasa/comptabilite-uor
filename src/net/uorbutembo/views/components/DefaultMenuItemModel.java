@@ -11,6 +11,9 @@ public class DefaultMenuItemModel <T> implements MenuItemModel<T> {
 	private String name;
 	private String label;
 	private List<T> items = new ArrayList<>();
+	private int selectedItem = -1;
+	
+	private final List<MenuItemModelListener> listeners = new ArrayList<>();
 	
 	@SafeVarargs
 	public DefaultMenuItemModel (Icon icon, String label, T... items){
@@ -56,8 +59,12 @@ public class DefaultMenuItemModel <T> implements MenuItemModel<T> {
 	}
 
 	@Override
-	public void setLabel(String label) {
+	public void setLabel (String label) {
+		if(label == this.label)
+			return;
+
 		this.label = label;
+		emitOnChange();
 	}
 
 	@Override
@@ -68,6 +75,7 @@ public class DefaultMenuItemModel <T> implements MenuItemModel<T> {
 	@Override
     public void setIcon(Icon icon) {
         this.icon = icon;
+        emitOnChange();
     }
 
 	@Override
@@ -80,15 +88,15 @@ public class DefaultMenuItemModel <T> implements MenuItemModel<T> {
         this.name = name;
     }
 
+	@SuppressWarnings("unchecked")
 	@Override
-    public List<T> getItems() {
-        return this.items;
+    public T[] getItems() {
+		Object [] is = new Object[items.size()];
+		for (int i = 0; i < items.size(); i++)
+			is[i] = items.get(i);
+        return (T[]) is;
     }
 
-	@Override
-    public void setItems(List<T> items) {
-        this.items = items;
-    }
     
 	@Override
     public int countItems () {
@@ -96,22 +104,93 @@ public class DefaultMenuItemModel <T> implements MenuItemModel<T> {
     }
     
 	@Override
+	public int getCurrentItem() {
+		return selectedItem;
+	}
+
+	@Override
+	public void setSelectedItem (int index) throws IndexOutOfBoundsException {
+		if(index  > countItems())
+			throw new IndexOutOfBoundsException("Index out of range: "+index);
+		
+		if(selectedItem == index)
+			return;
+		
+		int old = this.selectedItem;
+		
+		selectedItem = index;
+		if(old != -1)
+			emitOnChange(old);
+		
+		if(selectedItem != -1)
+			emitOnChange(index);
+
+	}
+
+	@Override
     public MenuItemModel<T> addItem (T item , int index) {
     	this.items.add(index, item);
+    	emitOnChange();
     	return this;
     }
     
 	@Override
     public MenuItemModel<T> addItem (T item) {
     	this.items.add(item);
+    	emitOnChange();
     	return this;
     }
     
     @SuppressWarnings("unchecked")
     @Override
 	public void addItems (T... items) {
-    	for (T t : items) {
+    	for (T t : items) 
 			this.items.add(t);
-		}
+    	emitOnChange();
     }
+
+	@Override
+	public void updateItem(T item, int index) {
+		items.set(index, item);
+		emitOnChange(index);
+	}
+
+	@Override
+	public T getItem(int index) {
+		return items.get(index);
+	}
+
+	@Override
+	public void removeItem(int index) {
+		items.remove(index);
+		emitOnChange();
+	}
+
+	@Override
+	public void addModelListener(MenuItemModelListener ls) {
+		if(!listeners.contains(ls))
+			listeners.add(ls);
+	}
+
+	@Override
+	public void removeModelListener(MenuItemModelListener ls) {
+		listeners.remove(ls);
+	}
+	
+	/**
+	 * informe tout les ecouteurs du changement du model
+	 */
+	protected void emitOnChange () {
+		for (MenuItemModelListener ls : listeners)
+			ls.onChange(this);
+	}
+	
+	/**
+	 * @param index
+	 */
+	protected void emitOnChange (int index) {
+		for (MenuItemModelListener ls : listeners)
+			ls.onChange(this, index);
+	}
+
 }

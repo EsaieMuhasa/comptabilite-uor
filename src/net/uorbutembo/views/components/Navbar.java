@@ -66,20 +66,20 @@ public class Navbar extends JPanel {
 	 * @param name
 	 */
 	public void showGroup (String name) {
-		NavbarGroup group = this.groups.get(name);
+		NavbarGroup group = groups.get(name);
 		if(group != null) {
-			Set<String> keys = this.groups.keySet();
+			Set<String> keys = groups.keySet();
 			for (String key : keys) {
-				this.groups.get(key).setVisible(false);
+				groups.get(key).setVisible(false);
 			}
 			group.setVisible(true);
 		}
 	}
 	
 	public void hideItems () {
-		Set<String> keys = this.groups.keySet();
+		Set<String> keys = groups.keySet();
 		for (String key : keys) {
-			this.groups.get(key).setVisible(false);
+			groups.get(key).setVisible(false);
 		}
 	}
 	
@@ -92,7 +92,7 @@ public class Navbar extends JPanel {
         
         Color color = BKG_END;
         g2.setColor(color);
-        g2.fillRect(1, 0, getWidth(), getHeight());
+        g2.fillRect(0, 0, getWidth(), getHeight());
 	}
 	
 	@Override
@@ -104,6 +104,6 @@ public class Navbar extends JPanel {
         
         
         g2.setColor(BORDER_COLOR);
-        g2.drawLine(0, this.getHeight()-1, this.getWidth(), this.getHeight()-1);
+        g2.drawLine(0, getHeight()-1, getWidth(), getHeight()-1);
 	}
 }

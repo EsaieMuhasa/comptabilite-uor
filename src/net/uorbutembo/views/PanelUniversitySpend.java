@@ -144,6 +144,13 @@ public class PanelUniversitySpend extends Panel{
 	}
 	
 	/**
+	 * relecture des donnees depuis le DAO
+	 */
+	public void reload() {
+		tableModel.reload();
+	}
+	
+	/**
 	 * inersion de la description d'une depense
 	 */
 	private void createSpend() {

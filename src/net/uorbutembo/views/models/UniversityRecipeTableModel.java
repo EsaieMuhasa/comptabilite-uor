@@ -5,10 +5,7 @@ package net.uorbutembo.views.models;
 
 import java.util.List;
 
-import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.UniversityRecipe;
-import net.uorbutembo.dao.AcademicYearDao;
-import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.dao.UniversityRecipeDao;
 import net.uorbutembo.swing.TableModel;
 
@@ -16,24 +13,14 @@ import net.uorbutembo.swing.TableModel;
  * @author Esaie MUHASA
  *
  */
-public class UniversityRecipeTableModel extends TableModel <UniversityRecipe> implements AcademicYearDaoListener{
+public class UniversityRecipeTableModel extends TableModel <UniversityRecipe>{
 	private static final long serialVersionUID = -3715461019742870626L;
 
 	private UniversityRecipeDao universityRecipeDao;
-	private boolean firstLoad = true;
 	
 	public UniversityRecipeTableModel(UniversityRecipeDao daoInterface) {
 		super(daoInterface);
 		this.universityRecipeDao = daoInterface;
-		daoInterface.getFactory().findDao(AcademicYearDao.class).addYearListener(this);
-	}
-	
-	@Override
-	public void onCurrentYear(AcademicYear year) {
-		if(firstLoad) {
-			reload();
-			firstLoad = false;
-		}
 	}
 
 	@Override

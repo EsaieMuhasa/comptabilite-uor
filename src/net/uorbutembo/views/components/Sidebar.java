@@ -80,7 +80,7 @@ public class Sidebar extends Panel implements ItemListener{
 	private final JScrollPane scroll = new JScrollPane(body);
 	private final MenuItemListener listener;
 	
-	private List<MenuItem> items = new ArrayList<>();
+	private final  List<MenuItem> items = new ArrayList<>();
 	
 	private final DefaultComboBoxModel<AcademicYear> comboModel = new  DefaultComboBoxModel<AcademicYear>();
 	private final ComboBoxTool comboBox = new ComboBoxTool(comboModel);
@@ -229,22 +229,15 @@ public class Sidebar extends Panel implements ItemListener{
 	public MenuItem addItem (MenuItemModel<?>  item) {
 		return this.addMenu(item);
 	}
+
 	
-	public void onItemClicked (MenuItem item) {
-		if(item.isCurrent()) {
-			return;
-		}
-		
-		for (MenuItem i : items) {
-			if (i.isCurrent()) {
-				i.setCurrent(false);
-				break;
-			}
-		}
-		
-		item.setCurrent(true);
+	/**
+	 * @return the items
+	 */
+	public List<MenuItem> getItems() {
+		return items;
 	}
-	
+
 	/**
 	 * Ajout d'un element au menu
 	 * @param <H>

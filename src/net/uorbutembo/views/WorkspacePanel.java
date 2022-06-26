@@ -19,8 +19,6 @@ import javax.swing.JLabel;
 import javax.swing.border.EmptyBorder;
 
 import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.dao.AcademicYearDao;
-import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.tools.R;
@@ -38,7 +36,7 @@ import net.uorbutembo.views.components.Sidebar;
  * Ce panieau represente l'epace de travail.
  * chaque element de l'espace de travail doit Heriter de DefaultScenePanel
  */
-public class WorkspacePanel extends Panel implements MenuItemListener, AcademicYearDaoListener{
+public class WorkspacePanel extends Panel implements MenuItemListener, Sidebar.YearChooserListener{
 	private static final long serialVersionUID = 3541117443197136392L;
 	
 	private final Navbar navbar = new Navbar();
@@ -51,25 +49,20 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 	private Sidebar sidebar;
 	
 	protected AcademicYear currentYear;
-	private AcademicYearDao academicYearDao;
-	
-	
+	private MenuItemModel<String> config;
 	private PanelDashboard dashboard;
 
-	
 	public WorkspacePanel(MainWindow mainWindow) {
 		super(new BorderLayout());
 		this.mainWindow = mainWindow;
-		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
-		academicYearDao.addYearListener(this);
-		this.setBorder(null);
+		setBorder(null);
 		
 		final Panel container = new Panel(new BorderLayout());
 		
-		this.add(head, BorderLayout.NORTH);
-		container.add(this.navbar, BorderLayout.NORTH);
-		container.add(this.body, BorderLayout.CENTER);
-		this.add(container, BorderLayout.CENTER);
+		add(head, BorderLayout.NORTH);
+		container.add(navbar, BorderLayout.NORTH);
+		container.add(body, BorderLayout.CENTER);
+		add(container, BorderLayout.CENTER);
 	}
 	
 	/**
@@ -89,9 +82,11 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 		MenuItemModel<String> dashbord = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("dashboard")), "Tableau de bord");
 		MenuItemModel<String> students = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("student")), "Etudiants ");
 		MenuItemModel<String> journal = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("calendar")), "Journal ");
-		MenuItemModel<String> config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Configurations globales");
 		
-		this.dashboard = new PanelDashboard(mainWindow);
+		config = new DefaultMenuItemModel<>(new ImageIcon(R.getIcon("cog")), "Configurations globales");
+		config.addItems("Année academique", "Filières et classes", "Dépenses", "Autres recettes", "Lieux de payement");
+		
+		dashboard = new PanelDashboard(mainWindow);
 		
 		this
 		.add(dashbord, dashboard)
@@ -102,6 +97,13 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 		head.setVisible(false);
 		navbar.hideItems();
 		navbar.setVisible(false);
+		sidebar.addYearChooserListener(this);
+	}
+	
+	@Override
+	public void onChange(AcademicYear year) {
+		currentYear = year;
+		config.updateItem(year.toString(), 0);
 	}
 
 	/**
@@ -129,80 +131,105 @@ public class WorkspacePanel extends Panel implements MenuItemListener, AcademicY
 	}
 	
 	@Override
-	protected void paintBorder(Graphics g) {
-		super.paintBorder(g);
-		
-		Graphics2D g2 = (Graphics2D) g;
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
-        g2.setColor(BORDER_COLOR);
-        g2.drawLine(0, 0, 0, this.getHeight());
-	}
-	
-	@Override
 	protected void paintComponent(Graphics g) {
-		super.paintComponent(g);
-		
 		Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
         g2.setColor(BKG_DARK);
-        g2.fillRect(0, 0, this.getWidth(), this.getHeight());
+        g2.fillRect(0, 0, getWidth(), getHeight());
         
+        super.paintComponent(g);
 	}
 	
 	@Override
-	public void onCurrentYear(AcademicYear year) {
-		currentYear = year;
+	protected void paintChildren (Graphics g) {
+		super.paintChildren(g);
+		
+		Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+        
+        g2.setColor(BORDER_COLOR);
+        g2.drawLine(0, 0, 0, this.getHeight());
+        
 	}
-
+	
+	public void onItemClicked (MenuItem item) {
+		if(item.isCurrent()) {
+			return;
+		}
+		
+		for (MenuItem i : sidebar.getItems()) {
+			if (i.isCurrent()) {
+				i.setCurrent(false);
+				break;
+			}
+		}
+		
+		item.setCurrent(true);
+	}
 
 	@Override
-	public void onOpen(MenuItem item) {
-		
-	}
+	public void onOpen(MenuItem item) {}
 
 	@Override
-	public void onClose(MenuItem item) {
-		
-	}
+	public void onClose(MenuItem item) {}
 
 
 	@Override
 	public void onAction(MenuItem item, int index, MenuItemButton view) {
-		this.onAction(item);
-	}
-
-	@Override
-	public void onAction(MenuItem item) {
-		this.body.removeAll();
+		
+		if(!item.isCurrent()) 
+			showContainer(item);
+		
+		onItemClicked(item);
 		
 		if(this.scenes.containsKey(item.getModel().getName())) {	
 			DefaultScenePanel scene = this.scenes.get(item.getModel().getName());
-			this.body.add(scene, item.getModel().getName());
+			scene.onShow(item, index);
+			scene.showAt(index);
+			item.getModel().setSelectedItem(index);
+		}
+	}
+
+	@Override
+	public void onAction (MenuItem item) {
+		
+		if(item.getModel().countItems() != 0)
+			return;
+		
+		onItemClicked(item);
+		showContainer(item);
+	}
+	
+	private void showContainer (MenuItem item) {
+		body.removeAll();
+		
+		if(scenes.containsKey(item.getModel().getName())) {	
+			DefaultScenePanel scene = scenes.get(item.getModel().getName());
+			body.add(scene, item.getModel().getName());
+			
 			if(scene.hasHeader()) {		
 				head.setVisible(true);
 				head.setTitle(scene.getTitle());
 				head.setIcon(scene.getIcon());
-			}else {
+			} else 
 				head.setVisible(false);
-			}
 			
-			if(scene.getNavbarItems().isEmpty()) {
-				this.navbar.setVisible(false);
-			} else {
-				this.navbar.setVisible(true);
-			}
-			
-			this.scenes.get(item.getModel().getName()).onShow(item);
-			this.layout.show(this.body, item.getModel().getName());
-			this.navbar.showGroup(item.getModel().getName());
+			if (scene.getNavbarItems().isEmpty())
+				navbar.setVisible(false);
+			else
+				navbar.setVisible(true);
+
+			scenes.get(item.getModel().getName()).onShow(item);
+			layout.show(body, item.getModel().getName());
+			navbar.showGroup(item.getModel().getName());
 		} else {
-			this.navbar.hideItems();
+			navbar.hideItems();
 		}
 		
-		this.body.revalidate();
-		this.body.repaint();
+		body.revalidate();
+		body.repaint();		
 	}
 	
 	/**

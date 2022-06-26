@@ -88,6 +88,18 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	}
 	
 	/**
+	 * visualisation du composant don le menu est a l'index en parametre
+	 * @param index
+	 */
+	public void showAt (final int index) throws IndexOutOfBoundsException {
+		body.removeAll();
+		body.add(cards.get(navbarItems.get(index).getName()), navbarItems.get(index).getName());
+		card.show(body, navbarItems.get(index).getName());
+		body.revalidate();
+		body.repaint();
+	}
+	
+	/**
 	 * @return the mainWindow
 	 */
 	public MainWindow getMainWindow() {
@@ -156,7 +168,6 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	public boolean hasHeader () {
 		return true;
 	}
-
 	//item-menu
 	
 	/**
@@ -167,10 +178,10 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	 */
 	public DefaultScenePanel addItemMenu (NavbarButtonModel item, JComponent component) {
 		this.navbarItems.add(item);
-		if(this.cards.isEmpty()) {			
-			this.getBody().add(component, item.getName());
+		if (cards.isEmpty()) {			
+			getBody().add(component, item.getName());
 		}
-		this.cards.put(item.getName(), component);
+		cards.put(item.getName(), component);
 		return this;
 	}
 	//--item-menu
@@ -200,7 +211,9 @@ public abstract class DefaultScenePanel extends Panel implements WorkspaceListen
 	public void onShow(MenuItem item) {}
 
 	@Override
-	public void onShow(MenuItem item, int index) {}
+	public void onShow (MenuItem item, int index) {
+		
+	}
 
 	@Override
 	public boolean isReady() {

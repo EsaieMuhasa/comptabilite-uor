@@ -149,6 +149,14 @@ public class PanelPaymentLocation extends Panel {
 		add(scroll, BorderLayout.CENTER);
 	}
 	
+	
+	/**
+	 * rechargement des donnees 
+	 */
+	public void reload() {
+		tableModel.reload();
+	}
+	
 	/**
 	 * enregistrement d'un nouveau lieux de payement
 	 */

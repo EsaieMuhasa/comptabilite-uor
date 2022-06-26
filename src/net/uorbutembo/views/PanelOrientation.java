@@ -7,29 +7,20 @@ import java.awt.BorderLayout;
 
 import javax.swing.JTabbedPane;
 
-import net.uorbutembo.beans.AcademicYear;
-import net.uorbutembo.dao.AcademicYearDao;
-import net.uorbutembo.dao.AcademicYearDaoListener;
 import net.uorbutembo.swing.Panel;
 
 /**
  * @author Esaie MUHASA
  *
  */
-public class PanelOrientation extends Panel implements AcademicYearDaoListener{
+public class PanelOrientation extends Panel{
 	private static final long serialVersionUID = 1706520118231790169L;
 	
-	private boolean loaded = false;
 	private final PanelFaculty panelFaculty;
 	private final PanelStudyClass panelStudyClass;
 	
-	/**
-	 * 
-	 */
 	public PanelOrientation(MainWindow mainWindow) {
 		super(new BorderLayout());
-		
-		mainWindow.factory.findDao(AcademicYearDao.class).addYearListener(this);
 		
 		panelFaculty=new PanelFaculty(mainWindow);
 		panelStudyClass=new PanelStudyClass(mainWindow);
@@ -41,11 +32,10 @@ public class PanelOrientation extends Panel implements AcademicYearDaoListener{
 		this.add(tabbed, BorderLayout.CENTER);
 	}
 	
-	@Override
-	public void onCurrentYear(AcademicYear year) {
-		if(loaded)
-			return;
-		
+	/**
+	 * lecture des donnees
+	 */
+	public void reload() {
 		panelFaculty.load();
 		panelStudyClass.load();
 	}
