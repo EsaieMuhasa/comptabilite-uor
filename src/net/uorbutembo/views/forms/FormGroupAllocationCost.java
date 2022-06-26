@@ -80,8 +80,8 @@ public class FormGroupAllocationCost extends Panel {
 	private final Panel left = new Panel(new BorderLayout());
 	private final Panel right = new  Panel(new BorderLayout());
 	private final Panel bottom = new Panel();
-	private final Box center = Box.createVerticalBox();
-	private final JScrollPane fieldScroll = FormUtil.createScrollPane(center);
+	private final Box fieldsContainer = Box.createVerticalBox();//conteneur des champs de saisie
+	private final JScrollPane fieldScroll = FormUtil.createScrollPane(fieldsContainer);
 	
 	private final Button  btnSave = new Button(new ImageIcon(R.getIcon("success")), "Enregistrer");
 	
@@ -160,11 +160,15 @@ public class FormGroupAllocationCost extends Panel {
 		
 		//syncronisation des scroll bars
 		fieldScroll.getVerticalScrollBar().addAdjustmentListener(event -> {
-			if (event.getSource() != fieldScroll.getVerticalScrollBar())
+			if (event.getSource() != fieldScroll.getVerticalScrollBar() || event.getAdjustable().getMaximum() == 0)
 				return;
 			
 			JScrollBar bar = piePanel.getScroll().getVerticalScrollBar();
-			BigDecimal big = new BigDecimal((( 100.0 / event.getAdjustable().getMaximum()) * event.getValue()) * (bar.getMaximum() / 100)).setScale(0, RoundingMode.HALF_UP);
+			double number = (( 100d / event.getAdjustable().getMaximum()) * event.getValue()) * (bar.getMaximum() / 100d);
+			if (Double.isNaN(number) || Double.isInfinite(number))
+				return;
+			
+			BigDecimal big = new BigDecimal(number).setScale(0, RoundingMode.HALF_UP);
 			int value =  big.intValue();
 			bar.setValue(value - bar.getModel().getExtent()/4);
 		});
@@ -178,12 +182,11 @@ public class FormGroupAllocationCost extends Panel {
 	 */
 	public synchronized void init (AcademicFee academicFee, List<AnnualSpend> annualSpends) {
 		this.academicFee = academicFee;
-		
 		if(annualSpends != null){
 			this.annualSpends = annualSpends;
 			pieModel.removeAll();
 			fields.clear();
-			center.removeAll();
+			fieldsContainer.removeAll();
 		}
 		
 		pieModel.setMax(academicFee.getAmount());
@@ -195,15 +198,16 @@ public class FormGroupAllocationCost extends Panel {
 		//la repartiton est modificable uniquement pour l'annee courante
 		//les archives ne sont plus modifiable
 		if(academicYearDao.isCurrent(academicFee.getAcademicYear())) {	
-			container.add(left, 0);
 			layout.setColumns(2);
+			container.add(left, 0);
 			bottom.setVisible(true);
 		} else {
 			bottom.setVisible(false);
-			container.remove(left);
 			layout.setColumns(1);
+			container.remove(left);
 		}
 		
+		container.revalidate();
 		container.repaint();
 	}
 	
@@ -294,8 +298,8 @@ public class FormGroupAllocationCost extends Panel {
 			t.start();
 		});
 		
-		center.add(Box.createVerticalGlue());
-		center.setBorder(new EmptyBorder(0, 0, 0, DEFAULT_V_GAP));
+		fieldsContainer.add(Box.createVerticalGlue());
+		fieldsContainer.setBorder(new EmptyBorder(0, 0, 0, DEFAULT_V_GAP));
 		
 		container.add(left);
 		container.add(right);
@@ -349,7 +353,7 @@ public class FormGroupAllocationCost extends Panel {
 		
 		pieModel.removeAll();
 		fields.clear();
-		center.removeAll();
+		fieldsContainer.removeAll();
 		
 		//les champs de text
 		for ( int i= 0, max= annualSpends.size(); i<max; i++) {
@@ -357,7 +361,7 @@ public class FormGroupAllocationCost extends Panel {
 			createFieldGroup(spend);
 		}
 
-		center.repaint();
+		fieldsContainer.repaint();
 		//btnSave.setEnabled(academicFee != null && pieModel.getCountPart() != 0 && academicYearDao.isCurrent(academicFee.getAcademicYear()));
 	}
 	
@@ -413,8 +417,8 @@ public class FormGroupAllocationCost extends Panel {
 		panelPadding.add(panel, BorderLayout.CENTER);
 		
 		fields.add(field);
-		center.add(panelPadding);
-		center.add(Box.createVerticalStrut(DEFAULT_H_GAP));
+		fieldsContainer.add(panelPadding);
+		fieldsContainer.add(Box.createVerticalStrut(DEFAULT_H_GAP));
 	}
 	
 	/**
@@ -428,8 +432,8 @@ public class FormGroupAllocationCost extends Panel {
 		btnSave.setEnabled(false);
 		title.setText(" ");
 		pieModel.removeAll();
-		center.removeAll();
-		center.repaint();
+		fieldsContainer.removeAll();
+		fieldsContainer.repaint();
 		academicFee = null;
 	}
 	
@@ -442,7 +446,6 @@ public class FormGroupAllocationCost extends Panel {
       g2.fillRect(0, this.getHeight()-5, this.getWidth(), 5);
       super.paintBorder(g);
 	}
-	
 	
 	/**
 	 * @return the academicFee

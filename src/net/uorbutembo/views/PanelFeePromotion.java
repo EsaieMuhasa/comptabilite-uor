@@ -366,9 +366,10 @@ public class PanelFeePromotion extends Panel {
 		else
 			feeList.removeMouseListener(mouseAdapter);
 		
+		updateConfig(true);
+		
 		if (!listListenerInited){
 			listListenerInited = true;
-			updateConfig(true);
 			feeList.addListSelectionListener(listListener);
 		}
 	}

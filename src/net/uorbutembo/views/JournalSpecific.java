@@ -78,6 +78,7 @@ import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.DefaultPointCloud;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
+import net.uorbutembo.swing.charts.PieRender;
 import net.uorbutembo.swing.charts.CloudChartRender.ChartRenderTranslationListener;
 import net.uorbutembo.swing.charts.CloudChartRender.Interval;
 import net.uorbutembo.swing.charts.PointCloud.CloudType;
@@ -1254,7 +1255,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 				case 0: return FormUtil.DEFAULT_FROMATER.format(data.get(rowIndex).getSource().getRecordDate());
 				case 1: return data.get(rowIndex).getLabel();
 				case 2: return data.get(rowIndex).getPaymentLocation();
-				case 3: return data.get(rowIndex).getAmount()+" USD";
+				case 3: return PieRender.DECIMAL_FORMAT.format(data.get(rowIndex).getAmount())+" USD";
 			}
 			return null;
 		}

@@ -120,6 +120,10 @@ class PieCaptionRender extends JComponent implements PieModelListener{
 	}
 	
 	private void paintCaption (Graphics2D g2, PiePartInfo info, boolean hover, int translateX, int width) {
+		
+		if (info.getShape() == null || info.getShape().getBounds2D() == null)
+			return;
+		
 		PiePart part = info.getPart();
 		
 		FontMetrics metricsPercent = g2.getFontMetrics(FONT_PERCENT);

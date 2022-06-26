@@ -101,9 +101,19 @@ public class WorkspacePanel extends Panel implements MenuItemListener, Sidebar.Y
 	}
 	
 	@Override
-	public void onChange(AcademicYear year) {
+	public synchronized void onChange(AcademicYear year) {
 		currentYear = year;
 		config.updateItem(year.toString(), 0);
+		
+		for (MenuItem item : sidebar.getItems()) {
+			if (item.isCurrent()) {
+				if(item.getModel().countItems() != 0)
+					mainWindow.setTitle(R.getConfig().get("appName")+""+(currentYear == null? "":" ("+currentYear.toString()+") ")+" - "+item.getModel().getLabel()+ " / "+item.getModel().getItem(item.getModel().getCurrentItem()));
+				else
+					mainWindow.setTitle(R.getConfig().get("appName")+""+(currentYear == null? "":" ("+currentYear.toString()+") ")+" - "+item.getModel().getLabel());
+				break;
+			}
+		}
 	}
 
 	/**
@@ -150,8 +160,7 @@ public class WorkspacePanel extends Panel implements MenuItemListener, Sidebar.Y
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
         
         g2.setColor(BORDER_COLOR);
-        g2.drawLine(0, 0, 0, this.getHeight());
-        
+        g2.drawLine(0, 0, 0, getHeight());
 	}
 	
 	public void onItemClicked (MenuItem item) {
@@ -190,6 +199,7 @@ public class WorkspacePanel extends Panel implements MenuItemListener, Sidebar.Y
 			scene.showAt(index);
 			item.getModel().setSelectedItem(index);
 		}
+		mainWindow.setTitle(R.getConfig().get("appName")+""+(currentYear == null? "":" ("+currentYear.toString()+") ")+" - "+item.getModel().getLabel()+ " / "+view.getText());
 	}
 
 	@Override
@@ -200,6 +210,7 @@ public class WorkspacePanel extends Panel implements MenuItemListener, Sidebar.Y
 		
 		onItemClicked(item);
 		showContainer(item);
+		mainWindow.setTitle(R.getConfig().get("appName")+""+(currentYear == null? "":" ("+currentYear.toString()+") ")+" - "+item.getModel().getLabel());
 	}
 	
 	private void showContainer (MenuItem item) {

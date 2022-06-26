@@ -42,7 +42,7 @@ public class AcademicYearTableModel extends TableModel<AcademicYear> {
 			case 0: return "Libelé l'année";
 			case 1: return "Date d'ouverture";
 			case 2: return "Date de fermeture";
-			case 3: return "Date d'enregistremnt";
+			case 3: return "Date d'enregistrement";
 		}
 		return super.getColumnName(column);
 	}

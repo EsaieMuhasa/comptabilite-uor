@@ -10,6 +10,7 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GradientPaint;
@@ -199,9 +200,19 @@ public class Sidebar extends Panel implements ItemListener{
 		if (e.getStateChange() != ItemEvent.SELECTED)
 			return;
 		
-		AcademicYear year = comboModel.getElementAt(comboBox.getSelectedIndex());
-		for (YearChooserListener listener : yearChooserListeners)
-			listener.onChange(year);
+		comboBox.setEnabled(false);
+		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		mainWindow.setCursor(getCursor());
+		Thread t = new Thread(() -> {			
+			AcademicYear year = comboModel.getElementAt(comboBox.getSelectedIndex());
+			for (YearChooserListener listener : yearChooserListeners)
+				listener.onChange(year);
+			
+			setCursor(Cursor.getDefaultCursor());
+			mainWindow.setCursor(getCursor());
+			comboBox.setEnabled(true);
+		});
+		t.start();
 	}
 	
 	/**

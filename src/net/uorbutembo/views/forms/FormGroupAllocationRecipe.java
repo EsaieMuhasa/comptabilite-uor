@@ -136,7 +136,7 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 		}
 		
 	};
-	
+	private final Panel container = new Panel(layout);
 	
 	/**
 	 * @param mainWindow
@@ -151,7 +151,6 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 		annualSpendDao.addListener(spendAdapter);
 		universityRecipeDao.addListener(uniRecipeAdapter);
 		
-		final Panel container = new Panel(layout);
 		final Panel left = new Panel(new BorderLayout());
 		
 		parentOfBox.add(Box.createVerticalGlue());
@@ -196,6 +195,12 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 		parentOfBox.setVisible(state);
 		
 		layout.setColumns(state? 2: 1);
+		container.remove(parentOfBox);
+		if (state) {
+			container.add(parentOfBox);
+			piePanel.setCaptionVisibility(false);
+		} else
+			piePanel.setCaptionVisibility(true);
 		
 		for (AllocationRecipeField field : fields) {
 			field.reload(recipe);
@@ -203,6 +208,8 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 		
 		setTitle(recipe.toString());
 		pieModel.setTitle(recipe.toString());
+		container.revalidate();
+		container.repaint();
 	}
 	
 	/**
