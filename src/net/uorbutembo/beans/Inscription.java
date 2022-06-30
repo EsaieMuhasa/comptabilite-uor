@@ -21,11 +21,6 @@ public class Inscription extends DBEntity {
 	private Promotion promotion;
 	
 	/**
-	 * L'appariteur centrale qui aurait valider l'inscription
-	 */
-	private CentralApparitor centralApparitor;
-	
-	/**
 	 * l'adresse de residence de l'inscrit
 	 */
 	private String adress;
@@ -76,21 +71,7 @@ public class Inscription extends DBEntity {
 	public void setPromotion(Promotion promotion) {
 		this.promotion = promotion;
 	}
-
-	/**
-	 * @return the centralApparitor
-	 */
-	public CentralApparitor getCentralApparitor() {
-		return centralApparitor;
-	}
-
-	/**
-	 * @param centralApparitor the centralApparitor to set
-	 */
-	public void setCentralApparitor(CentralApparitor centralApparitor) {
-		this.centralApparitor = centralApparitor;
-	}
-
+	
 	/**
 	 * @return the adress
 	 */

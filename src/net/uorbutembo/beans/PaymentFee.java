@@ -54,11 +54,6 @@ public class PaymentFee extends DBEntity {
 	private String wording;
 	
 	/**
-	 * Le comptable validateur de l'operation
-	 */
-	private Accountant accountant;
-	
-	/**
 	 * 
 	 */
 	public PaymentFee() {
@@ -154,20 +149,6 @@ public class PaymentFee extends DBEntity {
 	 */
 	public void setWording(String wording) {
 		this.wording = wording;
-	}
-
-	/**
-	 * @return the accountant
-	 */
-	public Accountant getAccountant() {
-		return accountant;
-	}
-
-	/**
-	 * @param accountant the accountant to set
-	 */
-	public void setAccountant(Accountant accountant) {
-		this.accountant = accountant;
 	}
 
 	/**

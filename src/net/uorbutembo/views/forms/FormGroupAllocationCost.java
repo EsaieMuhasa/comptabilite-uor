@@ -101,12 +101,13 @@ public class FormGroupAllocationCost extends Panel {
 		
 		@Override
 		public void refresh (PieModel model) {
-			double percent = model.getSumPercent();
-			BigDecimal bigPercent = new BigDecimal(percent).setScale(4, RoundingMode.FLOOR);
+			BigDecimal bigPercent = new BigDecimal(model.getSumPercent()).setScale(4, RoundingMode.FLOOR);
 			BigDecimal bigAmount = new BigDecimal(model.getRealMax()).setScale(4, RoundingMode.FLOOR);
-			labelPercentUsed.setText(bigPercent.doubleValue()+" %");
+			
+			final double percent = bigPercent.doubleValue(), amount = bigAmount.doubleValue();
+			labelPercentUsed.setText(percent+" %");
 			labelAmountUsed.setText(bigAmount.doubleValue()+" "+FormUtil.UNIT_MONEY+"");
-			btnSave.setEnabled(percent == 100.0);
+			btnSave.setEnabled(percent == 100.0 && amount == academicFee.getAmount());
 		}
 		
 		@Override
@@ -260,6 +261,7 @@ public class FormGroupAllocationCost extends Panel {
 								toCreate.add(cost);
 							}
 						}
+						//System.out.println(cost.getAnnualSpend().getUniversitySpend().getTitle()+" => "+cost.getAmount());
 					}
 					
 					if (toCreate.size() != 0){//creation des nouvelles rubriques
@@ -515,13 +517,11 @@ public class FormGroupAllocationCost extends Panel {
 				return;
 			}
 			
-			if(!this.amount.hasFocus()) 
+			if(!amount.hasFocus()) 
 				return;
 			
-			double amount =cost.getAmount();
-			BigDecimal number = new BigDecimal((100.0 / academicFee.getAmount()) * amount).setScale(2, RoundingMode.HALF_UP);
-			double percent = number.doubleValue();
-			this.percent.setValue(percent+"");
+			BigDecimal number = new BigDecimal((100.0d / academicFee.getAmount()) * cost.getAmount()).setScale(2, RoundingMode.HALF_UP);
+			percent.setValue(number.doubleValue()+"");
 		};
 		
 		private CaretListener caretPercent = (event) -> {

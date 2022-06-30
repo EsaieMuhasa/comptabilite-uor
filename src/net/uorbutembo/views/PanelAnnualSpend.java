@@ -77,12 +77,24 @@ public class PanelAnnualSpend extends Panel {
 	private final DAOAdapter<AnnualSpend> annualSpendAdapter = new DAOAdapter<AnnualSpend>() {
 		@Override
 		public void onCreate(AnnualSpend e, int requestId) {
+			hiddeDialog();
 			reload();
 		}
 		
 		@Override
 		public void onCreate(AnnualSpend[] e, int requestId) {
+			hiddeDialog();
 			reload();
+		}
+		
+		/**
+		 * on cache la boite de dilogue et on libere les ressources qu'elle occupe
+		 */
+		private void hiddeDialog () {
+			if(dialogForm  != null){
+				dialogForm.setVisible(false);
+				dialogForm.dispose();
+			}
 		}
 		
 		@Override
@@ -90,13 +102,15 @@ public class PanelAnnualSpend extends Panel {
 		
 	};
 	
-	private MainWindow mainWindow;
+	private final MainWindow mainWindow;
 	
 	/**
 	 * @param mainWindow
 	 */
-	public PanelAnnualSpend(MainWindow mainWindow) {
+	public PanelAnnualSpend (MainWindow mainWindow) {
 		super(new BorderLayout());
+		this.mainWindow = mainWindow;
+		
 		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
 		universitySpendDao = mainWindow.factory.findDao(UniversitySpendDao.class);
 		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
@@ -134,7 +148,7 @@ public class PanelAnnualSpend extends Panel {
 		itemDelete.addActionListener(event -> {
 			AnnualSpend spend = tableModel.getRow(table.getSelectedRow());
 			String message = "Voulez-vous vraiment supprimer la rubrique \n\""+spend.getUniversitySpend().getTitle()+"\"\n";
-			message += "pour le budget de l'année academique "+currentYear.getLabel()+" ?";
+			message += "pour le budget de l'année académique "+currentYear.getLabel()+" ?";
 			message += "\nN.B: Cette suppression est definitive!";
 			int status = JOptionPane.showConfirmDialog(mainWindow, message, "Suppression", JOptionPane.YES_NO_OPTION);
 			if(status == JOptionPane.OK_OPTION) {
@@ -162,27 +176,32 @@ public class PanelAnnualSpend extends Panel {
 		add(center, BorderLayout.CENTER);
 	}
 	
+	/**
+	 * unilitaire de creation du boite de dialogue permetant de selectionner certatins depanse qu niveau globel
+	 * pour en prendre en compte pour l'annee courtante
+	 */
 	private void createDialog() {
 		if (dialogForm != null)
 			return;
 		
 		final Panel padding = new Panel(new BorderLayout());
 		form = new FormAnnualSpend(mainWindow);
-		dialogForm = new JDialog(mainWindow, "Récupération dépenses annuel", true);
+		form.setCurrentYear(currentYear);
+		dialogForm = new JDialog(mainWindow, "Récupération dépenses annuelles", true);
 		dialogForm.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		dialogForm.getContentPane().add(padding, BorderLayout.CENTER);
+		dialogForm.getContentPane().add(FormUtil.createVerticalScrollPane(padding), BorderLayout.CENTER);
 		dialogForm.getContentPane().setBackground(FormUtil.BKG_DARK);
 		
 		padding.add(form, BorderLayout.CENTER);
 		padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		dialogForm.pack();
+		dialogForm.setSize(dialogForm.getWidth() + 50, dialogForm.getHeight());
 	}
-
 	
 	/**
 	 * rechargement des donnees
 	 */
-	private void reload() {
+	private void reload () {
 		if(form != null)
 			form.loadData();
 		
@@ -208,10 +227,9 @@ public class PanelAnnualSpend extends Panel {
 		else 
 			tablePanel.setTitle("");
 		
-		btnNew.setVisible(currentYear != null && academicYearDao.isCurrent(currentYear));//0975612604
+		btnNew.setVisible(currentYear != null && academicYearDao.isCurrent(currentYear));
 		
 		reload();
 	}
-
 
 }

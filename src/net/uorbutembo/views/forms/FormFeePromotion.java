@@ -121,6 +121,51 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		}
 	};
 	
+	private final DAOAdapter<Promotion> promotionAdapter = new DAOAdapter<Promotion>() {
+
+		@Override
+		public synchronized void onCreate(Promotion p, int requestId) {
+			if(currentYear.getId() == p.getAcademicYear().getId()){
+				modelUnselectedPromotion.addElement(p);
+				changeStateButtonAdding(!modelUnselectedPromotion.isEmpty());
+			}
+		}
+
+		@Override
+		public synchronized void onUpdate(Promotion e, int requestId) {}
+
+		@Override
+		public synchronized void onDelete(Promotion e, int requestId) {
+			if(e.getAcademicYear().getId() == currentYear.getId()) {
+				for (int i = 0, count = modelUnselectedPromotion.getSize(); i < count; i++) {
+					if(e.getId() == modelUnselectedPromotion.get(i).getId()) {
+						modelUnselectedPromotion.remove(i);
+						break;
+					}
+				}
+				changeStateButtonAdding(!modelUnselectedPromotion.isEmpty());
+			}
+		}
+
+		@Override
+		public synchronized void onCreate(Promotion[] e, int requestId) {
+			for (int i = 0; i < e.length; i++)
+				onCreate(e[i], requestId);
+		}
+
+		@Override
+		public synchronized void onUpdate(Promotion[] e, int requestId) {
+			for(int i = 0; i < e.length; i++)
+				onUpdate(e[i], requestId);
+		}
+
+		@Override
+		public synchronized void onDelete(Promotion[] e, int requestId) {
+			for(int i = 0; i < e.length; i++)
+				onDelete(e[i], requestId);
+		}
+	};
+	
 	public FormFeePromotion (MainWindow mainWindow) {
 		super(mainWindow);
 		
@@ -129,11 +174,11 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
 		
 		academicFeeDao.addListener(feeAdapter);
+		promotionDao.addListener(promotionAdapter);
 		container.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		setTitle("Formulaire d'enregistrement");
 		getBody().add(container, BorderLayout.CENTER);
 		
-		init();
 		add(getMiddle(), BorderLayout.CENTER);
 	}
 	
@@ -219,38 +264,6 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		for (PanelAcademicFeeConfig panel : panelsConfig) {
 			panel.btnAdd.setEnabled(enable);
 		}
-	}
-
-	/**
-	 * Ecoute des evenements du DAO
-	 */
-	private void init() {
-		
-		this.promotionDao.addListener(new DAOAdapter<Promotion>() {
-			@Override
-			public void onCreate(Promotion p, int requestId) {
-				if(currentYear.getId() == p.getAcademicYear().getId()){
-					modelUnselectedPromotion.addElement(p);
-					changeStateButtonAdding(!modelUnselectedPromotion.isEmpty());
-				}
-			}
-			
-			@Override
-			public void onDelete(Promotion e, int requestId) {
-				if(e.getAcademicYear().getId() == currentYear.getId()) {
-					for (int i = 0, count = modelUnselectedPromotion.getSize(); i < count; i++) {
-						if(e.getId() == modelUnselectedPromotion.get(i).getId()) {
-							modelUnselectedPromotion.remove(i);
-							break;
-						}
-					}
-					changeStateButtonAdding(!modelUnselectedPromotion.isEmpty());
-				}
-			}
-			
-			
-		});
-		
 	}
 
 	@Override

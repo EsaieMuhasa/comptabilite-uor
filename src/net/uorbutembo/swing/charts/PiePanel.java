@@ -319,6 +319,17 @@ public class PiePanel extends Panel implements Printable{
 		center.add(scroll);
 		setBorderColor(borderColor);
 	}
+	
+	/**
+	 * change visibility of graphic render
+	 * this method has importance when you need update all pie part of model
+	 * @param visible
+	 */
+	public void setRenderVisible (boolean visible) {
+		render.setVisible(visible);
+		if(caption != null)
+			caption.setVisible(visible);
+	}
 
 	/**
 	 * @return the render
@@ -327,6 +338,13 @@ public class PiePanel extends Panel implements Printable{
 		return render;
 	}
 	
+	/**
+	 * @return the caption
+	 */
+	public PieCaptionRender getCaption() {
+		return caption;
+	}
+
 	@Override
 	public void setBackground(Color bg) {
 		super.setBackground(bg);

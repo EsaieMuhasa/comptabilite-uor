@@ -673,7 +673,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 										)
 									);
 						}
-						pieModel.setTitle("Solde disponible pour chaque lieux de perception");
+						pieModel.setTitle("Solde disponible pour chaque lieux de perception de l'agent");
 					}
 				}break;
 				case 1 : {//les recettes
@@ -696,7 +696,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 						} else {
 							pieModel.addPart(new DefaultPiePart(FormUtil.COLORS[colorIndex++], 0d, "Autres recettes"));				
 						}
-						pieModel.setTitle("Repartition des recettes selons les sources de financement");
+						pieModel.setTitle("Répartition des recettes selons les sources de financement");
 					} else {//lieux de payment
 						
 						final List<PaymentLocation> all = paymentLocationDao.countAll() != 0? paymentLocationDao.findAll() : new ArrayList<>();
@@ -720,7 +720,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 									); 
 						}
 						
-						pieModel.setTitle("Repartition des recettes selon les lieux de perception");
+						pieModel.setTitle("Répartition des recettes selon les lieux de perception");
 					}
 				}break;
 				case 2 : {//les depenses
@@ -737,7 +737,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 										)
 									); 
 						}
-						pieModel.setTitle("Repartition des dépenses pour chaque compte");
+						pieModel.setTitle("Répartition des dépenses pour chaque compte (rubrique du budget)");
 					} else {//lieux de retrait
 						final List<PaymentLocation> all = paymentLocationDao.countAll() != 0? paymentLocationDao.findAll() : new ArrayList<>();
 						final List<AnnualSpend> rps = annualSpendDao.checkByAcademicYear(year.getId())? annualSpendDao.findByAcademicYear(year) : new ArrayList<>();
@@ -758,7 +758,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 										)
 									); 
 						}
-						pieModel.setTitle("Repartition des dépenses, selon le lieux de payments");
+						pieModel.setTitle("Répartition des dépenses, selon le lieux de payments");
 					}
 					
 				}break;
@@ -928,6 +928,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			
 			TableModel<?> model = (TableModel<?>) table.getModel();
 			labelCount.setText(model.getCount()+" opérations");
+			btnToExcel.setEnabled(model.getRowCount() != 0);
 		}
 		
 		/**
@@ -1250,6 +1251,8 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			labelCount.setText(opt+" opération"+(opt > 1? "s":""));
 			btnPrev.setEnabled(tableModel.hasPrevious());
 			btnNext.setEnabled(tableModel.hasNext());
+			
+			btnToExcel.setEnabled(tableModel.getRowCount() != 0);
 		}
 		
 		/**

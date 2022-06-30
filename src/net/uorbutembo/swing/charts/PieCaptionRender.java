@@ -26,7 +26,7 @@ import javax.swing.border.EmptyBorder;
  * @author Esaie MUHASA
  *
  */
-class PieCaptionRender extends JComponent implements PieModelListener{
+public class PieCaptionRender extends JComponent implements PieModelListener{
 	private static final long serialVersionUID = 124364175204094635L;
 	
 	private final Font 

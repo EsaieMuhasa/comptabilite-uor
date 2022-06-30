@@ -33,7 +33,6 @@ import net.uorbutembo.beans.AcademicFee;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AllocationCost;
 import net.uorbutembo.beans.AnnualSpend;
-import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AllocationCostDao;
@@ -309,14 +308,11 @@ public class PanelFeePromotion extends Panel {
 		
 		AcademicFee fee = listModel.get(index);
 		tablePanel.setTitle("Liste des promotions qui doivent payer "+fee.getAmount()+FormUtil.UNIT_MONEY);
-		if(promotionDao.checkByAcademicFee(fee.getId())) {				
-			List<Promotion> promotions = promotionDao.findByAcademicFee(fee);
-			for (Promotion p : promotions) {
-				tableModel.addRow(p);
-			}
-		}
+		tableModel.reload(fee);
 		
 		pieModel.removeAll();
+		formCost.setVisible(false);
+		
 		if(allocationCostDao.checkByAcademicFee(fee.getId())) {
 			List<AllocationCost> costs = this.allocationCostDao.findByAcademicFee(fee);
 			for (int i=0, max=costs.size(); i<max;i++) {
@@ -326,7 +322,6 @@ public class PanelFeePromotion extends Panel {
 				pieModel.addPart(part);
 			}
 		}
-		formCost.setVisible(false);
 		if (loadFees) {			
 			List<AnnualSpend> spends = annualSpendDao.checkByAcademicYear(currentYear.getId())? annualSpendDao.findByAcademicYear(currentYear) : new ArrayList<>();
 			formCost.init(fee, spends);

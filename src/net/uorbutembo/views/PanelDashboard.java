@@ -143,8 +143,10 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 		if(year == null)
 			return;
 		
+		piePanel.setRenderVisible(false);
 		labelTitle.setText(year.getLabel());
 		load();
+		piePanel.setRenderVisible(true);
 	}
 	
 	/**
@@ -163,7 +165,7 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 			part.setData(faculty);
 			modelPieStudents.addPart(part);
 		}
-		this.globalModel.setCurrentYear(currentYear);
+		globalModel.setCurrentYear(currentYear);
 	}
 	
 	/**

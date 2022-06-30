@@ -174,23 +174,19 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 
 	@Override
 	public List<Promotion> findByAcademicYear(long academicYearId) throws DAOException {
-		List<Promotion> ps = this.findAll(
-				new String[] {"academicYear"},
-				new Object[] {academicYearId}, "studyClass");
 		AcademicYear year = this.factory.findDao(AcademicYearDao.class).findById(academicYearId);
-		for (Promotion p : ps) {
-			p.setAcademicYear(year);
-		}
-		return ps;
+		return findByAcademicYear(year);
 	}
 	
 	@Override
-	public List<Promotion> findByAcademicYear(AcademicYear academicYear) throws DAOException {
-		List<Promotion> ps = this.findAll(
+	public List<Promotion> findByAcademicYear (AcademicYear academicYear) throws DAOException {
+		List<Promotion> ps = findAll(
 				new String[] {"academicYear"},
 				new Object[] {academicYear.getId()}, "studyClass");
 		for (Promotion p : ps) {
 			p.setAcademicYear(academicYear);
+			if(p.getAcademicFee() != null)
+				p.setAcademicFee(academicFeeDao.findById(p.getAcademicFee().getId()));
 		}
 		return ps;
 	}
@@ -232,6 +228,7 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 					new Object[] { academicFee == null || academicFee.getId() <= 0? null : academicFee.getId(), now.getTime() },
 					promotion.getId()
 				);
+			promotion.setAcademicFee(academicFee);
 			emitOnUpdate(promotion);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
@@ -255,6 +252,7 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 						now.getTime()
 					}, promotion.getId()
 				);
+				promotion.setAcademicFee(academicFee);
 			}
 			connection.commit();
 			emitOnUpdate(promotions);

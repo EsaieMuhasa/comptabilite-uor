@@ -823,7 +823,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 						//dettes
 						for(Promotion p : promotions[i]) {//recherche du total, pour mieux calculer la dette
 							double count = inscriptionDao.countByPromotion(p);
-							total += (p.getAcademicFee().getAmount() * count);
+							total += p.getAcademicFee() != null? (p.getAcademicFee().getAmount() * count) : 0;
 							progress.setValue(progress.getValue() + 1);
 							progress.setMaximum(progress.getMaximum() + 1);
 							progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
@@ -889,7 +889,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 						for(StudyClass s : classes[i]) {
 							Promotion p = promotionDao.find(currentYear, deps.get(i), s);
 							double count  = inscriptionDao.countByPromotion(p);
-							total += count * p.getAcademicFee().getAmount();
+							total += p.getAcademicFee() != null? (count * p.getAcademicFee().getAmount()) : 0;
 							progress.setValue(progress.getValue() + 1);
 							progress.setMaximum(progress.getMaximum() + 1);
 							progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
@@ -987,7 +987,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 						for(Department d : classement[index]) {
 							Promotion p = promotionDao.find(currentYear, d, s);
 							double count  = inscriptionDao.countByPromotion(p);
-							total += count * p.getAcademicFee().getAmount();
+							total += p.getAcademicFee() != null? count * p.getAcademicFee().getAmount() : 0;
 							progress.setValue(progress.getValue() + 1);
 							progress.setMaximum(progress.getMaximum() + 1);
 							progress.setString("("+progress.getValue()+"/"+progress.getMaximum()+") Chargement du graphique...");
@@ -1042,7 +1042,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 						
 						double sold = paymentFeeDao.getSoldByPromotion(p);
 						double count = inscriptionDao.countByPromotion(p);
-						double total = p.getAcademicFee().getAmount() * count;
+						double total = p.getAcademicFee() != null? p.getAcademicFee().getAmount() * count : 0;
 						
 						//soldes
 						DefaultPiePart partSold = new DefaultPiePart(color, sold, p.toString());

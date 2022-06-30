@@ -203,12 +203,13 @@ public class JournalSpecific extends Panel  implements ActionListener{
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		for (JournalMenuItem menu : listAccount.items) 
-			menu.setActive(false);
 		
 		JournalMenuItem item = (JournalMenuItem) e.getSource();
 		if(item == containerPanel.getAccount())
 			return;
+		
+		for (JournalMenuItem menu : listAccount.items) 
+			menu.setActive(false);
 		
 		listAccount.setEnabled(false);
 		item.setActive(true);
@@ -397,6 +398,8 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			labelCount.setText(tableModel.getRowCount()+" opération"+(tableModel.getRowCount() > 1? "s":""));
 			btnPrev.setEnabled(tableModel.hasPrevious());
 			btnNext.setEnabled(tableModel.hasNext());
+			
+			btnToExcel.setEnabled(tableModel.getRowCount() != 0);
 		}
 
 		/**
@@ -641,6 +644,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			labelCount.setText(opt+" opération"+(opt > 1? "s":"")+"/ page "+(tableModel.getOffset()/tableModel.getLimit()));
 			btnPrev.setEnabled(tableModel.hasPrevious());
 			btnNext.setEnabled(tableModel.hasNext());
+			btnToExcel.setEnabled(tableModel.getRowCount() != 0);
 		};
 
 

@@ -14,6 +14,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.ListSelectionModel;
+import javax.swing.table.TableColumn;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Promotion;
@@ -111,6 +112,7 @@ public class PanelPromotion extends Panel {
 				JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
 			}
 		});
+		
 	}
 	
 	/**
@@ -147,6 +149,14 @@ public class PanelPromotion extends Panel {
 		
 		btnNew.setEnabled(true);
 		btnNew.setVisible(year != null && academicYearDao.isCurrent(year));
+		
+		for(int i = 0; i <= 2; i += 2) {
+			TableColumn col = tablePanel.getTable().getColumnModel().getColumn(i);
+			col.setMinWidth(130);
+			col.setWidth(140);
+			col.setMaxWidth(145);
+			col.setResizable(false);
+		}
 	}
 
 }

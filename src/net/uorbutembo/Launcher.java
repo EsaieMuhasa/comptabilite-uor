@@ -3,6 +3,8 @@
  */
 package net.uorbutembo;
 
+import java.io.File;
+
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
@@ -11,6 +13,7 @@ import net.uorbutembo.dao.DAOBaseListener;
 import net.uorbutembo.dao.DAOConfigException;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOFactory;
+import net.uorbutembo.tools.Config;
 import net.uorbutembo.views.MainWindow;
 
 
@@ -26,6 +29,13 @@ public class Launcher implements DAOBaseListener{
 	public static void main(String[] args) {
 		
 		boolean lookExist = false;
+		
+//		try {
+//			PrintStream err = new PrintStream(new File("error.txt"));
+//			System.setErr(err);
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
 		
 		try {
 			for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
@@ -56,6 +66,10 @@ public class Launcher implements DAOBaseListener{
 			factory.addListener(launcher);
 			StartWindow st = new StartWindow();
 			st.setVisible(true);
+			
+			File workspace = new File(Config.find("workspace"));
+			if(!workspace.isDirectory())
+				workspace.mkdirs();
 			
 			MainWindow frame = new MainWindow(factory);
 			factory.reload();

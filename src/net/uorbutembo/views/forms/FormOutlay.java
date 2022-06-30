@@ -376,28 +376,31 @@ public class FormOutlay extends DefaultFormPanel {
 		pieModel.removeAll();
 		
 		AnnualSpend account = comboAccountModel.getElementAt(comboAccount.getSelectedIndex());
-		int count = comboLocationModel.getSize();
-		PiePart [] parts = new PiePart[count];
-		for (int i = 0, colorIndex = 0; i < count; i++) {
-			PaymentLocation l = comboLocationModel.getElementAt(i);
-			
-			if (!paymentFeePartDao.checkBySpend(account, l) && !otherRecipePartDao.checkBySpend(account, l))
-				continue;
-			
-			double soldFee = paymentFeePartDao.getSoldBySpend(account, l);
-			double soldOther = otherRecipePartDao.getSoldBySpend(account, l);
-			double soldOut = outlayDao.getSoldByAccount(account.getId(), l.getId());
-			
-			double sold = soldFee + soldOther - soldOut;
-			DefaultPiePart part = new DefaultPiePart(FormUtil.COLORS[(colorIndex) % (FormUtil.COLORS.length-1)], sold, l.toString());
-			part.setData(l);
-			parts[colorIndex++] = part;
-		}
-		pieModel.addParts(parts);
-		pieModel.setTitle(account.toString()+", soldes diponibles");
-		if (pieModel.getCountPart() > comboLocation.getSelectedIndex())
-			pieModel.setSelectedIndex(comboLocation.getSelectedIndex());
 		
+		if(account != null) {
+			int count = comboLocationModel.getSize();
+			PiePart [] parts = new PiePart[count];
+			for (int i = 0, colorIndex = 0; i < count; i++) {
+				PaymentLocation l = comboLocationModel.getElementAt(i);
+				
+				if (!paymentFeePartDao.checkBySpend(account, l) && !otherRecipePartDao.checkBySpend(account, l))
+					continue;
+				
+				double soldFee = paymentFeePartDao.getSoldBySpend(account, l);
+				double soldOther = otherRecipePartDao.getSoldBySpend(account, l);
+				double soldOut = outlayDao.getSoldByAccount(account.getId(), l.getId());
+				
+				double sold = soldFee + soldOther - soldOut;
+				DefaultPiePart part = new DefaultPiePart(FormUtil.COLORS[(colorIndex) % (FormUtil.COLORS.length-1)], sold, l.toString());
+				part.setData(l);
+				parts[colorIndex++] = part;
+			}
+			pieModel.addParts(parts);
+			pieModel.setTitle(account.toString()+", soldes diponibles");
+			if (pieModel.getCountPart() > comboLocation.getSelectedIndex())
+				pieModel.setSelectedIndex(comboLocation.getSelectedIndex());
+			
+		}
 		validateAmount();
 	}
 

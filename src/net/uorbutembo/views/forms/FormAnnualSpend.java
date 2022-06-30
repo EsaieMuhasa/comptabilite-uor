@@ -36,10 +36,84 @@ public class FormAnnualSpend extends DefaultFormPanel {
 	private AcademicYear currentYear;
 	
 	private List<CheckBox<UniversitySpend>> checkBoxs = new ArrayList<>();
-	Box box = Box.createVerticalBox();
+	private Box box = Box.createVerticalBox();
+	
+	private final DAOAdapter<AnnualSpend> spendAdapter = new DAOAdapter<AnnualSpend>() {
+
+		@Override
+		public synchronized void onCreate(AnnualSpend e, int requestId) {
+			for (CheckBox<UniversitySpend> check : checkBoxs) {
+				if(check.getData().getId() == e.getUniversitySpend().getId()) {
+					box.remove(check);
+					checkBoxs.remove(check);
+					break;
+				}
+			}
+		}
+		
+		@Override
+		public synchronized void onCreate(AnnualSpend[] e, int requestId) {
+			for (int i = 0; i < e.length; i++)
+				onCreate(e[i], requestId);
+		}
+
+		@Override
+		public synchronized void onDelete(AnnualSpend e, int requestId) {
+			if(e.getAcademicYear().getId() != currentYear.getId())
+				return;
+			
+			UniversitySpend spend = universitySpendDao.findById(e.getUniversitySpend().getId());
+			CheckBox<UniversitySpend> check = FormUtil.createCheckBox(spend.getTitle(), spend);
+			checkBoxs.add(check);
+			box.add(check);
+		}
+		
+		@Override
+		public synchronized void onDelete(AnnualSpend[] e, int requestId) {
+			for (int i = 0; i < e.length; i++)
+				onDelete(e[i], requestId);
+		}
+		
+	};
+	
+	private final DAOAdapter<UniversitySpend> universityAdapter = new DAOAdapter<UniversitySpend>() {
+		@Override
+		public synchronized void onCreate(UniversitySpend e, int requestId) {
+			CheckBox<UniversitySpend> check = FormUtil.createCheckBox(e.getTitle(), e);
+			checkBoxs.add(check);
+			box.add(check);
+		}
+		
+		@Override
+		public synchronized void onUpdate(UniversitySpend e, int requestId) {
+			for (CheckBox<UniversitySpend> c : checkBoxs) {
+				if(c.getData().getId() == e.getId()) {
+					c.setText(e.getTitle());
+					c.setData(e);
+					break;
+				}
+			}
+		}
+		
+		@Override
+		public synchronized void onDelete(UniversitySpend e, int requestId) {
+			for (CheckBox<UniversitySpend> c : checkBoxs) {
+				if(c.getData().getId() == e.getId()) {
+					box.remove(c);
+					break;
+				}
+			}
+		}
+		
+		@Override
+		public synchronized void onDelete(UniversitySpend[] e, int requestId) {
+			for (UniversitySpend u : e)
+				onDelete(u, requestId);
+		}
+	};
 
 	/**
-	 * 
+	 * @param mainWindow
 	 */
 	public FormAnnualSpend(MainWindow mainWindow) {
 		super(mainWindow);
@@ -50,52 +124,8 @@ public class FormAnnualSpend extends DefaultFormPanel {
 		this.getBody().add(box, BorderLayout.NORTH);
 		this.setVisible(false);
 		
-		annualSpendDao.addListener(new DAOAdapter<AnnualSpend>() {
-			@Override
-			public synchronized void onDelete(AnnualSpend e, int requestId) {
-				UniversitySpend spend = universitySpendDao.findById(e.getUniversitySpend().getId());
-				CheckBox<UniversitySpend> check = FormUtil.createCheckBox(spend.getTitle(), spend);
-				checkBoxs.add(check);
-				box.add(check);
-			}
-		});
-		
-		universitySpendDao.addListener(new DAOAdapter<UniversitySpend>() {
-			@Override
-			public synchronized void onCreate(UniversitySpend e, int requestId) {
-				CheckBox<UniversitySpend> check = FormUtil.createCheckBox(e.getTitle(), e);
-				checkBoxs.add(check);
-				box.add(check);
-			}
-			
-			@Override
-			public synchronized void onUpdate(UniversitySpend e, int requestId) {
-				for (CheckBox<UniversitySpend> c : checkBoxs) {
-					if(c.getData().getId() == e.getId()) {
-						c.setText(e.getTitle());
-						c.setData(e);
-						break;
-					}
-				}
-			}
-			
-			@Override
-			public synchronized void onDelete(UniversitySpend e, int requestId) {
-				for (CheckBox<UniversitySpend> c : checkBoxs) {
-					if(c.getData().getId() == e.getId()) {
-						box.remove(c);
-						break;
-					}
-				}
-			}
-			
-			@Override
-			public synchronized void onDelete(UniversitySpend[] e, int requestId) {
-				for (UniversitySpend u : e) {
-					onDelete(u, requestId);
-				}
-			}
-		});
+		annualSpendDao.addListener(spendAdapter);
+		universitySpendDao.addListener(universityAdapter);
 	}
 	
 	/**
@@ -104,7 +134,7 @@ public class FormAnnualSpend extends DefaultFormPanel {
 	 */
 	public void loadData () {
 		if(this.currentYear == null || (universitySpendDao.countAll() == 0)) {
-			this.setVisible(false);
+			setVisible(false);
 			return;
 		}
 
@@ -129,7 +159,7 @@ public class FormAnnualSpend extends DefaultFormPanel {
 	 * @param currentYear the currentYear to set
 	 */
 	public void setCurrentYear(AcademicYear currentYear) {
-		if(this.currentYear == null || this.currentYear.getId() != currentYear.getId()) {
+		if(this.currentYear == null || currentYear.getId() != currentYear.getId()) {
 			this.currentYear = currentYear;
 			loadData();//mis en jour des composent du paneau
 		}
@@ -163,12 +193,14 @@ public class FormAnnualSpend extends DefaultFormPanel {
 			all[i] = as;
 		}
 		try {
-			this.annualSpendDao.create(all);
-			for (CheckBox<UniversitySpend> check : this.checkBoxs) {
+			annualSpendDao.create(all);
+			for (CheckBox<UniversitySpend> check : checkBoxs) {
 				if(check.isSelected())				
 					box.remove(check);
 			}
-			this.showMessageDialog("Success d'enregistrement ","Rubique du buget pour l'annee "+this.currentYear.getLabel()+"\n"+message, JOptionPane.INFORMATION_MESSAGE);
+			box.revalidate();
+			box.repaint();
+			showMessageDialog("Succèss d'enregistrement ","Rubique du buget pour l'année "+currentYear.getLabel()+"\n"+message, JOptionPane.INFORMATION_MESSAGE);
 		} catch (DAOException e) {
 			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}
