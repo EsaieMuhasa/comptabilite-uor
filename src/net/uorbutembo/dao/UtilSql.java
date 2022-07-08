@@ -158,8 +158,10 @@ abstract class UtilSql <T extends DBEntity> implements DAOInterface<T> {
 	@Override
 	public synchronized void delete (long id) throws DAOException {		
 		T t = this.findById(id);
-		try (Connection connection =  this.factory.getConnection();) {
+		try (Connection connection =  factory.getConnection();) {
+			connection.setAutoCommit(false);
 			t= delete(connection, id);
+			connection.commit();
 			emitOnDelete(t);			
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);

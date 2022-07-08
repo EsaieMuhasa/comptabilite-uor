@@ -240,7 +240,7 @@ public class IndividualSheet extends Panel {
 	public void setInscription (InscriptionDataRow inscription) {
 		this.inscription = inscription;
 		popup.setLabel(inscription.getInscription().getStudent().toString());
-		header.setInscription(inscription.getInscription());
+		header.setInscription(inscription);
 		tableModel.setInscription(inscription);
 		form.setInscription(inscription.getInscription());
 		

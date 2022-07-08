@@ -231,6 +231,8 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		if(dialogRegister != null)
 			return;
 		
+		dialogRegister = new JDialog(mainWindow, "Ré-inscription d'un étudiant", true);
+		
 		final JPanel registerFormPanel = new JPanel(new BorderLayout());
 		formRegister = new FormReRegister(mainWindow, true);
 		
@@ -239,11 +241,10 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		registerFormPanel.setBorder(BODY_BORDER);
 		final JScrollPane registerFormScroll = FormUtil.createVerticalScrollPane(registerFormPanel);
 		
-		dialogRegister = new JDialog(mainWindow, "Ré-inscription d'un étudiant", true);
-		dialogRegister.setContentPane(registerFormScroll);
+		dialogRegister.getContentPane().add(registerFormScroll, BorderLayout.CENTER);
+		dialogRegister.getContentPane().setBackground(FormUtil.BKG_DARK);
 		dialogRegister.pack();
-		dialogRegister.setSize(700, dialogRegister.getHeight());
-		dialogRegister.setResizable(false);
+		dialogRegister.setSize(750, dialogRegister.getHeight());
 		dialogRegister.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		
 		formRegister.setCurrentYear(navigation.getCurrentYear());
@@ -259,7 +260,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		
 		sheet = new IndividualSheet(mainWindow);
 		dialogSheet = new JDialog(mainWindow,"Fiche de payement", true);
-		dialogSheet.setSize(mainWindow.getWidth()-mainWindow.getWidth()/4, mainWindow.getHeight()-mainWindow.getHeight()/4);
+		dialogSheet.setSize(mainWindow.getWidth()-mainWindow.getWidth()/5, mainWindow.getHeight()-mainWindow.getHeight()/5);
 		dialogSheet.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		dialogSheet.getContentPane().add(sheet, BorderLayout.CENTER);
 	}
@@ -752,6 +753,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		 */
 		private synchronized void reload (int group) {
 			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			piePanel.setRenderVisible(false);
 			for (int i = 0; i < radios.length; i++){
 				radios[i].removeChangeListener(radioListener);
 				radios[i].setEnabled(false);
@@ -1093,6 +1095,8 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 			
 			progress.setVisible(false);
 			setCursor(Cursor.getDefaultCursor());
+			
+			piePanel.setRenderVisible(true);
 		}
 		
 	}

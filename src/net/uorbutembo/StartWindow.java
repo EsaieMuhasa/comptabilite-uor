@@ -5,11 +5,9 @@ package net.uorbutembo;
 
 import static net.uorbutembo.tools.FormUtil.BKG_DARK;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -29,16 +27,20 @@ import net.uorbutembo.tools.Config;
  */
 public class StartWindow extends JFrame {
 	private static final long serialVersionUID = -3192714715826250151L;
-	private static final Font FONT = new Font("Arial", Font.BOLD, 30);
+	private static final Font FONT = new Font("Arial", Font.BOLD, 25);
 	private static final Cursor WAIT = new Cursor(Cursor.WAIT_CURSOR);
+	private static final Color COLOR = new Color(0xEE5010);
 
 	private ConntentRender render;
 	private Image logo;
+	private boolean run = true;
+	private Thread thread;
+	private int count = 0;
 	
 	public StartWindow() {
 		super();
 		
-		setSize(500, 250);
+		setSize(400, 250);
 		setUndecorated(true);
 		setLocationRelativeTo(null);
 		setBackground(new Color(0xAA000000, true));
@@ -56,6 +58,36 @@ public class StartWindow extends JFrame {
 		setContentPane(render);
 	}
 	
+	@Override
+	public void dispose() {
+		super.dispose();
+		
+		if (thread != null) {
+			run = false;
+			thread = null;
+		}
+	}
+	
+	@Override
+	public void setVisible(boolean b) {
+		super.setVisible(b);
+		if (b) {
+			run = true;
+			thread = new Thread(() -> {
+				while (run) {
+					try {
+						Thread.sleep(250);
+					} catch (InterruptedException e) {}
+					repaint();
+					count++;
+				}
+			});
+			thread.start();
+		} else {
+			run = false;
+		}
+	}
+	
 	private class ConntentRender extends JComponent {
 		private static final long serialVersionUID = -1003829780883748446L;
 		public ConntentRender() {
@@ -63,7 +95,11 @@ public class StartWindow extends JFrame {
 		}
 		
 		private String getMessage () {
-			return "Chargement...";
+			int point = count % 4;
+			String msg = "Chargement";
+			for (int i = 0; i < point; i++) 
+				msg += ".";
+			return msg;
 		}
 		
 		@Override
@@ -78,20 +114,17 @@ public class StartWindow extends JFrame {
 	        
 	        g2.setColor(Color.WHITE.darker());
 	        g2.drawRect(0, 0, getWidth()-1, getHeight()-1);
-	        g2.setStroke(new BasicStroke(3f));
-	        g2.drawRect(50, 50, getWidth()-100, getHeight()-100);
 	        
-	        int wid = getWidth(), heig = getHeight();
-	        g2.fillOval(-wid/2, -heig/2, wid, heig);
-	        g2.fillOval(wid/2, heig/2, wid, heig);
-	        
-	        FontMetrics metrics = g2.getFontMetrics(FONT);
-	        g2.setColor(Color.LIGHT_GRAY);
+	        g2.drawImage(logo, getWidth() / 2 - 75, 20, 150, 150, null);
+	        g2.setColor(COLOR);
 	        g2.setFont(FONT);
-	        String message = getMessage();
-	        int w = metrics.stringWidth(message), x = getWidth()/2 - w/2, y = getHeight()/2 + metrics.getHeight()/3;
-	        g2.drawImage(logo, x-50, y - 35, 45, 45, null);
-	        g2.drawString(message, x, y);
+	        final int wi = g2.getFontMetrics(FONT).stringWidth("FINANCE");
+	        int x = getWidth() / 2 - wi / 2;
+	        g2.drawString("FINANCE", x, 200);
+
+	        g2.setColor(Color.LIGHT_GRAY);
+	        g2.setFont(FONT.deriveFont(16f));
+	        g2.drawString(getMessage (), x, 225);
 		}
 	}
 }

@@ -66,12 +66,13 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 	public void update(Inscription i, long id) throws DAOException {
 		try {
 			this.updateInTable(
-					new String[] {"promotion", "student", "adress", "lastUpdate"},
+					new String[] {"promotion", "student", "adress", "lastUpdate", "picture"},
 					new Object[] {
 							i.getPromotion().getId(),
 							i.getStudent().getId(),
 							i.getAdress(),
-							i.getLastUpdate().getTime()
+							i.getLastUpdate().getTime(),
+							i.getPicture()
 					}, id);
 			this.emitOnUpdate(i);
 		} catch (SQLException e) {
@@ -598,52 +599,45 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	protected Inscription mapping (ResultSet result) throws SQLException, DAOException {
+	
+	private Inscription baseMapping (ResultSet result) throws SQLException {
 		Inscription in = new Inscription(result.getLong("id"));
-		in.setStudent(new Student(result.getLong("student")));
-		in.setPromotion(new Promotion(result.getLong("promotion")));
 		in.setRecordDate(new Date(result.getLong("recordDate")));
+		in.setAdress(result.getString("adress"));
+		in.setPicture(result.getString("picture"));
 		if(result.getLong("lastUpdate") != 0) {
 			in.setLastUpdate(new Date(result.getLong("lastUpdate")));
 		}
 		return in;
 	}
+
+	@Override
+	protected Inscription mapping (ResultSet result) throws SQLException, DAOException {
+		Inscription in = baseMapping(result);
+		in.setStudent(new Student(result.getLong("student")));
+		in.setPromotion(new Promotion(result.getLong("promotion")));
+		return in;
+	}
 	
 	protected Inscription mapping (ResultSet result, Student student, Promotion promotion) throws SQLException, DAOException {
-		Inscription in = new Inscription(result.getLong("id"));
+		Inscription in = baseMapping(result);
 		in.setStudent(student == null ? new Student(result.getLong("student")) : student);
 		in.setPromotion(promotion == null ? new Promotion(result.getLong("promotion")) : promotion);
-		in.setRecordDate(new Date(result.getLong("recordDate")));
-		if(result.getLong("lastUpdate") != 0) {
-			in.setLastUpdate(new Date(result.getLong("lastUpdate")));
-		}
 		return in;
 	}
 	
 	@Override
 	protected Inscription fullMapping (ResultSet result) throws SQLException, DAOException {
-		Inscription in = new Inscription(result.getLong("id"));
-		in.setStudent(this.studentDao.findById(result.getLong("student")));
-		in.setPromotion(this.promotionDao.findById(result.getLong("promotion")));
-		in.setRecordDate(new Date(result.getLong("recordDate")));
-		in.setPicture(result.getString("picture"));
-		if(result.getLong("lastUpdate") != 0) {
-			in.setLastUpdate(new Date(result.getLong("lastUpdate")));
-		}
+		Inscription in = baseMapping(result);
+		in.setStudent(studentDao.findById(result.getLong("student")));
+		in.setPromotion(promotionDao.findById(result.getLong("promotion")));
 		return in;
 	}
 	
 	protected Inscription fullMapping (ResultSet result, Student student, Promotion promotion) throws SQLException, DAOException {
-		Inscription in = new Inscription(result.getLong("id"));
+		Inscription in = baseMapping(result);
 		in.setStudent(student == null ? this.studentDao.findById(result.getLong("student")) : student);
 		in.setPromotion(promotion == null ? this.promotionDao.findById(result.getLong("promotion")) : promotion);
-		in.setRecordDate(new Date(result.getLong("recordDate")));
-		in.setPicture(result.getString("picture"));
-		if(result.getLong("lastUpdate") != 0) {
-			in.setLastUpdate(new Date(result.getLong("lastUpdate")));
-		}
 		return in;
 	}
 

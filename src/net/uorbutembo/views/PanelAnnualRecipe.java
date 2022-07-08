@@ -6,6 +6,7 @@ package net.uorbutembo.views;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -17,6 +18,7 @@ import javax.swing.JDialog;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JSplitPane;
+import javax.swing.ListSelectionModel;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualRecipe;
@@ -27,6 +29,7 @@ import net.uorbutembo.dao.AnnualRecipeDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
 import net.uorbutembo.dao.DAOException;
+import net.uorbutembo.dao.OtherRecipeDao;
 import net.uorbutembo.dao.UniversityRecipeDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
@@ -41,8 +44,9 @@ import net.uorbutembo.views.forms.FormGroupAllocationRecipe;
 public class PanelAnnualRecipe extends Panel {
 	private static final long serialVersionUID = -6487804127168576480L;
 	
-	private final MainWindow mainWindow;
-	private final AnnualRecipeDao annualRecipeDao;
+	private MainWindow mainWindow;
+	private AnnualRecipeDao annualRecipeDao;
+	private OtherRecipeDao otherRecipeDao;
 	private final AnnualSpendDao annualSpendDao;
 	private final AcademicYearDao academicYearDao;
 	private final UniversityRecipeDao universityRecipeDao;
@@ -52,7 +56,11 @@ public class PanelAnnualRecipe extends Panel {
 	private DefaultListModel<AnnualRecipe> modelRecipe = new DefaultListModel<>();
 	private JList<AnnualRecipe> listRecipe = new JList<>(modelRecipe);
 	private JButton btnAdd = new Button(new ImageIcon(R.getIcon("new")), "Nouvelle source");
-	{btnAdd.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);}
+	private JButton btnDelete = new Button(new ImageIcon(R.getIcon("close")), "Supprimer");
+	{
+		btnAdd.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		btnDelete.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+	}
 	private DialogChooseRecipe dialog;
 	
 	private final Panel panelRight = new  Panel(new BorderLayout());
@@ -106,6 +114,47 @@ public class PanelAnnualRecipe extends Panel {
 		}
 		
 	};
+	
+	/**
+	 * evenement du click sur botons de suppression d'une recette annuel
+	 */
+	private final ActionListener btnDeleteListener = event -> {
+		if (listRecipe.getSelectedIndex() == -1) {
+			JOptionPane.showMessageDialog(mainWindow, "Veiller selectionner une recette annuel", "Alert", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		
+		AnnualRecipe recipe = modelRecipe.get(listRecipe.getSelectedIndex());
+		if(otherRecipeDao.checkByAccount(recipe)) {
+			JOptionPane.showMessageDialog(mainWindow, "Impossible d'éffectuer cette operation car \ncertains operations du journal y font réfférence", "information", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		String message = "La recette \""+recipe+"\" sera \n supprimer de la liste des recettes pour l'année "+currentYear;
+		if(JOptionPane.showConfirmDialog(mainWindow, message, "Suppression de la recette", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) {			
+			try {
+				annualRecipeDao.delete(recipe.getId());
+			} catch (DAOException e) {
+				JOptionPane.showMessageDialog(mainWindow, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+	};
+	
+	/**
+	 * evenement de selection d'une recette dans la configuration globale
+	 */
+	private final ActionListener btnAddListener =event -> {
+		
+		if(dialog == null) {
+			dialog = new DialogChooseRecipe(mainWindow);
+			dialog.setCurrentYear(currentYear);
+		}
+		
+		if (dialog.hasChoosableRecipe())
+			dialog.setVisible(true);
+		else 
+			JOptionPane.showMessageDialog(mainWindow, "Impossible d'éffectuer cette opération\n car "
+					+ "tout les dépenses sont déjà répris!", "Avertissement", JOptionPane.ERROR_MESSAGE);
+	};
 
 	/**
 	 * @param mainWindow
@@ -117,6 +166,7 @@ public class PanelAnnualRecipe extends Panel {
 		annualSpendDao = mainWindow.factory.findDao(AnnualSpendDao.class);
 		academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
 		universityRecipeDao = mainWindow.factory.findDao(UniversityRecipeDao.class);
+		otherRecipeDao = mainWindow.factory.findDao(OtherRecipeDao.class);
 		
 		universityRecipeDao.addListener(univRecipeAdapter);
 		annualRecipeDao.addListener(annualRecipeAdapter);
@@ -153,6 +203,8 @@ public class PanelAnnualRecipe extends Panel {
 		
 		if(dialog != null)
 			dialog.setCurrentYear(currentYear);
+		
+		btnDelete.setVisible(academicYearDao.isCurrent(currentYear));
 	}
 
 	/**
@@ -161,7 +213,9 @@ public class PanelAnnualRecipe extends Panel {
 	private void init () {
 		final Panel panelBottom = new Panel();
 		panelBottom.add(btnAdd);
+		panelBottom.add(btnDelete);
 		//left
+		listRecipe.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		listRecipe.setBackground(FormUtil.BKG_END);
 		listRecipe.setForeground(Color.WHITE);
 		panelRight.add(panelBottom, BorderLayout.SOUTH);
@@ -171,23 +225,12 @@ public class PanelAnnualRecipe extends Panel {
 		
 		panelCenter.add(FormUtil.createVerticalScrollPane(formRecipe), BorderLayout.CENTER);
 		panelCenter.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
-		this.add(split, BorderLayout.CENTER);
+		add(split, BorderLayout.CENTER);
 		
 		//event
+		btnDelete.addActionListener(btnDeleteListener);
+		btnAdd.addActionListener(btnAddListener);
 		btnAdd.setEnabled(false);
-		btnAdd.addActionListener(event -> {
-			
-			if(dialog == null) {
-				dialog = new DialogChooseRecipe(mainWindow);
-				dialog.setCurrentYear(currentYear);
-			}
-			
-			if (dialog.hasChoosableRecipe())
-				dialog.setVisible(true);
-			else 
-				JOptionPane.showMessageDialog(mainWindow, "Impossible d'effectuer cette opérations\n car "
-						+ "tout les depense sont déjà répris!", "Avertissement", JOptionPane.ERROR_MESSAGE);
-		});
 		
 		listRecipe.addListSelectionListener(event -> {
 			int index = listRecipe.getSelectedIndex();
@@ -255,7 +298,7 @@ public class PanelAnnualRecipe extends Panel {
 		};
 		
 		public DialogChooseRecipe(MainWindow mainWindow) {
-			super(mainWindow, "Choisir les recetes", true);
+			super(mainWindow, "Choisir les recettes", true);
 			annualRecipeDao = mainWindow.factory.findDao(AnnualRecipeDao.class);
 			universityRecipeDao = mainWindow.factory.findDao(UniversityRecipeDao.class);
 			

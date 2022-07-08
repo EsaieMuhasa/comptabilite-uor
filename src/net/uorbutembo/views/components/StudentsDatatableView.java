@@ -25,7 +25,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.JTableHeader;
 
-import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -638,7 +637,7 @@ public class StudentsDatatableView extends Panel {
 		for (int i = 0; i < models.length; i++) {
 			XSSFDrawing drawing = sheet.createDrawingPatriarch();
 			
-			XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, offsetColumns, (i * 30) + 1, 30, 30);
+			XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, offsetColumns+1, (i * 30) + 1, 30, 30);
 			
 			XSSFChart chart = drawing.createChart(anchor);
 			chart.setTitleText(models[i].getTitle());
@@ -659,7 +658,7 @@ public class StudentsDatatableView extends Panel {
 	}
 	
 	/**
-	 * generation d'un feille pour une le detais de payement pour une faculte
+	 * generation d'un feuille pour le detais de payement pour une faculte
 	 * @param data
 	 * @param book
 	 * @param config
@@ -753,8 +752,14 @@ public class StudentsDatatableView extends Panel {
 				
 				//titre des colones
 				row = sheet.createRow(++rowCount);
+				font = book.createFont();
+				font.setFontHeight(11);
+				font.setFontName("Arial");
+				font.setBold(true);
+				
 				style = book.createCellStyle();
-				style.setBorderBottom(BorderStyle.DOUBLE);
+				style.setFont(font);
+				
 				for (int i = 0; i < columnIndex.length; i++) {					
 					cell = row.createCell(i);
 					cell.setCellValue(dataModel.getRow(0).getTitleAt(columnIndex[i]));
@@ -1269,8 +1274,8 @@ public class StudentsDatatableView extends Panel {
 			int status = JOptionPane.showConfirmDialog(null, message, "Supression de l'inscription", JOptionPane.OK_CANCEL_OPTION);
 			if(status == JOptionPane.OK_OPTION) {
 				if(row.getPayments().size() != 0) {
-					JOptionPane.showMessageDialog(mainWindow, "Impossible d'effectuer cette operation, "
-							+ "\ncar la fiche individuel de cette etudiant contiens \naumoin une données",
+					JOptionPane.showMessageDialog(mainWindow, "Impossible d'effectuer cette opération, "
+							+ "\ncar la fiche individuel de cette étudiant contiens \naumoin une donnée",
 							"Alert", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
@@ -1289,14 +1294,20 @@ public class StudentsDatatableView extends Panel {
 		
 		private final ActionListener itemEditInscriptionListener = event -> {
 			if(dialogInscription == null) {
-				dialogInscription = new JDialog();
+				dialogInscription = new JDialog(mainWindow, "Edition de l'inscription", true);
 				dialogInscription.setModal(true);
-				dialogInscription.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
-				
+				dialogInscription.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 				formRegister = new FormReRegister(mainWindow, false);
 				formRegister.setCurrentYear(currentYear);
-				dialogInscription.getContentPane().add(formRegister, BorderLayout.CENTER);
-				dialogInscription.getContentPane().setBackground(FormUtil.BKG_START);
+				
+				final Panel panel = new Panel(new BorderLayout());
+				final JScrollPane scroll = FormUtil.createVerticalScrollPane(panel);
+				
+				panel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+				panel.add(formRegister);
+				
+				dialogInscription.getContentPane().add(scroll, BorderLayout.CENTER);
+				dialogInscription.getContentPane().setBackground(FormUtil.BKG_DARK);
 				formRegister.getBtnCancel().addActionListener(cancelUpdateInscription);
 				dialogInscription.pack();
 			}
@@ -1309,15 +1320,20 @@ public class StudentsDatatableView extends Panel {
 		
 		private final ActionListener itemEditProfilListener = event -> {
 			if(dialogStudent == null) {
-				dialogStudent = new JDialog();
-				dialogStudent.setModal(true);
-				dialogStudent.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
-				dialogStudent.setSize(650, 450);
-				dialogStudent.setResizable(false);
-				dialogStudent.getContentPane().setBackground(FormUtil.BKG_START);
+				dialogStudent = new JDialog(mainWindow, "Edition du profil d'un étudiant", true);
 				
 				formStudent = new FormStudent(mainWindow);
-				dialogStudent.getContentPane().add(formStudent, BorderLayout.CENTER);
+				final Panel panel = new Panel(new BorderLayout());
+				final JScrollPane scroll = FormUtil.createVerticalScrollPane(panel);
+				
+				panel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+				panel.add(formStudent);
+				
+				dialogStudent.getContentPane().add(scroll, BorderLayout.CENTER);
+				dialogStudent.getContentPane().setBackground(FormUtil.BKG_DARK);
+				dialogStudent.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				dialogStudent.pack();
+				dialogStudent.setSize(650, dialogStudent.getHeight()+5);
 			}
 			
 			InscriptionDataRow row = tableModel.getRow(table.getSelectedRow());
@@ -1356,12 +1372,11 @@ public class StudentsDatatableView extends Panel {
 			table.getColumnModel().getColumn(4).setWidth(140);
 			table.getColumnModel().getColumn(4).setResizable(false);
 			
-			this.add(tablePanel, BorderLayout.CENTER);
-			this.setBorder(EMPTY_BOTTOM_BORDER);
+			add(tablePanel, BorderLayout.CENTER);
+			setBorder(EMPTY_BOTTOM_BORDER);
 			
-			if(tableModel.getRowCount() == 0) {
-				this.setAutohide(true);
-			}
+			if(tableModel.getRowCount() == 0)
+				setAutohide(true);
 			
 			table.addMouseListener(mouseAdapter);
 			

@@ -42,6 +42,11 @@ public class OutlayTableModel extends TableModel<Outlay> {
 		offset = 0;
 		this.account = account;
 		reload();
+		
+		if(account != null)
+			setTitle("Dépenses "+account.getAcademicYear()+", compte "+account.toString());
+		else
+			setTitle("");
 	}
 	
 	@Override

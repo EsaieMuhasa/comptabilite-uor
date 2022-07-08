@@ -27,6 +27,7 @@ import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.DAOAdapter;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.tools.FormUtil;
@@ -75,10 +76,17 @@ public class FormFeePromotion extends DefaultFormPanel  {
 		
 		@Override
 		public void onRemove(PanelAcademicFeeConfig config, List<Promotion> promotions) {
-			for (Promotion promotion : promotions) {
-				promotionDao.bindToAcademicFee(promotion.getId(), 0);
-				promotion.setAcademicFee(null);
-				modelUnselectedPromotion.addElement(promotion);
+			try {				
+				for (Promotion promotion : promotions) {
+					promotionDao.bindToAcademicFee(promotion, null);
+					promotion.setAcademicFee(null);
+					modelUnselectedPromotion.addElement(promotion);
+				}
+				
+				for (PanelAcademicFeeConfig c : panelsConfig)
+					c.btnAdd.setEnabled(true);
+			} catch (DAOException e) {
+				showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		

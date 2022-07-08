@@ -50,8 +50,8 @@ public class ChartPanel extends Panel {
 	private CloudChartRender chartRender;
 	private ModelAdapter modelAdapter = new ModelAdapter();
 	
-	private final JCheckBox xLine = new JCheckBox("Grille X", true);
-	private final JCheckBox yLine = new JCheckBox("Grille Y", true);
+	private final JCheckBox xLine = new JCheckBox("Grilles-X", true);
+	private final JCheckBox yLine = new JCheckBox("Grilles-Y", true);
 	private final JCheckBox mouseLine = new JCheckBox("Traces", true);
 	
 	private final Box checkBox = Box.createHorizontalBox();

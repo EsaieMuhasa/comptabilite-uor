@@ -147,7 +147,10 @@ public interface PromotionDao extends DAOInterface<Promotion> {
 	 */
 	void bindToAcademicFee (Promotion promotion, AcademicFee academicFee) throws DAOException;
 	default void bindToAcademicFee (long promotionId, long academicFeeId) throws DAOException {
-		bindToAcademicFee(findById(promotionId), getFactory().findDao(AcademicFeeDao.class).findById(academicFeeId));
+		if(academicFeeId <= 0) 
+			bindToAcademicFee(findById(promotionId), null);
+		else 
+			bindToAcademicFee(findById(promotionId), getFactory().findDao(AcademicFeeDao.class).findById(academicFeeId));
 	}
 	
 	

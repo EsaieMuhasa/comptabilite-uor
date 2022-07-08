@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 
 import net.uorbutembo.beans.AcademicYear;
+import net.uorbutembo.beans.AllocationRecipe;
 import net.uorbutembo.beans.AnnualRecipe;
 
 /**
@@ -67,6 +68,19 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
+	}
+	
+	@Override
+	public synchronized AnnualRecipe delete (Connection connection, long id) throws DAOException {
+		if (factory.findDao(AllocationRecipeDao.class).checkByRecipe(id)) {
+			List<AllocationRecipe> recipes = factory.findDao(AllocationRecipeDao.class).findByRecipe(id);
+			long tab [] = new long[recipes.size()];
+			for (int i = 0; i < tab.length; i++) //recuperaion des IDs
+				tab[i] = recipes.get(i).getId();
+			
+			((AllocationRecipeDaoSql)factory.findDao(AllocationRecipeDao.class)).delete(connection, tab);
+		}
+		return super.delete(connection, id);
 	}
 
 	@Override

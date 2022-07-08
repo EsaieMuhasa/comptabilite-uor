@@ -6,6 +6,7 @@ package net.uorbutembo.views.forms;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemListener;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,6 +18,7 @@ import javax.swing.Box;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.CaretListener;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.AnnualRecipe;
@@ -32,13 +34,13 @@ import net.uorbutembo.dao.PaymentLocationDao;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.FormGroup;
 import net.uorbutembo.swing.Panel;
+import net.uorbutembo.swing.TextField;
 import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.views.MainWindow;
 import net.uorbutembo.views.components.DefaultFormPanel;
 
 /**
  * @author Esaie MUHASA
- *
  */
 public class FormOtherRecipe extends DefaultFormPanel {
 	private static final long serialVersionUID = -3723343048984497445L;
@@ -48,12 +50,13 @@ public class FormOtherRecipe extends DefaultFormPanel {
 	private final DefaultComboBoxModel<PaymentLocation> comboLocationModel = new DefaultComboBoxModel<>();
 	private final Map<AcademicYear, List<AnnualRecipe>> classementRecipes = new HashMap<>();
 	
-	private final ComboBox<AnnualRecipe> comboAccount = new ComboBox<>("Compte à crediter", comboAccountModel);
+	private final ComboBox<AnnualRecipe> comboAccount = new ComboBox<>("Compte à créditer", comboAccountModel);
 	private final ComboBox<AcademicYear> comboAccountYearFilter = new ComboBox<>("Année académique du compte", comboFilterYearModel);
-	private final ComboBox<PaymentLocation> comboLocation = new  ComboBox<>("Leux de perception", comboLocationModel);
+	private final ComboBox<PaymentLocation> comboLocation = new  ComboBox<>("Lieux de perception", comboLocationModel);
 	
-	private final FormGroup<String> groupAmount = FormGroup.createTextField("Montant en "+FormUtil.UNIT_MONEY);
-	private final FormGroup<String> groupWording = FormGroup.createTextField("Libele de perception");
+	private final TextField<String> fieldAmount =  new TextField<>("Montant en "+FormUtil.UNIT_MONEY);
+	private final FormGroup<String> groupAmount = FormGroup.createTextField(fieldAmount);
+	private final FormGroup<String> groupWording = FormGroup.createTextField("Libellé de perception");
 	private final FormGroup<String> groupReceived = FormGroup.createTextField("N° du reçu en caisse");
 	private final FormGroup<String> groupDate = FormGroup.createTextField("Date de perception (jj-mm-aaaa)");
 	
@@ -109,7 +112,29 @@ public class FormOtherRecipe extends DefaultFormPanel {
 				}
 			}
 		}
+	};
+	
+	/**
+	 * ecoute de changement de la valeur (du montant de la requectte) recue en recette
+	 */
+	private CaretListener amountListener = event -> {
+		validateAmount();
+	};
+	
+	/**
+	 * ecoute evenement de changement de l'annee academique selectionner
+	 */
+	private final ItemListener comboAccountYearFilterListener = event -> {
+		List<AnnualRecipe> spends = classementRecipes.get(comboFilterYearModel.getElementAt(comboAccountYearFilter.getSelectedIndex()));
+		comboAccount.setEnabled(spends!= null && !spends.isEmpty());
+		btnSave.setEnabled(spends!= null && !spends.isEmpty());
+		comboAccountModel.removeAllElements();
+		if(spends != null) {
+			for (AnnualRecipe spend : spends) 
+				comboAccountModel.addElement(spend);
+		}
 		
+		validateAmount();
 	};
 
 	/**
@@ -133,6 +158,25 @@ public class FormOtherRecipe extends DefaultFormPanel {
 		add(panel, BorderLayout.CENTER);
 		setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		load();
+	}
+	
+	
+	/**
+	 * validation du montant a retirer
+	 * tant que le montant est invalide, le bouton enregistrer reste desactiver
+	 */
+	private void validateAmount () {
+		String amount = groupAmount.getField().getValue();
+		boolean enable = false;
+		if (!amount.trim().isEmpty() && amount.matches(RGX_NUMBER)) {
+			double value = Double.parseDouble(amount);
+			enable = value > 0;
+		}
+		
+		if (comboAccountModel.getSize() == 0 || comboLocationModel.getSize() == 0)
+			enable = false;
+		
+		btnSave.setEnabled(enable);
 	}
 	
 	/**
@@ -244,18 +288,8 @@ public class FormOtherRecipe extends DefaultFormPanel {
 		getBody().add(container, BorderLayout.NORTH);
 		
 		//events
-		comboAccountYearFilter.addItemListener(event -> {
-			List<AnnualRecipe> spends = classementRecipes.get(comboFilterYearModel.getElementAt(comboAccountYearFilter.getSelectedIndex()));
-			comboAccount.setEnabled(spends!= null && !spends.isEmpty());
-			btnSave.setEnabled(spends!= null && !spends.isEmpty());
-			comboAccountModel.removeAllElements();
-			if(spends == null)
-				return;
-			
-			for (AnnualRecipe spend : spends) {
-				comboAccountModel.addElement(spend);
-			}
-		});
+		comboAccountYearFilter.addItemListener(comboAccountYearFilterListener);
+		fieldAmount.addCaretListener(amountListener);
 		//==
 	}
 

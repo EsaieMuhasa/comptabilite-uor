@@ -5,6 +5,7 @@ package net.uorbutembo.views;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
@@ -13,13 +14,19 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 
 import net.uorbutembo.dao.DAOBaseListener;
 import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.DAOFactory;
+import net.uorbutembo.swing.Panel;
 import net.uorbutembo.tools.Config;
+import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.Sidebar;
 
@@ -36,6 +43,7 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 	public final DAOFactory factory;
 	
 	private Dimension lastSize;
+	private final DialogProgress progress;
 	
 	private final WindowAdapter windowListener = new WindowAdapter() {
 
@@ -54,6 +62,8 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 		super(R.getConfig().get("appName"));
 		this.factory = factory;
 		factory.addListener(this);
+		
+		progress = new DialogProgress(this);
 		
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		int w = (int) (screenSize.getWidth() - screenSize.getWidth()/10);
@@ -121,6 +131,16 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 	public Sidebar getSidebar() {
 		return sidebar;
 	}
+	
+	@Override
+	public void setCursor(Cursor cursor) {
+		super.setCursor(cursor);
+		if(cursor.getType() == Cursor.WAIT_CURSOR) {
+			progress.setLocationRelativeTo(this);
+			progress.setVisible(true);
+		} else
+			progress.setVisible(false);
+	}
 
 	/**
 	 * @return the workspace
@@ -134,6 +154,35 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 		if(event.getType() == EventType.ERROR) {
 			DAOException e = (DAOException) event.getData();
 			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * 
+	 * @author Esaie MUHASA
+	 */
+	public static class DialogProgress extends JDialog {
+		private static final long serialVersionUID = -3359842359459731399L;
+		
+		private final JProgressBar progress = new JProgressBar();
+		public DialogProgress(MainWindow parent) {
+			super(parent, false);
+			setUndecorated(true);
+			Panel panel = new Panel(new BorderLayout());
+			
+			panel.add(progress, BorderLayout.CENTER);
+			panel.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+			((JPanel)getContentPane()).setBorder(BorderFactory.createLineBorder(FormUtil.BORDER_COLOR, 3));
+			((JPanel)getContentPane()).setBackground(FormUtil.BKG_DARK);
+			getContentPane().add(panel, BorderLayout.CENTER);
+			progress.setPreferredSize(new Dimension(400, progress.getPreferredSize().height));
+			progress.setIndeterminate(true);
+			progress.setString("Long chargement...");
+			progress.setStringPainted(true);
+			pack();
+			setLocationRelativeTo(panel);
+			setAlwaysOnTop(true);
 		}
 	}
 }

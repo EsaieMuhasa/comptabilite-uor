@@ -212,7 +212,7 @@ public class PieRender extends JComponent implements PieModelListener{
 	 * dessine le figure elementaire du graphique
 	 * @param g2
 	 */
-	private void doPaint (Graphics2D g2) {
+	private synchronized void doPaint (Graphics2D g2) {
 		
 		for (PiePartInfo info : parts) {
 			if (info.getArea() == null)
@@ -247,7 +247,7 @@ public class PieRender extends JComponent implements PieModelListener{
 	 * @param width
 	 * @param height
 	 */
-	public void paint (Graphics2D g, double width, double height) {
+	public synchronized void paint (Graphics2D g, double width, double height) {
 		
 		setVisible(false);
 		prepareRender(width, height);
@@ -476,9 +476,7 @@ public class PieRender extends JComponent implements PieModelListener{
 	}
 	
 	/**
-	 * 
 	 * @author Esaie MUHASA
-	 *
 	 */
 	private class MouseListener extends MouseAdapter{
 
@@ -486,7 +484,7 @@ public class PieRender extends JComponent implements PieModelListener{
 		public void mouseExited(MouseEvent e) {
 			if(!hovable)
 				return;
-			model.setSelectedIndex(-1);
+			hoverIndex = -1;
 		}
 
 		@Override

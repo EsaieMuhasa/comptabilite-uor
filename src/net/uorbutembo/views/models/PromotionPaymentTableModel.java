@@ -52,11 +52,11 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 			boolean exist = false;
 			for (int i = 0, count = data.size(); i < count; i++) {
 				InscriptionDataRow row = data.get(i);
-				if(row.getInscription().getId() == e.getId()) {
+				if(row.getInscription().getId() == e.getId()) {//lors du deplacement de l'inscription
 					exist= true;
 					if(e.getPromotion().getId() != promotion.getId()) {//modification de la promotion
 						removeRow(i);
-					}
+					} 
 					break;
 				}
 			}
@@ -85,6 +85,7 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 				if(row.getInscription().getStudent().getId() == e.getId()) {
 					row.getInscription().setStudent(e);
 					fireTableRowsUpdated(row.index, row.index);
+					row.emitReload();
 					break;
 				}
 			}
@@ -365,6 +366,14 @@ public class PromotionPaymentTableModel extends AbstractTableModel {
 			this.inscription = inscription;
 			this.index = index;
 			paymentFeeDao.addListener(paymentListener);
+		}
+		
+		/**
+		 * emission de l'evenement de relecture du compte
+		 */
+		private void emitReload() {
+			for (InscriptionDataRowListener l : listeners) 
+				l.onReload(this);
 		}
 		
 		/**

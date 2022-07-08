@@ -3,6 +3,7 @@
  */
 package net.uorbutembo.views.forms;
 
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -54,8 +55,8 @@ public class FormReRegister extends AbstractInscriptionForm {
 			btnSave.setVisible(false);
 			btnSaveUpdate.addActionListener(this);
 			
-			this.getFooter().add(btnSaveUpdate);
-			this.getFooter().add(btnCancel);
+			getFooter().add(btnSaveUpdate);
+			getFooter().add(btnCancel);
 			
 			
 			btnCancel.addActionListener(event -> {
@@ -79,7 +80,7 @@ public class FormReRegister extends AbstractInscriptionForm {
 	@Override
 	protected void init() {
 		super.init();
-		responsiveFileds.add(this.matricul);
+		responsiveFileds.add(matricul);
 		responsiveFileds.add(adresse);
 	}
 
@@ -95,6 +96,12 @@ public class FormReRegister extends AbstractInscriptionForm {
 	 */
 	public void setInscription(Inscription inscription) {
 		this.inscription = inscription;
+		
+		if (inscription == null) {
+			matricul.getField().setValue("");
+			adresse.getField().setValue("");
+			return;
+		}
 		
 		for (int i = 0, count = modelComboFaculty.getSize(); i < count; i++) {
 			Faculty fac = modelComboFaculty.getElementAt(i);
@@ -123,8 +130,8 @@ public class FormReRegister extends AbstractInscriptionForm {
 		matricul.getField().setValue(inscription.getStudent().getMatricul());
 		adresse.getField().setValue(inscription.getAdress());
 		
-		if(inscription.getStudent().getPicture() != null && !inscription.getStudent().getPicture().isEmpty())
-			imagePicker.show(R.getConfig().get("workspace")+inscription.getStudent().getPicture());
+		if(inscription.getPicture() != null && !inscription.getPicture().isEmpty())
+			imagePicker.show(R.getConfig().get("workspace")+inscription.getPicture());
 	}
 
 	@Override
@@ -149,40 +156,50 @@ public class FormReRegister extends AbstractInscriptionForm {
 		in.setStudent(student);
 		in.setAdress(adresse.getField().getValue());
 		
+		//picture
+		String fileName = in.getId()+"-"+System.currentTimeMillis()+"."+imagePicker.getImageType();
+		File file = new File(R.getConfig().get("workspace")+fileName);
+		BufferedImage image = imagePicker.getImage();
+		//==
+		
 		try {
+			in.setPicture(imagePicker.isCropableImage()? fileName : (inscription != null? inscription.getPicture() : null));
 			if(event.getSource() == btnSave) {
 				in.setRecordDate(now);
-				this.inscriptionDao.create(in);
+				inscriptionDao.create(in);
 			} else {
 				in.setLastUpdate(now);
 				in.setId(inscription.getId());
-				this.inscriptionDao.update(in, inscription.getId());
+				inscriptionDao.update(in, inscription.getId());
 			}
-			this.showMessageDialog("Information", "Success d'enregistrement de l'inscription de\n l'étudiant "+student.toString()+", \ndans la promtion "+promotion.toString(), JOptionPane.INFORMATION_MESSAGE);
+			showMessageDialog("Information", "Success d'enregistrement de l'inscription de\n l'étudiant "+student.toString()+", \ndans la promtion "+promotion.toString(), JOptionPane.INFORMATION_MESSAGE);
 		} catch (DAOException e) {
 			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		
 		//ecriture de la photo sur le disque dur
-		String fileName = in.getId()+"-"+System.currentTimeMillis()+"."+imagePicker.getImageType();
-		try  {
-			File file = new File(R.getConfig().get("workspace")+fileName);
-			BufferedImage image = imagePicker.getImage();
-			ImageIO.write(image, imagePicker.getImageType(), file);
-			inscriptionDao.updatePicture(in.getId(), fileName);
-			
-			if(in.getStudent().getPicture() == null)
-				studentDao.updatePicture(fileName, in.getStudent().getId());
-		} catch (Exception e) {
-			this.showMessageDialog("Erreur d'ecriture du fichier", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+		if(image != null && imagePicker.isCropableImage()) {			
+			try  {
+				ImageIO.write(image, imagePicker.getImageType(), file);				
+				if(in.getStudent().getPicture() == null)
+					studentDao.updatePicture(fileName, in.getStudent().getId());
+			} catch (Exception e) {
+				showMessageDialog("Erreur d'ecriture du fichier", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			}
 		}
 		
 		this.matricul.getField().setValue("");
 		adresse.getField().setValue("");
 		imagePicker.show(null);
-		inscription = null;
 		
+		if(inscription != null) {
+			inscription.setPicture(in.getPicture());
+			inscription = null;
+		}
+		
+		setEnabled(false);
+		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 	}
 	
 	@Override

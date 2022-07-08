@@ -28,7 +28,6 @@ import net.uorbutembo.dao.DepartmentDao;
 import net.uorbutembo.dao.FacultyDao;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Button;
-import net.uorbutembo.swing.Dialog;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
@@ -47,11 +46,11 @@ public class PanelFaculty extends Panel {
 	
 	private Button btnNewFaculty = new Button(new ImageIcon(R.getIcon("plus")), "Nouvelle faculté");
 	private FormFaculty formFaculty;
-	private Dialog dialogFaculty;
+	private JDialog dialogFaculty;
 	
 	private Button btnNewDepartment = new Button(new ImageIcon(R.getIcon("plus")), "Nouveau département");
 	private FormDepartment formDepartment;
-	private Dialog dialogDepartment;
+	private JDialog dialogDepartment;
 	
 	private final FacultyDao facultyDao;
 	private final DepartmentDao departmentDao;
@@ -122,13 +121,11 @@ public class PanelFaculty extends Panel {
 		btnNewFaculty.setEnabled(false);
 		btnNewFaculty.addActionListener(event -> {
 			createFaculty();
-			dialogFaculty.setTitle("Enregistrement d'une faculté");
 		});
 		
 		btnNewDepartment.setEnabled(false);
 		btnNewDepartment.addActionListener(event -> {
 			createDepartment();
-			dialogDepartment.setTitle("Enregistrement d'un département");
 		});
 		
 		Panel top = new Panel(new BorderLayout());
@@ -176,8 +173,9 @@ public class PanelFaculty extends Panel {
 	private void buildFacultyDialog () {
 		if(dialogFaculty == null) {
 			final Panel padding = new Panel(new BorderLayout());
-			dialogFaculty = new Dialog(mainWindow);
 			formFaculty = new FormFaculty(mainWindow);
+			dialogFaculty = new JDialog(mainWindow);
+			dialogFaculty.getContentPane().setBackground(FormUtil.BKG_DARK);
 			dialogFaculty.getContentPane().add(padding, BorderLayout.CENTER);
 			dialogFaculty.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 			padding.add(formFaculty, BorderLayout.CENTER);
@@ -201,12 +199,14 @@ public class PanelFaculty extends Panel {
 		if(dialogDepartment == null) {
 			final Panel padding = new Panel(new BorderLayout());
 			formDepartment = new FormDepartment(mainWindow);
-			dialogDepartment = new Dialog(mainWindow);
+			dialogDepartment = new JDialog(mainWindow);
+			dialogDepartment.getContentPane().setBackground(FormUtil.BKG_DARK);
 			dialogDepartment.getContentPane().add(padding, BorderLayout.CENTER);
 			padding.add(formDepartment, BorderLayout.CENTER);
+			padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			dialogDepartment.pack();
 			dialogDepartment.setSize(600, dialogDepartment.getHeight());
-			dialogDepartment.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
+			dialogDepartment.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 			dialogDepartment.addWindowListener(new WindowAdapter() {
 				@Override
 				public void windowClosing(WindowEvent e) {
@@ -222,6 +222,7 @@ public class PanelFaculty extends Panel {
 	 */
 	private void createFaculty () {
 		buildFacultyDialog();
+		dialogFaculty.setTitle("Enregistrement d'une faculté");
 		dialogFaculty.setLocationRelativeTo(mainWindow);
 		dialogFaculty.setVisible(true);
 	}
@@ -257,8 +258,12 @@ public class PanelFaculty extends Panel {
 	 * d'enregistrer un nouveau departement
 	 */
 	private void createDepartment() {
+		if (facultyDao.countAll() == 0) {
+			JOptionPane.showMessageDialog(mainWindow, "Impossible d'éffetuer cette operations \ncar aucune faculté n'est déjà enregistrer.", "Information", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
 		buildDepartmentDialog();
-		
+		dialogDepartment.setTitle("Enregistrement d'un département");
 		dialogDepartment.setLocationRelativeTo(mainWindow);
 		dialogDepartment.setVisible(true);
 	}
@@ -273,13 +278,24 @@ public class PanelFaculty extends Panel {
 		private JLabel labelAbb = FormUtil.createSubTitle("");
 		
 		private final JMenuItem itemUpdateFaculty = new  JMenuItem("Modifier la faculté", new ImageIcon(R.getIcon("edit")));
-		private final JMenuItem itemDeleteFaculty = new  JMenuItem("Suprimer la faculté", new ImageIcon(R.getIcon("close")));
+		private final JMenuItem itemDeleteFaculty = new  JMenuItem("Supprimer la faculté", new ImageIcon(R.getIcon("close")));
 		private final JMenuItem itemUpdateDepartment = new  JMenuItem("Modifier le département", new ImageIcon(R.getIcon("edit")));
-		private final JMenuItem itemDeleteDepartment = new  JMenuItem("Suprimer département", new ImageIcon(R.getIcon("close")));
+		private final JMenuItem itemDeleteDepartment = new  JMenuItem("Supprimer département", new ImageIcon(R.getIcon("close")));
 		
 		private final JPopupMenu popupDepartment = new JPopupMenu();
 		private final JPopupMenu popupFaculty = new JPopupMenu();
-		private final MouseAdapter listener = new MouseAdapter() {
+		
+		private final MouseAdapter listenerPopupFaculty = new MouseAdapter() {
+			@Override
+			public void mouseReleased (MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					itemDeleteFaculty.setEnabled(tableModel.getRowCount() == 0);
+					popupFaculty.show(tablePanel.getHeader(), e.getX(), e.getY());
+				}
+			}
+		};
+		
+		private final MouseAdapter listenerPopupDepartement = new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
@@ -311,7 +327,6 @@ public class PanelFaculty extends Panel {
 			tablePanel.getHeader().add(labelAbb, BorderLayout.WEST);
 			
 			table.setShowVerticalLines(true);
-			table.addMouseListener(listener);
 			table.setShowVerticalLines(true);
 			final int w = 140;
 			for (int i = 2; i <= 3; i++) {			
@@ -337,7 +352,8 @@ public class PanelFaculty extends Panel {
 		 * liberation des ressources et deconnection au DAO
 		 */
 		public void dispose() {
-			table.removeMouseListener(listener);
+			table.removeMouseListener(listenerPopupDepartement);
+			tablePanel.removeMouseListener(listenerPopupFaculty);
 			facultyDao.removeListener(daoAdapter);
 			departmentDao.removeListener(tableModel);
 		}
@@ -352,23 +368,8 @@ public class PanelFaculty extends Panel {
 			popupDepartment.add(itemUpdateDepartment);
 			popupDepartment.add(itemDeleteDepartment);
 			
-			tablePanel.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseReleased(MouseEvent e) {
-					if(e.isPopupTrigger()) {
-						popupFaculty.show(tablePanel.getHeader(), e.getX(), e.getY());
-					}
-				}
-			});
-			
-			table.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseReleased(MouseEvent e) {
-					if(e.isPopupTrigger() && table.getSelectedRow() != -1) {
-						popupDepartment.show(table, e.getX(), e.getY());
-					}
-				}
-			});
+			tablePanel.addMouseListener(listenerPopupFaculty);
+			table.addMouseListener(listenerPopupDepartement);
 			
 			itemDeleteFaculty.addActionListener(event -> {
 				Faculty fac = faculty;

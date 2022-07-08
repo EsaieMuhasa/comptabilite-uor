@@ -15,8 +15,6 @@ import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -69,6 +67,8 @@ import net.uorbutembo.swing.TablePanel;
 import net.uorbutembo.swing.charts.Axis;
 import net.uorbutembo.swing.charts.ChartPanel;
 import net.uorbutembo.swing.charts.CloudChartRender;
+import net.uorbutembo.swing.charts.CloudChartRender.ChartRenderTranslationListener;
+import net.uorbutembo.swing.charts.CloudChartRender.Interval;
 import net.uorbutembo.swing.charts.DateAxis;
 import net.uorbutembo.swing.charts.DefaultAxis;
 import net.uorbutembo.swing.charts.DefaultCloudChartModel;
@@ -79,8 +79,6 @@ import net.uorbutembo.swing.charts.DefaultPointCloud;
 import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.swing.charts.PieRender;
-import net.uorbutembo.swing.charts.CloudChartRender.ChartRenderTranslationListener;
-import net.uorbutembo.swing.charts.CloudChartRender.Interval;
 import net.uorbutembo.swing.charts.PointCloud.CloudType;
 import net.uorbutembo.tools.Config;
 import net.uorbutembo.tools.FormUtil;
@@ -901,6 +899,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			if (locations == null || account == null)
 				return;
 			
+			piePanel.setRenderVisible(false);
 			AnnualSpend account = this.account.getAccount();
 			int count = locations.size();
 			PiePart [] parts = new PiePart[count];
@@ -927,14 +926,10 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			pieModel.addParts(parts);
 			pieModel.setTitle(account.toString()+", soldes diponibles par emplacement");
 			
-			BigDecimal 
-				bigSold = new BigDecimal(pieModel.getRealMax()).setScale(3, RoundingMode.FLOOR),
-				bigIn = new BigDecimal(in).setScale(3, RoundingMode.FLOOR),
-				bigOut = new BigDecimal(out).setScale(3, RoundingMode.FLOOR);
-			
-			cardOutlayModel.setValue(bigOut.doubleValue());
-			cardRecipeModel.setValue(bigIn.doubleValue());
-			cardSoldModel.setValue(bigSold.doubleValue());
+			cardOutlayModel.setValue(out);
+			cardRecipeModel.setValue(in);
+			cardSoldModel.setValue(pieModel.getRealMax());
+			piePanel.setRenderVisible(true);
 		}
 		
 		@Override
@@ -1192,6 +1187,18 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			this.account = account;
 			offset = 0;
 			reload();
+			updateTitle();
+		}
+		
+		/**
+		 * utility method to updating model title
+		 * this method must be called after change current parent account, or recipe type change
+		 */
+		private void updateTitle() {
+			if(account != null)
+				setTitle((fees? "Recettes frais académique " : " Autres recettes ")+account.getAcademicYear()+", compte "+account.toString());
+			else
+				setTitle("");
 		}
 		
 		public void reload () {
@@ -1234,6 +1241,8 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			this.fees = fees;
 			offset = 0;
 			reload();
+			
+			updateTitle();
 		}
 
 		@Override

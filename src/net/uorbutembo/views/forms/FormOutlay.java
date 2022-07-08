@@ -8,6 +8,7 @@ import java.awt.Cursor;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -76,7 +77,7 @@ public class FormOutlay extends DefaultFormPanel {
 	private final TextField<String> amountField = new TextField<>("Montant en "+FormUtil.UNIT_MONEY);
 	
 	private final FormGroup<String> groupAmount = FormGroup.createTextField(amountField);
-	private final FormGroup<String> groupWording = FormGroup.createTextField("Libele de livraison");
+	private final FormGroup<String> groupWording = FormGroup.createTextField("Libellé de livraison");
 	private final FormGroup<String> groupDate = FormGroup.createTextField("Date de livraison  (jj-mm-aaaa)");
 	private final FormGroup<AcademicYear> groupYear = FormGroup.createComboBox(comboYear);
 	private final FormGroup<PaymentLocation> groupLocation = FormGroup.createComboBox(comboLocation);
@@ -162,6 +163,78 @@ public class FormOutlay extends DefaultFormPanel {
 		public synchronized void onDelete(Outlay e, int requestId) {
 			reloadPieChart();
 		}
+		
+	};
+	
+	/**
+	 * ecoute changement de la valeur selectionner pour le combo selection de l'annee academique.
+	 * par defaut, lors du changement de l'annee academique, change directement l'annee du combo box de filtrage
+	 */
+	private final ItemListener comboYearListener = event -> {
+		if (event.getStateChange() != ItemEvent.SELECTED) 
+			return;
+		
+		comboAccountYearFilter.setSelectedIndex(comboYear.getSelectedIndex());
+		validateAmount();
+	};
+	
+	/**
+	 * ecoute changement de valeur selectionner pour le combo des lieux de perception de l'argent
+	 */
+	private final ItemListener comboLocationListener = event -> {
+		if (event.getStateChange() != ItemEvent.SELECTED || comboLocation.getSelectedIndex() == -1) 
+			return;
+		
+		if(comboLocation.getSelectedIndex() < pieModel.getCountPart())
+			pieModel.setSelectedIndex(comboLocation.getSelectedIndex());
+		
+		validateAmount();
+	};
+	
+	/**
+	 * ecoute de l'evenement du changement de  la valeur du combo de selection d'une annee academique
+	 */
+	private final ItemListener comboAccountListener = event -> {
+		if (event.getStateChange() != ItemEvent.SELECTED) 
+			return;
+		
+		wait(true);
+		Thread t = new Thread( () -> {
+			reloadPieChart();
+			wait(false);
+			validateAmount();
+		});
+		t.start();
+	};
+	
+	/**
+	 * ecoute evenement changement de la valeur du combo academique
+	 * pour le filtrage des comptes
+	 */
+	private final ItemListener comboAccountYearFilterListener = event -> {
+		if (event.getStateChange() != ItemEvent.SELECTED)
+			return;
+		
+		comboAccount.removeItemListener(comboAccountListener);
+		wait(true);
+		
+		Thread t = new Thread( () -> {
+			List<AnnualSpend> spends = classementSpends.get(comboFilterYearModel.getElementAt(comboAccountYearFilter.getSelectedIndex()));
+			comboAccount.setEnabled(spends!= null && !spends.isEmpty());
+			comboAccountModel.removeAllElements();
+			if(spends != null) {
+				for (AnnualSpend spend : spends)
+					comboAccountModel.addElement(spend);
+				
+			}
+			reloadPieChart();
+			wait(false);
+			
+			btnSave.setEnabled(comboAccountModel.getSize() != 0);
+			comboAccount.addItemListener(comboAccountListener);
+			validateAmount();
+		});
+		t.start();
 		
 	};
 
@@ -261,15 +334,19 @@ public class FormOutlay extends DefaultFormPanel {
 		groupDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(new Date()));
 	}
 	
+	/**
+	 * validation du montant a retirer
+	 * tant que le montant est invalide, le bouton enregistrer reste desactiver
+	 */
 	private void validateAmount () {
 		String amount = groupAmount.getField().getValue();
+		boolean enable = false;
 		if (!amount.trim().isEmpty() && amount.matches(RGX_NUMBER)) {
 			double value = Double.parseDouble(amount);
 			PiePart part = pieModel.findByData(comboLocationModel.getElementAt(comboLocation.getSelectedIndex()));
-			btnSave.setEnabled(part != null && value <= part.getValue());
-		} else {
-			btnSave.setEnabled(false);
+			enable = part != null && value <= part.getValue();
 		}
+		btnSave.setEnabled(enable);
 	}
 	
 	/**
@@ -315,51 +392,14 @@ public class FormOutlay extends DefaultFormPanel {
 		add(pie, BorderLayout.CENTER);
 		setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		
-		amountField.addCaretListener(amountListener);
-		
-		comboLocation.addItemListener(event -> {
-			if (event.getStateChange() != ItemEvent.SELECTED) 
-				return;
-			
-			if(comboLocation.getSelectedIndex() < pieModel.getCountPart())
-				pieModel.setSelectedIndex(comboLocation.getSelectedIndex());
-		});
-		
-		comboYear.addItemListener(event -> {
-			if (event.getStateChange() != ItemEvent.SELECTED) 
-				return;
-			
-			comboAccountYearFilter.setSelectedIndex(comboYear.getSelectedIndex());
-			//AcademicYear year = comboFilterYearModel.getElementAt(comboAccountYearFilter.getSelectedIndex());
-		});
-		
 		//events
-		comboAccountYearFilter.addItemListener(event -> {
-			List<AnnualSpend> spends = classementSpends.get(comboFilterYearModel.getElementAt(comboAccountYearFilter.getSelectedIndex()));
-			comboAccount.setEnabled(spends!= null && !spends.isEmpty());
-			comboAccountModel.removeAllElements();
-			if(spends == null)
-				return;
-			
-			for (AnnualSpend spend : spends) {
-				comboAccountModel.addElement(spend);
-			}
-			
-			btnSave.setEnabled(comboAccountModel.getSize() != 0);
-		});
+		amountField.addCaretListener(amountListener);
+		comboLocation.addItemListener(comboLocationListener);
+		comboYear.addItemListener(comboYearListener);
+		comboAccountYearFilter.addItemListener(comboAccountYearFilterListener);
+		comboAccount.addItemListener(comboAccountListener);
 		//==
 		
-		comboAccount.addItemListener(event -> {
-			if (event.getStateChange() != ItemEvent.SELECTED) 
-				return;
-			
-			wait(true);
-			Thread t = new Thread( () -> {
-				reloadPieChart();
-				wait(false);
-			});
-			t.start();
-		});
 	}
 	
 	private void wait (boolean status) {
@@ -372,8 +412,12 @@ public class FormOutlay extends DefaultFormPanel {
 		btnSave.setEnabled(!status && comboAccountModel.getSize() != 0);
 	}
 	
-	private void reloadPieChart ()  {
+	/**
+	 * rechargement des donnnes du graphique
+	 */
+	private synchronized void reloadPieChart () {
 		pieModel.removeAll();
+		piePanel.setRenderVisible(false);
 		
 		AnnualSpend account = comboAccountModel.getElementAt(comboAccount.getSelectedIndex());
 		
@@ -402,6 +446,7 @@ public class FormOutlay extends DefaultFormPanel {
 			
 		}
 		validateAmount();
+		piePanel.setRenderVisible(true);
 	}
 
 	@Override

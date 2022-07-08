@@ -54,6 +54,15 @@ public class ImagePicker extends Panel {
 	private Frame mainFrame;
 	
 	private String file;//pour afficher une image x dans l'image picker
+	
+	private final MouseAdapter mouseListener = new MouseAdapter() {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			if(e.getClickCount() == 2) {
+				btnChoose.doClick();
+			}
+		}
+	};
 
 	/**
 	 * 
@@ -103,7 +112,7 @@ public class ImagePicker extends Panel {
 		this.setBorder(new LineBorder(Color.WHITE));
 		
 		slider.setMaximum(200);
-		slider.setMinimum(20);
+		slider.setMinimum(1);
 		
 		box.add(slider);
 		box.add(Box.createVerticalStrut(20));
@@ -121,11 +130,11 @@ public class ImagePicker extends Panel {
 		
 		slider.setEnabled(false);
 		
-		FILE_CHOOSER.setDialogTitle("Selectionner la photo de paceport");
+		FILE_CHOOSER.setDialogTitle("Sélectionner la photo de passeport");
 		FILE_CHOOSER.setFileFilter(new ImagePickerFilter());
 		FILE_CHOOSER.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-		this.btnChoose.addActionListener(event -> {
+		btnChoose.addActionListener(event -> {
 			int result = FILE_CHOOSER.showDialog(mainFrame, "Ouvrir");
 			
 			if(result == JFileChooser.APPROVE_OPTION) {
@@ -138,15 +147,7 @@ public class ImagePicker extends Panel {
 			}
 		});
 		
-		this.render.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if(e.getClickCount() == 2) {
-					btnChoose.doClick();
-				}
-			}
-		});
-		
+		render.addMouseListener(mouseListener);
 		slider.addChangeListener(event -> {
 			if(!render.setRation(slider.getValue())) {
 				slider.setEnabled(false);
@@ -161,7 +162,8 @@ public class ImagePicker extends Panel {
 	 * @param ration
 	 */
 	public void setMaxZoom (int ration) {
-		this.slider.setMaximum(ration);
+		slider.setMaximum(ration);
+		render.setRationInterval(render.minRation, ration);
 	}
 	
 	/**
@@ -169,7 +171,8 @@ public class ImagePicker extends Panel {
 	 * @param ration
 	 */
 	public void setMinZoom (int ration) {
-		this.slider.setMinimum(ration);
+		slider.setMinimum(ration);
+		render.setRationInterval(ration, render.maxRation);
 	}
 	
 	/**
@@ -178,11 +181,11 @@ public class ImagePicker extends Panel {
 	 * @param ration
 	 */
 	public void setRation (int ration) {
-		this.slider.setValue(ration);
+		slider.setValue(ration);
 	}
 	
 	public int getRation () {
-		return this.slider.getValue();
+		return slider.getValue();
 	}
 	
 	/**
@@ -216,6 +219,13 @@ public class ImagePicker extends Panel {
 		return render.cropImage();
 	}
 	
+	/**
+	 * est-ce que l'image afficher dans le rendue est redimensionnable??
+	 * @return
+	 */
+	public boolean isCropableImage () {
+		return render.isCropable();
+	}
 	
 	/**
 	 * 
@@ -224,6 +234,8 @@ public class ImagePicker extends Panel {
 	 */
 	private static class ImagePickerRender extends JComponent {
 		private static final long serialVersionUID = 7268721008490974405L;
+		private static final BasicStroke BORDER_STROK = new BasicStroke(2f);
+		private static final Color BK_COLOR = new Color(0x88000000, true);
 		private static int IMAGE_RECT_CROP_WIDTH = 150;
 		private static final String DEFAULT_FILE_NAME = R.getIcon("personne");
 		private static BufferedImage defaultImage;
@@ -242,8 +254,10 @@ public class ImagePicker extends Panel {
 		private int hImg;//hauteur de l'image (apres calcul du ration)
 		
 		private int currentRation = 100;//la ration actuelement prise en compte
+		private int minRation = 1;
+		private int maxRation = 200;
 		
-		private MouseAdapter listener = new MouseAdapter() {
+		private final MouseAdapter listener = new MouseAdapter() {
 			
 			private Point start;
 			
@@ -304,8 +318,18 @@ public class ImagePicker extends Panel {
 		
 		public ImagePickerRender() {
 			super();
-			this.addMouseListener(listener);
-			this.addMouseMotionListener(listener);
+			addMouseListener(listener);
+			addMouseMotionListener(listener);
+		}
+		
+		/**
+		 * Initalisation l'intervale de varation de la ration
+		 * @param min
+		 * @param max
+		 */
+		public void setRationInterval (int min, int max) {
+			minRation = min;
+			maxRation = max;
 		}
 		
 		@Override
@@ -340,7 +364,7 @@ public class ImagePicker extends Panel {
 			}
 			
 			
-			g2.setColor(new Color(0x88000000, true));
+			g2.setColor(BK_COLOR);
 			
 			g2.fillRect(0, 0, getWidth(), yRect);
 			g2.fillRect(0, getHeight()-yRect, getWidth(), yRect);
@@ -348,7 +372,7 @@ public class ImagePicker extends Panel {
 			g2.fillRect(0, yRect, xRect, getHeight()-yRect*2);
 			g2.fillRect((xRect+ IMAGE_RECT_CROP_WIDTH), yRect, xRect, getHeight() - yRect*2);
 			
-			g2.setStroke(new BasicStroke(2f));
+			g2.setStroke(BORDER_STROK);
 			g2.drawRect(1, 1, getWidth()-2, getHeight()-2);
 
 			g2.setColor(Color.ORANGE);
@@ -365,7 +389,7 @@ public class ImagePicker extends Panel {
 		/**
 		 * @param fileName the fileName to set
 		 */
-		public void setFileName(String fileName, int ration) {
+		public void setFileName (String fileName, int ration) {
 			this.fileName = fileName;
 			if(fileName != null) {
 				try {
@@ -381,16 +405,14 @@ public class ImagePicker extends Panel {
 						yImg = (h - getHeight()) / -2;
 						setRation(ration);
 					}
-				} catch (IOException e) {
-					
-				}
+				} catch (IOException e) {}
 			} else {
 				image = null;
 			}
-			this.repaint();
+			repaint();
 		}
 		
-		private void initCropLook () {			
+		private void initCropLook () {
 			xRect = this.getWidth()/2 - IMAGE_RECT_CROP_WIDTH/2;
 			yRect = this.getHeight()/2 - IMAGE_RECT_CROP_WIDTH/2;
 		}
@@ -401,7 +423,7 @@ public class ImagePicker extends Panel {
 		 * @return {@link Boolean} true if ration succefuly applicated, otherways false
 		 */
 		public boolean setRation (int ration) {
-			boolean accept = ration >= 0 && ration <= 200;
+			boolean accept = ration >= minRation && ration <= maxRation;
 			if (accept)	{				
 				BigDecimal bigW = new BigDecimal(image.getWidth() * (ration/100.0)).setScale(0, RoundingMode.HALF_UP),
 						bigH = new BigDecimal(image.getHeight() * (ration/100.0)).setScale(0, RoundingMode.HALF_UP);
@@ -417,7 +439,7 @@ public class ImagePicker extends Panel {
 					wImg = wPropozed;
 					hImg = hPropozed;
 					
-					this.repaint();
+					repaint();
 					accept = true;
 					currentRation = ration;
 				} else 
@@ -433,14 +455,27 @@ public class ImagePicker extends Panel {
 		public int getCurrentRation() {
 			return currentRation;
 		}
+		
+		/**
+		 * y a-t-il moyen de crooper l'image??
+		 * @return
+		 */
+		public boolean isCropable () {
+			if(image != null && (image.getWidth() >= IMAGE_RECT_CROP_WIDTH && image.getHeight() >= IMAGE_RECT_CROP_WIDTH)) {
+				return true;
+			}
+			
+			return false;
+		}
 
 		/**
 		 * renvoie l'image cropper
 		 * @return
 		 */
 		public BufferedImage cropImage () {
-			if(image == null)
-				return null;
+			
+			if(!isCropable())
+				return image;
 			
 			double diffX = Math.abs(xImg - xRect),
 					diffY = Math.abs(yImg - yRect);
@@ -478,7 +513,7 @@ public class ImagePicker extends Panel {
 
 		@Override
 		public String getDescription() {
-			return "Selectionner une image: (.png, .jpg et .jpeg)";
+			return "Sélectionnér une image: (.png, .jpg et .jpeg)";
 		}
 		
 	}

@@ -12,7 +12,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -23,6 +22,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,7 +34,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -54,7 +53,6 @@ import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.TablePanel;
-import net.uorbutembo.tools.Config;
 import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.tools.R;
 import net.uorbutembo.views.MainWindow;
@@ -69,10 +67,6 @@ public class Sidebar extends Panel implements ItemListener{
 
 	private static final ImageIcon ICON_FULL_SCREEN = new ImageIcon(R.getIcon("viewInFullscreen"));
 	private static final ImageIcon ICON_CLOSE_FULL_SCREEN = new ImageIcon(R.getIcon("exitFullscreen"));
-	
-
-	private final JLabel logo = new JLabel(new ImageIcon(Config.find("appMainIcon")));
-	private final JLabel title = new JLabel(Config.find("appShortName"));
 	
 	public final MigLayout layout = new MigLayout("wrap, fillx, insets 0", "[fill]", "[]0[]");
 	private final Panel header = new Panel(new BorderLayout());
@@ -124,9 +118,14 @@ public class Sidebar extends Panel implements ItemListener{
 		@Override
 		public synchronized void onCurrentYear(AcademicYear year) {
 			if (comboModel.getSize() == 0) {
+				comboBox.removeItemListener(Sidebar.this);
 				List<AcademicYear> years = academicYearDao.findAll();
 				for (AcademicYear y : years) 
 					comboModel.addElement(y);
+				comboBox.addItemListener(Sidebar.this);
+				
+				for (YearChooserListener listener : yearChooserListeners)
+					listener.onChange(year);
 			}
 		}
 		
@@ -136,7 +135,7 @@ public class Sidebar extends Panel implements ItemListener{
 
 		@Override
 		public void mouseClicked(MouseEvent e) {
-			popup.show(Sidebar.this, 10, Sidebar.this.getHeight() - 120);
+			popup.show(Sidebar.this, 8, getHeight() - 140);
 		}
 		
 	};
@@ -171,13 +170,8 @@ public class Sidebar extends Panel implements ItemListener{
 	 * initialisation du header du sidebar
 	 */
 	private void initHeader() {
-		header.add(title, BorderLayout.CENTER);
-		header.add(logo, BorderLayout.WEST);
-		
-		title.setFont(new Font("Arial", Font.PLAIN, 40));
-		title.setForeground(Color.LIGHT_GRAY);
-		header.setBorder(new EmptyBorder(0, 5, 0, 10));
-		
+		header.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+		header.add(new PanelHeader());
 		add(header, BorderLayout.NORTH);
 	}
 	
@@ -316,6 +310,10 @@ public class Sidebar extends Panel implements ItemListener{
     }
     
     
+    /**
+     * boutons d'affichage des options supplementaire
+     * @author Esaie MUHASA
+     */
     private static final class ButtonTool extends MenuItemButton {
 		private static final long serialVersionUID = 6585041084631602673L;
     	
@@ -373,6 +371,10 @@ public class Sidebar extends Panel implements ItemListener{
 		}
     }
     
+    /**
+     * combo box de selection de l'annee academique
+     * @author Esaie MUHASA
+     */
     private static final class ComboBoxTool extends ComboBox<AcademicYear> {
 		private static final long serialVersionUID = -9198030526636496335L;
 		
@@ -460,8 +462,9 @@ public class Sidebar extends Panel implements ItemListener{
 		private static final long serialVersionUID = -9121297130688307056L;
 		
 		private final JMenuItem [] items = {
-				new JMenuItem("Année académique", new ImageIcon(R.getIcon("events"))),
+				new JMenuItem("Exercices académiques", new ImageIcon(R.getIcon("events"))),
 				new JMenuItem("Plain écran", ICON_FULL_SCREEN),
+				new JMenuItem("Apropos", new ImageIcon(R.getIcon("help"))),
 				new JMenuItem("Quitter", new ImageIcon(R.getIcon("minus")))
 		};
 		
@@ -484,7 +487,10 @@ public class Sidebar extends Panel implements ItemListener{
 						item.setIcon(ICON_FULL_SCREEN);
 					setFullScreenMainWindow(fullScreen);
 				}break;
-				case 2:{
+				case 2: {
+					
+				}break;
+				case 3:{
 					closeApplication();
 				}break;
 			}
@@ -531,7 +537,10 @@ public class Sidebar extends Panel implements ItemListener{
     	
     }
     
-    
+    /**
+     * boite de dialogue qui contiens le formulaire d'enregistrement/modification des annees academiques
+     * @author Esaie MUHASA
+     */
     public static class AcademicYeatDialog extends JDialog {
 		private static final long serialVersionUID = -5960791940678862938L;
 		
@@ -560,7 +569,7 @@ public class Sidebar extends Panel implements ItemListener{
 		 * @param mainWindow
 		 */
 		public AcademicYeatDialog(MainWindow mainWindow) {
-			super(mainWindow, "Configuration des années académiques", true);
+			super(mainWindow, "Configuration des exercices académiques", true);
 			
 			academicYearDao = mainWindow.factory.findDao(AcademicYearDao.class);
 			academicFeeDao = mainWindow.factory.findDao(AcademicFeeDao.class);
@@ -569,7 +578,7 @@ public class Sidebar extends Panel implements ItemListener{
 			
 			tableModel = new AcademicYearTableModel(academicYearDao);
 			table = new Table(tableModel);
-			final TablePanel tablePanel = new TablePanel(table, "Liste des années academiques");
+			final TablePanel tablePanel = new TablePanel(table, "Liste des exercices academiques");
 			final Panel root = new Panel(new BorderLayout(5, 5));
 			
 			formYear = new FormAcademicYear(mainWindow);
@@ -619,5 +628,41 @@ public class Sidebar extends Panel implements ItemListener{
 			});
 		}
     	
+    }
+    
+    private static class PanelHeader extends Panel {
+		private static final long serialVersionUID = 8867655768381235771L;
+		
+		private Image image;
+		private Rectangle2D rect;
+    	
+		
+		public PanelHeader() {
+			super();
+			setPreferredSize(new Dimension(200, 200));
+			rect = new Rectangle2D.Double(getWidth()/2 - 100, getHeight()/2 - 100, 200, 200);
+			
+			try {
+				image = ImageIO.read(new File("icon/uor.png"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		@Override
+		public void doLayout() {
+			super.doLayout();
+			rect.setRect(getWidth()/2 - 80, getHeight()/2 - 80, 160, 160);
+		}
+		
+		@Override
+		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			Graphics2D g2 = (Graphics2D) g;
+	        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+
+	        g2.drawImage(image, (int)rect.getX(), (int)rect.getY(), (int)rect.getWidth(), (int)rect.getHeight(), null);
+		}
     }
 }

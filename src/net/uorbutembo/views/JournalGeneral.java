@@ -635,6 +635,8 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		private synchronized void reloadChart () {
 			setEnableButtons(false);
 			
+			piePanel.setRenderVisible(false);
+			
 			pieModel.removeAll();
 			int colorIndex = 0;
 			
@@ -644,6 +646,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 						//on recupere directement le model tout cuit du dash board
 						piePanel.setModel(mainWindow.getWorkspace().getDashboard().getGlobalModel().getPieModelCaisse());
 						setEnableButtons(true);
+						piePanel.setRenderVisible(true);
 						return;
 					} else {//lieux de payment
 						final List<PaymentLocation> all = paymentLocationDao.countAll() != 0? paymentLocationDao.findAll() : new ArrayList<>();
@@ -673,7 +676,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 										)
 									);
 						}
-						pieModel.setTitle("Solde disponible pour chaque lieux de perception de l'agent");
+						pieModel.setTitle("Solde disponible pour chaque lieux de perception de l'argent");
 					}
 				}break;
 				case 1 : {//les recettes
@@ -765,9 +768,9 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			}
 			
 			piePanel.setModel(pieModel);
+			piePanel.setRenderVisible(true);
 			setEnableButtons(true);
 		}
-		
 	}
 	
 	private final class RecipePanel extends Panel {
@@ -993,7 +996,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 				return;
 			
 			formRecipe = new FormOtherRecipe(mainWindow);
-			dialogRecipe = new JDialog(mainWindow, "Entrée", true);
+			dialogRecipe = new JDialog(mainWindow, "Entrée en caisse", true);
 			dialogRecipe.setIconImage(mainWindow.getIconImage());
 			
 			dialogRecipe.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -1047,6 +1050,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			this.currentYear = currentYear;
 			offset = 0;
 			reload();
+			setTitle("Payement des frais académique "+currentYear);
 		}
 
 		@Override
@@ -1252,7 +1256,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			btnPrev.setEnabled(tableModel.hasPrevious());
 			btnNext.setEnabled(tableModel.hasNext());
 			
-			btnToExcel.setEnabled(tableModel.getRowCount() != 0);
+			btnToExcel.setEnabled(tableModel.getRowCount() != 0);			
 		}
 		
 		/**
@@ -1285,14 +1289,14 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 				return;
 			
 			formOutlay = new FormOutlay(mainWindow);
-			dialogOutlay = new JDialog(mainWindow, "Sortie", true);
+			dialogOutlay = new JDialog(mainWindow, "Sortie en caisse", true);
 			dialogOutlay.setIconImage(mainWindow.getIconImage());
 			
 			dialogOutlay.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 			dialogOutlay.getContentPane().add(formOutlay, BorderLayout.CENTER);
 			dialogOutlay.getContentPane().setBackground(FormUtil.BKG_DARK);
 			dialogOutlay.pack();
-			final Dimension size = new Dimension(dialogOutlay.getWidth() < 650? 650 : dialogOutlay.getWidth(), dialogOutlay.getHeight());
+			final Dimension size = new Dimension(dialogOutlay.getWidth() < 650? 650 : dialogOutlay.getWidth(), dialogOutlay.getHeight() + 250);
 			dialogOutlay.setSize(size);
 			dialogOutlay.setMinimumSize(size);
 			outlayAdapter = new DAOAdapter<Outlay>() {
@@ -1364,6 +1368,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			this.currentYear = currentYear;
 			offset = 0;
 			reload();
+			setTitle("Dépenses pour l'année académique "+currentYear);
 		}
 		
 		@Override

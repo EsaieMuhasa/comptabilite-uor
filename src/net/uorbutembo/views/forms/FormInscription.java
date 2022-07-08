@@ -1,5 +1,6 @@
 package net.uorbutembo.views.forms;
 
+import java.awt.Cursor;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -203,15 +204,19 @@ public class FormInscription extends AbstractInscriptionForm{
 			inscription.setPicture(fileName);
 			student.setPicture(fileName);
 		} catch (Exception e) {
-			this.showMessageDialog("Erreur d'écriture de la photo", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			showMessageDialog("Erreur d'écriture de la photo", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}
 		
 		try {
-			this.inscriptionDao.create(inscription);
-			this.showMessageDialog("Information", "Success d'enregistrement de l'inscription de\n l'etudiant "+student.toString()+", \ndans la promtion "+promotion.toString(), JOptionPane.INFORMATION_MESSAGE);
+			inscriptionDao.create(inscription);
+			showMessageDialog("Information", "Success d'enregistrement de l'inscription de\n l'etudiant "+student.toString()+", \ndans la promtion "+promotion.toString(), JOptionPane.INFORMATION_MESSAGE);
 		} catch (DAOException e) {
-			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			return;
 		}
+		
+		setEnabled(false);
+		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
 	}
 

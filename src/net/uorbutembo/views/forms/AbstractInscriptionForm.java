@@ -7,6 +7,7 @@ import static net.uorbutembo.tools.FormUtil.DEFAULT_H_GAP;
 import static net.uorbutembo.tools.FormUtil.DEFAULT_V_GAP;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import javax.swing.border.EmptyBorder;
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
 import net.uorbutembo.beans.Faculty;
+import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.beans.Promotion;
 import net.uorbutembo.beans.StudyClass;
 import net.uorbutembo.dao.AcademicYearDao;
@@ -83,6 +85,92 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 	private boolean firstResize = true;
 	
 	protected AcademicYear currentYear;
+	
+	private final DAOAdapter<Promotion> promotionListener = new DAOAdapter<Promotion>() {
+		@Override
+		public synchronized void onCreate(Promotion e, int requestId) {
+			Faculty faculty = null;
+			for (int i = 0, count = modelComboFaculty.getSize(); i<count; i++) {
+				Faculty fac = modelComboFaculty.getElementAt(i);
+				if(fac.getId() == e.getDepartment().getFaculty().getId()) {
+					faculty = fac;
+					break;
+				}
+			}
+			
+			Department department = null;
+			if(faculty == null) {//nouvelle configuration
+				faculty = facultyDao.findById(e.getDepartment().getFaculty().getId());
+				faculty.setDepartments(new ArrayList<>());
+				modelComboFaculty.addElement(faculty);
+			} else {					
+				for (int i = 0; i < faculty.getDepartments().size(); i++) {
+					if(faculty.getDepartments().get(i).getId() == e.getDepartment().getId()) {
+						department = faculty.getDepartments().get(i);
+						break;
+					}
+				}
+			}
+			
+			if (department == null) {//aucune promotion du departement n'etait encore associer a une classe d'etude pour l'annee currante
+				faculty.getDepartments().add(e.getDepartment());
+				department = e.getDepartment();
+				
+				//mis en jour du model de departements dans le cas où le departement d'y était pas.
+				if(faculty.getId() == modelComboFaculty.getElementAt(comboFaculty.getSelectedIndex()).getId()) {
+					modelComboDepartment.addElement(e.getDepartment());
+				}
+				
+				studyClassByDepartment.put(department, new ArrayList<>());
+			}
+			
+			Set<Department> departments = studyClassByDepartment.keySet();
+			for (Department dep : departments) {
+				if(dep.getId() == department.getId()) {
+					studyClassByDepartment.get(dep).add(e.getStudyClass());
+					break;
+				}
+			}
+			
+			//mis en jour du model des classes d'etudes dans le cas où le departement actuel est belle et biens celle selectionner
+			if(department.getId() == modelComboDepartment.getElementAt(comboDepartment.getSelectedIndex()).getId()) {
+				modelComboStudyClass.addElement(e.getStudyClass());
+			}
+		}
+		
+		@Override
+		public synchronized void onCreate (Promotion[] e, int requestId) {
+			for (Promotion promotion : e) {
+				onCreate(promotion, requestId);
+			}
+		}
+		
+		@Override
+		public synchronized void onDelete(Promotion e, int requestId) {
+			loadData();
+		}
+		
+		@Override
+		public synchronized void onDelete(Promotion[] e, int requestId) {
+			loadData();
+		}
+	};
+	
+	protected final DAOAdapter<Inscription> inscriptionAdapter = new DAOAdapter<Inscription>() {
+
+		@Override
+		public synchronized void onCreate(Inscription e, int requestId) {
+			setCursor(Cursor.getDefaultCursor());
+			setEnabled(false);
+		}
+
+		@Override
+		public synchronized void onUpdate(Inscription e, int requestId) {
+			setCursor(Cursor.getDefaultCursor());
+			setEnabled(false);
+		}
+		
+	};
 
 	/**
 	 * constructeur d'initialisation
@@ -97,6 +185,8 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 		studyClassDao = mainWindow.factory.findDao(StudyClassDao.class);
 		promotionDao = mainWindow.factory.findDao(PromotionDao.class);
 		mainWindow.factory.findDao(AcademicYearDao.class).addYearListener(this);
+		
+		inscriptionDao.addListener(inscriptionAdapter);
 		
 		container.add(fields, BorderLayout.CENTER);
 		container.add(panelPicture, BorderLayout.EAST);
@@ -121,93 +211,23 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 		box.add(Box.createVerticalGlue());
 		panelPicture.add(box, BorderLayout.CENTER);
 		
-		this.comboFaculty.addItemListener(event -> {
-			this.modelComboDepartment.removeAllElements();
-			Faculty fac = this.modelComboFaculty.getElementAt(this.comboFaculty.getSelectedIndex());
-			for (Department dp : fac.getDepartments()) {
-				this.modelComboDepartment.addElement(dp);
-			}
+		comboFaculty.addItemListener(event -> {
+			modelComboDepartment.removeAllElements();
+			Faculty fac = modelComboFaculty.getElementAt(comboFaculty.getSelectedIndex());
+			for (Department dp : fac.getDepartments()) 
+				modelComboDepartment.addElement(dp);
 		});
 		
-		this.comboDepartment.addItemListener(event -> {
-			this.modelComboStudyClass.removeAllElements();
-			List<StudyClass> studys = this.studyClassByDepartment.get(this.modelComboDepartment.getElementAt(this.comboDepartment.getSelectedIndex()));
+		comboDepartment.addItemListener(event -> {
+			modelComboStudyClass.removeAllElements();
+			List<StudyClass> studys = this.studyClassByDepartment.get(modelComboDepartment.getElementAt(comboDepartment.getSelectedIndex()));
 			if(studys == null) 
 				return;
-			for (StudyClass cl : studys) {
-				this.modelComboStudyClass.addElement(cl);
-			}
+			for (StudyClass cl : studys) 
+				modelComboStudyClass.addElement(cl);
 		});
 		
-		promotionDao.addListener(new DAOAdapter<Promotion>() {
-			@Override
-			public synchronized void onCreate(Promotion e, int requestId) {
-				Faculty faculty = null;
-				for (int i = 0, count = modelComboFaculty.getSize(); i<count; i++) {
-					Faculty fac = modelComboFaculty.getElementAt(i);
-					if(fac.getId() == e.getDepartment().getFaculty().getId()) {
-						faculty = fac;
-						break;
-					}
-				}
-				
-				Department department = null;
-				if(faculty == null) {//nouvelle configuration
-					faculty = facultyDao.findById(e.getDepartment().getFaculty().getId());
-					faculty.setDepartments(new ArrayList<>());
-					modelComboFaculty.addElement(faculty);
-				} else {					
-					for (int i = 0; i < faculty.getDepartments().size(); i++) {
-						if(faculty.getDepartments().get(i).getId() == e.getDepartment().getId()) {
-							department = faculty.getDepartments().get(i);
-							break;
-						}
-					}
-				}
-				
-				if (department == null) {//aucune promotion du departement n'etait encore associer a une classe d'etude pour l'annee currante
-					faculty.getDepartments().add(e.getDepartment());
-					department = e.getDepartment();
-					
-					//mis en jour du model de departements dans le cas où le departement d'y était pas.
-					if(faculty.getId() == modelComboFaculty.getElementAt(comboFaculty.getSelectedIndex()).getId()) {
-						modelComboDepartment.addElement(e.getDepartment());
-					}
-					
-					studyClassByDepartment.put(department, new ArrayList<>());
-				}
-				
-				Set<Department> departments = studyClassByDepartment.keySet();
-				for (Department dep : departments) {
-					if(dep.getId() == department.getId()) {
-						studyClassByDepartment.get(dep).add(e.getStudyClass());
-						break;
-					}
-				}
-				
-				//mis en jour du model des classes d'etudes dans le cas où le departement actuel est belle et biens celle selectionner
-				if(department.getId() == modelComboDepartment.getElementAt(comboDepartment.getSelectedIndex()).getId()) {
-					modelComboStudyClass.addElement(e.getStudyClass());
-				}
-			}
-			
-			@Override
-			public synchronized void onCreate (Promotion[] e, int requestId) {
-				for (Promotion promotion : e) {
-					onCreate(promotion, requestId);
-				}
-			}
-			
-			@Override
-			public synchronized void onDelete(Promotion e, int requestId) {
-				loadData();
-			}
-			
-			@Override
-			public synchronized void onDelete(Promotion[] e, int requestId) {
-				loadData();
-			}
-		});
+		promotionDao.addListener(promotionListener);
 	}
 	
 	@Override
@@ -255,7 +275,7 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 			return;
 		}
 		
-		List<Faculty> facs = this.facultyDao.checkByAcademicYear(currentYear) ? this.facultyDao.findByAcademicYear(currentYear) : null;
+		List<Faculty> facs = facultyDao.checkByAcademicYear(currentYear) ? facultyDao.findByAcademicYear(currentYear) : null;
 
 		if(facs == null){
 			setEnabled(false);
@@ -263,25 +283,24 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 		}
 		
 		for (Faculty fac : facs) {
-			if(this.departmentDao.checkByFaculty(fac, currentYear)) {
-				fac.setDepartments(this.departmentDao.findByFaculty(fac, currentYear));
+			if(departmentDao.checkByFaculty(fac, currentYear)) {
+				fac.setDepartments(departmentDao.findByFaculty(fac, currentYear));
 				
-				for (Department dp : fac.getDepartments()) {
-					this.studyClassByDepartment.put(dp, this.studyClassDao.findByAcademicYear(currentYear, dp));
-				}
-				this.modelComboFaculty.addElement(fac);
+				for (Department dp : fac.getDepartments()) 
+					studyClassByDepartment.put(dp, studyClassDao.findByAcademicYear(currentYear, dp));
+				modelComboFaculty.addElement(fac);
 			}
 		}
 		
-		Faculty selectedFac = this.modelComboFaculty.getElementAt(this.comboFaculty.getSelectedIndex());
-		for (Department dp : selectedFac.getDepartments()) {
-			this.modelComboDepartment.addElement(dp);
-		}
+		Faculty selectedFac = modelComboFaculty.getElementAt(comboFaculty.getSelectedIndex());
+		modelComboDepartment.removeAllElements();
+		for (Department dp : selectedFac.getDepartments())
+			modelComboDepartment.addElement(dp);
 		
 		List<StudyClass> sClass = this.studyClassByDepartment.get(this.modelComboDepartment.getElementAt(this.comboDepartment.getSelectedIndex()));
-		for (StudyClass cl : sClass) {
-			this.modelComboStudyClass.addElement(cl);
-		}
+		modelComboStudyClass.removeAllElements();
+		for (StudyClass cl : sClass) 
+			modelComboStudyClass.addElement(cl);
 
 		setEnabled(true);
 	}

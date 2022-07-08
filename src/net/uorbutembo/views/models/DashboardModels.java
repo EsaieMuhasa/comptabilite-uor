@@ -6,8 +6,6 @@ package net.uorbutembo.views.models;
 import static net.uorbutembo.tools.FormUtil.COLORS;
 
 import java.awt.Color;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +50,7 @@ import net.uorbutembo.tools.R;
  * + le model du card du montant deja payer
  * + le model du pie de repartition du montant deja payer, selon la configuration des rubrique budgetaite
  */
-public class GeneralBudgetPieModel extends DefaultPieModel {
+public class DashboardModels extends DefaultPieModel {
 	
 	private DefaultCardModel<Double> cardModel;
 	private AcademicYear currentYear;
@@ -325,7 +323,25 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		
 	};
 	
-	public GeneralBudgetPieModel(DAOFactory factory) {
+	private final DAOAdapter<Promotion> promotionListener = new DAOAdapter<Promotion>() {
+		@Override
+		public void onUpdate(Promotion e, int requestId) {
+			reload();
+			reloadCaisse();
+		}
+	};
+	
+	private final DAOAdapter<AcademicFee> feeListener = new DAOAdapter<AcademicFee>() {
+		@Override
+		public void onDelete(AcademicFee e, int requestId) {reload();}
+		@Override
+		public void onUpdate(AcademicFee e, int requestId) {
+			reload();
+			reloadCaisse();
+		}
+	};
+	
+	public DashboardModels(DAOFactory factory) {
 		super();
 		academicFeeDao = factory.findDao(AcademicFeeDao.class);
 		promotionDao = factory.findDao(PromotionDao.class);
@@ -347,24 +363,8 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		allocationRecipeDao.addListener(allocationRecipeListener);
 		outlayDao.addListener(outlayListener);
 		otherRecipeDao.addListener(otherAdapter);
-		
-		promotionDao.addListener(new DAOAdapter<Promotion>() {
-			@Override
-			public void onUpdate(Promotion e, int requestId) {
-				reload();
-				reloadCaisse();
-			}
-		});
-		
-		academicFeeDao.addListener(new DAOAdapter<AcademicFee>() {
-			@Override
-			public void onDelete(AcademicFee e, int requestId) {reload();}
-			@Override
-			public void onUpdate(AcademicFee e, int requestId) {
-				reload();
-				reloadCaisse();
-			}
-		});
+		promotionDao.addListener(promotionListener);
+		academicFeeDao.addListener(feeListener);
 		
 		//card du budget generale
 		cardModel = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
@@ -389,7 +389,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		pieModelCaisse.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
 		pieModelCaisse.setRealMaxPriority(true);
 		setTitle("Répartition général du budget");
-		setRealMaxPriority(true);
+		setRealMaxPriority(false);
 	}
 	
 	@Override
@@ -411,9 +411,9 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 	@Override
 	public void setMax(double max) {
 		super.setMax(max);
-		BigDecimal big = new  BigDecimal(max).setScale(2, RoundingMode.HALF_UP);
-		cardModel.setValue(big.doubleValue());
+		cardModel.setValue(max);
 	}
+	
 	
 	@Override
 	public String getSuffix() {
@@ -455,6 +455,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		this.currentYear = currentYear;
 		reload();
 		reloadCaisse();
+		cardModel.setInfo("Montant à ateindre pour l'année "+currentYear.toString());
 	}
 	
 	/**
@@ -478,7 +479,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 				annualRecipes.add(recipe);
 			}
 		}
-		this.calculAll();
+		calculAll();
 	}
 	
 	/**
@@ -549,6 +550,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 		
 		removeAll();
 		int colorIndex = 0;
+		double max = 0;
 		for (AcademicFee fee : academicFees) {
 			
 			if (!allocationCostDao.checkByAcademicFee(fee.getId()))
@@ -561,7 +563,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			for (Promotion promotion : proms) {
 				if (inscriptionDao.checkByPromotion(promotion)){
 					hasStudent = true;
-					break;
+					max += (fee.getAmount() * inscriptionDao.countByPromotion(promotion));
 				}
 			}
 			
@@ -571,7 +573,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			List<AllocationCost> costs = this.allocationCostDao.findByAcademicFee(fee);
 			for (int i=0, count = costs.size(); i< count; i++) {
 				AllocationCost al = costs.get(i);
-				PiePart part = this.findByData(al.getAnnualSpend());
+				PiePart part = findByData(al.getAnnualSpend());
 				
 				if(part == null) {
 					Color color = COLORS[(colorIndex++)%(COLORS.length-1)];
@@ -582,11 +584,12 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 				}
 				
 				part.setValue(part.getValue()+al.getTotalExpected());
-				this.addPart(part);
+				addPart(part);
 			}
 		}
 		
 		for (AnnualRecipe recipe : annualRecipes) {
+			max += recipe.getCollected();
 			
 			if (!allocationRecipeDao.checkByRecipe(recipe)) 
 				continue;
@@ -595,7 +598,7 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 			
 			for (int i=0, count = recipes.size(); i< count; i++) {
 				AllocationRecipe al = recipes.get(i);
-				PiePart part = this.findByData(al.getSpend());
+				PiePart part = findByData(al.getSpend());
 				
 				if(part == null) {
 					Color color = COLORS[(colorIndex++)%(COLORS.length-1)];
@@ -607,12 +610,12 @@ public class GeneralBudgetPieModel extends DefaultPieModel {
 				
 				double value = (al.getRecipe().getCollected() / 100.0) * al.getPercent();
 				part.setValue(part.getValue()+value);
-				this.addPart(part);
+				addPart(part);
 			}
 			
 		}
 		
-		cardModel.setValue(getRealMax());
+		setMax(max);
 	}
 	
 }

@@ -3,6 +3,7 @@
  */
 package net.uorbutembo.swing;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -18,6 +19,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 
 import net.uorbutembo.swing.DefaultCardModel.CardType;
+import net.uorbutembo.swing.charts.PieRender;
 
 /**
  * @author Esaie MUHASA
@@ -159,15 +161,23 @@ public class Card extends JComponent implements CardModelListener {
 		
 		//icon
 		if (icon != null)
-			g2.drawImage(icon, 10, 10, 50, 50, null);
+			g2.drawImage(icon, 10, 10, 80, 80, null);
 		//==icon
+		g2.setColor(model.getBackgroundColor());
+		g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f));
+		g2.fillRect(0, 0, width, height);
+		g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
 		
 		FontMetrics metricsInfo = g2.getFontMetrics(FONT_INFO);
 		FontMetrics  metricsValue = g2.getFontMetrics(FONT_VALUE);
 		FontMetrics metricsTitle = g2.getFontMetrics(FONT_TITLE);
 		
+		String value = model.getValue()+model.getSuffix();
+		if(model.getValue() instanceof Double)
+			value = PieRender.DECIMAL_FORMAT.format(model.getValue())+model.getSuffix();
+		
 		int hI =  height-(metricsInfo.getHeight()+10), wI = width;
-		int hV = (height- (metricsInfo.getHeight()+10)) - metricsValue.getHeight() - 5, xV = width - metricsValue.stringWidth(model.getValue()+model.getSuffix()) - 5;
+		int hV = (height- (metricsInfo.getHeight()+10)) - metricsValue.getHeight() - 5, xV = width - metricsValue.stringWidth(value) - 5;
 		int hT = hV + metricsValue.getHeight() - 10, xT = width - metricsTitle.stringWidth(model.getTitle()) - 5;
 		
 		Color darker = model.getBackgroundColor().darker();
@@ -178,7 +188,7 @@ public class Card extends JComponent implements CardModelListener {
 		
 		//value 
 		g2.setFont(FONT_VALUE);
-		g2.drawString(model.getValue().toString()+model.getSuffix(), xV, hV);
+		g2.drawString(value, xV, hV);
 		//==value
 		
 		//title

@@ -48,11 +48,11 @@ public class FormPaymentFee extends DefaultFormPanel {
 	private final DefaultComboBoxModel<PaymentLocation> locationModel = new DefaultComboBoxModel<>();
 	private final ComboBox<PaymentLocation> comboLocation = new ComboBox<>("Lieux de payment", locationModel);
 	
-	private final FormGroup<String> slipNumber = FormGroup.createTextField("Numéro");
+	private final FormGroup<String> slipNumber = FormGroup.createTextField("Numéro (bodereau ou reçu)");
 	private final FormGroup<String> slipDate = FormGroup.createTextField("Date de payement (jj-mm-aaaa)");
-	private final FormGroup<String> receipNumber = FormGroup.createTextField("Numéro du réçu en caisse");
+	private final FormGroup<String> receipNumber = FormGroup.createTextField("Numéro du reçu en caisse");
 	private final FormGroup<String> receivedDate = FormGroup.createTextField("Date du reçu en caisse (jj-mm-aaaa)");
-	private final FormGroup<String> wording = FormGroup.createTextField("libelé");
+	private final FormGroup<String> wording = FormGroup.createTextField("libellé");
 	private final FormGroup<String> amount = FormGroup.createTextField("Montant payer (en USD)");
 	private final FormGroup<PaymentLocation> location = FormGroup.createComboBox(comboLocation);
 	

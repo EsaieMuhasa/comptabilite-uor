@@ -220,7 +220,7 @@ public class DialogStudentExportConfig extends Dialog {
 	public static final class ExportConfig {
 		private final boolean [] groups;
 		private final boolean [][] groupsConfig;
-		private static final String [] COLUMN_NAMES = {"Effectifs", "Soldes", "Dêttes"};
+		private static final String [] COLUMN_NAMES = {"Soldes", "Dêttes", "Effectifs"};
 		
 		/**
 		 * @param groups

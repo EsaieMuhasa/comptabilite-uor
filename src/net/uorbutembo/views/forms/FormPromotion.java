@@ -347,7 +347,7 @@ public class FormPromotion extends DefaultFormPanel {
 		center.add(boxStudy, BorderLayout.EAST);//bouton de commande pour classe d'etude
 		center.add(this.splitGeneral, BorderLayout.CENTER);
 		center.setBorder(new EmptyBorder(5, 5, 10, 5));
-		this.getBody().add(center, BorderLayout.CENTER);
+		getBody().add(center, BorderLayout.CENTER);
 	}
 	
 	
@@ -362,27 +362,36 @@ public class FormPromotion extends DefaultFormPanel {
 	@Override
 	public void actionPerformed(ActionEvent event) {
 		
-		Promotion[] t = new Promotion [this.selectedDepartmentsModel.getSize() * this.selectedStudyClassModel.getSize()];
+		List<Promotion> list = new ArrayList<>();
 		Date now = new Date();
-		int index = 0;
-		for (int i = 0, iMax = this.selectedDepartmentsModel.getSize(); i < iMax ; i++) {
+		for (int i = 0, iMax = selectedDepartmentsModel.getSize(); i < iMax ; i++) {
 			for (int j = 0, jMax = this.selectedStudyClassModel.getSize(); j < jMax; j++) {
+				
+				if (promotionDao.check(currentYear, selectedDepartmentsModel.get(i), selectedStudyClassModel.get(j)))
+					continue;
+				
 				Promotion p = new Promotion();
-				p.setAcademicYear(this.currentYear);
-				p.setDepartment(this.selectedDepartmentsModel.get(i));
-				p.setStudyClass(this.selectedStudyClassModel.get(j));;
+				p.setAcademicYear(currentYear);
+				p.setDepartment(selectedDepartmentsModel.get(i));
+				p.setStudyClass(selectedStudyClassModel.get(j));;
 				p.setRecordDate(now);
 				
-				t[index] = p;
-				index++;
+				list.add(p);
 			}
 		}
 		
+		if(list.size() == 0)
+			return;
+		
+		Promotion[] t = new Promotion [list.size()];
+		for (int i = 0; i < t.length; i++)
+			t[i] = list.get(i);
+		
 		try {
-			this.promotionDao.create(t);
-			this.showMessageDialog("Information", "Succèss d'enregistrement d"+(t.length==1? "e la":"es")+" promotion"+(t.length!=1? "s":""), JOptionPane.INFORMATION_MESSAGE);
+			promotionDao.create(t);
+			showMessageDialog("Information", "Succèss d'enregistrement d"+(t.length==1? "e la":"es")+" promotion"+(t.length!=1? "s":""), JOptionPane.INFORMATION_MESSAGE);
 		} catch (DAOException e) {
-			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	

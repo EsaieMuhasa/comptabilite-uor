@@ -77,9 +77,8 @@ public class JournalWorkspace extends DefaultScenePanel {
 	public JournalWorkspace(MainWindow mainWindow) {
 		super("Journal des opérations financières", new ImageIcon(R.getIcon("calendar")), mainWindow, false);
 
-		NavbarButtonModel itemIndex = new NavbarButtonModel("index", "Général");
-		NavbarButtonModel itemAccounts = new NavbarButtonModel("bilan", "Spécifiques");
-		
+		NavbarButtonModel itemIndex = new NavbarButtonModel("home", "Général");
+		NavbarButtonModel itemAccounts = new NavbarButtonModel("more", "Détaillé");
 		
 		addItemMenu(itemIndex, home);
 		addItemMenu(itemAccounts, more);

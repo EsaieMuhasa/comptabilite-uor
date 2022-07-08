@@ -13,7 +13,10 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -38,6 +41,7 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	protected List<T> data = new ArrayList<>();
 	protected int limit;
 	protected int offset;
+	protected String title;
 
 	/**
 	 * 
@@ -275,13 +279,36 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 				FileOutputStream out = new FileOutputStream(fileName);
 			){
 			XSSFSheet sheet = book.createSheet(Config.find("appShortName").toLowerCase().replaceAll("(\\.)|([^a-z0-9])", "-")+"-sheet");
-			XSSFRow titles = sheet.createRow(0);
+			
+			//main title
+			XSSFRow  headRow = sheet.createRow(0);
+			XSSFCellStyle style = book.createCellStyle();
+			XSSFFont font = book.createFont();
+			font.setBold(true);
+			font.setFontHeight(14);
+			style.setFont(font);
+			
+			XSSFCell headCell = headRow.createCell(0);
+			headCell.setCellStyle(style);
+			headCell.setCellValue(getTitle() == null? "" : getTitle());
+			//==
+			
+			//columns titles
+			XSSFRow titles = sheet.createRow(1);
+			style = book.createCellStyle();
+			font = book.createFont();
+			font.setBold(true);
+			style.setFont(font);
+			
 			for (int i = 0, count = getExportableColumnCount(); i < count; i++) {
 				XSSFCell title = titles.createCell(i);
 				title.setCellValue(getExportableColumnName(i));
+				title.setCellStyle(style);
 			}
+			//==
+			
 			for (int i = 0, count = exportables.size(); i < count; i++) {
-				XSSFRow row = sheet.createRow(i+1);
+				XSSFRow row = sheet.createRow(i+2);
 				for (int j = 0; j < getExportableColumnCount(); j++) {
 					XSSFCell cell = row.createCell(j, getColumnType(j));
 					Object o = getCellValue(exportables, i, j);
@@ -290,8 +317,11 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 				fireExportationProgress(i, count);
 			}
 			
+			sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, getExportableColumnCount()-1));
+			
 			for (int i = 0; i < getExportableColumnCount(); i++)
 				sheet.autoSizeColumn(i);
+			
 			
 			book.write(out);
 			fireExportationFinish(reel);
@@ -306,6 +336,22 @@ public abstract class TableModel <T extends DBEntity> extends AbstractTableModel
 	 */
 	protected List<T> getExportableData() {
 		return data;
+	}
+	
+	/**
+	 * Renvoie le title du model
+	 * @return
+	 */
+	public String getTitle () {
+		return title;
+	}
+	
+	/**
+	 * Mis en jour du titre du model
+	 * @param title
+	 */
+	public void setTitle(String title) {
+		this.title = title;
 	}
 	
 	/**

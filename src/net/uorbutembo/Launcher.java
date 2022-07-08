@@ -73,8 +73,8 @@ public class Launcher implements DAOBaseListener{
 			
 			MainWindow frame = new MainWindow(factory);
 			factory.reload();
-			st.dispose();
 			st.setVisible(false);
+			st.dispose();
 			frame.setVisible(true);
 			factory.removeListener(launcher);
 		} catch (DAOConfigException e) {

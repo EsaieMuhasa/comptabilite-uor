@@ -5,6 +5,7 @@ package net.uorbutembo.views.components;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -17,6 +18,8 @@ import javax.swing.JComponent;
 
 import net.uorbutembo.beans.Inscription;
 import net.uorbutembo.tools.R;
+import net.uorbutembo.views.models.PromotionPaymentTableModel.InscriptionDataRow;
+import net.uorbutembo.views.models.PromotionPaymentTableModel.InscriptionDataRowListener;
 
 /**
  * @author Esaie MUHASA
@@ -29,45 +32,69 @@ public class IndividualSheetHeader extends JComponent {
 				SIZE = new Dimension(1100, 105),
 				MIN_SIZE = new Dimension(1100, 100);
 	
-	private Inscription inscription;
+	private InscriptionDataRow inscription;
+	private final InscriptionDataRowListener inscriptionRowListener = new InscriptionDataRowListener() {
+		
+		@Override
+		public void onReload(InscriptionDataRow row) {
+			if(inscription == null || row.getInscription().getId() != inscription.getInscription().getId())
+				return;
+			
+			inscription = row;
+			repaint();
+		}
+		
+		@Override
+		public void onLoad(InscriptionDataRow row) {}
+		
+		@Override
+		public void onDispose(InscriptionDataRow row) {}
+	};
 
 	/**
 	 * constructeur par defaut
 	 */
 	public IndividualSheetHeader() {
 		super();
-		this.init();
+		init();
 	}
 	
 	/**
 	 * @param inscription
 	 */
-	public IndividualSheetHeader(Inscription inscription) {
+	public IndividualSheetHeader (InscriptionDataRow inscription) {
 		super();
 		this.inscription = inscription;
 	}
 
 	private void init() {
-		this.setPreferredSize(SIZE);
-		this.setMaximumSize(MAX_SIZE);
-		this.setMinimumSize(MIN_SIZE);
+		setPreferredSize(SIZE);
+		setMaximumSize(MAX_SIZE);
+		setMinimumSize(MIN_SIZE);
 	}
 	
 	/**
 	 * @return the inscription
 	 */
-	public Inscription getInscription() {
+	public InscriptionDataRow getInscription() {
 		return inscription;
 	}
 
 	/**
 	 * @param inscription the inscription to set
 	 */
-	public void setInscription(Inscription inscription) {
-		if(this.inscription == null || inscription.getId() != this.inscription.getId()) {			
+	public void setInscription(InscriptionDataRow inscription) {
+		
+		if(this.inscription != null)
+			this.inscription.removeDataRowListener(inscriptionRowListener);
+		
+		if(this.inscription == null || inscription == null || inscription.getInscription().getId() != this.inscription.getInscription().getId()) {			
 			this.inscription = inscription;
 			this.repaint();
 		}
+		
+		if(inscription != null)
+			inscription.addDataRowListener(inscriptionRowListener);
 	}
 
 	@Override
@@ -86,7 +113,11 @@ public class IndividualSheetHeader extends JComponent {
 		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
 		
-		int height = this.getHeight();
+		if(inscription == null)
+			return;
+		
+		int height = getHeight();
+		Inscription inscription = this.inscription.getInscription();
 		
 		//photo de profil
 		String picture = inscription.getPicture() != null? R.getConfig().get("workspace")+""+inscription.getPicture(): null;
@@ -94,22 +125,19 @@ public class IndividualSheetHeader extends JComponent {
 			Image image = ImageIO.read(new File(picture !=null? picture : R.getIcon("personne")));
 			g2.drawImage (image, 4, 4, height-10, height-10, null);
 			g2.drawRoundRect(1, 1, height-5, height-5, 5, 5);
-		} catch (IOException e) {
-			System.out.println("> Error: "+e.getMessage()+" => "+picture);
-		}
-		
-		if(this.inscription == null)
-			return;
+		} catch (IOException e) {}
 		
 		// ==
 		
 		int startLine =  g2.getFont().getSize()+4;
-		
+
 		//identite
-		g2.drawString("Noms: "+inscription.getStudent().toString(), height, startLine);
+		g2.setFont(g2.getFont().deriveFont(Font.BOLD));
+		g2.drawString("Noms: "+inscription.getStudent().getFullName(), height, startLine);
+		g2.setFont(g2.getFont().deriveFont(Font.PLAIN));
 		g2.drawString("Faculté: "+inscription.getPromotion().getDepartment().getFaculty().toString(), height, startLine * 2);
 		g2.drawString("Département: "+inscription.getPromotion().getDepartment().toString(), height, startLine * 3);
-		g2.drawString("Class d'étude: "+inscription.getPromotion().getStudyClass().toString(), height, startLine * 4);
+		g2.drawString("Classe d'étude: "+inscription.getPromotion().getStudyClass().toString(), height, startLine * 4);
 		g2.drawString("E-mail: "+inscription.getStudent().getEmail(), height, startLine * 5);
 		g2.drawString("Téléphone: "+inscription.getStudent().getTelephone(), height, startLine * 6);
 		//==

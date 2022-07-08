@@ -35,7 +35,7 @@ import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.tools.R;
 import net.uorbutembo.views.components.DefaultScenePanel;
 import net.uorbutembo.views.components.Sidebar.YearChooserListener;
-import net.uorbutembo.views.models.GeneralBudgetPieModel;
+import net.uorbutembo.views.models.DashboardModels;
 
 /**
  * @author Esaie MUHASA
@@ -59,14 +59,14 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 	
 	//model pie
 	private final DefaultPieModel modelPieStudents = new DefaultPieModel(0, "Etudiant par faculté");
-	private final GeneralBudgetPieModel globalModel;
+	private final DashboardModels globalModel;
 	
 	private PiePanel piePanel = new PiePanel();
 	private Panel panelBottom = new Panel();
 	
 	public PanelDashboard(MainWindow mainWindow) {
 		super("Tableau de board", new ImageIcon(R.getIcon("dashboard")), mainWindow, false);
-		globalModel = new GeneralBudgetPieModel(mainWindow.factory);
+		globalModel = new DashboardModels(mainWindow.factory);
 		inscriptionDao = mainWindow.factory.findDao(InscriptionDao.class);
 		facultyDao = mainWindow.factory.findDao(FacultyDao.class);
 		
@@ -128,7 +128,7 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 	/**
 	 * @return the globalModel
 	 */
-	public GeneralBudgetPieModel getGlobalModel() {
+	public DashboardModels getGlobalModel() {
 		return globalModel;
 	}
 
