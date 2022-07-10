@@ -60,7 +60,7 @@ public class DialogStudentExportConfig extends Dialog {
 	};
 	
 	private final JCheckBox labels [] = {
-			new JCheckBox("Vue détailler", true), 
+			new JCheckBox("Vue détaillée", true), 
 			new JCheckBox("Vue globale", true),
 			new JCheckBox("Groupement des résultats", true)
 	};
@@ -220,7 +220,7 @@ public class DialogStudentExportConfig extends Dialog {
 	public static final class ExportConfig {
 		private final boolean [] groups;
 		private final boolean [][] groupsConfig;
-		private static final String [] COLUMN_NAMES = {"Soldes", "Dêttes", "Effectifs"};
+		private static final String [] COLUMN_NAMES = {"Soldes", "Dettes", "Effectifs"};
 		
 		/**
 		 * @param groups

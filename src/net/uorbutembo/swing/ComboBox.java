@@ -165,7 +165,7 @@ public class ComboBox<E> extends JComboBox<E> implements InputComponent<E>{
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent me) {
-                    mouseOver = true;
+                    mouseOver = combo.isEnabled();
                     
                     repaint();
                 }

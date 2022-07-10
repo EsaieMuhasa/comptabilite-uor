@@ -57,7 +57,7 @@ public class SidebarStudents extends Panel implements YearChooserListener{
 	private final JCheckBox checkFilter = new JCheckBox("Filtrage", false);
 	
 	private final JButton btnInscription = new Button(new ImageIcon(R.getIcon("usradd")), "Inscription");
-	private final JButton btnReinscription = new Button(new ImageIcon(R.getIcon("usredit")), "Ré-inscription");
+	private final JButton btnReinscription = new Button(new ImageIcon(R.getIcon("usredit")), "Réinscription");
 	{
 		btnInscription.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		btnReinscription.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);

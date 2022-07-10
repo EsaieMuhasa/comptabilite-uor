@@ -44,6 +44,7 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 	
 	private Dimension lastSize;
 	private final DialogProgress progress;
+	private AboutDialog aboutDialog;
 	
 	private final WindowAdapter windowListener = new WindowAdapter() {
 
@@ -126,6 +127,17 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 	}
 	
 	/**
+	 * disualisation de la fenere d'apropos du soft
+	 */
+	public void showAbout () {
+		if (aboutDialog == null)
+			aboutDialog = new AboutDialog(this);
+		
+		aboutDialog.setLocationRelativeTo(this);
+		aboutDialog.setVisible(true);
+	}
+	
+	/**
 	 * @return the sidebar
 	 */
 	public Sidebar getSidebar() {
@@ -181,8 +193,11 @@ public class MainWindow extends JFrame implements DAOBaseListener{
 			progress.setString("Long chargement...");
 			progress.setStringPainted(true);
 			pack();
-			setLocationRelativeTo(panel);
+			setLocationRelativeTo(parent);
 			setAlwaysOnTop(true);
+			setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			progress.setCursor(getCursor());
+			progress.setForeground(FormUtil.BORDER_COLOR);
 		}
 	}
 }

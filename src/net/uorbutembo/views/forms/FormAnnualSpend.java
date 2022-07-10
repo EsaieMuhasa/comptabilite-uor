@@ -178,7 +178,7 @@ public class FormAnnualSpend extends DefaultFormPanel {
 		}
 		
 		if(spends.isEmpty()) {
-			this.showMessageDialog("Alert", "Impossible d'effectuer cette requette. \nAssurez-vous d'avoir selectionner aumoin une case!", JOptionPane.ERROR_MESSAGE);
+			this.showMessageDialog("Alert", "Impossible d'effectuer cette requette. \nAssurez-vous d'avoir sélectionner aumoin une case!", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		

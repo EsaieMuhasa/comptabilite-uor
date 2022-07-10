@@ -34,6 +34,27 @@ public interface InscriptionDao extends DAOInterface<Inscription>, OverallStatis
 	}
 	
 	/**
+	 * verifie si l'etudiant est deja inscrit pour l'annee academique
+	 * @param student
+	 * @param year
+	 * @return
+	 * @throws DAOException
+	 */
+	boolean checkByStudent(long student, long year) throws DAOException;
+	default boolean checkByStudent(Student student, AcademicYear year) throws DAOException {
+		return checkByStudent(student.getId(), year.getId());
+	}
+	
+	/**
+	 * Renvoie l'inscription d'un etudiant pour une excercice academique
+	 * @param student
+	 * @param year
+	 * @return
+	 * @throws DAOException
+	 */
+	Inscription findByStudent (Student student, AcademicYear year) throws DAOException;
+	
+	/**
 	 * Verifie s'il y a aumon un etudiant qui s'ait deja inscrit dans une promotion 
 	 * @param promotionId
 	 * @return
@@ -44,20 +65,15 @@ public interface InscriptionDao extends DAOInterface<Inscription>, OverallStatis
 	}
 	
 	/**
-	 * Renvoie le parcour universitaire d'un etudiant
-	 * @param studentId
-	 * @return
-	 * @throws DAOException
-	 */
-	List<Inscription> findByStudent (long studentId) throws DAOException;
-	
-	/**
-	 * Renvoie l'inscription de l'etudiant en parametre
+	 * Renvoie le parcours universitarie d'un etudiant
 	 * @param student
 	 * @return
 	 * @throws DAOException
 	 */
 	List<Inscription> findByStudent (Student student) throws DAOException;
+	default List<Inscription> findByStudent (long studentId) throws DAOException {
+		return findByStudent(getFactory().findDao(StudentDao.class).findById(studentId));
+	}
 	
 	/**
 	 * Pou effectuer une recherche apoximative dans la table de instription

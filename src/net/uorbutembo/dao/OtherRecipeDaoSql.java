@@ -105,7 +105,7 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	@Override
 	public double getSoldByAcademicYear(AcademicYear year, Date date) throws DAOException {
 		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), year.getId());
-		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) AND (collectionDate BETWEEN %d AND %d)", 
+		final String sql =String.format("SELECT SUM(amount) AS amount FROM %s WHERE account IN(%s) AND (collectionDate BETWEEN %d AND %d)", 
 				getTableName(), sqlAccount, toMinTimestampOfDay(date).getTime(), toMaxTimestampOfDay(date).getTime());
 		double sum = 0;
 		try (Connection connection = factory.getConnection();
@@ -122,7 +122,7 @@ class OtherRecipeDaoSql extends UtilSql<OtherRecipe> implements OtherRecipeDao {
 	@Override
 	public double getSoldByAcademicYearBeforDate(AcademicYear year, Date date) throws DAOException {
 		final String sqlAccount = String.format("SELECT id FROM %s WHERE academicYear = %d", AnnualRecipe.class.getSimpleName(), year.getId());
-		final String sql =String.format("SELECT * FROM %s WHERE account IN(%s) AND collectionDate <= %d", 
+		final String sql =String.format("SELECT SUM(amount) AS amount FROM %s WHERE account IN(%s) AND collectionDate <= %d", 
 				getTableName(), sqlAccount, toMaxTimestampOfDay(date).getTime());
 		double sum = 0;
 		try (Connection connection = factory.getConnection();

@@ -124,13 +124,14 @@ public class ImagePicker extends Panel {
 		Panel bottom = new Panel();
 		bottom.add(btnChoose);
 		
+		title.setForeground(Color.LIGHT_GRAY);
 		this.add(title, BorderLayout.NORTH);
 		this.add(center, BorderLayout.CENTER);
 		this.add(bottom, BorderLayout.SOUTH);
 		
 		slider.setEnabled(false);
 		
-		FILE_CHOOSER.setDialogTitle("Sélectionner la photo de passeport");
+		FILE_CHOOSER.setDialogTitle("Sélectionné la photo de passeport");
 		FILE_CHOOSER.setFileFilter(new ImagePickerFilter());
 		FILE_CHOOSER.setFileSelectionMode(JFileChooser.FILES_ONLY);
 

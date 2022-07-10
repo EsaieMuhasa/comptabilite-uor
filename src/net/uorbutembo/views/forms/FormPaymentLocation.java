@@ -25,7 +25,7 @@ import net.uorbutembo.views.components.DefaultFormPanel;
 public class FormPaymentLocation extends DefaultFormPanel {
 	private static final long serialVersionUID = -4354613955916407820L;
 
-	private final TextField<String> name = new TextField<>("Appélation du lieux");
+	private final TextField<String> name = new TextField<>("Appellation du lieux");
 	private final FormGroup<String> nameGroup = FormGroup.createTextField(name);
 	private final PaymentLocationDao paymentLocationDao;
 	

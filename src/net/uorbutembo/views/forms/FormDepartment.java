@@ -29,8 +29,8 @@ import net.uorbutembo.views.components.DefaultFormPanel;
 public class FormDepartment extends DefaultFormPanel {
 	private static final long serialVersionUID = 1236148729398198199L;
 	
-	private final FormGroup<String> acronym = FormGroup.createTextField("Abbreviation");
-	private final FormGroup<String> fullname = FormGroup.createTextField("Appelation complete");
+	private final FormGroup<String> acronym = FormGroup.createTextField("Abbréviation");
+	private final FormGroup<String> fullname = FormGroup.createTextField("Appellation complète");
 	
 	private final ComboBox<Faculty> comboFaculties = new ComboBox<>("Faculté");
 	private final FormGroup<Faculty> faculty = FormGroup.createComboBox(comboFaculties);

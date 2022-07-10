@@ -42,7 +42,7 @@ public class FormStudent extends DefaultFormPanel {
 	private final FormGroup<String> telephone = FormGroup.createTextField("Téléphone");
 	private final FormGroup<String> email = FormGroup.createTextField("E-mail");
 	private final FormGroup<String> school = FormGroup.createTextField("Ecole d'origine");
-	private final FormGroup<String> birthPlace = FormGroup.createTextField("Leux de naissance");
+	private final FormGroup<String> birthPlace = FormGroup.createTextField("Lieux de naissance");
 	private final FormGroup<String> birthDate = FormGroup.createTextField("Date de naissance");
 	private final FormGroup<Kind> groupKind = FormGroup.createComboBox(comboKind);
 	private final FormGroup<String> matricul = FormGroup.createTextField("Matricule");

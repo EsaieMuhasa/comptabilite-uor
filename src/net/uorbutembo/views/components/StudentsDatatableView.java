@@ -1240,7 +1240,7 @@ public class StudentsDatatableView extends Panel {
 		private JMenuItem itemEditProfil = new JMenuItem("Mofifier l'identité", new ImageIcon(R.getIcon("usredit")));
 		private JMenuItem itemEditInscription = new JMenuItem("Mofifier l'inscription", new ImageIcon(R.getIcon("edit")));
 		private JMenuItem itemOpenFile = new JMenuItem("Fiche individuelle", new ImageIcon(R.getIcon("report")));
-		private JMenuItem itemDelete = new JMenuItem("Suprimer l'inscription", new ImageIcon(R.getIcon("close")));
+		private JMenuItem itemDelete = new JMenuItem("Supprimer l'inscription", new ImageIcon(R.getIcon("close")));
 		
 		private final TableModelListener tableModelListener = event -> {
 			int count = tableModel.getRowCount();
@@ -1275,7 +1275,7 @@ public class StudentsDatatableView extends Panel {
 			if(status == JOptionPane.OK_OPTION) {
 				if(row.getPayments().size() != 0) {
 					JOptionPane.showMessageDialog(mainWindow, "Impossible d'effectuer cette opération, "
-							+ "\ncar la fiche individuel de cette étudiant contiens \naumoin une donnée",
+							+ "\ncar la fiche individuel de cette étudiant contiens \naumoin une opération",
 							"Alert", JOptionPane.ERROR_MESSAGE);
 					return;
 				}

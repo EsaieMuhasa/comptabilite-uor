@@ -38,7 +38,7 @@ public class FormInscription extends AbstractInscriptionForm{
 	private FormGroup<String> telephone = FormGroup.createTextField("Téléphone");
 	private FormGroup<String> email = FormGroup.createTextField("E-mail");
 	private FormGroup<String> school = FormGroup.createTextField("Ecole d'origine");
-	private FormGroup<String> birthPlace = FormGroup.createTextField("Leux de naissance");
+	private FormGroup<String> birthPlace = FormGroup.createTextField("Lieux de naissance");
 	private FormGroup<String> birthDate = FormGroup.createTextField("Date de naissance (jj-mm-aaaa)");
 	private FormGroup<Kind> groupKind = FormGroup.createComboBox(comboKind);
 	//-- fields

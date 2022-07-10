@@ -26,6 +26,11 @@ class PaymentFeePartDaoSql extends AbstractRecipePartDao<PaymentFee> implements 
 	}
 	
 	@Override
+	protected String getDateColumnName() {
+		return "slipDate";
+	}
+	
+	@Override
 	protected PaymentFee mapSource(ResultSet result) throws SQLException {
 		PaymentFee fee = new PaymentFee(result.getLong("id"));
 		fee.setRecordDate(new Date(result.getLong("recordDate")));

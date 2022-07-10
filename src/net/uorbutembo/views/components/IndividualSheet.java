@@ -63,8 +63,8 @@ public class IndividualSheet extends Panel {
 	
 	private JPopupMenu popup = new JPopupMenu();
 	private JMenuItem itemPayement = new JMenuItem("Nouveau payement", new ImageIcon(R.getIcon("add")));
-	private JMenuItem itemUpdatePayement = new JMenuItem("Modifier le payement selectionné", new ImageIcon(R.getIcon("edit")));
-	private JMenuItem itemDeletePayement = new JMenuItem("Suprimer le payement selectionné", new ImageIcon(R.getIcon("close")));
+	private JMenuItem itemUpdatePayement = new JMenuItem("Modifier le payement sélectionné", new ImageIcon(R.getIcon("edit")));
+	private JMenuItem itemDeletePayement = new JMenuItem("Supprimer le payement sélectionné", new ImageIcon(R.getIcon("close")));
 	private JMenuItem itemExportEXEL = new JMenuItem("Exporter en Excel", new ImageIcon(R.getIcon("export")));
 	
 	private MouseListener popupListener = new MouseAdapter() {
@@ -101,7 +101,7 @@ public class IndividualSheet extends Panel {
 		@Override
 		public void onError(TableModel<?> model, Exception e) {
 			setCursor(Cursor.getDefaultCursor());
-			JOptionPane.showMessageDialog(IndividualSheet.this, e.getMessage(), "Erreur lors de l'exportation des donnees", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(IndividualSheet.this, e.getMessage(), "Erreur lors de l'exportation des données", JOptionPane.ERROR_MESSAGE);
 		}
 	};
 	

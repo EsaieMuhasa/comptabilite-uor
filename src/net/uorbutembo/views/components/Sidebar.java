@@ -190,8 +190,8 @@ public class Sidebar extends Panel implements ItemListener{
 	}
 	
 	@Override
-	public void itemStateChanged (ItemEvent e) {
-		if (e.getStateChange() != ItemEvent.SELECTED)
+	public void itemStateChanged (ItemEvent event) {
+		if (event.getStateChange() != ItemEvent.SELECTED)
 			return;
 		
 		comboBox.setEnabled(false);
@@ -199,8 +199,13 @@ public class Sidebar extends Panel implements ItemListener{
 		mainWindow.setCursor(getCursor());
 		Thread t = new Thread(() -> {			
 			AcademicYear year = comboModel.getElementAt(comboBox.getSelectedIndex());
-			for (YearChooserListener listener : yearChooserListeners)
-				listener.onChange(year);
+			
+			try {
+				for (YearChooserListener listener : yearChooserListeners)
+					listener.onChange(year);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			
 			setCursor(Cursor.getDefaultCursor());
 			mainWindow.setCursor(getCursor());
@@ -488,7 +493,7 @@ public class Sidebar extends Panel implements ItemListener{
 					setFullScreenMainWindow(fullScreen);
 				}break;
 				case 2: {
-					
+					mainWindow.showAbout();
 				}break;
 				case 3:{
 					closeApplication();

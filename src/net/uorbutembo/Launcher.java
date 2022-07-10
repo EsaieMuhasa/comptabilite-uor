@@ -4,6 +4,10 @@
 package net.uorbutembo;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -22,6 +26,8 @@ import net.uorbutembo.views.MainWindow;
  *
  */
 public class Launcher implements DAOBaseListener{
+	
+	private static final SimpleDateFormat DATE_FORMATER = new SimpleDateFormat("dd-MM-yyyy-hh-mm-ss");
 
 	/**
 	 * @param args
@@ -30,12 +36,21 @@ public class Launcher implements DAOBaseListener{
 		
 		boolean lookExist = false;
 		
-//		try {
-//			PrintStream err = new PrintStream(new File("error.txt"));
-//			System.setErr(err);
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		}
+		Date now = new Date();
+		File loggDir = new File(Config.find("workspace")+"logg/");
+		
+		if(!loggDir.isDirectory())
+			loggDir.mkdirs();
+		
+		String filename = DATE_FORMATER.format(now)+".txt";
+		File logg = new File(loggDir.getAbsolutePath()+filename);
+		
+		try {
+			PrintStream err = new PrintStream(logg);
+			System.setErr(err);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 		
 		try {
 			for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {

@@ -338,6 +338,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	@Override
 	public void onInscription(ActionEvent event) {
 		createDialogueInscription();
+		dialogInscription.setTitle(navigation.getCurrentYear()+" - Inscription d'un nouveau étudiant"); 
 		dialogInscription.setLocationRelativeTo(mainWindow);
 		dialogInscription.setVisible(true);
 	}
@@ -345,6 +346,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	@Override
 	public void onReinscription(ActionEvent event) {
 		createDialogueReRegister();
+		dialogRegister.setTitle(navigation.getCurrentYear()+" - Ré-inscription d'un étudiant");
 		dialogRegister.setLocationRelativeTo(mainWindow);
 		dialogRegister.setVisible(true);
 	}
@@ -352,7 +354,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	@Override
 	public void onAction(InscriptionDataRow row) {
 		createDialogIndiviualSheet();
-		dialogSheet.setTitle("Fiche induviduelle de payment - "+row.getInscription().getStudent().getFullName());
+		dialogSheet.setTitle(navigation.getCurrentYear()+"- Fiche induviduelle de payment - "+row.getInscription().getStudent().getFullName());
 		sheet.setInscription(row);
 		dialogSheet.setLocationRelativeTo(mainWindow);
 		dialogSheet.setVisible(true);

@@ -60,14 +60,14 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 	//fields
 	protected final ComboBox<Faculty> comboFaculty = new ComboBox<>("Faculté", modelComboFaculty);
 	protected final ComboBox<Department> comboDepartment = new ComboBox<>("Département", modelComboDepartment);
-	protected final ComboBox<StudyClass> comboStudyClass = new ComboBox<>("Class d'étude", modelComboStudyClass);
+	protected final ComboBox<StudyClass> comboStudyClass = new ComboBox<>("Classe d'étude", modelComboStudyClass);
 	
 	protected final FormGroup<Faculty> groupFaculty = FormGroup.createComboBox(comboFaculty);
 	protected final FormGroup<Department> groupDepartment = FormGroup.createComboBox(comboDepartment);
 	protected final FormGroup<StudyClass> groupStudyClass = FormGroup.createComboBox(comboStudyClass);
 	protected final FormGroup<String> matricul = FormGroup.createTextField("Matricule");
 	protected final FormGroup<String> adresse = FormGroup.createTextField("Adresse de residence");
-	protected final ImagePicker imagePicker = new ImagePicker("photo paceport");
+	protected final ImagePicker imagePicker = new ImagePicker("Photo passeport");
 	//fields
 	
 	protected final InscriptionDao inscriptionDao;
@@ -161,13 +161,13 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 		@Override
 		public synchronized void onCreate(Inscription e, int requestId) {
 			setCursor(Cursor.getDefaultCursor());
-			setEnabled(false);
+			setEnabled(true);
 		}
 
 		@Override
 		public synchronized void onUpdate(Inscription e, int requestId) {
 			setCursor(Cursor.getDefaultCursor());
-			setEnabled(false);
+			setEnabled(true);
 		}
 		
 	};

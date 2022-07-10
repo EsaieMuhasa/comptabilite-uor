@@ -92,10 +92,42 @@ class InscriptionDaoSql extends UtilSql<Inscription> implements InscriptionDao {
 			throw new DAOException(e.getMessage(), e);
 		}
 	}
-
+	
 	@Override
-	public List<Inscription> findByStudent(long studentId) throws DAOException {
-		return this.findByStudent(this.studentDao.findById(studentId));
+	public boolean checkByStudent(long student, long year) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT * FROM %s INNER JOIN %s ON %s.promotion = %s.id WHERE %s.academicYear = %d AND %s.student = %d LIMIT 1",
+				getTableName(), Promotion.class.getSimpleName(), getTableName(), Promotion.class.getSimpleName(),
+				Promotion.class.getSimpleName(), year, getTableName(), student);
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY)) {
+			return result.next();
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+	}
+	
+	@Override
+	public Inscription findByStudent(Student student, AcademicYear year) throws DAOException {
+		final String SQL_QUERY = String.format("SELECT "
+				+ "Inscription.id AS id, Inscription.recordDate AS recordDate, Inscription.lastUpdate AS lastUpdate, Inscription.student AS student,"
+				+ "Inscription.promotion AS promotion, Inscription.adress AS adress, Inscription.picture AS picture "
+				+ "FROM Inscription INNER JOIN Promotion ON Inscription.promotion = Promotion.id "
+				+ "WHERE Promotion.academicYear = %d AND Inscription.student = %d LIMIT 1 OFFSET 0", year.getId(), student.getId());
+		Inscription inscription = null;
+		try (
+				Connection connection = this.factory.getConnection();
+				Statement statement = connection.createStatement();
+				ResultSet result = statement.executeQuery(SQL_QUERY)) {
+			if( result.next() ) 
+				inscription = fullMapping(result, student, null);
+			else
+				throw new DAOException("Aucune inscription pour l'etudiant "+student.getMatricul()+" pour l'annee academique "+year);
+		} catch (SQLException e) {
+			throw new DAOException(e.getMessage(), e);
+		}
+		return inscription;
 	}
 
 	@Override

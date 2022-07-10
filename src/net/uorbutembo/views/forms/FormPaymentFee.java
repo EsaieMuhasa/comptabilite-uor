@@ -46,7 +46,7 @@ public class FormPaymentFee extends DefaultFormPanel {
 	private Inscription inscription;
 	
 	private final DefaultComboBoxModel<PaymentLocation> locationModel = new DefaultComboBoxModel<>();
-	private final ComboBox<PaymentLocation> comboLocation = new ComboBox<>("Lieux de payment", locationModel);
+	private final ComboBox<PaymentLocation> comboLocation = new ComboBox<>("Lieux de payement", locationModel);
 	
 	private final FormGroup<String> slipNumber = FormGroup.createTextField("Numéro (bodereau ou reçu)");
 	private final FormGroup<String> slipDate = FormGroup.createTextField("Date de payement (jj-mm-aaaa)");
@@ -236,7 +236,7 @@ public class FormPaymentFee extends DefaultFormPanel {
 			message += "Le montant doit être une valeur numérique\n";
 		
 		if (receivedDate.trim().length() != 0 && !receivedDate.matches(RGX_SIMBLE_DATE))
-			message += "Entrez la date du réçu au format valide\n";
+			message += "Entrez la date du reçu au format valide\n";
 		
 		if (slipDate.trim().length() != 0 && !slipDate.matches(RGX_SIMBLE_DATE))
 			message += "Entrez la date du lieux de payement au format valide\n";
@@ -244,7 +244,7 @@ public class FormPaymentFee extends DefaultFormPanel {
 		if (receipNumber.trim().length() != 0 && !receipNumber.matches(RGX_POSITIV_INT))
 			message += "Le numéro du réçu doit être un entier positif";
 		else if (paymentFeeDao.checkByReceiptNumber(receipNumber, id))
-			message += "Ce numéro est déjà attribuer à un autre réçu en caisse\n";
+			message += "Ce numéro est déjà attribuer à un autre reçu en caisse\n";
 		
 		if (message.length() != 0) {
 			showMessageDialog("Error", message, JOptionPane.ERROR_MESSAGE);
@@ -259,7 +259,7 @@ public class FormPaymentFee extends DefaultFormPanel {
 			fee.setSlipDate(FormUtil.DEFAULT_FROMATER.parse(slipDate));
 			
 			if (fee.getAmount() <= 0)
-				message += "Le montant doit être une valeur superieur à Zéro";
+				message += "Le montant doit être une valeur suppérieur à Zéro";
 		} catch (Exception e) {
 			message += "Une erreur est survenue lors du parsage des données saisie\n"+e.getMessage();
 			return;

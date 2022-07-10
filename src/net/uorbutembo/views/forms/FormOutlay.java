@@ -73,7 +73,7 @@ public class FormOutlay extends DefaultFormPanel {
 	private final ComboBox<AcademicYear> comboYear = new ComboBox<>("Année académique", comboYearModel);
 	private final ComboBox<AnnualSpend> comboAccount = new ComboBox<>("Compte à crediter", comboAccountModel);
 	private final ComboBox<AcademicYear> comboAccountYearFilter = new ComboBox<>("Année académique du compte", comboFilterYearModel);
-	private final ComboBox<PaymentLocation> comboLocation = new  ComboBox<>("Leux de livraison", comboLocationModel);
+	private final ComboBox<PaymentLocation> comboLocation = new  ComboBox<>("Lieux de livraison", comboLocationModel);
 	private final TextField<String> amountField = new TextField<>("Montant en "+FormUtil.UNIT_MONEY);
 	
 	private final FormGroup<String> groupAmount = FormGroup.createTextField(amountField);
@@ -100,7 +100,7 @@ public class FormOutlay extends DefaultFormPanel {
 	{
 		pieModel.setRealMaxPriority(true);
 		pieModel.setSuffix("$");
-		pieModel.setTitle("Disponible par leux de perception");
+		pieModel.setTitle("Disponible par lieux de perception");
 	}
 	
 	private final CaretListener amountListener = event -> {

@@ -40,6 +40,11 @@ class OtherRecipePartDaoSql extends AbstractRecipePartDao<OtherRecipe> implement
 		return recipe;
 	}
 	
+	@Override
+	protected String getDateColumnName() {
+		return "collectionDate";
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	protected <L extends DAOInterface<OtherRecipe>> Class<L> getSourceDAOInterface() {

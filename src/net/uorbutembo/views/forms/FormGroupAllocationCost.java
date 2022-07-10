@@ -291,7 +291,7 @@ public class FormGroupAllocationCost extends Panel {
 							toDelete.get(i).setId(0);
 					}
 					
-					JOptionPane.showMessageDialog(null, "Succès d'enregistrement de \nla répartiton du "+academicFee.getAmount()+" USD", "Alert", JOptionPane.INFORMATION_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Succès d'enregistrement de \nla répartiton du "+academicFee.getAmount()+" USD", "Information", JOptionPane.INFORMATION_MESSAGE);
 				} catch (DAOException e) {
 					JOptionPane.showMessageDialog(null, e.getMessage(), "Erreur", JOptionPane.ERROR_MESSAGE);
 				}

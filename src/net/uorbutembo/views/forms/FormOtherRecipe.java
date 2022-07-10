@@ -305,10 +305,7 @@ public class FormOtherRecipe extends DefaultFormPanel {
 		
 		try {
 			final Date collectionDate = FormUtil.DEFAULT_FROMATER.parse(groupDate.getField().getValue());
-			if(otherRecipe != null)
-				otherRecipe.setCollectionDate(collectionDate);
-			else
-				recipe.setCollectionDate(collectionDate);
+			recipe.setCollectionDate(collectionDate);
 		} catch (ParseException e) {
 			message += "Entrez la date au format valide\n";
 		}

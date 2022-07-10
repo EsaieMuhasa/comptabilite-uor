@@ -43,7 +43,7 @@ public class FormReRegister extends AbstractInscriptionForm {
 	 */
 	public FormReRegister(MainWindow mainWindow, boolean registerForm) {
 		super(mainWindow);
-		setTitle("Formulaire de re-inscription");
+		setTitle("Formulaire de réinscription");
 		init();
 		this.fieldsLayout.setRows(4);
 		
@@ -146,11 +146,18 @@ public class FormReRegister extends AbstractInscriptionForm {
 		String matricul = this.matricul.getField().getValue();
 		
 		if(!studentDao.checkByMatricul(matricul)) {
-			this.showMessageDialog("Matricule invalide", "Ce numero matricule est inconnue dans la base de donnée", JOptionPane.ERROR_MESSAGE);
+			showMessageDialog("Matricule invalide", "Ce numero matricule est inconnue dans la base de donnée", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		Student student = studentDao.findByMatricul(matricul);
+		
+		if (event.getSource() == btnSave && inscriptionDao.checkByStudent(student, currentYear)) {
+			Inscription i = inscriptionDao.findByStudent(student, currentYear);
+			showMessageDialog("Information", "L'étudiant "+student.getFullName()+" \nest déjà inscrit pour l'année académique "+currentYear
+					+" \nPromotion: "+i.getPromotion(), JOptionPane.INFORMATION_MESSAGE);
 			return;
 		}
 		
-		Student student = studentDao.findByMatricul(matricul);
 		
 		in.setPromotion(promotion);
 		in.setStudent(student);
@@ -172,7 +179,7 @@ public class FormReRegister extends AbstractInscriptionForm {
 				in.setId(inscription.getId());
 				inscriptionDao.update(in, inscription.getId());
 			}
-			showMessageDialog("Information", "Success d'enregistrement de l'inscription de\n l'étudiant "+student.toString()+", \ndans la promtion "+promotion.toString(), JOptionPane.INFORMATION_MESSAGE);
+			showMessageDialog("Information", "Succèss d'enregistrement de l'inscription de\n l'étudiant "+student.toString()+", \ndans la promotion "+promotion.toString(), JOptionPane.INFORMATION_MESSAGE);
 		} catch (DAOException e) {
 			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 			return;

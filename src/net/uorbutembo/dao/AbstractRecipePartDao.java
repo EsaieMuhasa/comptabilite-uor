@@ -159,8 +159,8 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 	@Override
 	public List<DefaultRecipePart<S>> findByAcademicYear (long academicYearId, Date min, Date max) throws DAOException {
 		List<DefaultRecipePart<S>> data = new ArrayList<>();
-		final String SQL  = String.format("SELECT * FROM %s WHERE spend IN(SELECT id FROM %s WHERE academicYear = %d ) AND (recordDate BETWEEN %d AND %d)",
-				getViewName(), AnnualSpend.class.getSimpleName(), academicYearId, toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
+		final String SQL  = String.format("SELECT * FROM %s WHERE spend IN(SELECT id FROM %s WHERE academicYear = %d ) AND (%s BETWEEN %d AND %d)",
+				getViewName(), AnnualSpend.class.getSimpleName(), academicYearId, getDateColumnName(), toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL)) {
@@ -205,8 +205,8 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 	@Override
 	public int countByAcademicYear(long academicYearId, Date min, Date max) throws DAOException {
 		int count = 0;
-		final String SQL  = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE spend IN(SELECT id FROM %s WHERE academicYear = %d) AND (recordDate BETWEEN %d AND %d)",
-				getViewName(), AnnualSpend.class.getSimpleName(), academicYearId, toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
+		final String SQL  = String.format("SELECT COUNT(*) AS nombre FROM %s WHERE spend IN(SELECT id FROM %s WHERE academicYear = %d) AND (%s BETWEEN %d AND %d)",
+				getViewName(), AnnualSpend.class.getSimpleName(), academicYearId, getDateColumnName(), toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL)) {
@@ -220,8 +220,8 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 
 	@Override
 	public boolean checkByAcademicYearBeforDate (long yearId, Date date) throws DAOException {
-		final String SQL  = String.format("SELECT * AS nombre FROM %s WHERE spend IN(SELECT id FROM %s WHERE academicYear = %d) AND recordDate <= %d LIMIT 1",
-				getViewName(), AnnualSpend.class.getSimpleName(), yearId, toMinTimestampOfDay(date));
+		final String SQL  = String.format("SELECT * AS nombre FROM %s WHERE spend IN(SELECT id FROM %s WHERE academicYear = %d) AND %s <= %d LIMIT 1",
+				getViewName(), AnnualSpend.class.getSimpleName(), yearId, getDateColumnName(), toMinTimestampOfDay(date));
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL)) {
@@ -233,8 +233,8 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 
 	@Override
 	public List<DefaultRecipePart<S>> findByAcademicYearBeforDate (long yearId, Date date) throws DAOException {
-		final String SQL  = String.format("SELECT * AS nombre FROM %s WHERE spend IN(SELECT id FROM %s WHERE academicYear = %d) AND recordDate <= %d",
-				getViewName(), AnnualSpend.class.getSimpleName(), yearId, toMinTimestampOfDay(date));
+		final String SQL  = String.format("SELECT * AS nombre FROM %s WHERE spend IN(SELECT id FROM %s WHERE academicYear = %d) AND %s <= %d",
+				getViewName(), AnnualSpend.class.getSimpleName(), yearId, getDateColumnName(), toMinTimestampOfDay(date));
 		List<DefaultRecipePart<S>> data = new ArrayList<>();
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -319,7 +319,8 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 	@Override
 	public List<RecipePart<S>> findBySpendAtDate (AnnualSpend spend, Date min, Date max) throws DAOException {
 		List<RecipePart<S>> data = new ArrayList<>();
-		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND (recordDate BETWEEN %d AND %d)", getViewName(), spend.getId(), toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
+		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND (%s BETWEEN %d AND %d)", getViewName(), spend.getId(), 
+				getDateColumnName(), toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL)) {
@@ -337,7 +338,7 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 	@Override
 	public List<RecipePart<S>> findBySpendBeforDate(AnnualSpend spend, Date date) throws DAOException {
 		List<RecipePart<S>> data = new ArrayList<>();
-		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND recordDate <= %d", getViewName(), spend.getId(), toMinTimestampOfDay(date));
+		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND %s <= %d", getViewName(), spend.getId(), getDateColumnName(), toMinTimestampOfDay(date));
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL)) {
@@ -389,7 +390,8 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 	@Override
 	public List<RecipePart<S>> findBySpendAtDate(AnnualSpend spend, PaymentLocation location, Date min, Date max) throws DAOException {
 		List<RecipePart<S>> data = new ArrayList<>();
-		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND location = %d AND (recordDate BETWEEN %d AND %d)", getViewName(), spend.getId(), location.getId(), toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
+		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND location = %d AND (%s BETWEEN %d AND %d)", getViewName(), spend.getId(), location.getId(),
+				getDateColumnName(), toMinTimestampOfDay(min), toMaxTimestampOfDay(max));
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL)) {
@@ -407,7 +409,8 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 	@Override
 	public List<RecipePart<S>> findBySpendBeforDate(AnnualSpend spend, PaymentLocation location, Date date) throws DAOException {
 		List<RecipePart<S>> data = new ArrayList<>();
-		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND location = %d AND recordDate <= %d", getViewName(), spend.getId(), location.getId(), toMinTimestampOfDay(date));
+		final String SQL  = String.format("SELECT * FROM %s WHERE spend = %d AND location = %d AND %s <= %d", getViewName(), spend.getId(), location.getId(), 
+				getDateColumnName(), toMinTimestampOfDay(date));
 		try (Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
 				ResultSet result = statement.executeQuery(SQL)) {
@@ -484,8 +487,8 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 	
 	@Override
 	public double getSoldBySpendAtDate(AnnualSpend spend, Date date) throws DAOException {
-		final String SQL  = String.format("SELECT SUM(part) AS amount FROM %s WHERE spend = %d AND (recordDate BETWEEN %d AND %d)", 
-				getViewName(), spend.getId(), toMinTimestampOfDay(date).getTime(), toMaxTimestampOfDay(date).getTime());
+		final String SQL  = String.format("SELECT SUM(part) AS amount FROM %s WHERE spend = %d AND (%s BETWEEN %d AND %d)", 
+				getViewName(), spend.getId(), getDateColumnName(), toMinTimestampOfDay(date).getTime(), toMaxTimestampOfDay(date).getTime());
 		double sum = 0;
 		try ( Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -500,8 +503,8 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 	
 	@Override
 	public double getSoldBySpendBeforDate(AnnualSpend spend, Date date) throws DAOException {
-		final String SQL  = String.format("SELECT SUM(part) AS amount FROM %s WHERE spend = %d AND recordDate <= %d", 
-				getViewName(), spend.getId(), toMaxTimestampOfDay(date).getTime());
+		final String SQL  = String.format("SELECT SUM(part) AS amount FROM %s WHERE spend = %d AND %s <= %d", 
+				getViewName(), spend.getId(), getDateColumnName(), toMaxTimestampOfDay(date).getTime());
 		double sum = 0;
 		try ( Connection connection = factory.getConnection();
 				Statement statement = connection.createStatement();
@@ -572,6 +575,12 @@ abstract class AbstractRecipePartDao < S extends DBEntity> extends UtilSql<Defau
 				result.getString("label"), result.getString("title"), result.getDouble("amount"));
 		return data;
 	}
+	
+	/**
+	 * Enrevoie le nom de la collone où ce trouve la date d'execution de l'operation
+	 * @return
+	 */
+	protected abstract String getDateColumnName () ;
 	
 	/**
 	 * cartographie de la source de la repartition d'une recette
