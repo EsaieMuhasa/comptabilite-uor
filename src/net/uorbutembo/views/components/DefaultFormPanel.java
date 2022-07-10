@@ -151,5 +151,15 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 	public JButton getBtnSave() {
 		return btnSave;
 	}
+	
+	/**
+	 * Remise en zero des champs du formulaire
+	 */
+	public final void razFields () {}
+	
+	/**
+	 * Lors de la demande remise en zero des champs du formulaire
+	 */
+	protected void doRaz () {};
 
 }

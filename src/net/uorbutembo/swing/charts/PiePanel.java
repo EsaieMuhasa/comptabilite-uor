@@ -5,6 +5,7 @@ package net.uorbutembo.swing.charts;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -24,7 +25,6 @@ import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -42,6 +42,8 @@ import net.uorbutembo.tools.R;
  */
 public class PiePanel extends Panel implements Printable{
 	private static final long serialVersionUID = 8834575442903333237L;
+	
+	private Frame owner;
 	
 	private PieRender render;
 	private PieCaptionRender caption;
@@ -100,8 +102,8 @@ public class PiePanel extends Panel implements Printable{
 	
 	private final ActionListener btnImgListener = event -> {
 		
-		int status = ChartPanel.FILE_CHOOSER.showSaveDialog(this);
-		if(status == JFileChooser.APPROVE_OPTION) {
+		boolean status = ChartPanel.FILE_CHOOSER.showSaveDialog(getOwner());
+		if(status) {
 			String fileName = ChartPanel.FILE_CHOOSER.getSelectedFile().getAbsolutePath();
 			if(!fileName.matches("^(.+)(\\.)(png|jpeg|jpg)$"))
 				fileName += ".png";
@@ -205,6 +207,20 @@ public class PiePanel extends Panel implements Printable{
 			title.setText("");
 	}
 	
+	/**
+	 * @return the owner
+	 */
+	public Frame getOwner() {
+		return owner;
+	}
+
+	/**
+	 * @param owner the owner to set
+	 */
+	public void setOwner(Frame owner) {
+		this.owner = owner;
+	}
+
 	/**
 	 * Modification de la visibilite du caption
 	 * @param visible

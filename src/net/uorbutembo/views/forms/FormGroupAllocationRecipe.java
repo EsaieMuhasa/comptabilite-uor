@@ -150,6 +150,7 @@ public class FormGroupAllocationRecipe extends DefaultFormPanel {
 		
 		annualSpendDao.addListener(spendAdapter);
 		universityRecipeDao.addListener(uniRecipeAdapter);
+		piePanel.setOwner(mainWindow);
 		
 		final Panel left = new Panel(new BorderLayout());
 		

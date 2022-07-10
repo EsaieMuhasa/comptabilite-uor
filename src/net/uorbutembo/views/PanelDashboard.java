@@ -79,6 +79,7 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 		center.setBorder(new EmptyBorder(10, 0, 0, 0));
 		center.add(piePanel, BorderLayout.CENTER);
 		piePanel.setBorderColor(FormUtil.BORDER_COLOR);
+		piePanel.setOwner(mainWindow);
 		
 		labelTitle.setHorizontalAlignment(JLabel.RIGHT);
 		top.add(labelTitle, BorderLayout.NORTH);

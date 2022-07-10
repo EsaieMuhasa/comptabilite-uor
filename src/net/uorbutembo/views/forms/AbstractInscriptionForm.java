@@ -162,12 +162,14 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 		public synchronized void onCreate(Inscription e, int requestId) {
 			setCursor(Cursor.getDefaultCursor());
 			setEnabled(true);
+			razFields();
 		}
 
 		@Override
 		public synchronized void onUpdate(Inscription e, int requestId) {
 			setCursor(Cursor.getDefaultCursor());
 			setEnabled(true);
+			razFields();
 		}
 		
 	};
@@ -238,6 +240,15 @@ public abstract class AbstractInscriptionForm extends DefaultFormPanel implement
 			this.onResize(this.getWidth());
 		
 		firstResize = false;
+	}
+	
+	@Override
+	protected void doRaz() {
+		super.doRaz();
+		
+		matricul.getField().setValue("");
+		imagePicker.show(null);
+		adresse.getField().setValue("");
 	}
 	
 	/**

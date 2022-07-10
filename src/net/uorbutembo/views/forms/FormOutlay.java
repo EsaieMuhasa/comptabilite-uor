@@ -264,8 +264,9 @@ public class FormOutlay extends DefaultFormPanel {
 		btnCancel.addActionListener(event -> {
 			setOutlay(null);
 		});
+		piePanel.setOwner(mainWindow);
 	}
-	
+
 	/**
 	 * @param outlay the outlay to set
 	 */

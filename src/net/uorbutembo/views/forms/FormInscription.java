@@ -79,6 +79,19 @@ public class FormInscription extends AbstractInscriptionForm{
 	}
 	
 	@Override
+	protected void doRaz() {
+		super.doRaz();
+		
+		name.getField().setValue("");
+		postName.getField().setValue("");
+		lastName.getField().setValue("");
+		telephone.getField().setValue("");
+		email.getField().setValue("");
+		birthDate.getField().setValue("");
+		birthPlace.getField().setValue("");
+	}
+	
+	@Override
 	protected void onResize(int width) {
 		super.onResize(width);
 		

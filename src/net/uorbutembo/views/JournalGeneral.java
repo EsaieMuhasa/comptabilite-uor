@@ -27,7 +27,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -427,6 +426,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			add(chartPanel, BorderLayout.CENTER);
 			chartPanel.getChartRender().setVerticalTranslate(false);
 			chartPanel.getChartRender().addTranslationListener(this);
+			chartPanel.setOwner(mainWindow);
 		}
 		
 		private void wait (boolean status) {
@@ -613,6 +613,7 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			
 			add(top, BorderLayout.NORTH);
 			add(piePanel, BorderLayout.CENTER);
+			piePanel.setOwner(mainWindow);
 		}
 		
 		/**
@@ -841,8 +842,8 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 		
 		private final ActionListener btnExportListener = event -> {
 			TableModel<?> model = (TableModel<?>) table.getModel();
-			int rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
-			if(rps == JFileChooser.APPROVE_OPTION) {
+			boolean rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
+			if(rps) {
 				Thread t = new Thread(() -> {
 					model.exportToExcel(Table.XLSX_FILE_CHOOSER.getSelectedFile());
 				});
@@ -1177,8 +1178,8 @@ public class JournalGeneral extends Panel implements YearChooserListener{
 			btnNext.setEnabled(tableModel.hasNext());
 		};
 		private final ActionListener btnExportListener = event -> {
-			int rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
-			if(rps == JFileChooser.APPROVE_OPTION) {
+			boolean rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
+			if(rps) {
 				Thread t = new Thread(() -> {
 					tableModel.exportToExcel(Table.XLSX_FILE_CHOOSER.getSelectedFile());
 				});

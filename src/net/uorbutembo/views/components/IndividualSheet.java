@@ -15,7 +15,6 @@ import java.io.File;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
-import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -212,8 +211,9 @@ public class IndividualSheet extends Panel {
 		});
 		
 		itemExportEXEL.addActionListener(event -> {
-			int rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
-			if(rps == JFileChooser.APPROVE_OPTION) {
+			boolean rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
+			if(rps) {
+				tableModel.setTitle(inscription.getInscription().getStudent().getFullName()+" - "+inscription.getInscription().getPromotion().getAcademicYear().toString());
 				Thread t = new Thread(() -> {
 					tableModel.exportToExcel(Table.XLSX_FILE_CHOOSER.getSelectedFile());
 				});

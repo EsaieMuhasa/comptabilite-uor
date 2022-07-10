@@ -6,6 +6,7 @@ package net.uorbutembo.swing.charts;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.event.ActionListener;
@@ -22,13 +23,13 @@ import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
+import jnafilechooser.api.JnaFileChooser;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.tools.FormUtil;
@@ -40,10 +41,11 @@ import net.uorbutembo.tools.R;
  */
 public class ChartPanel extends Panel {
 	private static final long serialVersionUID = -4145881145979100410L;
-	static final JFileChooser FILE_CHOOSER = new JFileChooser();
+	static final JnaFileChooser FILE_CHOOSER = new JnaFileChooser();
+	private Frame owner;
 	static {		
-		FILE_CHOOSER.setFileFilter(new ImageExportFilter());
-		FILE_CHOOSER.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		FILE_CHOOSER.setMultiSelectionEnabled(false);
+		FILE_CHOOSER.addFilter("Images", "png", "jpg", "jpeg");
 	}
 	
 	private CloudChartModel model;
@@ -107,8 +109,8 @@ public class ChartPanel extends Panel {
 	
 	private final ActionListener btnImgListener = event -> {
 		
-		int status = FILE_CHOOSER.showSaveDialog(this);
-		if(status == JFileChooser.APPROVE_OPTION) {
+		boolean status = FILE_CHOOSER.showSaveDialog(getOwner());
+		if(status) {
 			String fileName = FILE_CHOOSER.getSelectedFile().getAbsolutePath();
 			if(!fileName.matches("^(.+)(\\.)(png|jpeg|jpg)$"))
 				fileName += ".png";
@@ -164,6 +166,20 @@ public class ChartPanel extends Panel {
 	 */
 	public CloudChartModel getModel() {
 		return model;
+	}
+
+	/**
+	 * @return the owner
+	 */
+	public Frame getOwner() {
+		return owner;
+	}
+
+	/**
+	 * @param owner the owner to set
+	 */
+	public void setOwner(Frame owner) {
+		this.owner = owner;
 	}
 
 	/**

@@ -60,10 +60,7 @@ public class FormReRegister extends AbstractInscriptionForm {
 			
 			
 			btnCancel.addActionListener(event -> {
-				matricul.getField().setValue("");
-				adresse.getField().setValue("");
-				imagePicker.show(null);
-				inscription = null;
+				razFields();
 			});
 		}
 		
@@ -98,8 +95,7 @@ public class FormReRegister extends AbstractInscriptionForm {
 		this.inscription = inscription;
 		
 		if (inscription == null) {
-			matricul.getField().setValue("");
-			adresse.getField().setValue("");
+			razFields();
 			return;
 		}
 		
@@ -132,6 +128,12 @@ public class FormReRegister extends AbstractInscriptionForm {
 		
 		if(inscription.getPicture() != null && !inscription.getPicture().isEmpty())
 			imagePicker.show(R.getConfig().get("workspace")+inscription.getPicture());
+	}
+	
+	@Override
+	protected void doRaz() {
+		super.doRaz();
+		inscription = null;
 	}
 
 	@Override
@@ -181,7 +183,7 @@ public class FormReRegister extends AbstractInscriptionForm {
 			}
 			showMessageDialog("Information", "Succèss d'enregistrement de l'inscription de\n l'étudiant "+student.toString()+", \ndans la promotion "+promotion.toString(), JOptionPane.INFORMATION_MESSAGE);
 		} catch (DAOException e) {
-			this.showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
+			showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		
@@ -196,14 +198,11 @@ public class FormReRegister extends AbstractInscriptionForm {
 			}
 		}
 		
-		this.matricul.getField().setValue("");
-		adresse.getField().setValue("");
-		imagePicker.show(null);
 		
-		if(inscription != null) {
+		if(inscription != null)
 			inscription.setPicture(in.getPicture());
-			inscription = null;
-		}
+		
+		razFields();
 		
 		setEnabled(false);
 		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));

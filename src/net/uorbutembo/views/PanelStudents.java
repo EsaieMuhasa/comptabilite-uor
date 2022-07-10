@@ -18,7 +18,6 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.swing.Box;
@@ -26,7 +25,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -36,7 +34,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeListener;
-import javax.swing.filechooser.FileFilter;
 
 import net.uorbutembo.beans.AcademicYear;
 import net.uorbutembo.beans.Department;
@@ -52,6 +49,7 @@ import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.Button;
 import net.uorbutembo.swing.Panel;
 import net.uorbutembo.swing.SearchField;
+import net.uorbutembo.swing.Table;
 import net.uorbutembo.swing.charts.DefaultPieModel;
 import net.uorbutembo.swing.charts.DefaultPiePart;
 import net.uorbutembo.swing.charts.PieModel;
@@ -112,9 +110,6 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	private JDialog dialogSheet;//boite de dialogue de consultation des fiches de payements
 	private IndividualSheet sheet;
 	
-	private JFileChooser fileChooser = new JFileChooser();
-	private ExcelFileFilter filterExcel = new ExcelFileFilter();
-	
 	private FormInscription formInscription;
 	private FormReRegister formRegister;
 	
@@ -126,18 +121,10 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		@Override
 		public void onValiate(ExportConfig config) {
 			
-			Date now = new Date();
-			File old = fileChooser.getCurrentDirectory();
-			File newFile = new File(old.getAbsolutePath()+"/uor-data-manager-export-"+FormUtil.DEFAULT_FROMATER.format(now)+".xlsx");
-			
-			fileChooser.setFileFilter(filterExcel);
-			fileChooser.setSelectedFile(newFile);
-			
-			int status = fileChooser.showSaveDialog(mainWindow);
-			if(status != JFileChooser.APPROVE_OPTION)
+			if(!Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow))
 				return;
 			
-			File file = fileChooser.getSelectedFile();
+			File file = Table.XLSX_FILE_CHOOSER.getSelectedFile();
 			if(file == null )
 				return;
 			
@@ -277,8 +264,6 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		box.add(btnToExcel);
 		box.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 		center.add(box, BorderLayout.SOUTH);
-		
-		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 		
 		progress.setBorderPainted(false);
 		progress.setStringPainted(true);
@@ -675,6 +660,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 			paymentFeeDao = factory.findDao(PaymentFeeDao.class);
 			
 			piePanel.setBorderColor(FormUtil.BORDER_COLOR);
+			piePanel.setOwner(mainWindow);
 			
 			paymentFeeDao.addListener(paymentAdapter);
 			inscriptionDao.addListener(inscriptionAdapter);
@@ -1099,27 +1085,6 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 			setCursor(Cursor.getDefaultCursor());
 			
 			piePanel.setRenderVisible(true);
-		}
-		
-	}
-	
-	
-	/**
-	 * @author Esaie MUHASA
-	 * Filtre de detection des fichiers excels
-	 */
-	private static class ExcelFileFilter extends FileFilter {
-
-		@Override
-		public boolean accept(File f) {
-			if(f.getName().endsWith(".xlsx"))
-				return true;
-			return f.isDirectory();
-		}
-
-		@Override
-		public String getDescription() {
-			return "Fichier excel 2007 ou plus (.xlsx)";
 		}
 		
 	}

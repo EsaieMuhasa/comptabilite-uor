@@ -52,5 +52,7 @@
 	<classpathentry kind="lib" path="lib/sqlite-jdbc-3.7.2.jar"/>
 	<classpathentry kind="lib" path="lib/TimingFramework-0.55.jar"/>
 	<classpathentry kind="lib" path="lib/xmlbeans-5.0.3.jar"/>
+	<classpathentry kind="lib" path="lib/jna-5.5.0.jar"/>
+	<classpathentry kind="lib" path="lib/swing-jnafilechooser.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

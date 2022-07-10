@@ -165,7 +165,7 @@ public class PanelFeePromotion extends Panel {
 		tablePanel = new TablePanel(table, "");
 		formFeePromotion = new FormFeePromotion(mainWindow);
 		
-		formCost = new FormGroupAllocationCost(allocationCostDao);
+		formCost = new FormGroupAllocationCost(mainWindow);
 		
 		Panel panelForm = new Panel(new BorderLayout());
 		panelForm.add(formFeePromotion, BorderLayout.CENTER);
@@ -173,7 +173,7 @@ public class PanelFeePromotion extends Panel {
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.addTab("Détailles des répartitions", panelShowConfig);
-		tabbedPane.addTab("Association des aux promotions", panelForm);
+		tabbedPane.addTab("Association des frais aux promotions", panelForm);
 		
 		panelShowConfig.setBorder(new EmptyBorder(5, 5, 5, 0));
 		

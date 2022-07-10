@@ -296,15 +296,13 @@ public class FormPaymentFee extends DefaultFormPanel {
 		}
 	}
 	
-	/**
-	 * vidage de champs de saisie
-	 * @param razFee, faut-il re-instancier l'objet charger du stockge temporaire
-	 */
-	private void razFields () {
+	@Override
+	protected void doRaz() {
+		super.doRaz();
 		amount.getField().setValue("");
 		slipNumber.getField().setValue("");
 		receipNumber.getField().setValue("");
 		wording.getField().setValue("");
 	}
-
+	
 }

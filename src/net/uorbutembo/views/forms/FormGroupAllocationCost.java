@@ -54,6 +54,7 @@ import net.uorbutembo.swing.charts.PiePanel;
 import net.uorbutembo.swing.charts.PiePart;
 import net.uorbutembo.tools.FormUtil;
 import net.uorbutembo.tools.R;
+import net.uorbutembo.views.MainWindow;
 
 /**
  * @author Esaie MUHASA
@@ -142,19 +143,19 @@ public class FormGroupAllocationCost extends Panel {
 	};
 
 	/**
-	 * Constructeur d'initialisation
-	 * @param feePromotionDao
+	 * @param mainWindow
 	 */
-	public FormGroupAllocationCost(AllocationCostDao allocationCostDao) {
+	public FormGroupAllocationCost(MainWindow mainWindow) {
 		super(new BorderLayout());
-		this.allocationCostDao = allocationCostDao;
-		this.annualSpendDao= allocationCostDao.getFactory().findDao(AnnualSpendDao.class);
-		this.academicYearDao = allocationCostDao.getFactory().findDao(AcademicYearDao.class);
-		this.initViews();
+		allocationCostDao = mainWindow.factory.findDao(AllocationCostDao.class);
+		annualSpendDao= allocationCostDao.getFactory().findDao(AnnualSpendDao.class);
+		academicYearDao = allocationCostDao.getFactory().findDao(AcademicYearDao.class);
+		initViews();
 		setBorder(BorderFactory.createLineBorder(FormUtil.BORDER_COLOR));
 		
 		piePanel.getModel().addListener(pieListener);
-		piePanel.getRender().setHovable(false);
+		piePanel.getRender().setHovable(true);
+		piePanel.setOwner(mainWindow);
 		annualSpendDao.addListener(annualAdapter);
 		btnSave.setEnabled(false);
 		pieModel.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);

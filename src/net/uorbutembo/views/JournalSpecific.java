@@ -24,7 +24,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
@@ -348,8 +347,8 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			btnNext.setEnabled(tableModel.hasNext());
 		};
 		private final ActionListener btnExportListener = event -> {
-			int rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
-			if(rps == JFileChooser.APPROVE_OPTION) {
+			boolean rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
+			if(rps) {
 				Thread t = new Thread(() -> {
 					tableModel.exportToExcel(Table.XLSX_FILE_CHOOSER.getSelectedFile());
 				});
@@ -454,8 +453,8 @@ public class JournalSpecific extends Panel  implements ActionListener{
 		};
 		
 		private final ActionListener btnExportListener = event -> {
-			int rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
-			if(rps == JFileChooser.APPROVE_OPTION) {
+			boolean rps = Table.XLSX_FILE_CHOOSER.showSaveDialog(mainWindow);
+			if(rps) {
 				Thread t = new Thread(() -> {
 					tableModel.exportToExcel(Table.XLSX_FILE_CHOOSER.getSelectedFile());
 				});
@@ -631,7 +630,7 @@ public class JournalSpecific extends Panel  implements ActionListener{
 				table.getColumnModel().getColumn(cols[i]).setResizable(false);
 			}
 			//==
-			
+			piePanel.setOwner(mainWindow);
 		}
 	
 		@Override
@@ -856,6 +855,9 @@ public class JournalSpecific extends Panel  implements ActionListener{
 			
 			add(center, BorderLayout.CENTER);
 			add(bottom, BorderLayout.SOUTH);
+			
+			piePanel.setOwner(mainWindow);
+			chartPanel.setOwner(mainWindow);
 			
 			paymentLocationDao.addListener(locationAdapter);
 			chartPanel.getChartRender().addTranslationListener(this);

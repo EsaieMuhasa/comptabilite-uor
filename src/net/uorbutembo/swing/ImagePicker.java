@@ -26,13 +26,12 @@ import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JSlider;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
-import javax.swing.filechooser.FileFilter;
 
+import jnafilechooser.api.JnaFileChooser;
 import net.uorbutembo.tools.R;
 
 /**
@@ -50,7 +49,12 @@ public class ImagePicker extends Panel {
 	private ImagePickerRender render = new ImagePickerRender();
 	private Button btnChoose = new Button(new ImageIcon(R.getIcon("edit")), "Choisir");
 	
-	private final static JFileChooser FILE_CHOOSER = new JFileChooser();
+	private final static JnaFileChooser FILE_CHOOSER = new JnaFileChooser();
+	static {
+		FILE_CHOOSER.setMultiSelectionEnabled(false);
+		FILE_CHOOSER.addFilter("Image", "png", "jpg", "jpeg");
+		FILE_CHOOSER.setTitle("Sélectionné la photo de passeport");
+	}
 	private Frame mainFrame;
 	
 	private String file;//pour afficher une image x dans l'image picker
@@ -130,15 +134,11 @@ public class ImagePicker extends Panel {
 		this.add(bottom, BorderLayout.SOUTH);
 		
 		slider.setEnabled(false);
-		
-		FILE_CHOOSER.setDialogTitle("Sélectionné la photo de passeport");
-		FILE_CHOOSER.setFileFilter(new ImagePickerFilter());
-		FILE_CHOOSER.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 		btnChoose.addActionListener(event -> {
-			int result = FILE_CHOOSER.showDialog(mainFrame, "Ouvrir");
+			boolean result = FILE_CHOOSER.showOpenDialog(mainFrame);
 			
-			if(result == JFileChooser.APPROVE_OPTION) {
+			if(result) {
 				File file = FILE_CHOOSER.getSelectedFile();
 				render.setFileName(file.getAbsolutePath(), slider.getValue());
 				slider.setEnabled(true);
@@ -492,31 +492,6 @@ public class ImagePicker extends Panel {
 			BufferedImage crop = buffer.getSubimage(x, y, size, size);
 			return crop;
 		}
-	}
-	
-	/**
-	 * @author Esaie MUHASA
-	 * Filtrage lors de la selection d'une image
-	 */
-	private static class ImagePickerFilter extends FileFilter {
-
-		@Override
-		public boolean accept(File f) {
-			if(f.isDirectory())
-				return true;
-			
-			for (String e : EXT)
-				if(f.getAbsoluteFile().getName().toLowerCase().matches(".+\\."+e))
-					return true;
-			
-			return false;
-		}
-
-		@Override
-		public String getDescription() {
-			return "Sélectionnér une image: (.png, .jpg et .jpeg)";
-		}
-		
 	}
 
 }

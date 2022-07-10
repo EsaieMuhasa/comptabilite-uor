@@ -43,7 +43,7 @@ public class Launcher implements DAOBaseListener{
 			loggDir.mkdirs();
 		
 		String filename = DATE_FORMATER.format(now)+".txt";
-		File logg = new File(loggDir.getAbsolutePath()+filename);
+		File logg = new File(loggDir.getAbsolutePath()+"/"+filename);
 		
 		try {
 			PrintStream err = new PrintStream(logg);
