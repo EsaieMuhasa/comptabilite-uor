@@ -3,6 +3,7 @@
  */
 package net.uorbutembo.dao;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
@@ -31,14 +32,31 @@ class AcademicFeeDaoSql extends UtilSql<AcademicFee> implements AcademicFeeDao {
 	
 	@Override
 	public void create(AcademicFee a) throws DAOException {
-		try {
-			long id = this.insertInTable(
+		try (Connection connection = factory.getConnection()) {
+			create(connection, a);
+			emitOnCreate(a);
+		} catch (SQLException e) {
+			throw new DAOException("Une ererur est survenue lors de l'enregistrement\n"+e.getMessage(), e);
+		}
+	}
+	
+	@Override
+	public void create(Connection connection, AcademicFee a) throws DAOException, SQLException {
+		long id = this.insertInTable(
+				connection,
+				new String [] {"amount", "description", "academicYear", "recordDate"},
+				new Object[] {a.getAmount(), a.getDescription(), a.getAcademicYear().getId(), a.getRecordDate().getTime()});
+		a.setId(id);
+	}
+	
+	@Override
+	public void create(Connection connection, AcademicFee[] t) throws DAOException, SQLException {
+		for (AcademicFee a : t) {
+			long id = insertInTable(
+					connection,
 					new String [] {"amount", "description", "academicYear", "recordDate"},
 					new Object[] {a.getAmount(), a.getDescription(), a.getAcademicYear().getId(), a.getRecordDate().getTime()});
 			a.setId(id);
-			this.emitOnCreate(a);
-		} catch (SQLException e) {
-			throw new DAOException("Une ererur est survenue lors de l'enregistrement\n"+e.getMessage(), e);
 		}
 	}
 

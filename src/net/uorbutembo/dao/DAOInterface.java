@@ -68,27 +68,14 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param t
 	 * @throws DAOException
 	 */
-	default void create (T [] t) throws DAOException {
-		throw new DAOException("La creation de occurence multiple n'est pas prise en charge \npar le DAO -> "+getClass().getName()+" <-");
-	}
+	void create (T [] t) throws DAOException;
 	
 	/**
 	 * cration dans un nouvea thread
 	 * @param e
 	 * @param requestId l'identifiant a retransmetre de l'evenement de syncronisation apres execution de la requette
 	 */
-	default void doCreate (T e, int requestId) {
-		Thread t = new Thread( () ->  {
-			try {
-				create(e);
-			} catch (DAOException ex) {
-				for (DAOListener<T> lis : getListeners()) {
-					lis.onError(ex, requestId);
-				}
-			}
-		}, getClass().getSimpleName()+"_"+System.currentTimeMillis());
-		t.start();
-	}
+	void doCreate (T e, int requestId);
 	
 	/**
 	 * surcharge cration d'une occurence dans un nouveau thread
@@ -125,18 +112,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param id
 	 * @param requestId
 	 */
-	default void doUpdate(T e, long id, int requestId) {
-		Thread t = new Thread( () ->  {
-			try {
-				update(e, id);
-			} catch (DAOException ex) {
-				for (DAOListener<T> lis : getListeners()) {
-					lis.onError(ex, requestId);
-				}
-			}
-		}, getClass().getSimpleName()+"_"+System.currentTimeMillis());
-		t.start();
-	}
+	void doUpdate(T e, long id, int requestId);
 	
 	/**
 	 * @param e
@@ -163,18 +139,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param id
 	 * @param requestId
 	 */
-	default void doDelete(long id, int requestId) {
-		Thread t = new Thread( () ->  {
-			try {
-				delete(id);
-			} catch (DAOException e) {
-				for (DAOListener<T> lis : getListeners()) {
-					lis.onError(e, requestId);
-				}
-			}
-		}, getClass().getSimpleName()+"_delete_"+System.currentTimeMillis());
-		t.start();
-	}
+	void doDelete(long id, int requestId) ;
 	
 	/***
 	 * revoie une occurence pour la colone de filtrage
@@ -220,22 +185,7 @@ public interface DAOInterface <T extends DBEntity>{
 	/**
 	 * @param requestId
 	 */
-	default void  doFindAll (int requestId) {
-		Thread t = new Thread( () ->  {
-			try {
-				List<T> data = findAll();
-				for (DAOListener<T> lis : getListeners()) {
-					lis.onFind(data, requestId);
-				}
-			} catch (DAOException e) {
-				for (DAOListener<T> lis : getListeners()) {
-					lis.onError(e, requestId);
-				}
-			}
-			
-		}, getClass().getSimpleName()+"_findAll_"+System.currentTimeMillis());
-		t.start();
-	}
+	void  doFindAll (int requestId);
 	
 	/**
 	 * 
@@ -248,22 +198,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param limit
 	 * @param requestId
 	 */
-	default void  doFindAll (int limit, int requestId) {
-		Thread t = new Thread( () ->  {
-			try {
-				List<T> data = findAll(limit);
-				for (DAOListener<T> lis : getListeners()) {
-					lis.onFind(data, requestId);
-				}
-			} catch (DAOException e) {
-				for (DAOListener<T> lis : getListeners()) {
-					lis.onError(e, requestId);
-				}
-			}
-			
-		}, getClass().getSimpleName()+"_findAll_"+System.currentTimeMillis());
-		t.start();
-	}
+	void doFindAll (int limit, int requestId);
 	
 	/**
 	 * 
@@ -271,21 +206,7 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param offset
 	 * @param requestId
 	 */
-	default void  doFindAll (int limit, int offset, int requestId) {
-		Thread t = new Thread( () ->  {
-			try {
-				List<T> data = findAll(limit, offset);
-				for (DAOListener<T> lis : getListeners()) {
-					lis.onFind(data, requestId);
-				}
-			} catch (DAOException e) {
-				for (DAOListener<T> lis : getListeners()) {
-					lis.onError(e, requestId);
-				}
-			}
-		}, getClass().getSimpleName()+"_findAll_"+System.currentTimeMillis());
-		t.start();
-	}
+	void doFindAll (int limit, int offset, int requestId);
 	
 	/**
 	 * Recuperation d'une intervale des donnees
@@ -392,38 +313,41 @@ public interface DAOInterface <T extends DBEntity>{
 	 * @param offset
 	 * @return
 	 */
-	public List<T> findAll(int limit, int offset) throws DAOException ;
+	List<T> findAll(int limit, int offset) throws DAOException ;
 	
 	/**
 	 * Ajout d'un ecouteur au DAO
 	 * @param listener
 	 */
-	default void addListener (DAOListener<T> listener) {
-		if(getListeners().contains(listener)) {
-			return;
-		}
-		getListeners().add(listener);
-	}
+	void addListener (DAOListener<T> listener) ;
 	
 	/**
 	 * retire l'ecouteur dont la refernce est en parametre
 	 * @param listener
 	 */
-	default void removeListener (DAOListener<T> listener) {
-		getListeners().remove(listener);
-	}
+	void removeListener (DAOListener<T> listener);
 	
 	/**
 	 * retire tout les ecouteurs
 	 */
-	default void clearListener () {
-		getListeners().clear();
-	}
+	void clearListener ();
 	
 	/**
-	 * @return
+	 * abonnement d'un ecouteur de progression des taches lorde
+	 * @param listener
 	 */
-	List<DAOListener<T>> getListeners ();
+	void addProgressListener (DAOProgressListener<T> listener);
+	
+	/**
+	 * desabonnement d'un ecouteur de progression d'une tache lorde
+	 * @param listener
+	 */
+	void removeProgressListener (DAOProgressListener<T> listener);
+	
+	/**
+	 * desabonneement de tout les ecouteur de progression des taches lourdes
+	 */
+	void clearProgressListener ();
 	
 	/**
 	 * demande de synchronisation des ecouteurs

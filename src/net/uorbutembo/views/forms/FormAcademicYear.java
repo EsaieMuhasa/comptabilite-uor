@@ -40,6 +40,8 @@ import net.uorbutembo.views.components.DefaultFormPanel;
  */
 public class FormAcademicYear extends DefaultFormPanel {
 	private static final long serialVersionUID = -4419809391236771300L;
+
+	public static final int IMPORT_REQUEST_ID = 0xFFFFFF;
 	
 	private AcademicYearDao academicYearDao;
 	
@@ -76,6 +78,7 @@ public class FormAcademicYear extends DefaultFormPanel {
 		@Override
 		public synchronized void onCreate(AcademicYear e, int requestId) {
 			modelAcademicYar.addElement(e);
+			setEnabled(true);
 		}
 
 		@Override
@@ -87,6 +90,7 @@ public class FormAcademicYear extends DefaultFormPanel {
 					break;
 				}
 			}
+			setEnabled(true);
 		}
 
 		@Override
@@ -144,6 +148,26 @@ public class FormAcademicYear extends DefaultFormPanel {
 			panelImport.setVisible(false);
 	}
 	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		
+		label.setEnabled(enabled);
+		btnCancel.setEnabled(enabled);
+		boxImport.setEnabled(enabled);
+		groupAcademicYear.setEnabled(enabled);
+		closeDate.setEnabled(enabled);
+		startDate.setEnabled(enabled);
+	}
+	
+	@Override
+	protected void doRaz() {
+		super.doRaz();
+		label.getField().setValue("");
+		startDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(new Date()));
+		closeDate.getField().setValue("");
+	}
+	
 	/**
 	 * @param academicYear the academicYear to set
 	 */
@@ -159,17 +183,14 @@ public class FormAcademicYear extends DefaultFormPanel {
 			startDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(academicYear.getStartDate()));
 			if(academicYear.getCloseDate() != null)
 				closeDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(academicYear.getCloseDate()));
-		} else {
-			label.getField().setValue("");
-			startDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(new Date()));
-			closeDate.getField().setValue("");
-		}
+		} else 
+			razFields();
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent event) {
-		String start  = this.startDate.getValue();
-		String close = this.closeDate.getValue();
+		String start  = startDate.getValue();
+		String close = closeDate.getValue();
 		String label = this.label.getValue();
 		
 		long id = academicYear == null? 0 : academicYear.getId();
@@ -204,18 +225,23 @@ public class FormAcademicYear extends DefaultFormPanel {
 		if(year.getStartDate() != null && year.getLabel() != null && !year.getLabel().isEmpty()) {
 			Date now = new Date();
 			try {
+				setEnabled(false);
 				if(academicYear == null){
 					year.setRecordDate(now);
-					this.academicYearDao.create(year);
+					
+					if(boxImport.isSelected() && modelAcademicYar.getSize() != 0) {
+						academicYearDao.create(year, 
+								modelAcademicYar.getElementAt(comboAcademicYear.getSelectedIndex()), IMPORT_REQUEST_ID);
+					} else 
+						academicYearDao.create(year);
 				} else {
 					year.setLastUpdate(now);
 					year.setRecordDate(academicYear.getRecordDate());
 					year.setId(academicYear.getId());
 					academicYearDao.update(year, academicYear.getId());
 				}
-				setAcademicYear(null);
-				showMessageDialog("Information", "Année académique enregistrer avec success", JOptionPane.INFORMATION_MESSAGE);
 			} catch (DAOException e) {
+				setEnabled(true);
 				showMessageDialog("Erreur", e.getMessage(), JOptionPane.ERROR_MESSAGE);
 			}
 		}

@@ -93,6 +93,12 @@ public abstract class DefaultFormPanel extends Panel implements ActionListener {
 		add(middle, BorderLayout.NORTH);
 	}
 	
+	@Override
+	public void setEnabled(boolean enabled) {
+		super.setEnabled(enabled);
+		btnSave.setEnabled(enabled);
+	}
+	
 	/**
 	 * Affiche une boite de dialogue
 	 * @param title

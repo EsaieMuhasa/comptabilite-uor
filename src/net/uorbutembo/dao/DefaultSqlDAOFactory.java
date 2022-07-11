@@ -64,12 +64,10 @@ class DefaultSqlDAOFactory implements DAOFactory{
 	 * @throws SQLException
 	 */
 	public Connection getConnection () throws SQLException {
-		if(this.user == null || this.user.trim().isEmpty()) {
+		if(this.user == null || this.user.trim().isEmpty())
 			return DriverManager.getConnection(this.url);
-		}
-		
-		Connection connection = DriverManager.getConnection(this.url, this.user, this.password);
-		return connection;
+		else
+			return DriverManager.getConnection(this.url, this.user, this.password);
 	}
 	
 	@SuppressWarnings("unchecked")

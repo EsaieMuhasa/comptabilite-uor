@@ -44,7 +44,7 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 	}
 	
 	@Override
-	protected void create(Connection connection, AnnualRecipe a) throws DAOException, SQLException{
+	public void create(Connection connection, AnnualRecipe a) throws DAOException, SQLException{
 		long id  = insertInTable(
 				connection,
 				new String [] {"universityRecipe", "academicYear", "recordDate"},
@@ -54,6 +54,12 @@ class AnnualRecipeDaoSql extends UtilSql<AnnualRecipe> implements AnnualRecipeDa
 						a.getRecordDate().getTime()
 				});
 		a.setId(id);
+	}
+	
+	@Override
+	public void create(Connection connection, AnnualRecipe[] t) throws DAOException, SQLException {
+		for (AnnualRecipe a : t)
+			create(connection, a);
 	}
 	
 	@Override

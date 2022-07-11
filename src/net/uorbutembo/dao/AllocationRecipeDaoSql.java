@@ -41,7 +41,7 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 	}
 	
 	@Override
-	protected void create(Connection connection, AllocationRecipe t) throws DAOException, SQLException {
+	public void create(Connection connection, AllocationRecipe t) throws DAOException, SQLException {
 		long id = insertInTable(
 				connection,
 				new String[] {"percent", "recipe", "spend", "recordDate"},
@@ -52,7 +52,7 @@ class AllocationRecipeDaoSql extends UtilSql<AllocationRecipe> implements Alloca
 	
 	
 	@Override
-	protected void create(Connection connection, AllocationRecipe[] t) throws DAOException, SQLException {
+	public void create(Connection connection, AllocationRecipe[] t) throws DAOException, SQLException {
 		for (AllocationRecipe recipe : t) {
 			create(connection, recipe);
 		}

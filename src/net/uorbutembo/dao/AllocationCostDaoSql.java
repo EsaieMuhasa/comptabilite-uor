@@ -49,7 +49,7 @@ class AllocationCostDaoSql extends UtilSql<AllocationCost> implements Allocation
 							a.getAnnualSpend().getId(),
 							a.getRecordDate().getTime() });
 			a.setId(id);
-			this.emitOnCreate(a);
+			emitOnCreate(a);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
@@ -59,24 +59,26 @@ class AllocationCostDaoSql extends UtilSql<AllocationCost> implements Allocation
 	public synchronized void create(AllocationCost[] t) throws DAOException {
 		try (final Connection connection = factory.getConnection()) {
 			connection.setAutoCommit(false);
-			for (AllocationCost a : t) {
-				long id = insertInTable(
-						connection,
-						new String[] {"academicFee", "amount", "annualSpend","recordDate" },
-						new Object[] {
-								a.getAcademicFee().getId(),
-								a.getAmount(),
-								a.getAnnualSpend().getId(),
-								a.getRecordDate().getTime() });
-				a.setId(id);
-			}
 			connection.commit();
-			for (AllocationCost a : t) {
-				this.emitOnCreate(a);
-			}
+			emitOnCreate(t);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
+	}
+	
+	@Override
+	public void create (Connection connection, AllocationCost[] t) throws DAOException, SQLException {
+		for (AllocationCost a : t) {
+			long id = insertInTable(
+					connection,
+					new String[] {"academicFee", "amount", "annualSpend","recordDate" },
+					new Object[] {
+							a.getAcademicFee().getId(),
+							a.getAmount(),
+							a.getAnnualSpend().getId(),
+							a.getRecordDate().getTime() });
+			a.setId(id);
+		}		
 	}
 	
 	@Override

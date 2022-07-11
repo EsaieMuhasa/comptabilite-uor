@@ -22,6 +22,14 @@ public interface AcademicYearDao extends DAOInterface<AcademicYear> {
 	}
 	
 	/**
+	 * Creation d'une annee academique et importation de la configuration d'une autre annee academique
+	 * @param year l'annee academique qui doit etre creer
+	 * @param importable la configuration a importer pour l'annee academique fraichement creer
+	 * @throws DAOException
+	 */
+	void create (AcademicYear year, AcademicYear importable, int requestId);
+	
+	/**
 	 * Verifie s'il y a l'annee qui correspond au label en premier parametre
 	 * et dont l'ID est different du 2eme parametre
 	 * @param label

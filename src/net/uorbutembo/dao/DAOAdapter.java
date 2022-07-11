@@ -12,43 +12,59 @@ import net.uorbutembo.beans.DBEntity;
  * @author Esaie MUHASA
  *
  */
-public abstract class DAOAdapter <H extends DBEntity> implements DAOListener<H>, AcademicYearDaoListener{
+public abstract class DAOAdapter <H extends DBEntity> implements DAOListener<H>, 
+	AcademicYearDaoListener, DAOProgressListener<H> {
 
 	public DAOAdapter() {
 		super();
 	}
 
 	@Override
-	public synchronized void onCreate(H e, int requestId) {}
+	public void onCreate(H e, int requestId) {}
 
 	@Override
-	public synchronized void onUpdate(H e, int requestId) {}
+	public void onUpdate(H e, int requestId) {}
 
 	@Override
-	public synchronized void onDelete(H e, int requestId) {}
+	public void onDelete(H e, int requestId) {}
 
 	@Override
-	public synchronized void onFind(H e, int requestId) {}
+	public void onFind(H e, int requestId) {}
 
 	@Override
-	public synchronized void onFind(List<H> e, int requestId) {}
+	public void onFind(List<H> e, int requestId) {}
 
 	@Override
-	public synchronized void onError(DAOException e, int requestId) {}
+	public void onError(DAOException e, int requestId) {}
 
 	@Override
-	public synchronized void onCurrentYear(AcademicYear year) {}
+	public void onCurrentYear(AcademicYear year) {}
 
 	@Override
-	public synchronized void onCreate(H[] e, int requestId) {}
+	public void onCreate(H[] e, int requestId) {}
 
 	@Override
-	public synchronized void onUpdate(H[] e, int requestId) {}
+	public void onUpdate(H[] e, int requestId) {}
 
 	@Override
-	public synchronized void onDelete(H[] e, int requestId) {}
+	public void onDelete(H[] e, int requestId) {}
 
 	@Override
-	public synchronized void onCheck(boolean check, int requestId) {}
+	public void onCheck(boolean check, int requestId) {}
+
+	@Override
+	public void onStart(int requestId) {}
+
+	@Override
+	public void onProgress(int current, int max, String message, int requestId) {}
+
+	@Override
+	public void onFinish(int requestId) {}
+
+	@Override
+	public void onFinish(H data, int requestId) {}
+
+	@Override
+	public void onFinish(List<H> data, int requestId) {}
 
 }

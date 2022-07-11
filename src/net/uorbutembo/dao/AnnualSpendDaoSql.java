@@ -43,7 +43,7 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 					new String[] {"academicYear", "universitySpend", "recordDate"},
 					new Object[] {a.getAcademicYear().getId(), a.getUniversitySpend().getId(), a.getRecordDate().getTime()});
 			a.setId(id);
-			this.emitOnCreate(a);
+			emitOnCreate(a);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
@@ -53,20 +53,22 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 	public void create(AnnualSpend[] t) throws DAOException {
 		try (Connection connection = this.factory.getConnection()) {
 			connection.setAutoCommit(false);
-			for (AnnualSpend a : t) {				
-				long id = this.insertInTable(
-						connection,
-						new String[] {"academicYear", "universitySpend", "recordDate"},
-						new Object[] {a.getAcademicYear().getId(), a.getUniversitySpend().getId(), a.getRecordDate().getTime()});
-				a.setId(id);
-			}
-			connection.commit();
-			for (AnnualSpend a : t) {				
-				this.emitOnCreate(a);
-			}
+			connection.commit();			
+			emitOnCreate(t);
 		} catch (SQLException e) {
 			throw new DAOException(e.getMessage(), e);
 		}
+	}
+	
+	@Override
+	public void create(Connection connection, AnnualSpend[] t) throws DAOException, SQLException {
+		for (AnnualSpend a : t) {				
+			long id = insertInTable(
+					connection,
+					new String[] {"academicYear", "universitySpend", "recordDate"},
+					new Object[] {a.getAcademicYear().getId(), a.getUniversitySpend().getId(), a.getRecordDate().getTime()});
+			a.setId(id);
+		}		
 	}
 
 	@Override
@@ -119,16 +121,12 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 			Thread t = new Thread(() -> {
 				if(!costs.isEmpty()) {
 					if(cs.length == 1)
-						for(DAOListener<AllocationCost> ls : childsDao.getListeners())
-							ls.onDelete(cs[0], DEFAULT_REQUEST_ID);
+						childsDao.fireEventDelete(cs[0], DEFAULT_REQUEST_ID);
 					else
-						for(DAOListener<AllocationCost> ls : childsDao.getListeners())
-							ls.onDelete(cs, DEFAULT_REQUEST_ID);
+						childsDao.fireEventDelete(cs, DEFAULT_REQUEST_ID);
 				}
 				
-				for (DAOListener<AnnualSpend> ls : listeners) {
-					ls.onDelete(spend, DEFAULT_REQUEST_ID);
-				}
+				fireEventDelete(spend, DEFAULT_REQUEST_ID);
 			});
 			t.start();
 		} catch (SQLException e) {

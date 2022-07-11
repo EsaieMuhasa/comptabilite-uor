@@ -84,6 +84,19 @@ class PromotionDaoSql extends UtilSql<Promotion> implements PromotionDao {
 			throw new DAOException("Une erreur est survenue en plaine transaction\n"+e.getMessage(), e);
 		}
 	}
+	
+	@Override
+	public void create (Connection connection, Promotion[] t) throws DAOException, SQLException {
+		for (int i=0; i<t.length; i++) {
+			Promotion p = t[i];
+			long id = insertInTable(
+					connection,
+					new String[] {"academicYear", "studyClass", "department", "recordDate", "academicFee"},
+					new Object[] {p.getAcademicYear().getId(), p.getStudyClass().getId(), p.getDepartment().getId(), p.getRecordDate().getTime(),
+							p.getAcademicFee() != null? p.getAcademicFee().getId() : null});
+			p.setId(id);
+		}
+	}
 
 	@Override
 	public void update(Promotion p, long id) throws DAOException {

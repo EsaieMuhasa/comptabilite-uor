@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.swing.Box;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
@@ -38,6 +39,7 @@ import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
@@ -48,6 +50,7 @@ import net.uorbutembo.dao.AcademicFeeDao;
 import net.uorbutembo.dao.AcademicYearDao;
 import net.uorbutembo.dao.AnnualSpendDao;
 import net.uorbutembo.dao.DAOAdapter;
+import net.uorbutembo.dao.DAOException;
 import net.uorbutembo.dao.PromotionDao;
 import net.uorbutembo.swing.ComboBox;
 import net.uorbutembo.swing.Panel;
@@ -556,6 +559,8 @@ public class Sidebar extends Panel implements ItemListener{
 		private final AcademicYearTableModel tableModel;
 		private final Table table;
 		private FormAcademicYear formYear;
+		private final JProgressBar progress = new JProgressBar();
+		private final Box bottom = Box.createHorizontalBox();
 		
 		private AcademicYearDao academicYearDao;
 		private AcademicFeeDao academicFeeDao;
@@ -568,6 +573,69 @@ public class Sidebar extends Panel implements ItemListener{
 				if(e.isPopupTrigger() && table.getSelectedRow() != -1)
 					menu.show(table, e.getX(), e.getY());
 			}
+		};
+		
+		private final DAOAdapter<AcademicYear> yearAdapter = new DAOAdapter<AcademicYear>() {
+
+			@Override
+			public synchronized void onError(DAOException e, int requestId) {
+				if(requestId != FormAcademicYear.IMPORT_REQUEST_ID)
+					return;
+				
+				bottom.setVisible(false);
+				setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				setCursor(Cursor.getDefaultCursor());
+				formYear.setCursor(getCursor());
+				formYear.setEnabled(true);
+				JOptionPane.showMessageDialog(AcademicYeatDialog.this, e.getMessage(), "Erreur", JOptionPane.INFORMATION_MESSAGE);
+			}
+
+			@Override
+			public void onCreate(AcademicYear e, int requestId) {
+				JOptionPane.showMessageDialog(AcademicYeatDialog.this, "Année académique enregistrer avec success", "Information", JOptionPane.INFORMATION_MESSAGE);
+			}
+
+			@Override
+			public void onCurrentYear(AcademicYear year) {
+				
+			}
+
+			@Override
+			public void onStart(int requestId) {
+				if(requestId != FormAcademicYear.IMPORT_REQUEST_ID)
+					return;
+				
+				bottom.setVisible(true);
+				progress.setValue(0);
+				setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+				setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				formYear.setCursor(getCursor());
+			}
+
+			@Override
+			public void onProgress(int current, int max, String message, int requestId) {
+				if(requestId != FormAcademicYear.IMPORT_REQUEST_ID)
+					return;
+				
+				progress.setMaximum(max);
+				progress.setValue(current);
+				progress.setString(message);
+			}
+
+			@Override
+			public void onFinish(AcademicYear data, int requestId) {
+				if(requestId != FormAcademicYear.IMPORT_REQUEST_ID)
+					return;
+				
+				bottom.setVisible(false);
+				setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				setCursor(Cursor.getDefaultCursor());
+				formYear.setCursor(getCursor());
+				formYear.setEnabled(true);
+				formYear.razFields();
+			}
+			
+			
 		};
 		
 		/**
@@ -594,7 +662,14 @@ public class Sidebar extends Panel implements ItemListener{
 			root.add(tablePanel, BorderLayout.CENTER);
 			root.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			
+			progress.setStringPainted(true);
+			
+			bottom.add(progress);
+			bottom.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
+			bottom.setVisible(false);
+			
 			getContentPane().add(root, BorderLayout.CENTER);
+			getContentPane().add(bottom, BorderLayout.SOUTH);
 			getContentPane().setBackground(FormUtil.BKG_DARK);
 			
 			pack();
@@ -604,6 +679,7 @@ public class Sidebar extends Panel implements ItemListener{
 			setLocationRelativeTo(mainWindow);
 			
 			tableModel.reload();
+			academicYearDao.addProgressListener(yearAdapter);
 		}
 		
 		/**
