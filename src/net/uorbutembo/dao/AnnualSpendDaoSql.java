@@ -53,6 +53,7 @@ class AnnualSpendDaoSql extends UtilSql<AnnualSpend> implements AnnualSpendDao {
 	public void create(AnnualSpend[] t) throws DAOException {
 		try (Connection connection = this.factory.getConnection()) {
 			connection.setAutoCommit(false);
+			create(connection, t);
 			connection.commit();			
 			emitOnCreate(t);
 		} catch (SQLException e) {

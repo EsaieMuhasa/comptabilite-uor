@@ -82,7 +82,7 @@ public class PanelAcademicYear extends Panel{
 				.addItemMenu(new NavbarButtonModel("promotions", "Promotions"), scroll)
 				.addItemMenu(new NavbarButtonModel("feePromotion", "Frais académique"), panelFeePromotion)
 				.addItemMenu(new NavbarButtonModel("autherRecipe", "Autres recettes"), panelAnnualRecipe)
-				.addItemMenu(new NavbarButtonModel("annualSpend", "Dépenses annuel"), panelAnnualSpend);
+				.addItemMenu(new NavbarButtonModel("annualSpend", "Dépenses annuelles"), panelAnnualSpend);
 		}
 
 		@Override

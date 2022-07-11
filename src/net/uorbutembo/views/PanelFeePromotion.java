@@ -172,7 +172,7 @@ public class PanelFeePromotion extends Panel {
 		panelForm.setBorder(DEFAULT_EMPTY_BORDER);
 		
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane.addTab("Détailles des répartitions", panelShowConfig);
+		tabbedPane.addTab("Détails des répartitions", panelShowConfig);
 		tabbedPane.addTab("Association des frais aux promotions", panelForm);
 		
 		panelShowConfig.setBorder(new EmptyBorder(5, 5, 5, 0));

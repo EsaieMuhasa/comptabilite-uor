@@ -94,7 +94,7 @@ public class PanelDashboard extends DefaultScenePanel implements YearChooserList
 		
 		JRadioButton  radio = new JRadioButton("Etudiants");
 		JRadioButton  payment = new JRadioButton("Solde en caisse");
-		JRadioButton  budget = new JRadioButton("Budget globale");
+		JRadioButton  budget = new JRadioButton("Budget global");
 		ActionListener radionListener = (event -> {
 			if(event.getSource() == radio) {
 				piePanel.setModel(modelPieStudents);

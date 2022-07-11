@@ -299,10 +299,13 @@ public class FormPaymentFee extends DefaultFormPanel {
 	@Override
 	protected void doRaz() {
 		super.doRaz();
+		Date now = new Date();
 		amount.getField().setValue("");
 		slipNumber.getField().setValue("");
 		receipNumber.getField().setValue("");
 		wording.getField().setValue("");
+		slipDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(now));
+		receivedDate.getField().setValue(FormUtil.DEFAULT_FROMATER.format(now));
 	}
 	
 }

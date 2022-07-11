@@ -673,8 +673,8 @@ public class Sidebar extends Panel implements ItemListener{
 			getContentPane().setBackground(FormUtil.BKG_DARK);
 			
 			pack();
-			setMinimumSize(new Dimension(getWidth(), 400));
-			setSize(getWidth()+250, 450);
+			setMinimumSize(new Dimension(getWidth(), 500));
+			setSize(getWidth()+200, 600);
 			setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 			setLocationRelativeTo(mainWindow);
 			

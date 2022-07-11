@@ -369,7 +369,7 @@ public class DashboardModels extends DefaultPieModel {
 		//card du budget generale
 		cardModel = new DefaultCardModel<>(FormUtil.BKG_END, Color.WHITE);
 		cardModel.setTitle("Budget global");
-		cardModel.setInfo("Montant à ateindre pour l'année courante");
+		cardModel.setInfo("Montant à atteindre pour l'année courante");
 		cardModel.setIcon(R.getIcon("acounting"));
 		cardModel.setSuffix(FormUtil.UNIT_MONEY_SYMBOL);
 		cardModel.setValue(0d);
@@ -455,7 +455,7 @@ public class DashboardModels extends DefaultPieModel {
 		this.currentYear = currentYear;
 		reload();
 		reloadCaisse();
-		cardModel.setInfo("Montant à ateindre pour l'année "+currentYear.toString());
+		cardModel.setInfo("Montant à atteindre pour l'année "+currentYear.toString());
 	}
 	
 	/**

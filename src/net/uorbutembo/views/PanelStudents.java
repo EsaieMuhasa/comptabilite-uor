@@ -202,7 +202,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 		inscriptionFormPanel.setBorder(BODY_BORDER);
 		final JScrollPane inscriptionFormScroll = FormUtil.createVerticalScrollPane(inscriptionFormPanel);
 		
-		dialogInscription = new JDialog(mainWindow, "Inscription d'un nouveau étudiant", true);
+		dialogInscription = new JDialog(mainWindow, "Inscription d'un nouvel étudiant", true);
 		dialogInscription.setContentPane(inscriptionFormScroll);
 		dialogInscription.pack();
 		dialogInscription.setSize(900, dialogInscription.getHeight());
@@ -246,7 +246,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 			return;
 		
 		sheet = new IndividualSheet(mainWindow);
-		dialogSheet = new JDialog(mainWindow,"Fiche de payement", true);
+		dialogSheet = new JDialog(mainWindow,"Fiche de paiement", true);
 		dialogSheet.setSize(mainWindow.getWidth()-mainWindow.getWidth()/5, mainWindow.getHeight()-mainWindow.getHeight()/5);
 		dialogSheet.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		dialogSheet.getContentPane().add(sheet, BorderLayout.CENTER);
@@ -323,7 +323,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	@Override
 	public void onInscription(ActionEvent event) {
 		createDialogueInscription();
-		dialogInscription.setTitle(navigation.getCurrentYear()+" - Inscription d'un nouveau étudiant"); 
+		dialogInscription.setTitle(navigation.getCurrentYear()+" - Inscription d'un nouvel étudiant"); 
 		dialogInscription.setLocationRelativeTo(mainWindow);
 		dialogInscription.setVisible(true);
 	}
@@ -339,7 +339,7 @@ public class PanelStudents extends DefaultScenePanel implements NavigationListen
 	@Override
 	public void onAction(InscriptionDataRow row) {
 		createDialogIndiviualSheet();
-		dialogSheet.setTitle(navigation.getCurrentYear()+"- Fiche induviduelle de payment - "+row.getInscription().getStudent().getFullName());
+		dialogSheet.setTitle(navigation.getCurrentYear()+"- Fiche induviduelle de paiement - "+row.getInscription().getStudent().getFullName());
 		sheet.setInscription(row);
 		dialogSheet.setLocationRelativeTo(mainWindow);
 		dialogSheet.setVisible(true);

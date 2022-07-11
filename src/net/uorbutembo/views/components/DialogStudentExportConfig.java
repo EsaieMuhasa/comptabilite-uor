@@ -54,7 +54,7 @@ public class DialogStudentExportConfig extends Dialog {
 			},
 			{
 				new JCheckBox("Par faculté", true),
-				new JCheckBox("Par Départements", true),
+				new JCheckBox("Par départements", true),
 				new JCheckBox("Par classe d'étude", true),
 			}
 	};
@@ -136,7 +136,7 @@ public class DialogStudentExportConfig extends Dialog {
 	 * @param owner
 	 */
 	public DialogStudentExportConfig (Frame owner) {
-		super(owner, "Configuration des données à expter", true);
+		super(owner, "Configuration des données à exporter", true);
 		
 		final Panel container = new Panel(new GridLayout(1, 2, FormUtil.DEFAULT_H_GAP, FormUtil.DEFAULT_V_GAP));
 		final Panel bottom = new Panel(new FlowLayout(FlowLayout.RIGHT));

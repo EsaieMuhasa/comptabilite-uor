@@ -174,7 +174,7 @@ public class PanelFaculty extends Panel {
 		if(dialogFaculty == null) {
 			final Panel padding = new Panel(new BorderLayout());
 			formFaculty = new FormFaculty(mainWindow);
-			dialogFaculty = new JDialog(mainWindow);
+			dialogFaculty = new JDialog(mainWindow, true);
 			dialogFaculty.getContentPane().setBackground(FormUtil.BKG_DARK);
 			dialogFaculty.getContentPane().add(padding, BorderLayout.CENTER);
 			dialogFaculty.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -182,7 +182,6 @@ public class PanelFaculty extends Panel {
 			padding.setBorder(FormUtil.DEFAULT_EMPTY_BORDER);
 			dialogFaculty.pack();
 			dialogFaculty.setSize(600, dialogFaculty.getHeight());
-			dialogFaculty.setResizable(false);
 			dialogFaculty.addWindowFocusListener(new WindowAdapter() {
 				@Override
 				public void windowClosing(WindowEvent e) {
@@ -199,7 +198,7 @@ public class PanelFaculty extends Panel {
 		if(dialogDepartment == null) {
 			final Panel padding = new Panel(new BorderLayout());
 			formDepartment = new FormDepartment(mainWindow);
-			dialogDepartment = new JDialog(mainWindow);
+			dialogDepartment = new JDialog(mainWindow, true);
 			dialogDepartment.getContentPane().setBackground(FormUtil.BKG_DARK);
 			dialogDepartment.getContentPane().add(padding, BorderLayout.CENTER);
 			padding.add(formDepartment, BorderLayout.CENTER);
@@ -259,7 +258,7 @@ public class PanelFaculty extends Panel {
 	 */
 	private void createDepartment() {
 		if (facultyDao.countAll() == 0) {
-			JOptionPane.showMessageDialog(mainWindow, "Impossible d'éffetuer cette operations \ncar aucune faculté n'est déjà enregistrer.", "Information", JOptionPane.WARNING_MESSAGE);
+			JOptionPane.showMessageDialog(mainWindow, "Impossible d'éffetuer cette opérations \ncar aucune faculté n'est déjà enregistrer.", "Information", JOptionPane.WARNING_MESSAGE);
 			return;
 		}
 		buildDepartmentDialog();
